@@ -1,0 +1,76 @@
+/* ------------ Menu Bar Plugin ------------ */
+.cet-titlebar {
+    height: 30px !important;
+}
+.cet-title {
+    color: white !important;
+}
+.cet-container {
+    top: 30px !important;
+}
+
+/* ------------ Menu Bar ------------ */
+/*.cet-menubar {
+    background-color: #0D0D0D;
+    border: 0 solid #66666A;
+    border-bottom-width: 1px;
+    overflow: visible;
+}
+
+.menuBar-wrapper {
+    background-color: #202020;
+    display: flex;
+    flex-shrink: 1;
+    box-sizing: border-box;
+    overflow: hidden;
+    flex-wrap: wrap;
+    border: 1px solid #66666A;
+    border-bottom: 0;
+    padding: 2px;
+    margin: 0 0 -1px 3px;
+}
+
+.cet-menubar.bottom {
+    padding: 0 0 0 0;
+}
+
+.cet-menubar.bottom .cet-menubar-menu-button {
+    border-radius: 0;
+    margin: 1px;
+}
+
+.cet-menubar .cet-menubar-menu-button:not(.disabled):hover, .cet-menubar .cet-menubar-menu-button:not(.disabled).open {
+    background-color: #18324B;
+    border: 1px solid #074F97;
+    margin: 0;
+}*/
+
+/* ------------ Menu Bar Dropdowns ------------ */
+/*.cet-menubar-menu-container {
+    border: 1px solid #66666A;
+    margin: 0;
+    padding: 1px;
+    border-radius: 0;
+}
+.cet-action-item {
+    background-color: #202020;
+    border: unset;
+    margin: 0;
+    border-radius: 0;
+}
+.cet-action-item:hover {
+    background-color: #18324B;
+}
+.cet-menubar-menu-container .cet-action-menu-item {
+    border: 1px solid rgba(0, 0, 0, 0);
+    margin: 0;
+    border-radius: 0;
+}
+.cet-action-menu-item {
+    border: unset;
+    margin: 0;
+    border-radius: 0;
+}
+.cet-action-menu-item:hover {
+    border: 1px solid #074F97;
+}*/

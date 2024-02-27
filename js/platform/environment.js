@@ -1,0 +1,1 @@
+const isApp = typeof require !== 'undefined';

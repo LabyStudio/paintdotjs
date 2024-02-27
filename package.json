@@ -1,0 +1,34 @@
+{
+  "name": "paintdotjs",
+  "version": "1.0.0",
+  "description": "paint.js is an open source general-purpose raster graphics editor program, developed with javascript.",
+  "main": "js/platform/desktop/main.js",
+  "scripts": {
+    "bundle": "webpack --config webpack.config.js",
+    "bundle-watch": "webpack --config webpack.config.js --watch",
+    "dev": "electron .",
+    "dist": "electron-builder",
+    "pwa": "node ./scripts/generate_pwa.js",
+    "prepublish": "npm run bundle && npm run pwa"
+  },
+  "keywords": [
+    "paint",
+    "paint.js",
+    "paintdotjs",
+    "paintjs",
+    "paintdotnet",
+    "paint.net",
+    "paintnet"
+  ],
+  "author": "LabyStudio",
+  "devDependencies": {
+    "electron": "29.0.1",
+    "electron-builder": "^24.12.0",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^5.1.4",
+    "workbox-build": "^6.5.3"
+  },
+  "dependencies": {
+    "custom-electron-titlebar": "^4.2.8"
+  }
+}
