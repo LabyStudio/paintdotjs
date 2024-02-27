@@ -5,5 +5,5 @@ node_modules/
 bundle.js
 workbox-*.js
 service_worker.js
-.idea
+.idea/
 *.iml
