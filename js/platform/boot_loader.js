@@ -1,3 +1,6 @@
+Panels.setup();
+
+/*
 if (!isApp) {
     async function registerServiceWorker() {
         if ('serviceWorker' in navigator) {
@@ -8,5 +11,6 @@ if (!isApp) {
             }
         }
     }
+
     void registerServiceWorker();
-}
+}*/

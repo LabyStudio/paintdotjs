@@ -8,6 +8,7 @@
     "bundle-watch": "webpack --config webpack.config.js --watch",
     "dev": "electron .",
     "dist": "electron-builder",
+    "gen-imprts": "node ./scripts/generate_imports.js",
     "pwa": "node ./scripts/generate_pwa.js",
     "prepublish": "npm run bundle && npm run pwa"
   },

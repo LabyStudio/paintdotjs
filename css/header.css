@@ -1,0 +1,27 @@
+/* ------------ Title Bar ------------ */
+#titleBar {
+    background-color: var(--color-title-bar);
+    width: 100%;
+    height: 27px;
+    border: 0 solid var(--color-title-bar-border);
+    border-bottom-width: 1px;
+}
+
+/* ------------ Menu ------------ */
+#menu {
+    width: fit-content;
+    height: 26px;
+    background-color: var(--color-menu-background);
+    border: 1px solid var(--color-title-bar-border);
+    border-bottom-width: 0;
+    margin-left: 3px;
+    padding-bottom: 1px;
+}
+
+/* ------------ Header ------------ */
+header {
+    height: 90px;
+    background-color: var(--color-menu-background);
+    border: 0 solid var(--color-title-bar-border);
+    border-bottom-width: 1px;
+}

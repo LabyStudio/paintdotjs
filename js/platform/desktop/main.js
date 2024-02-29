@@ -28,7 +28,7 @@ function createWindow() {
         }
     })
 
-    Menu.setApplicationMenu(null);
+    Menu.getApplicationMenu().items = [];
 
     mainWindow.loadFile('index.html')
     mainWindow.show()

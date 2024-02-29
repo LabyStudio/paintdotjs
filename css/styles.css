@@ -1,5 +1,25 @@
+:root {
+    /* Background */
+    --color-background: #282726;
+
+    /* Title Bar */
+    --color-title-bar: #0D0D0D;
+    --color-title-bar-border: #66666A;
+
+    /* Menu */
+    --color-menu-background: #202020;
+    --color-menu-item-text: #ffffff;
+    --color-menu-item-hover: #18324B;
+    --color-menu-item-border: #074F97;
+}
+
 html {
-    background-color: #282726;
+    background-color: var(--color-background);
+    user-select: none;
+}
+
+body {
+    margin: 0;
 }
 
 h1 {

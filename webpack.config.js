@@ -4,6 +4,7 @@ module.exports = {
     mode: 'production',
     target: 'node',
     entry: './src/index.js',
+    devtool: 'eval-source-map',
     output: {
         filename: 'bundle.js',
         path: __dirname

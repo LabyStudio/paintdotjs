@@ -7,3 +7,4 @@ workbox-*.js
 service_worker.js
 .idea/
 *.iml
+run/

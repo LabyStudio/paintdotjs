@@ -2,75 +2,126 @@
 .cet-titlebar {
     height: 30px !important;
 }
+
 .cet-title {
     color: white !important;
 }
+
 .cet-container {
     top: 30px !important;
 }
 
-/* ------------ Menu Bar ------------ */
-/*.cet-menubar {
-    background-color: #0D0D0D;
-    border: 0 solid #66666A;
-    border-bottom-width: 1px;
-    overflow: visible;
+/* ------------ Menu Item ------------- */
+.menu-item {
+    width: fit-content;
+    padding: 5px 5px 5px 5px;
+    margin: 2px;
+    border: 1px solid transparent;
+    color: var(--color-menu-item-text);
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 11px;
+    display: inline-block;
 }
 
-.menuBar-wrapper {
-    background-color: #202020;
-    display: flex;
-    flex-shrink: 1;
-    box-sizing: border-box;
-    overflow: hidden;
-    flex-wrap: wrap;
-    border: 1px solid #66666A;
-    border-bottom: 0;
-    padding: 2px;
-    margin: 0 0 -1px 3px;
+.menu-item:hover.menu-item:not([disabled]), .menu-item[active] {
+    background-color: var(--color-menu-item-hover);
 }
 
-.cet-menubar.bottom {
-    padding: 0 0 0 0;
+.menu-item:hover, .menu-item[active] {
+    border: 1px solid var(--color-menu-item-border);
+    position: relative;
+    cursor: pointer;
 }
 
-.cet-menubar.bottom .cet-menubar-menu-button {
-    border-radius: 0;
+.menu-item:hover:before, .menu-item[active]:before {
+    border: 1px solid var(--color-menu-background);
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.menu-item[disabled] {
+    color: #66666A;
+    cursor: unset;
+}
+
+/* ------------ Drop Menu ------------ */
+.drop-menu {
+    position: absolute;
+    width: fit-content;
+    background-color: var(--color-menu-background);
+    border: 1px solid var(--color-title-bar-border);
+    z-index: 1;
+    animation: fadeIn 0.15s ease-in-out;
+}
+
+.drop-menu .drop-entry {
+    height: 16px;
+    display: block;
     margin: 1px;
+    padding: 3px 4px 3px 4px;
 }
 
-.cet-menubar .cet-menubar-menu-button:not(.disabled):hover, .cet-menubar .cet-menubar-menu-button:not(.disabled).open {
-    background-color: #18324B;
-    border: 1px solid #074F97;
-    margin: 0;
-}*/
+.drop-menu:before {
+    background: var(--color-title-bar-border);
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 26px;
+    width: 1px;
+    bottom: 0;
+    pointer-events: none;
+    opacity: 0.2;
+}
 
-/* ------------ Menu Bar Dropdowns ------------ */
-/*.cet-menubar-menu-container {
-    border: 1px solid #66666A;
-    margin: 0;
-    padding: 1px;
-    border-radius: 0;
+.drop-entry {
+    width: auto;
+    height: 16px;
+    display: block;
+    margin: 1px;
+    padding: 3px 4px 3px 4px;
 }
-.cet-action-item {
-    background-color: #202020;
-    border: unset;
-    margin: 0;
-    border-radius: 0;
+
+.drop-entry .icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
 }
-.cet-action-item:hover {
-    background-color: #18324B;
+
+.drop-entry .text {
+    width: auto;
+    display: inline-block;
+    position: relative;
+    top: -4px;
+    padding-left: 12px;
 }
-.cet-menubar-menu-container .cet-action-menu-item {
-    border: 1px solid rgba(0, 0, 0, 0);
-    margin: 0;
-    border-radius: 0;
+
+.drop-entry .shortcut {
+    display: inline-block;
+    position: relative;
+    float: right;
+    top: 2px;
+    margin-left: 28px;
 }
-.cet-action-menu-item {
-    border: unset;
-    margin: 0;
-    border-radius: 0;
+
+.drop-separator {
+    width: auto;
+    height: 1px;
+    background-color: var(--color-title-bar-border);
+    margin: 2px 2px 2px 27px;
+    opacity: 0.2;
 }
-.cet-action-menu-item:hover {
-    border: 1px solid #074F97;
-}*/
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
