@@ -7,6 +7,8 @@ class PanelRegistry {
 
         this.register(new MainMenu());
         this.register(new CommonMenu());
+        this.register(new SettingsMenu());
+        this.register(new ToolMenu());
     }
 
     register(panel) {

@@ -17,9 +17,11 @@
 <!-- Header -->
 <header>
     <div id="titleBar">
-        <div id="mainMenu"></div>
-        <div id="commonMenu"></div>
+        <div id="mainMenu" class="strip"></div>
+        <div id="settingsMenu" class="strip"></div>
     </div>
+    <div id="commonMenu" class="strip"></div>
+    <div id="toolMenu" class="strip"></div>
 </header>
 
 <!-- Content -->
@@ -43,15 +45,18 @@
 <script src="./js/src/interface/item/menu/action/drop/DropEntry.js"></script>
 <script src="./js/src/interface/item/menu/action/drop/DropMenuItem.js"></script>
 <script src="./js/src/interface/menu.js"></script>
-<script src="./js/src/interface/panel/common/CommonMenu.js"></script>
-<script src="./js/src/interface/panel/main/MainMenu.js"></script>
-<script src="./js/src/interface/panel/main/menu/AdjustmentsMenu.js"></script>
-<script src="./js/src/interface/panel/main/menu/EditMenu.js"></script>
-<script src="./js/src/interface/panel/main/menu/EffectsMenu.js"></script>
-<script src="./js/src/interface/panel/main/menu/FileMenu.js"></script>
-<script src="./js/src/interface/panel/main/menu/ImageMenu.js"></script>
-<script src="./js/src/interface/panel/main/menu/LayersMenu.js"></script>
-<script src="./js/src/interface/panel/main/menu/ViewMenu.js"></script>
+<script src="./js/src/interface/panel/header/common/CommonMenu.js"></script>
+<script src="./js/src/interface/panel/header/settings/SettingsMenu.js"></script>
+<script src="./js/src/interface/panel/header/tool/ToolMenu.js"></script>
+<script src="./js/src/interface/panel/header/tool/ToolSelector.js"></script>
+<script src="./js/src/interface/panel/header/main/MainMenu.js"></script>
+<script src="./js/src/interface/panel/header/main/menu/AdjustmentsMenu.js"></script>
+<script src="./js/src/interface/panel/header/main/menu/EditMenu.js"></script>
+<script src="./js/src/interface/panel/header/main/menu/EffectsMenu.js"></script>
+<script src="./js/src/interface/panel/header/main/menu/FileMenu.js"></script>
+<script src="./js/src/interface/panel/header/main/menu/ImageMenu.js"></script>
+<script src="./js/src/interface/panel/header/main/menu/LayersMenu.js"></script>
+<script src="./js/src/interface/panel/header/main/menu/ViewMenu.js"></script>
 <script src="./js/src/interface/panel/PanelRegistry.js"></script>
 <script src="./js/src/interface/item/menu/seperator/HorizontalSeperator.js"></script>
 <script src="./js/src/interface/item/menu/seperator/VerticalSeparator.js"></script>

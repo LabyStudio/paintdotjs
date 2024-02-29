@@ -1,6 +1,6 @@
 class DropMenuItem extends MenuItem {
 
-    constructor(id, entries) {
+    constructor(id, entries = []) {
         super(id, () => {
             if (this.isEnabled() && !this.isOpen()) {
                 this.open();

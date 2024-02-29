@@ -9,10 +9,15 @@
 
 /* ------------ Header ------------ */
 header {
-    height: 90px;
+    height: 82px;
     background-color: var(--color-menu-background);
     border: 0 solid var(--color-title-bar-border);
     border-bottom-width: 1px;
+}
+
+.strip {
+    display: flex;
+    align-items: center;
 }
 
 /* ------------ Main Menu ------------ */
@@ -26,6 +31,16 @@ header {
     padding-bottom: 1px;
 }
 
+/* ------------ Settings Menu ------------ */
+
+#settingsMenu {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 2px;
+    flex-direction: row-reverse;
+}
+
 /* ------------ Common Menu ------------ */
 #commonMenu {
     width: fit-content;
@@ -33,5 +48,53 @@ header {
     border-bottom-width: 0;
     margin-left: 3px;
     margin-top: 2px;
-    padding-bottom: 1px;
+}
+
+/* ------------ Tool Menu ------------ */
+
+#toolMenu {
+    height: 24px;
+    width: fit-content;
+    border-bottom-width: 0;
+    margin-left: 2px;
+}
+
+#toolMenu .menu-item {
+    padding: 5px 5px 5px 5px;
+    height: 11px;
+}
+
+#toolMenu .tool-selector {
+    display: flex;
+    align-items: center;
+    padding-top: 6px;
+}
+
+#toolMenu .tool-selector .icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    padding: 0;
+    margin: 2px;
+}
+
+#toolMenu .tool-selector .separator {
+    width: 2px;
+    height: 14px;
+    background-color: var(--color-title-bar-border);
+    margin: 2px;
+    opacity: 0;
+}
+
+#toolMenu .tool-selector:hover .separator {
+    opacity: 0.2;
+}
+
+#toolMenu .tool-selector .arrow-down {
+    width: 0;
+    height: 0;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 3px solid var(--color-menu-item-text);
+    margin: 2px;
 }

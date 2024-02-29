@@ -14,8 +14,9 @@
 /* ------------ Menu Item ------------- */
 .menu-item {
     width: fit-content;
-    padding: 5px 5px 5px 5px;
-    margin: 2px;
+    height: auto;
+    padding: 6px;
+    margin: 1px;
     border: 1px solid transparent;
     color: var(--color-menu-item-text);
     display: inline-block;
