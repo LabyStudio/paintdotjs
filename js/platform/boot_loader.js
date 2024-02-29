@@ -1,4 +1,4 @@
-Panels.setup();
+PanelRegistry.initialize();
 
 /*
 if (!isApp) {

@@ -1,4 +1,4 @@
-class FileWindowMenu extends DropMenuItem {
+class FileMenu extends DropMenuItem {
     constructor() {
         super("menu.file", [
             new DropEntry("menu.file.new", null),
@@ -7,15 +7,15 @@ class FileWindowMenu extends DropMenuItem {
                 .withNoIcon(),
             new DropEntry("menu.file.acquire", null)
                 .withNoIcon(),
-            new DropSeparator(),
+            new VerticalSeparator(),
             new DropEntry("menu.file.save", null),
             new DropEntry("menu.file.saveAs", null),
             new DropEntry("menu.file.saveAll", null),
-            new DropSeparator(),
+            new VerticalSeparator(),
             new DropEntry("menu.file.print", null),
-            new DropSeparator(),
+            new VerticalSeparator(),
             new DropEntry("menu.file.close", null),
-            new DropSeparator(),
+            new VerticalSeparator(),
             new DropEntry("menu.file.exit", () => {
                 window.close();
             }),

@@ -21,6 +21,18 @@ class DropMenuItem extends MenuItem {
         }
     }
 
+    add(entry) {
+        this.entries.push(entry);
+        entry.initialize(this);
+    }
+
+    remove(entry) {
+        let index = this.entries.indexOf(entry);
+        if (index !== -1) {
+            this.entries.splice(index, 1);
+        }
+    }
+
     open() {
         let dropMenu = document.createElement("div");
         dropMenu.className = "drop-menu";
@@ -54,5 +66,9 @@ class DropMenuItem extends MenuItem {
 
     isOpen() {
         return this.openMenu;
+    }
+
+    get(id) {
+        return this.entries.find(e => e.id === id);
     }
 }

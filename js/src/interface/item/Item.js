@@ -3,22 +3,22 @@ class Item extends UIElement {
     constructor(id, callback) {
         super(id);
         this.callback = callback;
+        this.enabled = this.isImplemented();
     }
 
     initialize(parent) {
         super.initialize(parent);
         this.element = this.buildElement();
 
-        let isImplemented = this.callback !== null;
-        if (!isImplemented) {
+        if (!this.isImplemented()) {
             this.element.setAttribute("title", "Not implemented");
         }
-        this.setEnabled(isImplemented);
+
+        // Update enabled state on element
+        this.setEnabled(this.enabled);
 
         this.element.onclick = () => {
-            if (this.callback !== null) {
-                this.callback();
-            }
+            this.run();
         }
     }
 
@@ -29,6 +29,16 @@ class Item extends UIElement {
         } else {
             this.element.setAttribute("disabled", "")
         }
+    }
+
+    run() {
+        if (this.callback !== null) {
+            this.callback();
+        }
+    }
+
+    isImplemented() {
+        return this.callback !== null;
     }
 
     isEnabled() {

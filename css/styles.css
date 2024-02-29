@@ -11,6 +11,15 @@
     --color-menu-item-text: #ffffff;
     --color-menu-item-hover: #18324B;
     --color-menu-item-border: #074F97;
+
+    font-family: 'Microsoft Sans Serif', sans-serif;
+    font-size: 8.25pt;
+}
+
+/* include ./assets/microsoft_sans_serif.ttf */
+@font-face {
+    font-family: "Microsoft Sans Serif";
+    src: url("../assets/font/microsoft_sans_serif.ttf") format('truetype');
 }
 
 html {

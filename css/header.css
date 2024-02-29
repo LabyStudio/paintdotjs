@@ -7,8 +7,16 @@
     border-bottom-width: 1px;
 }
 
-/* ------------ Menu ------------ */
-#menu {
+/* ------------ Header ------------ */
+header {
+    height: 90px;
+    background-color: var(--color-menu-background);
+    border: 0 solid var(--color-title-bar-border);
+    border-bottom-width: 1px;
+}
+
+/* ------------ Main Menu ------------ */
+#mainMenu {
     width: fit-content;
     height: 26px;
     background-color: var(--color-menu-background);
@@ -18,10 +26,12 @@
     padding-bottom: 1px;
 }
 
-/* ------------ Header ------------ */
-header {
-    height: 90px;
-    background-color: var(--color-menu-background);
-    border: 0 solid var(--color-title-bar-border);
-    border-bottom-width: 1px;
+/* ------------ Common Menu ------------ */
+#commonMenu {
+    width: fit-content;
+    height: 26px;
+    border-bottom-width: 0;
+    margin-left: 3px;
+    margin-top: 2px;
+    padding-bottom: 1px;
 }

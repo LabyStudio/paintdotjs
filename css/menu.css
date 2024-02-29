@@ -18,8 +18,6 @@
     margin: 2px;
     border: 1px solid transparent;
     color: var(--color-menu-item-text);
-    font-family: "DejaVu Sans", sans-serif;
-    font-size: 11px;
     display: inline-block;
 }
 
@@ -48,6 +46,24 @@
 .menu-item[disabled] {
     color: #66666A;
     cursor: unset;
+}
+
+.menu-item[disabled] img {
+    filter: grayscale(100%);
+}
+
+/* ------------ Icon Item ------------ */
+.icon-item {
+    padding: 2px;
+    margin: 0 0 0 0;
+    width: 17px;
+    height: 17px;
+}
+
+.icon-item .icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
 }
 
 /* ------------ Drop Menu ------------ */
@@ -109,14 +125,6 @@
     margin-left: 28px;
 }
 
-.drop-separator {
-    width: auto;
-    height: 1px;
-    background-color: var(--color-title-bar-border);
-    margin: 2px 2px 2px 27px;
-    opacity: 0.2;
-}
-
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -124,4 +132,23 @@
     to {
         opacity: 1;
     }
+}
+
+/* ------------ Separator ------------ */
+
+.vertical-separator {
+    width: auto;
+    height: 1px;
+    background-color: var(--color-title-bar-border);
+    margin: 2px 2px 2px 27px;
+    opacity: 0.2;
+}
+
+.horizontal-separator {
+    width: 1px;
+    height: 13px;
+    background-color: var(--color-title-bar-border);
+    margin: 0 5px 1px 5px;
+    opacity: 0.5;
+    display: inline-block;
 }

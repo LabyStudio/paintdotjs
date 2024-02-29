@@ -1,4 +1,4 @@
-class ViewWindowMenu extends DropMenuItem {
+class ViewMenu extends DropMenuItem {
     constructor() {
         super("menu.view", [
             new DropEntry("menu.view.zoomIn", null),
@@ -6,10 +6,10 @@ class ViewWindowMenu extends DropMenuItem {
             new DropEntry("menu.view.zoomToWindow", null),
             new DropEntry("menu.view.zoomToSelection", null),
             new DropEntry("menu.view.actualSize", null),
-            new DropSeparator(),
+            new VerticalSeparator(),
             new DropEntry("menu.view.grid", null),
             new DropEntry("menu.view.rulers", null),
-            new DropSeparator(),
+            new VerticalSeparator(),
             new DropEntry("measurementUnit.pixel", null)
                 .withTranslationKey("plural", false)
                 .withNoIcon(),

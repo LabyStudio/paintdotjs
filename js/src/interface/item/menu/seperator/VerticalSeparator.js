@@ -1,9 +1,9 @@
-class DropSeparator extends UIElement {
+class VerticalSeparator extends UIElement {
 
     constructor() {
-        super("drop-separator");
+        super("vertical-separator");
         this.element = document.createElement("div");
-        this.element.className = "drop-separator";
+        this.element.className = "vertical-separator";
     }
 
     getElement() {

@@ -25,10 +25,10 @@ walk(srcDir);
 
 files.forEach(file => {
     const relativePath = path.relative(srcDir, file);
-    imports.push(`<script src="${srcDir}${relativePath}"></script>`);
+    imports.push(`<script src="${srcDir}${relativePath}"></script>`.replaceAll('\\', '/'));
 });
 
-const index = fs.readFileSync(indexFile, 'utf8');
+const index = fs.readFileSync(indexFile, 'utf8').replaceAll('\r\n', '\n');
 const start = '<!-- Sources$start -->';
 const end = '<!-- Sources$end -->';
 
