@@ -1,0 +1,28 @@
+/* ------------ Footer ------------ */
+footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+/* ------------ Footer Menu ------------ */
+#footerMenu {
+    background-color: var(--color-menu-background);
+    width: 100%;
+    height: 25px;
+    display: flex;
+}
+
+#toolInfoItem {
+    display: flex;
+    flex: auto;
+    font-size: calc(min(8.25pt, 1vw));
+}
+
+#canvasSizeItem {
+    width: 80px;
+}
+
+#cursorPositionItem {
+    width: 80px;
+}

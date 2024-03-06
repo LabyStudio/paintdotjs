@@ -1,6 +1,6 @@
 :root {
     /* Background */
-    --color-background: #282726;
+    --color-background: #2F2F2F;
 
     /* Title Bar */
     --color-title-bar: #0D0D0D;
@@ -29,6 +29,7 @@ html {
 
 body {
     margin: 0;
+    overflow: hidden;
 }
 
 h1 {

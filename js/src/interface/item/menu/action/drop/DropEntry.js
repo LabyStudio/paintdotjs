@@ -12,7 +12,7 @@ class DropEntry extends ActionItem {
             // Icon
             let icon = document.createElement("img");
             icon.className = "icon";
-            if (this.hasIcon) {
+            if (this.hasIconImage) {
                 icon.src = "assets/icons/" + this.getIconPath();
                 icon.onerror = event => {
                     icon.style.opacity = '0';

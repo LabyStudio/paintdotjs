@@ -36,13 +36,20 @@ class DropMenuItem extends MenuItem {
     open() {
         let dropMenu = document.createElement("div");
         dropMenu.className = "drop-menu";
-        dropMenu.style.left = this.element.offsetLeft + "px";
-        dropMenu.style.top = windowTop() + this.element.offsetTop + this.element.offsetHeight + "px";
         for (let entry of this.entries) {
             dropMenu.appendChild(entry.getElement());
         }
         document.body.appendChild(dropMenu);
         this.openMenu = true;
+
+        // Set drop position
+        let elementBounds = this.element.getBoundingClientRect();
+        dropMenu.style.left = this.element.offsetLeft
+            + (elementBounds.right > window.innerWidth / 2 ? -this.element.offsetWidth * 2 : 0)
+            + "px";
+        dropMenu.style.top = elementBounds.top
+            + (this.isDropUp() ? -dropMenu.offsetHeight : this.element.offsetHeight)
+            + "px";
 
         this.element.setAttribute("active", "");
 
@@ -62,6 +69,14 @@ class DropMenuItem extends MenuItem {
         this.openMenu = false;
 
         this.element.removeAttribute("active");
+    }
+
+    isDropUp() {
+        return this.element !== null && this.isDropUpAt(this.element.getBoundingClientRect());
+    }
+
+    isDropUpAt(bounds) {
+        return bounds.top + bounds.height > window.innerHeight;
     }
 
     isOpen() {

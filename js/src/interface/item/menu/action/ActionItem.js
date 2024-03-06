@@ -1,9 +1,9 @@
 class ActionItem extends MenuItem {
 
-    constructor(id, callback) {
+    constructor(id, callback = null) {
         super(id, callback);
 
-        this.hasIcon = true;
+        this.hasIconImage = true;
 
         this.translationKey = "text";
         this.absoluteTranslationKey = false;
@@ -12,7 +12,7 @@ class ActionItem extends MenuItem {
     }
 
     withNoIcon() {
-        this.hasIcon = false;
+        this.hasIconImage = false;
         return this;
     }
 
@@ -35,6 +35,10 @@ class ActionItem extends MenuItem {
         return this.id.replaceAll(".", "_")
             .replace(/([A-Z])/g, "_$1")
             .toLowerCase() + "_" + this.iconPathKey + ".png";
+    }
+
+    hasIcon() {
+        return this.hasIconImage;
     }
 
     getText() {

@@ -63,38 +63,3 @@ header {
     padding: 5px 5px 5px 5px;
     height: 11px;
 }
-
-#toolMenu .tool-selector {
-    display: flex;
-    align-items: center;
-    padding-top: 6px;
-}
-
-#toolMenu .tool-selector .icon {
-    width: 16px;
-    height: 16px;
-    display: inline-block;
-    padding: 0;
-    margin: 2px;
-}
-
-#toolMenu .tool-selector .separator {
-    width: 2px;
-    height: 14px;
-    background-color: var(--color-title-bar-border);
-    margin: 2px;
-    opacity: 0;
-}
-
-#toolMenu .tool-selector:hover .separator {
-    opacity: 0.2;
-}
-
-#toolMenu .tool-selector .arrow-down {
-    width: 0;
-    height: 0;
-    border-left: 3px solid transparent;
-    border-right: 3px solid transparent;
-    border-top: 3px solid var(--color-menu-item-text);
-    margin: 2px;
-}

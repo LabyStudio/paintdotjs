@@ -1,9 +1,10 @@
 class Item extends UIElement {
 
-    constructor(id, callback) {
+    constructor(id, callback = null) {
         super(id);
         this.callback = callback;
         this.enabled = this.isImplemented();
+        this.element = null;
     }
 
     initialize(parent) {
@@ -22,6 +23,17 @@ class Item extends UIElement {
         }
     }
 
+    updateDocument() {
+        if (this.element === null) {
+            return;
+        }
+
+        let parent = this.element.parentElement;
+        let previousElement = this.element;
+        parent.replaceChild(this.element = this.buildElement(), previousElement);
+        this.element.onclick = previousElement.onclick;
+    }
+
     setEnabled(enabled) {
         this.enabled = enabled;
         if (enabled) {
@@ -38,7 +50,7 @@ class Item extends UIElement {
     }
 
     isImplemented() {
-        return this.callback !== null;
+        return !this.isClickable() || this.callback !== null;
     }
 
     isEnabled() {
@@ -50,6 +62,10 @@ class Item extends UIElement {
     }
 
     buildElement() {
+    }
+
+    isClickable() {
+        return true;
     }
 
     updateParent(parent) {

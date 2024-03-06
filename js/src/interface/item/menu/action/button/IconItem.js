@@ -14,7 +14,7 @@ class IconItem extends ActionItem {
             if (this.isImplemented()) {
                 icon.setAttribute("title", this.getText());
             }
-            if (this.hasIcon) {
+            if (this.hasIcon()) {
                 icon.src = "assets/icons/" + this.getIconPath();
                 icon.onerror = event => {
                     icon.style.opacity = '0';
@@ -29,7 +29,7 @@ class IconItem extends ActionItem {
 
     static fromActionItem(actionItem) {
         let iconItem = new IconItem(actionItem.id, actionItem.callback);
-        iconItem.hasIcon = actionItem.hasIcon;
+        iconItem.hasIconImage = actionItem.hasIconImage;
         iconItem.translationKey = actionItem.translationKey;
         iconItem.absoluteTranslationKey = actionItem.absoluteTranslationKey;
         iconItem.iconPathKey = actionItem.iconPathKey;
