@@ -18,8 +18,12 @@ class Item extends UIElement {
         // Update enabled state on element
         this.setEnabled(this.enabled);
 
-        this.element.onclick = () => {
+        this.element.onclick = e => {
             this.run();
+
+            if (!this.isClickable()) {
+                e.stopPropagation();
+            }
         }
     }
 

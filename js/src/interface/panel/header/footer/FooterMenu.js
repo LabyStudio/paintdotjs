@@ -6,7 +6,8 @@ class FooterMenu extends StripPanel {
                 new ToolInfoItem(),
                 new CanvasSizeItem(),
                 new CursorPositionItem(),
-                new MeasurementUnitSelectorItem()
+                new MeasurementUnitSelectorItem(),
+                new ZoomItem()
             ]
         });
     }

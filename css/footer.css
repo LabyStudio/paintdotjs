@@ -13,6 +13,11 @@ footer {
     display: flex;
 }
 
+#footerMenu .menu-item {
+    padding: 5px 5px 5px 5px;
+    height: 11px;
+}
+
 #toolInfoItem {
     display: flex;
     flex: auto;
@@ -25,4 +30,16 @@ footer {
 
 #cursorPositionItem {
     width: 80px;
+}
+
+#zoomField {
+    width: 40px;
+    background-color: var(--color-menu-background);
+    color: var(--color-menu-item-text);
+    border: 1px solid var(--color-menu-item-text);
+    box-shadow: 0 0 0 2px var(--color-menu-item-border);
+}
+
+#zoomField:focus-visible {
+    outline: none;
 }
