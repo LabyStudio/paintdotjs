@@ -23,7 +23,6 @@ class DropMenuItem extends MenuItem {
 
     add(entry) {
         this.entries.push(entry);
-        entry.initialize(this);
     }
 
     remove(entry) {
@@ -37,6 +36,7 @@ class DropMenuItem extends MenuItem {
         let dropMenu = document.createElement("div");
         dropMenu.className = "drop-menu";
         for (let entry of this.entries) {
+            entry.initialize(this);
             dropMenu.appendChild(entry.getElement());
         }
         document.body.appendChild(dropMenu);

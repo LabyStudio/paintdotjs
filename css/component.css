@@ -1,0 +1,89 @@
+/* ----------- Text Field ----------- */
+
+input[type="text"] {
+    width: 40px;
+    background-color: var(--color-menu-background);
+    color: var(--color-menu-item-text);
+    border: 1px solid var(--color-menu-item-text);
+    box-shadow: 0 0 0 2px var(--color-menu-item-border);
+}
+
+input[type="text"]:focus-visible {
+    outline: none;
+}
+
+/* ------------ Slider ------------ */
+
+.slider-wrapper {
+    display: flex;
+    position: relative;
+}
+
+.slider-tick {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.6px;
+    height: 10px;
+    background-color: #dadada;
+    transform: translate(-50%, -25%);
+    z-index: 0;
+}
+
+input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    z-index: 1;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    appearance: none;
+    height: 1px;
+    background-color: #707070;
+    box-shadow: 0 1px 0 0 #FFFFFF;
+    z-index: 1;
+}
+
+input[type="range"]::-moz-range-track {
+    appearance: none;
+    height: 1px;
+    background-color: #707070;
+    box-shadow: 0 1px 0 0 #FFFFFF;
+    z-index: 1;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    position: relative;
+    appearance: none;
+    background-color: #EEEEEE;
+    border: 1px solid #707070;
+    border-radius: 1px;
+    width: 10px;
+    height: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    clip-path: polygon(100% 0, 100% 60%, 50% 100%, 50% 100%, 0 60%, 0 0);
+    z-index: 1;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background-image: linear-gradient(#DDEFFA, #B7E2F9);
+    border: 1px solid #3C7FB1;
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+    background-image: linear-gradient(#ACDCF5, #5EAED9);
+    border: 1px solid #2C628B;
+}
+
+input[type="range"]::-moz-range-thumb {
+    appearance: none;
+    background-color: #EEEEEE;
+    border: 1px solid #707070;
+    border-radius: 0;
+    width: 8px;
+    height: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+}

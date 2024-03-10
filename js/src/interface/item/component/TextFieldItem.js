@@ -9,6 +9,12 @@ class TextFieldItem extends Item {
         element.type = "text";
         element.id = this.id;
         element.value = "100%";
+
+        setTimeout(_ => {
+            element.focus();
+            element.select();
+        });
+
         return element;
     }
 
