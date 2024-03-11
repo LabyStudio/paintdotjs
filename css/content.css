@@ -1,0 +1,36 @@
+html {
+    background-color: var(--color-background);
+    user-select: none;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+#content {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    height: 82px;
+    background-color: var(--color-menu-background);
+    border: 0 solid var(--color-title-bar-border);
+    border-bottom-width: 1px;
+}
+
+#canvas {
+    flex: 1;
+    overflow: hidden;
+}
+
+footer {
+    width: 100%;
+}

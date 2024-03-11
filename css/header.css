@@ -8,12 +8,6 @@
 }
 
 /* ------------ Header ------------ */
-header {
-    height: 82px;
-    background-color: var(--color-menu-background);
-    border: 0 solid var(--color-title-bar-border);
-    border-bottom-width: 1px;
-}
 
 .strip {
     display: flex;

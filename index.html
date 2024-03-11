@@ -4,36 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="./assets/icon.png" type="image/x-icon">
-    <title>paint.js</title>
+    <title id="title">paint.js</title>
 
     <!-- Styles -->
-    <link href="./css/styles.css" rel="stylesheet">
+    <link href="./css/theme.css" rel="stylesheet">
     <link href="./css/menu.css" rel="stylesheet">
     <link href="./css/component.css" rel="stylesheet">
+    <link href="./css/content.css" rel="stylesheet">
     <link href="./css/header.css" rel="stylesheet">
     <link href="./css/footer.css" rel="stylesheet">
 </head>
 
 <body>
+<div id="content">
+    <!-- Header -->
+    <header>
+        <div id="titleBar">
+            <div id="mainMenu" class="strip"></div>
+            <div id="settingsMenu" class="strip"></div>
+        </div>
+        <div id="commonMenu" class="strip"></div>
+        <div id="toolMenu" class="strip"></div>
+    </header>
 
-<!-- Header -->
-<header>
-    <div id="titleBar">
-        <div id="mainMenu" class="strip"></div>
-        <div id="settingsMenu" class="strip"></div>
-    </div>
-    <div id="commonMenu" class="strip"></div>
-    <div id="toolMenu" class="strip"></div>
-</header>
+    <!-- Content -->
+    <canvas id="canvas"></canvas>
 
-<!-- Content -->
-<h1 id="title">Test Version</h1>
-
-<footer>
-    <div id="footerMenu" class="strip"></div>
-    <div id="window-resize"></div>
-</footer>
-
+    <footer>
+        <div id="footerMenu" class="strip"></div>
+        <div id="window-resize"></div>
+    </footer>
+</div>
 </body>
 
 <!-- Environment -->

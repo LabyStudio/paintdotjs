@@ -21,17 +21,3 @@
     font-family: "Microsoft Sans Serif";
     src: url("../assets/font/microsoft_sans_serif.ttf") format('truetype');
 }
-
-html {
-    background-color: var(--color-background);
-    user-select: none;
-}
-
-body {
-    margin: 0;
-    overflow: hidden;
-}
-
-h1 {
-    color: white;
-}
