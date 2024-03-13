@@ -1,6 +1,6 @@
 const {CustomTitlebar, TitlebarColor} = require('custom-electron-titlebar')
 
-window.appVersion = require('../../../package.json').version;
+window.PDJVERSION = require('../../../package.json').version;
 
 window.addEventListener('DOMContentLoaded', () => {
     new CustomTitlebar({

@@ -1,3 +1,3 @@
 import './languages'
 
-window.appVersion = PDJVERSION;
+window.PDJVERSION = PDJVERSION;
