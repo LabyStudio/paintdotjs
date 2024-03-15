@@ -33,4 +33,12 @@ class Document {
             layer.renderRegion(renderArgs, region);
         }
     }
+
+    getWidth() {
+        return this.width;
+    }
+
+    getHeight() {
+        return this.height;
+    }
 }

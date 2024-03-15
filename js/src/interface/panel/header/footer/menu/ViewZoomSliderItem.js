@@ -2,14 +2,34 @@ class ViewZoomSliderItem extends SliderItem {
 
     constructor() {
         super("menuViewZoomSlider");
+
+        this.app.on("document:visible_document_rectangle_update", rectangle => {
+            this.updateCurrentValue();
+        });
+    }
+
+    onChange(value) {
+        let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
+        if (activeDocumentWorkspace === null) {
+            return;
+        }
+        activeDocumentWorkspace.setZoom(value / 100);
+    }
+
+    getCurrentValue() {
+        let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
+        if (activeDocumentWorkspace === null) {
+            return 100;
+        }
+        return activeDocumentWorkspace.getZoom() * 100;
     }
 
     getMin() {
-        return 0;
+        return 1;
     }
 
     getMax() {
-        return 100;
+        return 200;
     }
 
     getStep() {

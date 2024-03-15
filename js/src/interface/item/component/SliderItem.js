@@ -11,12 +11,16 @@ class SliderItem extends Item {
             let element = document.createElement("input");
             element.type = "range";
             element.id = this.id;
+            element.value = this.getCurrentValue() + "";
             element.setAttribute("min", this.getMin() + "");
             element.setAttribute("max", this.getMax() + "");
             element.setAttribute("step", this.getStep() + "");
+            element.oninput = () => {
+                this.onChange(element.value);
+            }
             wrapper.appendChild(element);
 
-            if(this.getTicks().length > 0) {
+            if (this.getTicks().length > 0) {
                 for (let tick of this.getTicks()) {
                     let tickElement = document.createElement("div");
                     tickElement.classList.add("slider-tick");
@@ -26,6 +30,20 @@ class SliderItem extends Item {
             }
         }
         return wrapper;
+    }
+
+    onChange(value) {
+        if (this.callback !== null && this.callback !== undefined) {
+            this.callback(value);
+        }
+    }
+
+    updateCurrentValue(value = this.getCurrentValue()) {
+        this.element.children[0].value = Math.round(value) + "";
+    }
+
+    getCurrentValue() {
+        return 50;
     }
 
     getMin() {

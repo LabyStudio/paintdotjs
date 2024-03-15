@@ -64,4 +64,5 @@ class AppWorkspace extends AppView {
         return this.activeDocumentWorkspace;
     }
 
+
 }

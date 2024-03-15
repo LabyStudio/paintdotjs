@@ -4,6 +4,10 @@ class ViewZoomPercentageItem extends DropMenuItem {
         super("zoomPercentageItem");
 
         this.add(new TextFieldItem("zoomPercentageField"));
+
+        this.app.on("document:visible_document_rectangle_update", rectangle => {
+            this.updateText();
+        });
     }
 
     isDropUp() {
@@ -11,6 +15,10 @@ class ViewZoomPercentageItem extends DropMenuItem {
     }
 
     getText() {
-        return "100%";
+        let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
+        if (activeDocumentWorkspace === null) {
+            return "100%";
+        }
+        return Math.round(activeDocumentWorkspace.getZoom() * 100) + "%";
     }
 }

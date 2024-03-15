@@ -15,6 +15,13 @@ class MenuItem extends Item {
         return element;
     }
 
+    updateText(text = this.getText()) {
+        if (this.element === null) {
+            return;
+        }
+        this.element.innerHTML = text;
+    }
+
     getText() {
         return i18n(this.id + ".text");
     }
