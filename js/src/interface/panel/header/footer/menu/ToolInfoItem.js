@@ -5,7 +5,7 @@ class ToolInfoItem extends LabelMenuItem {
     }
 
     getSelectedTool() {
-        let selector = PanelRegistry.INSTANCE.get("toolMenu").get("toolStripChooser.chooseToolButton");
+        let selector = PanelRegistry.get("toolMenu").get("toolStripChooser.chooseToolButton");
         return selector.getSelectedEntry();
     }
 

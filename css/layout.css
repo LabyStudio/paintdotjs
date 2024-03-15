@@ -26,9 +26,14 @@ header {
     border-bottom-width: 1px;
 }
 
-#canvas {
+#view {
     flex: 1;
-    overflow: hidden;
+    overflow: scroll;
+}
+
+#canvas {
+    width: fit-content;
+    height: fit-content;
 }
 
 footer {

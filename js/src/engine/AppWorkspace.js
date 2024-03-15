@@ -5,9 +5,13 @@ class AppWorkspace extends AppView {
 
         this.documentWorkspaces = [];
         this.activeDocumentWorkspace = null;
+        this.activeTool = null;
     }
 
     initialize() {
+        PanelRegistry.initialize();
+        ToolRegistry.initialize();
+
         super.initialize();
     }
 
@@ -58,6 +62,60 @@ class AppWorkspace extends AppView {
                 .replace("{1}", PdjInfo.productName() + " " + PdjInfo.version() + " " + (isApp ? "App" : "Web"));
             setTitle(title);
         }
+    }
+
+    onMouseDown(mouseX, mouseY, button) {
+        // Handle mouse down for active tool
+        if (this.activeTool !== null) {
+            if (this.activeTool.onMouseDown(mouseX, mouseY, button)) {
+                return true;
+            }
+        }
+
+        if (super.onMouseDown(mouseX, mouseY, button)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    onMouseMove(mouseX, mouseY) {
+        // Handle mouse move for active tool
+        if (this.activeTool !== null) {
+            if (this.activeTool.onMouseMove(mouseX, mouseY)) {
+                return true;
+            }
+        }
+
+        if (super.onMouseMove(mouseX, mouseY)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    onMouseUp(mouseX, mouseY, button) {
+        // Handle mouse up for active tool
+        if (this.activeTool !== null) {
+            if (this.activeTool.onMouseUp(mouseX, mouseY, button)) {
+                return true;
+            }
+        }
+
+        if (super.onMouseUp(mouseX, mouseY, button)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    setActiveTool(tool) {
+        this.activeTool = tool;
+        tool.onActivate();
+    }
+
+    getActiveTool() {
+        return this.activeTool;
     }
 
     getActiveDocumentWorkspace() {

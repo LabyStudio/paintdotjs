@@ -1,4 +1,3 @@
-PanelRegistry.initialize();
 
 /*
 if (!isApp) {

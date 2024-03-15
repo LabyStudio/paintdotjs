@@ -17,12 +17,13 @@ input[type="text"]:focus-visible {
 .slider-wrapper {
     display: flex;
     position: relative;
+    height: 16px;
 }
 
 .slider-tick {
     position: absolute;
     left: 0;
-    top: 0;
+    top: 5px;
     width: 1.6px;
     height: 10px;
     background-color: #dadada;
@@ -31,10 +32,12 @@ input[type="text"]:focus-visible {
 }
 
 input {
+    background-color: transparent;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     z-index: 1;
+    width: 85px;
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
@@ -86,4 +89,9 @@ input[type="range"]::-moz-range-thumb {
     height: 9px;
     top: 50%;
     transform: translateY(-50%);
+}
+
+/* ------------ Scrollbar ------------ */
+:root {
+    scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-background);
 }

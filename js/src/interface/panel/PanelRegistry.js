@@ -1,35 +1,31 @@
 class PanelRegistry {
 
-    constructor() {
-        PanelRegistry.INSTANCE = this;
-
+    static {
         this.panels = {};
-
-        this.register(new MainMenu());
-        this.register(new CommonMenu());
-        this.register(new SettingsMenu());
-        this.register(new ToolMenu());
-        this.register(new FooterMenu());
     }
 
-    register(panel) {
+    static initialize() {
+        PanelRegistry.register(new MainMenu());
+        PanelRegistry.register(new CommonMenu());
+        PanelRegistry.register(new SettingsMenu());
+        PanelRegistry.register(new ToolMenu());
+        PanelRegistry.register(new FooterMenu());
+    }
+
+    static register(panel) {
         this.panels[panel.id] = panel;
         panel.initialize(null);
     }
 
-    unregister(id) {
+    static unregister(id) {
         delete this.panels[id];
     }
 
-    get(id) {
+    static get(id) {
         return this.panels[id];
     }
 
-    list() {
+    static list() {
         return Object.values(this.panels);
-    }
-
-    static initialize() {
-        new PanelRegistry();
     }
 }

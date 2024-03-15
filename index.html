@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <link rel="icon" href="./assets/icon.png" type="image/x-icon">
     <title id="title">paint.js</title>
 
@@ -28,7 +29,9 @@
     </header>
 
     <!-- Content -->
-    <canvas id="canvas"></canvas>
+    <div id="view">
+        <canvas id="canvas"></canvas>
+    </div>
 
     <footer>
         <div id="footerMenu" class="strip"></div>
@@ -86,6 +89,9 @@
 <script src="./js/src/engine/util/Rectangle.js"></script>
 <script src="./js/src/engine/util/Region.js"></script>
 <script src="./js/src/engine/AppWorkspace.js"></script>
+<script src="./js/src/engine/document/tool/Tool.js"></script>
+<script src="./js/src/engine/document/tool/tool/PanTool.js"></script>
+<script src="./js/src/engine/document/tool/ToolRegistry.js"></script>
 <script src="./js/src/engine/document/DocumentView.js"></script>
 <script src="./js/src/engine/document/Document.js"></script>
 <script src="./js/src/engine/document/DocumentWorkspace.js"></script>

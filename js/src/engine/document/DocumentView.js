@@ -24,39 +24,45 @@ class DocumentView {
     fitVisibleDocumentRectangle() {
         let margin = 40;
 
-        let screenWidth = this.app.getWidth() - margin * 2;
-        let screenHeight = this.app.getHeight() - margin * 2;
+        let viewWidth = this.app.getViewWidth() - margin * 2;
+        let viewHeight = this.app.getViewHeight() - margin * 2;
+
+        let canvasCenterX = this.app.getCanvasWidth() / 2;
+        let canvasCenterY = this.app.getCanvasHeight() / 2;
 
         let documentWidth = this.getWidth();
         let documentHeight = this.getHeight();
 
-        if (documentWidth > screenWidth || documentHeight > screenHeight) {
+        let x = canvasCenterX - viewWidth / 2 + margin;
+        let y = canvasCenterY - viewHeight / 2 + margin;
+
+        if (documentWidth > viewWidth || documentHeight > viewHeight) {
             let documentAspectRatio = documentWidth / documentHeight;
-            let screenAspectRatio = screenWidth / screenHeight;
+            let screenAspectRatio = viewWidth / viewHeight;
 
             if (documentAspectRatio > screenAspectRatio) {
                 // Fit to width
-                let height = screenWidth / documentAspectRatio;
+                let height = viewWidth / documentAspectRatio;
                 this.visibleDocumentRectangle = Rectangle.relative(
-                    margin,
-                    margin + (screenHeight - height) / 2,
-                    screenWidth,
+                    x,
+                    y + (viewHeight - height) / 2,
+                    viewWidth,
                     height
                 );
             } else {
                 // Fit to height
-                let width = screenHeight * documentAspectRatio;
+                let width = viewHeight * documentAspectRatio;
                 this.visibleDocumentRectangle = Rectangle.relative(
-                    margin + (screenWidth - width) / 2,
-                    margin,
+                    x + (viewWidth - width) / 2,
+                    y,
                     width,
-                    screenHeight
+                    viewHeight
                 );
             }
         } else {
             this.visibleDocumentRectangle = Rectangle.relative(
-                margin + (screenWidth - documentWidth) / 2,
-                margin + (screenHeight - documentHeight) / 2,
+                x + (viewWidth - documentWidth) / 2,
+                y + (viewHeight - documentHeight) / 2,
                 documentWidth,
                 documentHeight
             );

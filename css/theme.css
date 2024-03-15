@@ -12,8 +12,15 @@
     --color-menu-item-hover: #18324B;
     --color-menu-item-border: #074F97;
 
+    /* Scrollbar */
+    --color-scrollbar-background: #171717;
+    --color-scrollbar-thumb: #4D4D4D;
+
     font-family: 'Microsoft Sans Serif', sans-serif;
     font-size: 8.25pt;
+
+    color-scheme: dark;
+    scroll-behavior: unset;
 }
 
 /* include ./assets/microsoft_sans_serif.ttf */

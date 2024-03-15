@@ -44,4 +44,13 @@ class ToolSelector extends SelectorMenuItem {
             this.add(entry);
         }
     }
+
+    setSelectedId(id) {
+        super.setSelectedId(id);
+
+        let tool = ToolRegistry.get(id);
+        if (tool !== null) {
+            this.app.setActiveTool(tool);
+        }
+    }
 }
