@@ -33,8 +33,8 @@ class DocumentView {
         let documentWidth = this.getWidth();
         let documentHeight = this.getHeight();
 
-        let x = canvasCenterX - viewWidth / 2 + margin;
-        let y = canvasCenterY - viewHeight / 2 + margin;
+        let x = canvasCenterX - viewWidth / 2;
+        let y = canvasCenterY - viewHeight / 2;
 
         if (documentWidth > viewWidth || documentHeight > viewHeight) {
             let documentAspectRatio = documentWidth / documentHeight;

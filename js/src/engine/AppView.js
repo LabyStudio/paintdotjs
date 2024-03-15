@@ -19,18 +19,14 @@ class AppView {
         // Center view
         this.centerView();
 
+        // Start rendering
         this.render();
 
+        window.addEventListener('load', () => {
+            this.onResize(this.getViewWidth(), this.getViewHeight());
+        });
         window.addEventListener('resize', () => {
-            this.updateCanvasBounds();
-
-            // TODO change logic after implementing movement of the document
-            let documentWorkspace = this.getActiveDocumentWorkspace();
-            if (documentWorkspace !== null) {
-                documentWorkspace.fitVisibleDocumentRectangle();
-            }
-
-            this.fire("app:resize", this.getViewWidth(), this.getViewHeight());
+            this.onResize(this.getViewWidth(), this.getViewHeight());
         });
 
         // Cancel website zoom
@@ -77,7 +73,7 @@ class AppView {
         });
 
         // Mouse up listener
-        this.canvas.addEventListener('mouseup', event => {
+        document.addEventListener('mouseup', event => {
             let x = event.clientX;
             let y = event.clientY;
             this.fire("document:mouseup", x, y, event.button);
@@ -146,9 +142,23 @@ class AppView {
     }
 
     centerView() {
-        let viewElement = this.getViewElement();
-        viewElement.scrollLeft = (viewElement.scrollWidth - viewElement.clientWidth) / 2;
-        viewElement.scrollTop = (viewElement.scrollHeight - viewElement.clientHeight) / 2;
+        this.setViewPosition(
+            this.getCanvasWidth() / 2 - this.getViewWidth() / 2,
+            this.getCanvasHeight() / 2 - this.getViewHeight() / 2
+        )
+    }
+
+    onResize(width, height) {
+        this.updateCanvasBounds();
+
+        // TODO change logic after implementing movement of the document
+        let documentWorkspace = this.getActiveDocumentWorkspace();
+        if (documentWorkspace !== null) {
+            documentWorkspace.fitVisibleDocumentRectangle();
+            this.centerView();
+        }
+
+        this.fire("app:resize", width, height);
     }
 
     onMouseDown(mouseX, mouseY, button) {

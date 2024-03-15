@@ -33,17 +33,27 @@ function createWindow() {
     mainWindow.loadFile('index.html')
     mainWindow.show()
 
-    mainWindow.webContents.openDevTools()
+    mainWindow.webContents.on('before-input-event', (_, input) => {
+        if (input.type === 'keyDown' && input.key === 'F12') {
+            mainWindow.webContents.isDevToolsOpened()
+                ? mainWindow.webContents.closeDevTools()
+                : mainWindow.webContents.openDevTools({mode: 'undocked'});
+        }
+    });
 }
 
 app.whenReady().then(() => {
-    createWindow()
+    createWindow();
 
     app.on('activate', function () {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow()
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow();
+        }
     })
 })
 
 app.on('window-all-closed', function () {
-    if (process.platform !== 'darwin') app.quit()
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 })

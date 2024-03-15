@@ -1,4 +1,5 @@
 const {CustomTitlebar, TitlebarColor} = require('custom-electron-titlebar')
+const {app, BrowserWindow, Menu} = require('electron')
 
 window.PDJVERSION = require('../../../package.json').version;
 
