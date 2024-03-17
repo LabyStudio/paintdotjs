@@ -19,6 +19,8 @@ body {
     flex-direction: column;
 }
 
+/* ------------ Editor ------------ */
+
 header {
     height: 82px;
     background-color: var(--color-menu-background);
@@ -26,15 +28,33 @@ header {
     border-bottom-width: 1px;
 }
 
+#editor {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
 #view {
     flex: 1;
     overflow: scroll;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#environment {
+    position: absolute;
 }
 
 #canvas {
-    width: fit-content;
-    height: fit-content;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
+
+/* ------------ Footer ------------ */
 
 footer {
     width: 100%;

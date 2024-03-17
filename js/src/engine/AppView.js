@@ -4,10 +4,13 @@ class AppView {
 
     constructor() {
         this.canvas = document.getElementById('canvas');
+        this.editor = document.getElementById('editor');
+        this.environment = document.getElementById('environment');
+        this.view = document.getElementById('view');
+
         this.context = this.canvas.getContext('2d');
 
         this.panTool = null;
-
         this.listeners = {};
 
         this.updateCanvasBounds();
@@ -51,7 +54,7 @@ class AppView {
         document.addEventListener('contextmenu', event => event.preventDefault());
 
         // Mouse down listener
-        this.canvas.addEventListener('mousedown', event => {
+        this.environment.addEventListener('mousedown', event => {
             let x = event.clientX;
             let y = event.clientY;
             this.fire("document:mousedown", x, y, event.button);
@@ -62,7 +65,7 @@ class AppView {
         });
 
         // Mouse move listener
-        this.canvas.addEventListener('mousemove', event => {
+        this.environment.addEventListener('mousemove', event => {
             let x = event.clientX;
             let y = event.clientY;
             this.fire("document:mousemove", x, y);
@@ -84,7 +87,7 @@ class AppView {
         });
 
         // Disable smooth scrolling
-        this.getViewElement().addEventListener('wheel', event => {
+        this.view.addEventListener('wheel', event => {
             if (event.ctrlKey) {
                 return;
             }
@@ -106,9 +109,12 @@ class AppView {
         let pan = this.getViewElement();
         let bounds = pan.getBoundingClientRect();
 
-        // Double the resolution to make space to pan the document
-        this.canvas.width = bounds.width * AppView.PAN_SCALE_FACTOR;
-        this.canvas.height = bounds.height * AppView.PAN_SCALE_FACTOR;
+        this.canvas.width = bounds.width;
+        this.canvas.height = bounds.height;
+
+        let environment = document.getElementById("environment")
+        environment.style.width = bounds.width * 2 + "px";
+        environment.style.height = bounds.height * 2 + "px";
     }
 
     render() {
@@ -130,21 +136,21 @@ class AppView {
         // Render the composition of the active document workspace
         this.context.drawImage(
             surface.canvas,
-            view.getLeft(),
-            view.getTop(),
+            view.getLeft() - this.getViewX(),
+            view.getTop() - this.getViewY(),
             view.getWidth(),
             view.getHeight()
         );
     }
 
     setCursor(cursor) {
-        this.canvas.style.cursor = cursor;
+        this.editor.style.cursor = cursor;
     }
 
     centerView() {
         this.setViewPosition(
-            this.getCanvasWidth() / 2 - this.getViewWidth() / 2,
-            this.getCanvasHeight() / 2 - this.getViewHeight() / 2
+            this.getEnvironmentWidth() / 2 - this.getViewWidth() / 2,
+            this.getEnvironmentHeight() / 2 - this.getViewHeight() / 2
         )
     }
 
@@ -186,49 +192,56 @@ class AppView {
     }
 
     setViewPosition(x, y) {
-        let viewElement = this.getViewElement();
-        viewElement.scrollLeft = x;
-        viewElement.scrollTop = y;
+        this.view.scrollLeft = x;
+        this.view.scrollTop = y;
     }
 
     setViewX(x) {
-        this.getViewElement().scrollLeft = x;
+        this.view.scrollLeft = x;
     }
 
     setViewY(y) {
-        this.getViewElement().scrollTop = y;
+        this.view.scrollTop = y;
     }
 
     getViewX() {
-        return this.getViewElement().scrollLeft;
+        return this.view.scrollLeft;
     }
 
     getViewY() {
-        return this.getViewElement().scrollTop;
+        return this.view.scrollTop;
     }
 
     getActiveDocumentWorkspace() {
         return null;
     }
 
-    getCanvasWidth() {
-        return this.canvas.width;
+    getEnvironmentWidth() {
+        return this.environment.clientWidth;
     }
 
-    getCanvasHeight() {
-        return this.canvas.height;
+    getEnvironmentHeight() {
+        return this.environment.clientHeight;
     }
 
     getViewWidth() {
-        return this.getViewElement().clientWidth;
+        return this.view.clientWidth;
     }
 
     getViewHeight() {
-        return this.getViewElement().clientHeight;
+        return this.view.clientHeight;
     }
 
     getViewElement() {
-        return this.canvas.parentElement;
+        return this.view;
+    }
+
+    getEditorElement() {
+        return this.editor;
+    }
+
+    getEnvironmentElement() {
+        return this.environment;
     }
 
     on(event, callback) {
