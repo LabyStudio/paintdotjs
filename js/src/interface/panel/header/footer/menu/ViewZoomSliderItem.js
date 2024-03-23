@@ -3,7 +3,7 @@ class ViewZoomSliderItem extends SliderItem {
     constructor() {
         super("menuViewZoomSlider");
 
-        this.app.on("document:visible_document_rectangle_update", rectangle => {
+        this.app.on("document:update_viewport", rectangle => {
             this.updateCurrentValue();
         });
     }

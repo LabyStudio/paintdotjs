@@ -5,9 +5,14 @@ class DocumentView {
         this.document = null
         this.compositionSurface = null;
 
-        this.visibleDocumentRectangle = Rectangle.relative(0, 0, 0, 0);
+        this.viewportX = 0;
+        this.viewportY = 0;
 
-        this.app.on("document:visible_document_rectangle_update", () => {
+        this.zoom = 1;
+
+        this.app.on("document:update_viewport", () => {
+            this.app.setViewPosition(this.viewportX, this.viewportY);
+
             this.update();
         });
     }
@@ -21,7 +26,7 @@ class DocumentView {
         }
     }
 
-    fitVisibleDocumentRectangle() {
+    fitViewport() {
         let margin = 40;
 
         let viewWidth = this.app.getViewWidth() - margin * 2;
@@ -43,32 +48,21 @@ class DocumentView {
             if (documentAspectRatio > screenAspectRatio) {
                 // Fit to width
                 let height = viewWidth / documentAspectRatio;
-                this.visibleDocumentRectangle = Rectangle.relative(
-                    x,
-                    y + (viewHeight - height) / 2,
-                    viewWidth,
-                    height
-                );
+
+                this.zoom = viewWidth / documentWidth;
+                this.viewportX = x;
             } else {
                 // Fit to height
                 let width = viewHeight * documentAspectRatio;
-                this.visibleDocumentRectangle = Rectangle.relative(
-                    x + (viewWidth - width) / 2,
-                    y,
-                    width,
-                    viewHeight
-                );
+
+                this.zoom = viewHeight / documentHeight;
+                this.viewportY = y;
             }
-        } else {
-            this.visibleDocumentRectangle = Rectangle.relative(
-                x + (viewWidth - documentWidth) / 2,
-                y + (viewHeight - documentHeight) / 2,
-                documentWidth,
-                documentHeight
-            );
         }
 
-        this.app.fire("document:visible_document_rectangle_update", this.visibleDocumentRectangle);
+        this.centerView();
+
+        this.app.fire("document:update_viewport");
     }
 
     update() {
@@ -77,10 +71,6 @@ class DocumentView {
 
     getCompositionSurface() {
         return this.compositionSurface;
-    }
-
-    getVisibleDocumentRectangle() {
-        return this.visibleDocumentRectangle;
     }
 
     getWidth() {
@@ -92,19 +82,47 @@ class DocumentView {
     }
 
     getZoom() {
-        return this.visibleDocumentRectangle.getWidth() / this.getWidth();
+        return this.zoom;
     }
 
     setZoom(factor) {
-        let width = this.getWidth() * factor;
-        let height = this.getHeight() * factor;
-        this.visibleDocumentRectangle = Rectangle.relative(
-            this.visibleDocumentRectangle.getLeft() + (this.visibleDocumentRectangle.getWidth() - width) / 2,
-            this.visibleDocumentRectangle.getTop() + (this.visibleDocumentRectangle.getHeight() - height) / 2,
-            width,
-            height
-        );
-        this.app.fire("document:visible_document_rectangle_update", this.visibleDocumentRectangle);
+        let prevZoom = Math.max(this.zoom, 1);
+        let prevWidth = this.getWidth() * prevZoom;
+        let prevHeight = this.getHeight() * prevZoom;
+
+        this.zoom = factor;
+
+        let newZoom = Math.max(this.zoom, 1);
+        let newWidth = this.getWidth() * newZoom;
+        let newHeight = this.getHeight() * newZoom;
+
+        this.viewportX = this.viewportX * (newWidth / prevWidth);
+        this.viewportY = this.viewportY * (newHeight / prevHeight);
+
+        this.app.fire("document:update_viewport");
+
+        this.app.updateCanvasBounds();
+    }
+
+    setViewPosition(x, y) {
+        this.viewportX = x;
+        this.viewportY = y;
+
+        this.app.fire("document:update_viewport");
+    }
+
+    getViewportX() {
+        return this.viewportX;
+    }
+
+    getViewportY() {
+        return this.viewportY;
+    }
+
+    centerView() {
+        let x = this.app.getViewWidth() / 2;
+        let y = this.app.getViewHeight() / 2;
+        this.setViewPosition(x, y);
     }
 
 }

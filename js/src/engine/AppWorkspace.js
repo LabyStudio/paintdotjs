@@ -22,7 +22,7 @@ class AppWorkspace extends AppView {
         // Create document with initial size
         let document = new Document(width, height);
         documentWorkspace.setDocument(document);
-        documentWorkspace.fitVisibleDocumentRectangle();
+        documentWorkspace.fitViewport();
 
         // Add default background layer
         let backgroundLayer = Layer.createBackgroundLayer(width, height);

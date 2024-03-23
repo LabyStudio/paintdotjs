@@ -3,8 +3,6 @@ class ToolSelector extends SelectorMenuItem {
     constructor() {
         super("toolStripChooser.chooseToolButton");
 
-        this.setSelectedId("paintBrushTool")
-
         let toolIds = [
             "rectangleSelectTool",
             "moveTool",
@@ -43,6 +41,9 @@ class ToolSelector extends SelectorMenuItem {
 
             this.add(entry);
         }
+
+        // this.setSelectedId("paintBrushTool")
+        this.setSelectedId("panTool")
     }
 
     setSelectedId(id) {

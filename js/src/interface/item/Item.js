@@ -28,7 +28,7 @@ class Item extends UIElement {
     }
 
     updateDocument() {
-        if (this.element === null) {
+        if (this.element === null || this.element.parentElement === null) {
             return;
         }
 

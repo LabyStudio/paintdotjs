@@ -12,15 +12,12 @@ class AppView {
 
         this.panTool = null;
         this.listeners = {};
-
-        this.updateCanvasBounds();
     }
 
     initialize() {
         this.panTool = ToolRegistry.get("panTool");
 
-        // Center view
-        this.centerView();
+        this.updateCanvasBounds();
 
         // Start rendering
         this.render();
@@ -94,27 +91,43 @@ class AppView {
 
             event.preventDefault();
 
-            let viewElement = this.getViewElement();
             if (event.shiftKey) {
                 // noinspection JSSuspiciousNameCombination
-                viewElement.scrollLeft += event.deltaY;
+                this.view.scrollLeft += event.deltaY;
             } else {
-                viewElement.scrollTop += event.deltaY;
-                viewElement.scrollLeft += event.deltaX;
+                this.view.scrollTop += event.deltaY;
+                this.view.scrollLeft += event.deltaX;
             }
         }, {passive: false});
+
+        this.view.addEventListener('scroll', event => {
+            let documentWorkspace = this.getActiveDocumentWorkspace();
+            if (documentWorkspace === null) {
+                return;
+            }
+            documentWorkspace.setViewPosition(this.getViewX(), this.getViewY());
+        });
     }
 
     updateCanvasBounds() {
-        let pan = this.getViewElement();
-        let bounds = pan.getBoundingClientRect();
+        let viewWidth = this.getViewWidth();
+        let viewHeight = this.getViewHeight();
 
-        this.canvas.width = bounds.width;
-        this.canvas.height = bounds.height;
+        this.canvas.width = viewWidth;
+        this.canvas.height = viewHeight;
 
+        let documentWorkspace = this.getActiveDocumentWorkspace();
+        let documentWidth = documentWorkspace === null ? 0 : documentWorkspace.getWidth();
+        let documentHeight = documentWorkspace === null ? 0 : documentWorkspace.getHeight();
+        let zoom = documentWorkspace === null ? 1 : documentWorkspace.getZoom();
+
+        let envWidth = Math.max(viewWidth + documentWidth * zoom, viewWidth * 2);
+        let envHeight = Math.max(viewHeight + documentHeight * zoom, viewHeight * 2);
+
+        // Update environment size
         let environment = document.getElementById("environment")
-        environment.style.width = bounds.width * 2 + "px";
-        environment.style.height = bounds.height * 2 + "px";
+        environment.style.width = envWidth + "px";
+        environment.style.height = envHeight + "px";
     }
 
     render() {
@@ -128,30 +141,37 @@ class AppView {
         }
 
         let surface = documentWorkspace.getCompositionSurface();
-        let view = documentWorkspace.getVisibleDocumentRectangle();
+
+        let viewportX = documentWorkspace.getViewportX();
+        let viewportY = documentWorkspace.getViewportY();
+
+        let viewWidth = this.getViewWidth();
+        let viewHeight = this.getViewHeight();
+
+        let documentWidth = documentWorkspace.getWidth();
+        let documentHeight = documentWorkspace.getHeight();
+
+        let zoom = documentWorkspace.getZoom();
 
         // Clear
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.context.clearRect(0, 0, viewWidth, viewHeight);
+
+        let offsetX = viewWidth - Math.min((documentWidth * zoom) / 2, viewWidth / 2);
+        let offsetY = viewHeight - Math.min((documentHeight * zoom) / 2, viewHeight / 2);
 
         // Render the composition of the active document workspace
+        this.context.imageSmoothingEnabled = false;
         this.context.drawImage(
             surface.canvas,
-            view.getLeft() - this.getViewX(),
-            view.getTop() - this.getViewY(),
-            view.getWidth(),
-            view.getHeight()
+            -viewportX + offsetX,
+            -viewportY + offsetY,
+            documentWidth * zoom,
+            documentHeight * zoom
         );
     }
 
     setCursor(cursor) {
         this.editor.style.cursor = cursor;
-    }
-
-    centerView() {
-        this.setViewPosition(
-            this.getEnvironmentWidth() / 2 - this.getViewWidth() / 2,
-            this.getEnvironmentHeight() / 2 - this.getViewHeight() / 2
-        )
     }
 
     onResize(width, height) {
@@ -160,8 +180,7 @@ class AppView {
         // TODO change logic after implementing movement of the document
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
-            documentWorkspace.fitVisibleDocumentRectangle();
-            this.centerView();
+            documentWorkspace.fitViewport();
         }
 
         this.fire("app:resize", width, height);

@@ -5,7 +5,7 @@ class ViewZoomPercentageItem extends DropMenuItem {
 
         this.add(new TextFieldItem("zoomPercentageField"));
 
-        this.app.on("document:visible_document_rectangle_update", rectangle => {
+        this.app.on("document:update_viewport", rectangle => {
             this.updateText();
         });
     }

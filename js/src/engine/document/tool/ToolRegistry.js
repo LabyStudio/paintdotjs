@@ -7,6 +7,15 @@ class ToolRegistry {
     static initialize() {
         // Register all tools
         ToolRegistry.register(new PanTool());
+
+        // Set default tool
+        let selectedToolId = PanelRegistry.get("toolMenu")
+            .get("toolStripChooser.chooseToolButton")
+            .getSelectedId();
+        let defaultTool = this.get(selectedToolId);
+        if (defaultTool !== null) {
+            app.setActiveTool(defaultTool);
+        }
     }
 
     static register(tool) {
