@@ -38,9 +38,12 @@ class AppView {
                 let delta = event.deltaY;
                 let activeDocumentWorkspace = this.getActiveDocumentWorkspace();
                 if (activeDocumentWorkspace !== null) {
-                    let zoom = activeDocumentWorkspace.getZoom() - delta / 1000;
-                    if (zoom < 0.1) {
-                        zoom = 0.1; // Limit zoom to 1%
+                    let zoom = activeDocumentWorkspace.getZoom() - delta * activeDocumentWorkspace.getZoom() / 1000;
+                    if (zoom < 0.01) {
+                        zoom = 0.01; // Limit zoom to 1%
+                    }
+                    if (zoom > 100) {
+                        zoom = 100; // Limit zoom to 10000%
                     }
                     activeDocumentWorkspace.setZoom(zoom);
                 }
