@@ -10,6 +10,9 @@ class AppView {
 
         this.context = this.canvas.getContext('2d');
 
+        this.lastMouseX = 0;
+        this.lastMouseY = 0;
+
         this.panTool = null;
         this.listeners = {};
     }
@@ -31,6 +34,9 @@ class AppView {
 
         // Cancel website zoom
         window.addEventListener('wheel', event => {
+            let x = event.clientX - this.editor.offsetLeft;
+            let y = event.clientY - this.editor.offsetTop;
+
             if (event.ctrlKey) {
                 event.preventDefault();
 
@@ -45,7 +51,8 @@ class AppView {
                     if (zoom > 100) {
                         zoom = 100; // Limit zoom to 10000%
                     }
-                    activeDocumentWorkspace.setZoom(zoom);
+
+                    activeDocumentWorkspace.setZoom(zoom, x, y);
                 }
             }
         }, {passive: false});
@@ -54,9 +61,9 @@ class AppView {
         document.addEventListener('contextmenu', event => event.preventDefault());
 
         // Mouse down listener
-        this.environment.addEventListener('mousedown', event => {
-            let x = event.clientX;
-            let y = event.clientY;
+        this.editor.addEventListener('mousedown', event => {
+            let x = event.clientX - this.editor.offsetLeft;
+            let y = event.clientY - this.editor.offsetTop;
             this.fire("document:mousedown", x, y, event.button);
 
             this.onMouseDown(x, y, event.button);
@@ -65,9 +72,9 @@ class AppView {
         });
 
         // Mouse move listener
-        this.environment.addEventListener('mousemove', event => {
-            let x = event.clientX;
-            let y = event.clientY;
+        this.editor.addEventListener('mousemove', event => {
+            let x = event.clientX - this.editor.offsetLeft;
+            let y = event.clientY - this.editor.offsetTop;
             this.fire("document:mousemove", x, y);
 
             this.onMouseMove(x, y);
@@ -77,8 +84,8 @@ class AppView {
 
         // Mouse up listener
         document.addEventListener('mouseup', event => {
-            let x = event.clientX;
-            let y = event.clientY;
+            let x = event.clientX - this.editor.offsetLeft;
+            let y = event.clientY - this.editor.offsetTop;
             this.fire("document:mouseup", x, y, event.button);
 
             this.onMouseUp(x, y, event.button);
@@ -120,12 +127,22 @@ class AppView {
         this.canvas.height = viewHeight;
 
         let documentWorkspace = this.getActiveDocumentWorkspace();
-        let documentWidth = documentWorkspace === null ? 0 : documentWorkspace.getWidth();
-        let documentHeight = documentWorkspace === null ? 0 : documentWorkspace.getHeight();
-        let zoom = documentWorkspace === null ? 1 : documentWorkspace.getZoom();
+        if (documentWorkspace === null) {
+            return;
+        }
+
+        let documentWidth = documentWorkspace.getWidth();
+        let documentHeight = documentWorkspace.getHeight();
+        let zoom = documentWorkspace.getZoom();
 
         let envWidth = Math.max(viewWidth + documentWidth * zoom, viewWidth * 2);
         let envHeight = Math.max(viewHeight + documentHeight * zoom, viewHeight * 2);
+
+        let offsetX = this.getEnvironmentWidth() - envWidth;
+        let offsetY = this.getEnvironmentHeight() - envHeight;
+
+        // Shift the view position so it stays centered
+        documentWorkspace.shiftViewPosition(-offsetX / 2, -offsetY / 2);
 
         // Update environment size
         let environment = document.getElementById("environment")
@@ -159,18 +176,31 @@ class AppView {
         // Clear
         this.context.clearRect(0, 0, viewWidth, viewHeight);
 
-        let offsetX = viewWidth - Math.min((documentWidth * zoom) / 2, viewWidth / 2);
-        let offsetY = viewHeight - Math.min((documentHeight * zoom) / 2, viewHeight / 2);
+        let x = viewWidth - Math.min(documentWidth * zoom, viewWidth) / 2 - viewportX;
+        let y = viewHeight - Math.min(documentHeight * zoom, viewHeight) / 2 - viewportY;
+
+        let renderWidth = documentWidth * zoom;
+        let renderHeight = documentHeight * zoom;
 
         // Render the composition of the active document workspace
         this.context.imageSmoothingEnabled = false;
         this.context.drawImage(
             surface.canvas,
-            -viewportX + offsetX,
-            -viewportY + offsetY,
-            documentWidth * zoom,
-            documentHeight * zoom
+            x,
+            y,
+            renderWidth,
+            renderHeight
         );
+
+        // Debug
+        this.context.font = "16px Arial";
+        this.context.fillStyle = "white";
+        this.context.fillText(viewportX + ", " + viewportY, 10, 20);
+        this.context.fillText(documentWidth + "x" + documentHeight, 10, 20 + 16);
+        this.context.fillText(parseInt(zoom * 100) / 100, 10, 20 + 16 * 2);
+        this.context.fillText(parseInt(renderWidth) + "x" + parseInt(renderHeight), 10, 20 + 16 * 4);
+        this.context.fillText(parseInt(x) + ", " + parseInt(y), 10, 20 + 16 * 5);
+        this.context.fillText(parseInt(this.getLastMouseX()) + ", " + parseInt(this.getLastMouseY()), 10, 20 + 16 * 6);
     }
 
     setCursor(cursor) {
@@ -198,6 +228,9 @@ class AppView {
     }
 
     onMouseMove(mouseX, mouseY) {
+        this.lastMouseX = mouseX;
+        this.lastMouseY = mouseY;
+
         // Handle mouse move for middle mouse click pan
         if (this.panTool.isTracking()) {
             return this.panTool.onMouseMove(mouseX, mouseY);
@@ -264,6 +297,14 @@ class AppView {
 
     getEnvironmentElement() {
         return this.environment;
+    }
+
+    getLastMouseX() {
+        return this.lastMouseX;
+    }
+
+    getLastMouseY() {
+        return this.lastMouseY;
     }
 
     on(event, callback) {

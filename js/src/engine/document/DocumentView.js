@@ -85,28 +85,61 @@ class DocumentView {
         return this.zoom;
     }
 
-    setZoom(factor) {
-        let prevZoom = Math.max(this.zoom, 1);
+    setZoom(
+        factor,
+        pivotX = this.app.getViewWidth() / 2,
+        pivotY = this.app.getViewHeight() / 2
+    ) {
+        let viewWidth = this.app.getViewWidth();
+        let viewHeight = this.app.getViewHeight();
+
+        let prevZoom = this.zoom;
         let prevWidth = this.getWidth() * prevZoom;
         let prevHeight = this.getHeight() * prevZoom;
 
+        let newWidth = this.getWidth() * factor;
+        let newHeight = this.getHeight() * factor;
+
+        let deltaX = (prevWidth - newWidth) / 2;
+        let deltaY = (prevHeight - newHeight) / 2;
+
+        // Previous coordinates for the image to render
+        let prevRenderX = viewWidth - Math.min(prevWidth, viewWidth) / 2 - this.getViewportX();
+        let prevRenderY = viewHeight - Math.min(prevHeight, viewHeight) / 2 - this.getViewportY();
+
+        // The width and height of the image to scale depending on the pivot point
+        let wrappingWidth = (pivotX - prevRenderX) * 2;
+        let wrappingHeight = (pivotY - prevRenderY) * 2;
+
+        // Convert to new scale
+        wrappingWidth = wrappingWidth / prevWidth * newWidth;
+        wrappingHeight = wrappingHeight / prevHeight * newHeight;
+
+        // New coordinates for the image to render
+        let newRenderX = pivotX - wrappingWidth / 2;
+        let newRenderY = pivotY - wrappingHeight / 2;
+
+        deltaX += prevRenderX - newRenderX;
+        deltaY += prevRenderY - newRenderY;
+
+        this.shiftViewPosition(deltaX, deltaY)
+
         this.zoom = factor;
 
-        let newZoom = Math.max(this.zoom, 1);
-        let newWidth = this.getWidth() * newZoom;
-        let newHeight = this.getHeight() * newZoom;
-
-        this.viewportX = this.viewportX * (newWidth / prevWidth);
-        this.viewportY = this.viewportY * (newHeight / prevHeight);
-
-        this.app.fire("document:update_viewport");
-
         this.app.updateCanvasBounds();
+        this.app.fire("document:update_viewport");
     }
 
     setViewPosition(x, y) {
         this.viewportX = x;
         this.viewportY = y;
+
+        this.app.fire("document:update_viewport");
+    }
+
+    shiftViewPosition(deltaX, deltaY) {
+        this.viewportX += deltaX;
+        this.viewportY += deltaY;
 
         this.app.fire("document:update_viewport");
     }
