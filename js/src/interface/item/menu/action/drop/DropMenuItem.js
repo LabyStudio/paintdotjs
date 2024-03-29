@@ -9,6 +9,10 @@ class DropMenuItem extends MenuItem {
 
         this.openMenu = false;
         this.entries = entries;
+
+        this.closeListener = () => {
+            this.close();
+        };
     }
 
     initialize(parent) {
@@ -55,13 +59,13 @@ class DropMenuItem extends MenuItem {
 
         // Register close listener
         setTimeout(_ => {
-            document.addEventListener("click", () => {
-                this.close();
-            }, {once: true});
-        })
+            document.addEventListener("click", this.closeListener, {once: true});
+        });
     }
 
     close() {
+        document.removeEventListener("click", this.closeListener);
+
         let dropMenu = document.querySelector(".drop-menu");
         if (dropMenu) {
             dropMenu.remove();

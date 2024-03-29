@@ -32,8 +32,8 @@ class DocumentView {
         let viewWidth = this.app.getViewWidth() - margin * 2;
         let viewHeight = this.app.getViewHeight() - margin * 2;
 
-        let environmentCenterX = this.app.getEnvironmentWidth() / 2;
-        let environmentCenterY = this.app.getEnvironmentHeight() / 2;
+        let environmentCenterX = this.getEnvironmentWidth() / 2;
+        let environmentCenterY = this.getEnvironmentHeight() / 2;
 
         let documentWidth = this.getWidth();
         let documentHeight = this.getHeight();
@@ -81,6 +81,24 @@ class DocumentView {
         return this.document.getHeight();
     }
 
+    getRenderWidth() {
+        return this.getWidth() * this.zoom;
+    }
+
+    getRenderHeight() {
+        return this.getHeight() * this.zoom;
+    }
+
+    getEnvironmentWidth() {
+        let viewWidth = this.app.getViewWidth();
+        return Math.max(viewWidth + this.getRenderWidth(), viewWidth * 2);
+    }
+
+    getEnvironmentHeight() {
+        let viewHeight = this.app.getViewHeight();
+        return Math.max(viewHeight + this.getRenderHeight(), viewHeight * 2);
+    }
+
     getZoom() {
         return this.zoom;
     }
@@ -90,12 +108,10 @@ class DocumentView {
         pivotX = this.app.getViewWidth() / 2,
         pivotY = this.app.getViewHeight() / 2
     ) {
-        let viewWidth = this.app.getViewWidth();
-        let viewHeight = this.app.getViewHeight();
+        let renderBounds = this.getRenderBounds();
 
-        let prevZoom = this.zoom;
-        let prevWidth = this.getWidth() * prevZoom;
-        let prevHeight = this.getHeight() * prevZoom;
+        let prevWidth = renderBounds.getWidth();
+        let prevHeight = renderBounds.getHeight();
 
         let newWidth = this.getWidth() * factor;
         let newHeight = this.getHeight() * factor;
@@ -104,8 +120,8 @@ class DocumentView {
         let deltaY = (prevHeight - newHeight) / 2;
 
         // Previous coordinates for the image to render
-        let prevRenderX = viewWidth - Math.min(prevWidth, viewWidth) / 2 - this.getViewportX();
-        let prevRenderY = viewHeight - Math.min(prevHeight, viewHeight) / 2 - this.getViewportY();
+        let prevRenderX = renderBounds.getX();
+        let prevRenderY = renderBounds.getY();
 
         // The width and height of the image to scale depending on the pivot point
         let wrappingWidth = (pivotX - prevRenderX) * 2;
@@ -150,6 +166,16 @@ class DocumentView {
 
     getViewportY() {
         return this.viewportY;
+    }
+
+    getRenderBounds() {
+        let viewWidth = this.app.getViewWidth();
+        let viewHeight = this.app.getViewHeight();
+        let renderWidth = this.getRenderWidth();
+        let renderHeight = this.getRenderHeight();
+        let x = viewWidth - Math.min(renderWidth, viewWidth) / 2 - this.viewportX;
+        let y = viewHeight - Math.min(renderHeight, viewHeight) / 2 - this.viewportY;
+        return Rectangle.relative(x, y, renderWidth, renderHeight);
     }
 
     centerView() {

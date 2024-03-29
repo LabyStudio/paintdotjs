@@ -131,15 +131,11 @@ class AppView {
             return;
         }
 
-        let documentWidth = documentWorkspace.getWidth();
-        let documentHeight = documentWorkspace.getHeight();
-        let zoom = documentWorkspace.getZoom();
+        let envWidth = documentWorkspace.getEnvironmentWidth();
+        let envHeight = documentWorkspace.getEnvironmentHeight();
 
-        let envWidth = Math.max(viewWidth + documentWidth * zoom, viewWidth * 2);
-        let envHeight = Math.max(viewHeight + documentHeight * zoom, viewHeight * 2);
-
-        let offsetX = this.getEnvironmentWidth() - envWidth;
-        let offsetY = this.getEnvironmentHeight() - envHeight;
+        let offsetX = this.environment.clientWidth - envWidth;
+        let offsetY = this.environment.clientHeight - envHeight;
 
         // Shift the view position so it stays centered
         documentWorkspace.shiftViewPosition(-offsetX / 2, -offsetY / 2);
@@ -160,47 +156,35 @@ class AppView {
             return;
         }
 
-        let surface = documentWorkspace.getCompositionSurface();
-
-        let viewportX = documentWorkspace.getViewportX();
-        let viewportY = documentWorkspace.getViewportY();
-
-        let viewWidth = this.getViewWidth();
-        let viewHeight = this.getViewHeight();
-
-        let documentWidth = documentWorkspace.getWidth();
-        let documentHeight = documentWorkspace.getHeight();
-
-        let zoom = documentWorkspace.getZoom();
-
         // Clear
-        this.context.clearRect(0, 0, viewWidth, viewHeight);
-
-        let x = viewWidth - Math.min(documentWidth * zoom, viewWidth) / 2 - viewportX;
-        let y = viewHeight - Math.min(documentHeight * zoom, viewHeight) / 2 - viewportY;
-
-        let renderWidth = documentWidth * zoom;
-        let renderHeight = documentHeight * zoom;
+        this.context.clearRect(0, 0, this.getViewWidth(), this.getViewHeight());
 
         // Render the composition of the active document workspace
-        this.context.imageSmoothingEnabled = false;
-        this.context.drawImage(
+        let surface = documentWorkspace.getCompositionSurface();
+        let renderBounds = documentWorkspace.getRenderBounds();
+        ImageUtil.drawImage(
+            this.context,
             surface.canvas,
-            x,
-            y,
-            renderWidth,
-            renderHeight
+            0,
+            0,
+            documentWorkspace.getWidth(),
+            documentWorkspace.getHeight(),
+            renderBounds.getX(),
+            renderBounds.getY(),
+            renderBounds.getWidth(),
+            renderBounds.getHeight()
         );
 
         // Debug
         this.context.font = "16px Arial";
         this.context.fillStyle = "white";
-        this.context.fillText(viewportX + ", " + viewportY, 10, 20);
-        this.context.fillText(documentWidth + "x" + documentHeight, 10, 20 + 16);
-        this.context.fillText(parseInt(zoom * 100) / 100, 10, 20 + 16 * 2);
-        this.context.fillText(parseInt(renderWidth) + "x" + parseInt(renderHeight), 10, 20 + 16 * 4);
-        this.context.fillText(parseInt(x) + ", " + parseInt(y), 10, 20 + 16 * 5);
-        this.context.fillText(parseInt(this.getLastMouseX()) + ", " + parseInt(this.getLastMouseY()), 10, 20 + 16 * 6);
+        this.context.fillText(documentWorkspace.getWidth() + "x" + documentWorkspace.getHeight(), 10, 20 + 16);
+        this.context.fillText(documentWorkspace.getViewportX() + ", " + documentWorkspace.getViewportY(), 10, 20 + 16 * 2);
+        this.context.fillText(parseInt(renderBounds.getX()) + ", " + parseInt(renderBounds.getY()), 10, 20 + 16 * 4);
+        this.context.fillText(parseInt(renderBounds.getWidth()) + "x" + parseInt(renderBounds.getHeight()), 10, 20 + 16 * 5);
+
+        this.context.fillText(parseInt(documentWorkspace.getZoom() * 100) / 100, 10, 20 + 16 * 7);
+        this.context.fillText(parseInt(this.getLastMouseX()) + ", " + parseInt(this.getLastMouseY()), 10, 20 + 16 * 8);
     }
 
     setCursor(cursor) {
@@ -269,14 +253,6 @@ class AppView {
 
     getActiveDocumentWorkspace() {
         return null;
-    }
-
-    getEnvironmentWidth() {
-        return this.environment.clientWidth;
-    }
-
-    getEnvironmentHeight() {
-        return this.environment.clientHeight;
     }
 
     getViewWidth() {
