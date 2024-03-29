@@ -24,13 +24,13 @@ class CursorPositionItem extends LabelMenuItem {
         let documentHeight = documentWorkspace.getHeight();
         let zoom = documentWorkspace.getZoom();
 
-        let pixelX = Math.floor((mouseX - renderBounds.getX()) / zoom);
-        let pixelY = Math.floor((mouseY - renderBounds.getY()) / zoom);
+        let pixelX = (mouseX - renderBounds.getX()) / zoom;
+        let pixelY = (mouseY - renderBounds.getY()) / zoom;
 
         if (pixelX < 0 || pixelY < 0 || pixelX >= documentWidth || pixelY >= documentHeight) {
             return "";
         } else {
-            return pixelX + ", " + pixelY;
+            return Math.floor(pixelX) + ", " + Math.floor(pixelY);
         }
     }
 

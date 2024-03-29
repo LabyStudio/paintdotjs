@@ -35,7 +35,7 @@ class AppView {
         // Cancel website zoom
         window.addEventListener('wheel', event => {
             let x = event.clientX - this.editor.offsetLeft;
-            let y = event.clientY - this.editor.offsetTop;
+            let y = event.clientY - this.editor.offsetTop - windowTop();
 
             if (event.ctrlKey) {
                 event.preventDefault();
@@ -63,7 +63,7 @@ class AppView {
         // Mouse down listener
         this.editor.addEventListener('mousedown', event => {
             let x = event.clientX - this.editor.offsetLeft;
-            let y = event.clientY - this.editor.offsetTop;
+            let y = event.clientY - this.editor.offsetTop - windowTop();
             this.fire("document:mousedown", x, y, event.button);
 
             this.onMouseDown(x, y, event.button);
@@ -74,7 +74,7 @@ class AppView {
         // Mouse move listener
         this.editor.addEventListener('mousemove', event => {
             let x = event.clientX - this.editor.offsetLeft;
-            let y = event.clientY - this.editor.offsetTop;
+            let y = event.clientY - this.editor.offsetTop - windowTop();
             this.fire("document:mousemove", x, y);
 
             this.onMouseMove(x, y);
@@ -85,7 +85,7 @@ class AppView {
         // Mouse up listener
         document.addEventListener('mouseup', event => {
             let x = event.clientX - this.editor.offsetLeft;
-            let y = event.clientY - this.editor.offsetTop;
+            let y = event.clientY - this.editor.offsetTop - windowTop();
             this.fire("document:mouseup", x, y, event.button);
 
             this.onMouseUp(x, y, event.button);
