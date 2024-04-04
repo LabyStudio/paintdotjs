@@ -114,7 +114,9 @@ class AppWorkspace extends AppView {
 
     setActiveTool(tool) {
         this.activeTool = tool;
-        tool.onActivate();
+        if (tool !== null) {
+            tool.onActivate();
+        }
     }
 
     getActiveTool() {

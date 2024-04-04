@@ -13,7 +13,9 @@ class ViewZoomSliderItem extends SliderItem {
         if (activeDocumentWorkspace === null) {
             return;
         }
-        activeDocumentWorkspace.setZoom(value / 100);
+
+        let zoom = value > 100 ? Math.pow(10, (value - 100) / 50) : value / 100;
+        activeDocumentWorkspace.setZoom(zoom);
     }
 
     getCurrentValue() {
@@ -21,7 +23,8 @@ class ViewZoomSliderItem extends SliderItem {
         if (activeDocumentWorkspace === null) {
             return 100;
         }
-        return activeDocumentWorkspace.getZoom() * 100;
+        let zoom = activeDocumentWorkspace.getZoom();
+        return zoom > 1 ? 100 + Math.log10(zoom) * 50 : zoom * 100;
     }
 
     getMin() {

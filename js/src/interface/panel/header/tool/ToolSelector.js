@@ -50,8 +50,6 @@ class ToolSelector extends SelectorMenuItem {
         super.setSelectedId(id);
 
         let tool = ToolRegistry.get(id);
-        if (tool !== null) {
-            this.app.setActiveTool(tool);
-        }
+        this.app.setActiveTool(tool);
     }
 }

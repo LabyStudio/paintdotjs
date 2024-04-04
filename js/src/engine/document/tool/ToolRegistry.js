@@ -13,9 +13,7 @@ class ToolRegistry {
             .get("toolStripChooser.chooseToolButton")
             .getSelectedId();
         let defaultTool = this.get(selectedToolId);
-        if (defaultTool !== null) {
-            app.setActiveTool(defaultTool);
-        }
+        app.setActiveTool(defaultTool);
     }
 
     static register(tool) {
