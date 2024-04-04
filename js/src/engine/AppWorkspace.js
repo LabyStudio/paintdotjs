@@ -6,6 +6,7 @@ class AppWorkspace extends AppView {
         this.documentWorkspaces = [];
         this.activeDocumentWorkspace = null;
         this.activeTool = null;
+        this.measurementUnit = "pixel";
     }
 
     initialize() {
@@ -49,6 +50,8 @@ class AppWorkspace extends AppView {
     setActiveDocumentWorkspace(documentWorkspace) {
         this.activeDocumentWorkspace = documentWorkspace;
         this.updateTitle();
+
+        this.fire("app:update_active_document", documentWorkspace);
     }
 
     updateTitle() {
@@ -122,5 +125,22 @@ class AppWorkspace extends AppView {
         return this.activeDocumentWorkspace;
     }
 
+    setMeasurementUnit(unit) {
+        this.measurementUnit = unit;
+        this.fire("app:update_measurement_unit", unit);
+    }
+
+    getMeasurementUnit() {
+        return this.measurementUnit;
+    }
+
+    toUnit(pixels) {
+        if (this.measurementUnit === "inch") {
+            return (pixels / 96).toFixed(2).replace(".", ",");
+        } else if (this.measurementUnit === "centimeter") {
+            return (pixels / 96 * 2.54).toFixed(2).replace(".", ",");
+        }
+        return pixels;
+    }
 
 }

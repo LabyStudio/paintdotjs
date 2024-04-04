@@ -20,18 +20,12 @@ class CursorPositionItem extends LabelMenuItem {
         let mouseX = this.app.getLastMouseX();
         let mouseY = this.app.getLastMouseY();
 
-        let documentWidth = documentWorkspace.getWidth();
-        let documentHeight = documentWorkspace.getHeight();
         let zoom = documentWorkspace.getZoom();
 
         let pixelX = (mouseX - renderBounds.getX()) / zoom;
         let pixelY = (mouseY - renderBounds.getY()) / zoom;
 
-        if (pixelX < 0 || pixelY < 0 || pixelX >= documentWidth || pixelY >= documentHeight) {
-            return "";
-        } else {
-            return Math.floor(pixelX) + ", " + Math.floor(pixelY);
-        }
+        return this.app.toUnit(Math.floor(pixelX)) + ", " + this.app.toUnit(Math.floor(pixelY));
     }
 
 }

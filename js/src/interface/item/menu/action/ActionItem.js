@@ -25,6 +25,7 @@ class ActionItem extends MenuItem {
     withIconPathKey(iconPathKey, absolute = true) {
         this.iconPathKey = iconPathKey;
         this.absoluteIconPathKey = absolute;
+        this.hasIconImage = true;
         return this;
     }
 

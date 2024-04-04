@@ -18,11 +18,11 @@ class Item extends UIElement {
         // Update enabled state on element
         this.setEnabled(this.enabled);
 
-        this.element.onclick = e => {
-            this.run();
+        this.element.onclick = event => {
+            this.run(event);
 
             if (!this.isClickable()) {
-                e.stopPropagation();
+                event.stopPropagation();
             }
         }
     }
@@ -47,7 +47,11 @@ class Item extends UIElement {
         }
     }
 
-    run() {
+    shouldRun(event) {
+        return true;
+    }
+
+    run(event) {
         if (this.callback !== null) {
             this.callback();
         }

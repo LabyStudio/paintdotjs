@@ -13,7 +13,7 @@ class SelectorMenuItem extends DropMenuItem {
         element.className += " selector";
         {
             // Icon
-            if (selectedEntry.hasIcon()) {
+            if (selectedEntry.hasIcon() && this.showSelectedIcon()) {
                 let icon = document.createElement("img");
                 icon.className = "icon";
                 icon.src = "assets/icons/" + selectedEntry.getIconPath();
@@ -46,8 +46,18 @@ class SelectorMenuItem extends DropMenuItem {
         return this.entries.length === 0 ? null : this.entries[0];
     }
 
+    selectNextEntry() {
+        let index = this.entries.indexOf(this.getSelectedEntry());
+        let nextIndex = (index + 1) % this.entries.length;
+        this.setSelectedId(this.entries[nextIndex].id);
+    }
+
     setSelectedId(id) {
         this.selected = id;
         this.updateDocument();
+    }
+
+    showSelectedIcon() {
+        return true;
     }
 }
