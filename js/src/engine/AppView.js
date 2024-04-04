@@ -43,7 +43,7 @@ class AppView {
                 // Handle mouse wheel zoom
                 let delta = event.deltaY;
                 let activeDocumentWorkspace = this.getActiveDocumentWorkspace();
-                if (activeDocumentWorkspace !== null) {
+                if (activeDocumentWorkspace !== null && !activeDocumentWorkspace.isZoomToWindow()) {
                     let zoom = activeDocumentWorkspace.getZoom() - delta * activeDocumentWorkspace.getZoom() / 1000;
                     if (zoom < 0.01) {
                         zoom = 0.01; // Limit zoom to 1%
@@ -99,6 +99,11 @@ class AppView {
                 return;
             }
 
+            let documentWorkspace = this.getActiveDocumentWorkspace();
+            if (documentWorkspace === null || documentWorkspace.isZoomToWindow()) {
+                return;
+            }
+
             event.preventDefault();
 
             if (event.shiftKey) {
@@ -112,7 +117,7 @@ class AppView {
 
         this.view.addEventListener('scroll', event => {
             let documentWorkspace = this.getActiveDocumentWorkspace();
-            if (documentWorkspace === null) {
+            if (documentWorkspace === null || documentWorkspace.isZoomToWindow()) {
                 return;
             }
             documentWorkspace.setViewPosition(this.getViewX(), this.getViewY());
@@ -144,6 +149,9 @@ class AppView {
         let environment = document.getElementById("environment")
         environment.style.width = envWidth + "px";
         environment.style.height = envHeight + "px";
+
+        // Update scrollbar visibility
+        this.view.style.overflow = documentWorkspace.isZoomToWindow() ? "hidden" : "scroll";
     }
 
     render() {
@@ -178,8 +186,10 @@ class AppView {
         // Debug
         this.context.font = "16px Arial";
         this.context.fillStyle = "white";
+
         this.context.fillText(documentWorkspace.getWidth() + "x" + documentWorkspace.getHeight(), 10, 20 + 16);
         this.context.fillText(documentWorkspace.getViewportX() + ", " + documentWorkspace.getViewportY(), 10, 20 + 16 * 2);
+
         this.context.fillText(parseInt(renderBounds.getX()) + ", " + parseInt(renderBounds.getY()), 10, 20 + 16 * 4);
         this.context.fillText(parseInt(renderBounds.getWidth()) + "x" + parseInt(renderBounds.getHeight()), 10, 20 + 16 * 5);
 

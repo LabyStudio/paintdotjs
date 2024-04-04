@@ -9,6 +9,7 @@ class DocumentView {
         this.viewportY = 0;
 
         this.zoom = 1;
+        this.zoomToWindow = false;
 
         this.app.on("document:update_viewport", () => {
             this.app.setViewPosition(this.viewportX, this.viewportY);
@@ -91,11 +92,17 @@ class DocumentView {
 
     getEnvironmentWidth() {
         let viewWidth = this.app.getViewWidth();
+        if (this.zoomToWindow) {
+            return viewWidth;
+        }
         return Math.max(viewWidth + this.getRenderWidth(), viewWidth * 2);
     }
 
     getEnvironmentHeight() {
         let viewHeight = this.app.getViewHeight();
+        if (this.zoomToWindow) {
+            return viewHeight;
+        }
         return Math.max(viewHeight + this.getRenderHeight(), viewHeight * 2);
     }
 
@@ -158,6 +165,19 @@ class DocumentView {
         this.viewportY += deltaY;
 
         this.app.fire("document:update_viewport");
+    }
+
+    setZoomToWindow(zoomToWindow) {
+        this.zoomToWindow = zoomToWindow;
+
+        this.app.updateCanvasBounds();
+        this.app.fire("document:update_viewport");
+
+        this.fitViewport();
+    }
+
+    isZoomToWindow() {
+        return this.zoomToWindow;
     }
 
     getViewportX() {

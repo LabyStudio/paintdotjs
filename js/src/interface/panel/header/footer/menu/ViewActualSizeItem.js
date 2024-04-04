@@ -1,8 +1,27 @@
 class ViewActualSizeItem extends IconItem {
 
     constructor() {
-        super("menuViewActualSize");
+        super("menuViewActualSize", () => {
+            this.setZoomToWindow(!this.zoomToWindow);
+        });
 
-        // TODO menu_view_zoom_to_window
+        this.zoomToWindow = false;
     }
+
+    setZoomToWindow(zoomToWindow) {
+        this.zoomToWindow = zoomToWindow;
+        this.withIconPathKey(
+            this.zoomToWindow
+                ? "menu_view_zoom_to_window_icon"
+                : "menu_view_actual_size_icon",
+            true
+        );
+        this.updateDocument();
+
+        let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
+        if (activeDocumentWorkspace !== null) {
+            activeDocumentWorkspace.setZoomToWindow(zoomToWindow);
+        }
+    }
+
 }
