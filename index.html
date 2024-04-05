@@ -12,6 +12,7 @@
     <link href="./css/menu.css" rel="stylesheet">
     <link href="./css/component.css" rel="stylesheet">
     <link href="./css/layout.css" rel="stylesheet">
+    <link href="./css/window.css" rel="stylesheet">
     <link href="./css/header.css" rel="stylesheet">
     <link href="./css/footer.css" rel="stylesheet">
 </head>
@@ -38,9 +39,10 @@
 
     <footer>
         <div id="footerMenu" class="strip"></div>
-        <div id="window-resize"></div>
+        <div id="windowResize"></div>
     </footer>
 </div>
+<div id="windowOverlay"></div>
 </body>
 
 <!-- Environment -->
@@ -85,8 +87,13 @@
 <script src="./js/src/interface/panel/header/footer/menu/ViewActualSizeItem.js"></script>
 <script src="./js/src/interface/panel/header/footer/menu/ViewZoomSliderItem.js"></script>
 <script src="./js/src/interface/panel/PanelRegistry.js"></script>
-<script src="./js/src/interface/item/menu/seperator/HorizontalSeperator.js"></script>
-<script src="./js/src/interface/item/menu/seperator/VerticalSeparator.js"></script>
+<script src="./js/src/interface/item/menu/separator/HorizontalSeperator.js"></script>
+<script src="./js/src/interface/item/menu/separator/VerticalSeparator.js"></script>
+<script src="./js/src/interface/window/Form.js"></script>
+<script src="./js/src/interface/window/FormRegistry.js"></script>
+<script src="./js/src/interface/window/form/ToolForm.js"></script>
+<script src="./js/src/interface/window/window/AbstractWindow.js"></script>
+<script src="./js/src/interface/window/window/WebWindow.js"></script>
 <script src="./js/src/engine/util/Color.js"></script>
 <script src="./js/src/engine/AppView.js"></script>
 <script src="./js/src/engine/util/Rectangle.js"></script>

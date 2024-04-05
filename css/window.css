@@ -1,0 +1,70 @@
+/* ----------------- Window ----------------- */
+
+.window {
+    position: absolute;
+    background-color: var(--color-background);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    pointer-events: all;
+}
+
+.window .title-bar {
+    display: flex;
+    height: 20px;
+    margin-top: 1px;
+    padding: 5px 1px 5px 5px;
+    background-color: var(--color-title-bar);
+    cursor: move;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.window .title-bar .title {
+    margin: 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: calc(100% - 20px);
+}
+
+.window .title-bar .close-button {
+    width: 19px;
+    height: 19px;
+    margin: 0;
+    padding: 0 0 1px;
+    background-color: var(--color-close-button);
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+    font-family: 'Arial', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.window .content {
+
+}
+
+/* ----------------- Forms ----------------- */
+
+/* Tool */
+#toolForm {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#toolForm .menu-item {
+    flex-grow: 1;
+    padding: 3.5px;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+
+#toolForm .menu-item .icon {
+    height: 16px;
+}
+
+#toolForm .menu-item .large-icon {
+    height: 18px;
+}

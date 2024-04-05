@@ -12,6 +12,7 @@ class AppWorkspace extends AppView {
     initialize() {
         PanelRegistry.initialize();
         ToolRegistry.initialize();
+        FormRegistry.initialize();
 
         super.initialize();
     }
@@ -117,6 +118,7 @@ class AppWorkspace extends AppView {
         if (tool !== null) {
             tool.onActivate();
         }
+        this.fire("app:active_tool_updated", tool);
     }
 
     getActiveTool() {

@@ -16,6 +16,9 @@
     --color-scrollbar-background: #171717;
     --color-scrollbar-thumb: #4D4D4D;
 
+    /* Window */
+    --color-close-button: #C75050;
+
     font-family: 'Microsoft Sans Serif', sans-serif;
     font-size: 8.25pt;
 

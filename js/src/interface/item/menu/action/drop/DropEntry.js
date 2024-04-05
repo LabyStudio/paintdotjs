@@ -13,7 +13,7 @@ class DropEntry extends ActionItem {
             let icon = document.createElement("img");
             icon.className = "icon";
             if (this.hasIconImage) {
-                icon.src = "assets/icons/" + this.getIconPath();
+                icon.src = this.getIconSrc();
                 icon.onerror = event => {
                     icon.style.opacity = '0';
                 }
@@ -35,5 +35,9 @@ class DropEntry extends ActionItem {
             element.appendChild(shortcut);
         }
         return element;
+    }
+
+    getIconSrc() {
+        return "assets/icons/" + this.getIconPath();
     }
 }
