@@ -89,8 +89,8 @@
 
 #colorsForm .currentColor {
     position: absolute;
-    width: 33px;
-    height: 33px;
+    width: 31px;
+    height: 31px;
     border: 1px solid white;
     outline: 1px solid black;
 }
@@ -112,16 +112,16 @@
     position: absolute;
     right: 0;
     top: 0;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
 }
 
 #colorsForm #blackAndWhiteButton {
     position: absolute;
     left: 0;
     bottom: 0;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
 }
 
 #colorsForm #moreLessButton {
@@ -134,8 +134,8 @@
     position: absolute;
     right: 10px;
     top: 36px;
-    width: 163px;
-    height: 163px;
+    width: 141px;
+    height: 141px;
 }
 
 #colorsForm #colorCircle #colorCircleCanvas {
@@ -155,8 +155,8 @@
 
 #colorsForm #colorSettingsStrip {
     position: absolute;
-    left: 0;
-    bottom: 0;
+    left: 5px;
+    bottom: 35px;
     width: auto;
     height: 26px;
 }
@@ -165,18 +165,38 @@
     width: 18px;
     height: 18px;
     position: relative;
+    padding: 1px;
+}
+
+#colorsForm #colorSettingsStrip #colorAdd .icon {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    z-index: 5;
 }
 
 #colorsForm #colorSettingsStrip #colorAdd .color {
     position: absolute;
-    left: 3px;
-    top: 3px;
+    left: 2px;
+    top: 2px;
     width: 14px;
     height: 14px;
-    border-radius: 10%;
-    background-color: #65ff2f;
+    border-radius: 20%;
+    border: 1px solid #5D5D5D;
+    z-index: 0;
 }
 
 #colorsForm #colorSettingsStrip #swatch {
     padding: 0 2px 0 0;
+    margin: 0;
+}
+
+#colorsForm #colorPalette {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 24px;
+    margin: 0 8px 7px 8px;
+    background-color: red;
 }

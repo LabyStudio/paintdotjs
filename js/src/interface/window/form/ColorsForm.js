@@ -7,7 +7,7 @@ class ColorsForm extends Form {
     initialize(window) {
         super.initialize(window);
 
-        window.setSize(223, 261);
+        window.setSize(209, 248);
         window.setPosition(5, this.app.getViewBounds().getBottom() - window.getHeight() - 20 - 5);
     }
 
@@ -93,6 +93,18 @@ class ColorsForm extends Form {
         }
         grid.appendChild(colorSettingsStrip);
 
+        // Color palette
+        let colorPalette = document.createElement("div");
+        colorPalette.id = "colorPalette";
+        {
+            for (let i = 0; i < 12; i++) {
+                let color = document.createElement("div");
+                color.classList.add("color");
+                color.style.backgroundColor = "black";
+                colorPalette.appendChild(color);
+            }
+        }
+        grid.appendChild(colorPalette);
 
         return grid;
     }

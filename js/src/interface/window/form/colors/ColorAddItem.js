@@ -12,7 +12,7 @@ class ColorAddItem extends IconItem {
         {
             let colorElement = document.createElement("div");
             colorElement.classList.add("color");
-            colorElement.style.backgroundColor = "white";
+            colorElement.style.backgroundColor = "black";
             element.appendChild(colorElement);
         }
         return element;
