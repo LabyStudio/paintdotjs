@@ -88,6 +88,8 @@
 }
 
 #colorsForm .currentColor {
+    --selected-color: #FFF;
+    --indicator-active: 0;
     position: absolute;
     width: 31px;
     height: 31px;
@@ -95,14 +97,39 @@
     outline: 1px solid black;
 }
 
-#colorsForm #leftColor {
+#colorsForm .selectedColorIndicator::before {
+    content: "";
+    position: absolute;
+    width: 29px;
+    height: 29px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 65% 100%, 50% calc(100% - var(--indicator-active) * 22%), 35% 100%, 0 100%);
+    background-color: var(--selected-color);
+    transition: clip-path 0.2s, opacity 0.2s;
+}
+
+#colorsForm .selectedColorIndicator {
+    width: 29px;
+    height: 29px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 65% 100%, 50% calc(100% - var(--indicator-active) * 20%), 35% 100%, 0 100%);
+    background-color: #000000;
+    padding: 1px;
+    transition: clip-path 0.2s, opacity 0.2s;
+}
+
+#colorsForm .selectedColorIndicator:hover {
+    background-color: #000000;
+    opacity: 1 !important;
+}
+
+#colorsForm #mainColor {
     position: absolute;
     left: 1px;
     top: 1px;
     z-index: 1;
+    background-color: #fff;
 }
 
-#colorsForm #rightColor {
+#colorsForm #secondaryColor {
     right: 1px;
     bottom: 1px;
     z-index: 0;
@@ -198,5 +225,11 @@
     bottom: 0;
     height: 24px;
     margin: 0 8px 7px 8px;
-    background-color: red;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#colorsForm #colorPalette .color {
+    width: 12px;
+    height: 12px;
 }

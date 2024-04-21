@@ -30,7 +30,7 @@ class Color {
         return new Color(red, green, blue, alpha);
     }
 
-    static hslToRgb(h, s, l) {
+    static hslToRgb(h, s, l, alpha = 255) {
         let r, g, b;
 
         if (s === 0) {
@@ -53,7 +53,61 @@ class Color {
             b = hue2rgb(p, q, h - 1 / 3);
         }
 
-        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+
+        r = MathHelper.clamp(Math.round(r * 255), 0, 255);
+        g = MathHelper.clamp(Math.round(g * 255), 0, 255);
+        b = MathHelper.clamp(Math.round(b * 255), 0, 255);
+
+        return this.rgba2Packed(r, g, b, alpha);
+    }
+
+    static rgbToHsl(red, green, blue) {
+        let r = red / 255;
+        let g = green / 255;
+        let b = blue / 255;
+
+        let max = Math.max(r, g, b);
+        let min = Math.min(r, g, b);
+
+        let h, s, l = (max + min) / 2;
+
+        if (max === min) {
+            h = s = 0;
+        } else {
+            let d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+            switch (max) {
+                case r:
+                    h = (g - b) / d + (g < b ? 6 : 0);
+                    break;
+                case g:
+                    h = (b - r) / d + 2;
+                    break;
+                case b:
+                    h = (r - g) / d + 4;
+                    break;
+            }
+
+            h /= 6;
+        }
+
+        return [h, s, l];
+    }
+
+    static rgba2Packed(red, green, blue, alpha) {
+        return (alpha << 24) | (blue << 16) | (green << 8) | red;
+    }
+
+    static packed2Hex(packed) {
+        let red = (packed & 0xFF);
+        let green = (packed >> 8) & 0xFF;
+        let blue = (packed >> 16) & 0xFF;
+        let alpha = (packed >> 24) & 0xFF;
+        return "#" + red.toString(16).padStart(2, "0")
+            + green.toString(16).padStart(2, "0")
+            + blue.toString(16).padStart(2, "0")
+            + alpha.toString(16).padStart(2, "0");
     }
 }
 
