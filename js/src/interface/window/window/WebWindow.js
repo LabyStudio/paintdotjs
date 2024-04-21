@@ -123,6 +123,14 @@ class WebWindow extends AbstractWindow {
         }
     }
 
+    getWidth() {
+        return this.width;
+    }
+
+    getHeight() {
+        return this.height;
+    }
+
     close() {
         this.overlay.removeChild(this.windowElement);
     }

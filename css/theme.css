@@ -18,6 +18,20 @@
 
     /* Window */
     --color-close-button: #C75050;
+    --color-close-button-text: #FFFFFF;
+    --color-window-background: #282828;
+    --color-window-border: rgba(195, 195, 195, 0.21);
+
+    /* Components */
+    --color-slider-tick: #dadada;
+    --color-slider: #D0D0D0;
+    --color-slider-outline: #707070;
+    --color-slider-hover1: #DDEFFA;
+    --color-slider-hover2: #B7E2F9;
+    --color-slider-hover-outline: #3C7FB1;
+    --color-button: #FDFDFD;
+    --color-button-text: #000000;
+    --color-button-outline: #D0D0D0;
 
     font-family: 'Microsoft Sans Serif', sans-serif;
     font-size: 8.25pt;

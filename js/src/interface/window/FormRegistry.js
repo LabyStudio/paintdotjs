@@ -6,6 +6,7 @@ class FormRegistry {
 
     static initialize() {
         FormRegistry.register(new ToolForm());
+        FormRegistry.register(new ColorsForm());
     }
 
     static register(form) {

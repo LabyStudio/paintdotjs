@@ -277,6 +277,10 @@ class AppView {
         return this.view;
     }
 
+    getViewBounds() {
+        return Rectangle.fromElement(this.view);
+    }
+
     getEditorElement() {
         return this.editor;
     }

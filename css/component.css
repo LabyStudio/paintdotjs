@@ -26,7 +26,7 @@ input[type="text"]:focus-visible {
     top: 5px;
     width: 1.6px;
     height: 10px;
-    background-color: #dadada;
+    background-color: var(--color-slider-tick);
     transform: translate(-50%, -25%);
     z-index: 0;
 }
@@ -43,24 +43,24 @@ input {
 input[type="range"]::-webkit-slider-runnable-track {
     appearance: none;
     height: 1px;
-    background-color: #707070;
-    box-shadow: 0 1px 0 0 #FFFFFF;
+    background-color: var(--color-slider-outline);
+    box-shadow: 0 1px 0 0 var(--color-slider);
     z-index: 1;
 }
 
 input[type="range"]::-moz-range-track {
     appearance: none;
     height: 1px;
-    background-color: #707070;
-    box-shadow: 0 1px 0 0 #FFFFFF;
+    background-color: var(--color-slider-outline);
+    box-shadow: 0 1px 0 0 var(--color-slider);
     z-index: 1;
 }
 
 input[type="range"]::-webkit-slider-thumb {
     position: relative;
     appearance: none;
-    background-color: #EEEEEE;
-    border: 1px solid #707070;
+    background-color: var(--color-slider);
+    border: 1px solid var(--color-slider-outline);
     border-radius: 1px;
     width: 10px;
     height: 14px;
@@ -71,19 +71,19 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-    background-image: linear-gradient(#DDEFFA, #B7E2F9);
-    border: 1px solid #3C7FB1;
+    background-image: linear-gradient(var(--color-slider-hover1), var(--color-slider-hover2));
+    border: 1px solid var(--color-slider-hover-outline);
 }
 
 input[type="range"]::-webkit-slider-thumb:active {
-    background-image: linear-gradient(#ACDCF5, #5EAED9);
-    border: 1px solid #2C628B;
+    background-image: linear-gradient(var(--color-slider-hover2), var(--color-slider-hover1));
+    border: 1px solid var(--color-slider-hover-outline);
 }
 
 input[type="range"]::-moz-range-thumb {
     appearance: none;
-    background-color: #EEEEEE;
-    border: 1px solid #707070;
+    background-color: var(--color-slider);
+    border: 1px solid var(--color-slider-outline);
     border-radius: 0;
     width: 8px;
     height: 9px;
@@ -94,4 +94,14 @@ input[type="range"]::-moz-range-thumb {
 /* ------------ Scrollbar ------------ */
 :root {
     scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-background);
+}
+
+/* ------------ Button ------------ */
+button {
+    background-color: var(--color-button);
+    color: var(--color-button-text);
+    border: 1px solid var(--color-button-outline);
+    border-radius: 4px;
+    padding: 2px 10px;
+    cursor: pointer;
 }

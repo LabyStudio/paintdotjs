@@ -2,8 +2,9 @@
 
 .window {
     position: absolute;
-    background-color: var(--color-background);
+    background-color: var(--color-window-background);
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--color-window-border);
     z-index: 1000;
     pointer-events: all;
 }
@@ -35,10 +36,11 @@
     background-color: var(--color-close-button);
     border: none;
     box-shadow: none;
-    cursor: pointer;
     font-family: 'Arial', sans-serif;
     font-size: 10px;
     font-weight: bold;
+    border-radius: 0;
+    color: var(--color-close-button-text);
 }
 
 .window .content {
@@ -47,7 +49,7 @@
 
 /* ----------------- Forms ----------------- */
 
-/* Tool */
+/* ----------------- Tools ----------------- */
 #toolForm {
     display: flex;
     flex-wrap: wrap;
@@ -67,4 +69,83 @@
 
 #toolForm .menu-item .large-icon {
     height: 18px;
+}
+
+/* ----------------- Colors ----------------- */
+#colorsForm {
+    position: relative;
+}
+
+#currentColors {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    width: 53px;
+    height: 53px;
+}
+
+.currentColor {
+    position: absolute;
+    width: 33px;
+    height: 33px;
+    border: 1px solid white;
+    outline: 1px solid black;
+}
+
+#leftColor {
+    position: absolute;
+    left: 1px;
+    top: 1px;
+    z-index: 1;
+}
+
+#rightColor {
+    right: 1px;
+    bottom: 1px;
+    z-index: 0;
+}
+
+#swapColorsButton {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 14px;
+    height: 14px;
+}
+
+#blackAndWhiteButton {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 14px;
+    height: 14px;
+}
+
+#moreLessButton {
+    position: absolute;
+    right: 9px;
+    top: 8px;
+}
+
+#colorCircle {
+    position: absolute;
+    right: 10px;
+    top: 36px;
+    width: 163px;
+    height: 163px;
+}
+
+#colorCircle #colorCircleCanvas {
+    width: 100%;
+    height: 100%;
+}
+
+#colorCircle #colorCircleCursor {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border: 1px solid white;
+    outline: 1px solid black;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
 }

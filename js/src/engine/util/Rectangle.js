@@ -1,4 +1,5 @@
 class Rectangle {
+
     constructor(x, y, width, height) {
         this.x = x;
         this.y = y;
@@ -102,5 +103,10 @@ class Rectangle {
 
     static absolute(left, top, right, bottom) {
         return new Rectangle(left, top, right - left, bottom - top);
+    }
+
+    static fromElement(element) {
+        let rect = element.getBoundingClientRect();
+        return new Rectangle(rect.left, rect.top, rect.width, rect.height);
     }
 }
