@@ -213,12 +213,12 @@ class ColorsForm extends Form {
 
     setMainColor(color) {
         this.mainColor = color;
-        this.mainColorElement.style.setProperty('--selected-color', Color.packed2Hex(color));
+        this.updateCursor();
     }
 
     setSecondaryColor(color) {
         this.secondaryColor = color;
-        this.secondaryColorElement.style.setProperty('--selected-color', Color.packed2Hex(color));
+        this.updateCursor();
     }
 
     getSelectedColor() {
@@ -266,9 +266,11 @@ class ColorsForm extends Form {
         this.mainColorElement.children[0].style.opacity = isPrimary ? "1" : "0";
         this.mainColorElement.style.backgroundColor = isPrimary ? '#FFF' : "var(--selected-color)";
         this.mainColorElement.style.setProperty('--indicator-active', isPrimary ? "1" : "0");
+        this.mainColorElement.style.setProperty('--selected-color', Color.packed2Hex(this.mainColor));
         this.secondaryColorElement.children[0].style.opacity = isPrimary ? "0" : "1";
         this.secondaryColorElement.style.backgroundColor = isPrimary ? "var(--selected-color)" : '#FFF';
         this.secondaryColorElement.style.setProperty('--indicator-active', isPrimary ? "0" : "1");
+        this.secondaryColorElement.style.setProperty('--selected-color', Color.packed2Hex(this.secondaryColor));
     }
 
     renderPalette(canvas) {
