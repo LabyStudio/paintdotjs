@@ -7,6 +7,8 @@ class ColorsForm extends Form {
         this.secondaryColor = 0xFFFFFFFF;
         this.selectedIsPrimary = true;
 
+        this.expanded = false;
+
         this.palette = [];
 
         // Generate palette
@@ -32,6 +34,7 @@ class ColorsForm extends Form {
         this.circleCanvasElement = null;
         this.cursorAddElement = null;
         this.cursorElement = null;
+        this.moreLessButtonElement = null;
 
         document.addEventListener("mouseup", () => {
             this.dragging = false;
@@ -61,7 +64,8 @@ class ColorsForm extends Form {
     initialize(window) {
         super.initialize(window);
 
-        window.setSize(209, 248);
+        this.updateWindowSize();
+
         window.setPosition(5, this.app.getViewBounds().getBottom() - window.getHeight() - 20 - 5);
     }
 
@@ -111,7 +115,7 @@ class ColorsForm extends Form {
                 let temp = this.mainColor;
                 this.setMainColor(this.secondaryColor);
                 this.setSecondaryColor(temp);
-                this.updateCursor();
+                this.updateElements();
             };
             currentColors.appendChild(swapColorsButton)
 
@@ -122,19 +126,19 @@ class ColorsForm extends Form {
             blackAndWhiteButton.onclick = () => {
                 this.setMainColor(0xFF000000);
                 this.setSecondaryColor(0xFFFFFFFF);
-                this.updateCursor();
+                this.updateElements();
             };
             currentColors.appendChild(blackAndWhiteButton);
         }
         grid.appendChild(currentColors);
 
         // More/Less button
-        let moreLessButton = document.createElement("button");
-        moreLessButton.id = "moreLessButton";
-        moreLessButton.textContent = i18n("colorsForm.moreLessButton.text.more") + " >>";
-        moreLessButton.onclick = () => {
+        this.moreLessButtonElement = document.createElement("button");
+        this.moreLessButtonElement.id = "moreLessButton";
+        this.moreLessButtonElement.onclick = () => {
+            this.setExpanded(!this.expanded);
         };
-        grid.appendChild(moreLessButton);
+        grid.appendChild(this.moreLessButtonElement);
 
         // Color circle
         let colorCircle = document.createElement("div");
@@ -206,19 +210,19 @@ class ColorsForm extends Form {
         }
         grid.appendChild(colorPalette);
 
-        this.updateCursor();
+        this.updateElements();
 
         return grid;
     }
 
     setMainColor(color) {
         this.mainColor = color;
-        this.updateCursor();
+        this.updateElements();
     }
 
     setSecondaryColor(color) {
         this.secondaryColor = color;
-        this.updateCursor();
+        this.updateElements();
     }
 
     getSelectedColor() {
@@ -231,7 +235,7 @@ class ColorsForm extends Form {
         } else {
             this.setSecondaryColor(color);
         }
-        this.updateCursor();
+        this.updateElements();
     }
 
     setNotSelectedColor(color) {
@@ -244,10 +248,25 @@ class ColorsForm extends Form {
 
     setSelectedIsPrimary(isPrimary) {
         this.selectedIsPrimary = isPrimary;
-        this.updateCursor();
+        this.updateElements();
     }
 
-    updateCursor() {
+    setExpanded(expanded) {
+        this.expanded = expanded;
+
+        this.updateWindowSize();
+        this.updateElements();
+    }
+
+    updateWindowSize() {
+        if (this.expanded) {
+            this.window.setSize(386, 266);
+        } else {
+            this.window.setSize(209, 248);
+        }
+    }
+
+    updateElements() {
         // Update cursor position
         let selectedColor = this.getSelectedColor();
         let position = this.getPositionOfColor(this.circleCanvasElement, selectedColor);
@@ -271,6 +290,10 @@ class ColorsForm extends Form {
         this.secondaryColorElement.style.backgroundColor = isPrimary ? "var(--selected-color)" : '#FFF';
         this.secondaryColorElement.style.setProperty('--indicator-active', isPrimary ? "0" : "1");
         this.secondaryColorElement.style.setProperty('--selected-color', Color.packed2Hex(this.secondaryColor));
+
+        this.moreLessButtonElement.textContent = this.expanded
+            ? i18n("colorsForm.moreLessButton.text.less") + " <<"
+            : i18n("colorsForm.moreLessButton.text.more") + " >>";
     }
 
     renderPalette(canvas) {

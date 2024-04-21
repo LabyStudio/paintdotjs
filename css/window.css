@@ -153,13 +153,15 @@
 
 #colorsForm #moreLessButton {
     position: absolute;
-    right: 9px;
+    left: 128px;
     top: 8px;
+    width: 70px;
+    padding: 2px 0 2px 0;
 }
 
 #colorsForm #colorCircle {
     position: absolute;
-    right: 10px;
+    left: 60px;
     top: 36px;
     width: 141px;
     height: 141px;
@@ -183,7 +185,7 @@
 #colorsForm #colorSettingsStrip {
     position: absolute;
     left: 5px;
-    bottom: 35px;
+    top: 157px;
     width: auto;
     height: 26px;
 }
@@ -221,9 +223,9 @@
 #colorsForm #colorPalette {
     position: absolute;
     left: 0;
-    right: 0;
-    bottom: 0;
+    top: 185px;
     height: 24px;
+    width: 192px;
     margin: 0 8px 7px 8px;
     display: flex;
     flex-wrap: wrap;
