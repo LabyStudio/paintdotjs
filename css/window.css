@@ -7,6 +7,8 @@
     border: 1px solid var(--color-window-border);
     z-index: 1000;
     pointer-events: all;
+    display: flex;
+    flex-direction: column;
 }
 
 .window .title-bar {
@@ -44,7 +46,7 @@
 }
 
 .window .content {
-
+    flex: auto;
 }
 
 /* ----------------- Forms ----------------- */
@@ -74,9 +76,10 @@
 /* ----------------- Colors ----------------- */
 #colorsForm {
     position: relative;
+    height: 100%;
 }
 
-#currentColors {
+#colorsForm #currentColors {
     position: absolute;
     left: 8px;
     top: 8px;
@@ -84,7 +87,7 @@
     height: 53px;
 }
 
-.currentColor {
+#colorsForm .currentColor {
     position: absolute;
     width: 33px;
     height: 33px;
@@ -92,20 +95,20 @@
     outline: 1px solid black;
 }
 
-#leftColor {
+#colorsForm #leftColor {
     position: absolute;
     left: 1px;
     top: 1px;
     z-index: 1;
 }
 
-#rightColor {
+#colorsForm #rightColor {
     right: 1px;
     bottom: 1px;
     z-index: 0;
 }
 
-#swapColorsButton {
+#colorsForm #swapColorsButton {
     position: absolute;
     right: 0;
     top: 0;
@@ -113,7 +116,7 @@
     height: 14px;
 }
 
-#blackAndWhiteButton {
+#colorsForm #blackAndWhiteButton {
     position: absolute;
     left: 0;
     bottom: 0;
@@ -121,13 +124,13 @@
     height: 14px;
 }
 
-#moreLessButton {
+#colorsForm #moreLessButton {
     position: absolute;
     right: 9px;
     top: 8px;
 }
 
-#colorCircle {
+#colorsForm #colorCircle {
     position: absolute;
     right: 10px;
     top: 36px;
@@ -135,12 +138,12 @@
     height: 163px;
 }
 
-#colorCircle #colorCircleCanvas {
+#colorsForm #colorCircle #colorCircleCanvas {
     width: 100%;
     height: 100%;
 }
 
-#colorCircle #colorCircleCursor {
+#colorsForm #colorCircle #colorCircleCursor {
     position: absolute;
     width: 6px;
     height: 6px;
@@ -148,4 +151,32 @@
     outline: 1px solid black;
     border-radius: 50%;
     transform: translate(-50%, -50%);
+}
+
+#colorsForm #colorSettingsStrip {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: auto;
+    height: 26px;
+}
+
+#colorsForm #colorSettingsStrip #colorAdd {
+    width: 18px;
+    height: 18px;
+    position: relative;
+}
+
+#colorsForm #colorSettingsStrip #colorAdd .color {
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 10%;
+    background-color: #65ff2f;
+}
+
+#colorsForm #colorSettingsStrip #swatch {
+    padding: 0 2px 0 0;
 }

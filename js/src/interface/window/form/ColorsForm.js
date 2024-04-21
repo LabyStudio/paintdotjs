@@ -78,6 +78,22 @@ class ColorsForm extends Form {
         }
         grid.appendChild(colorCircle);
 
+        // Color settings strip
+        let colorSettingsStrip = document.createElement("div");
+        colorSettingsStrip.id = "colorSettingsStrip";
+        colorSettingsStrip.classList.add("strip");
+        {
+            // Color add
+            let colorAdd = new ColorAddItem();
+            colorSettingsStrip.appendChild(colorAdd.buildElement());
+
+            // Swatch
+            let swatch = new SwatchItem();
+            colorSettingsStrip.appendChild(swatch.buildElement());
+        }
+        grid.appendChild(colorSettingsStrip);
+
+
         return grid;
     }
 

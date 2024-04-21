@@ -13,7 +13,7 @@ class SelectorMenuItem extends DropMenuItem {
         element.className += " selector";
         {
             // Icon
-            if (selectedEntry.hasIcon() && this.showSelectedIcon()) {
+            if (selectedEntry != null && selectedEntry.hasIcon() && this.showSelectedIcon()) {
                 let icon = document.createElement("img");
                 icon.className = "icon";
                 icon.src = "assets/icons/" + selectedEntry.getIconPath();
