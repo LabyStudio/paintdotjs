@@ -87,40 +87,6 @@
     height: 53px;
 }
 
-#colorsForm .currentColor {
-    --selected-color: #FFF;
-    --indicator-active: 0;
-    position: absolute;
-    width: 31px;
-    height: 31px;
-    border: 1px solid white;
-    outline: 1px solid black;
-}
-
-#colorsForm .selectedColorIndicator::before {
-    content: "";
-    position: absolute;
-    width: 29px;
-    height: 29px;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 65% 100%, 50% calc(100% - var(--indicator-active) * 22%), 35% 100%, 0 100%);
-    background-color: var(--selected-color);
-    transition: clip-path 0.2s, opacity 0.2s;
-}
-
-#colorsForm .selectedColorIndicator {
-    width: 29px;
-    height: 29px;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 65% 100%, 50% calc(100% - var(--indicator-active) * 20%), 35% 100%, 0 100%);
-    background-color: #000000;
-    padding: 1px;
-    transition: clip-path 0.2s, opacity 0.2s;
-}
-
-#colorsForm .selectedColorIndicator:hover {
-    background-color: #000000;
-    opacity: 1 !important;
-}
-
 #colorsForm #mainColor {
     position: absolute;
     left: 1px;
@@ -159,27 +125,10 @@
     padding: 2px 0 2px 0;
 }
 
-#colorsForm #colorCircle {
+#colorsForm .color-circle {
     position: absolute;
     left: 60px;
     top: 36px;
-    width: 141px;
-    height: 141px;
-}
-
-#colorsForm #colorCircle #colorCircleCanvas {
-    width: 100%;
-    height: 100%;
-}
-
-#colorsForm #colorCircle #colorCircleCursor {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border: 1px solid white;
-    outline: 1px solid black;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
 }
 
 #colorsForm #colorSettingsStrip {
@@ -220,18 +169,64 @@
     margin: 0;
 }
 
-#colorsForm #colorPalette {
+#colorsForm .color-palette {
     position: absolute;
     left: 0;
-    top: 185px;
-    height: 24px;
     width: 192px;
-    margin: 0 8px 7px 8px;
+    margin-left: 8px;
     display: flex;
     flex-wrap: wrap;
+    background-image: var(--image-transparency);
 }
 
-#colorsForm #colorPalette .color {
+#colorsForm #basicColorPalette {
+    top: 185px;
+}
+
+#colorsForm #extendedColorPalette {
+    top: 209px;
+}
+
+#colorsForm .color-palette .color {
     width: 12px;
     height: 12px;
+}
+
+#colorsForm #sliderPanel {
+    position: absolute;
+    left: 225px;
+    top: 5px;
+    width: 150px;
+}
+
+#colorsForm #sliderPanel .entry {
+    display: flex;
+    width: 100%;
+    height: 23px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#colorsForm #sliderPanel .entry .text {
+    width: fit-content;
+    white-space: nowrap;
+}
+
+#colorsForm #sliderPanel .header {
+    gap: 5px;
+}
+
+#colorsForm #sliderPanel .header .divider {
+    width: 100%;
+    height: 0;
+}
+
+#colorsForm #sliderPanel .channel .row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+#colorsForm #sliderPanel .field input {
+    text-align: right;
 }

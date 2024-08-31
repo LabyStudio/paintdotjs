@@ -71,10 +71,6 @@ class WebWindow extends AbstractWindow {
                 let x = event.clientX - this.dragStartX;
                 let y = event.clientY - this.dragStartY;
 
-                // Clamp
-                x = Math.max(0, Math.min(this.overlay.clientWidth - this.width, x));
-                y = Math.max(0, Math.min(this.overlay.clientHeight - this.height, y));
-
                 this.setPosition(x, y);
 
                 event.preventDefault();
@@ -114,6 +110,10 @@ class WebWindow extends AbstractWindow {
     }
 
     setPosition(x, y) {
+        // Clamp
+        x = Math.max(0, Math.min(this.overlay.clientWidth - this.width, x));
+        y = Math.max(0, Math.min(this.overlay.clientHeight - this.height, y));
+
         this.x = x;
         this.y = y;
 

@@ -1,15 +1,50 @@
 /* ----------- Text Field ----------- */
 
 input[type="text"] {
-    width: 40px;
+    width: 50px;
     background-color: var(--color-menu-background);
     color: var(--color-menu-item-text);
     border: 1px solid var(--color-menu-item-text);
-    box-shadow: 0 0 0 2px var(--color-menu-item-border);
+    font-size: 8.25pt;
 }
 
 input[type="text"]:focus-visible {
     outline: none;
+    box-shadow: 0 0 0 2px var(--color-menu-item-border);
+}
+
+/* ------------ Input ------------ */
+
+input {
+    background-color: transparent;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    z-index: 1;
+    width: 85px;
+    font-family: var(--font-family), sans-serif;
+    font-size: var(--font-size);
+}
+
+/* ------------ Number Input ------------ */
+
+input[type="number"] {
+    width: 50px;
+    height: 12px;
+    background-color: var(--color-window-background);
+    color: var(--color-menu-item-text);
+    border: 1px solid var(--color-button-outline);
+    outline: 1px solid var(--color-button-outline);
+    border-radius: 0;
+    text-align: right;
+}
+
+input[type="number"]:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-menu-item-border);
+}
+
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
 }
 
 /* ------------ Slider ------------ */
@@ -29,15 +64,6 @@ input[type="text"]:focus-visible {
     background-color: var(--color-slider-tick);
     transform: translate(-50%, -25%);
     z-index: 0;
-}
-
-input {
-    background-color: transparent;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    z-index: 1;
-    width: 85px;
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
@@ -91,6 +117,99 @@ input[type="range"]::-moz-range-thumb {
     transform: translateY(-50%);
 }
 
+/* ------------ Color Slider ------------ */
+.color-slider {
+    /* Note: Also adjust canvas size in js */
+    width: 65px;
+    height: 10px;
+}
+
+.color-slider .canvas {
+    background-image: var(--image-transparency);
+}
+
+.color-slider .cursor::before {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    z-index: 1;
+}
+
+.color-slider .cursor {
+    position: relative;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 5px;
+    transform: translate(-50%, -80%);
+    background-color: white;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    padding: 2px 2px 1px 2px;
+    z-index: 1;
+}
+
+/* ------------ Color Circle ------------ */
+
+#colorsForm .color-circle {
+    position: absolute;
+    left: 60px;
+    top: 36px;
+
+    /* Note: Also adjust canvas size in js */
+    width: 141px;
+    height: 141px;
+}
+
+#colorsForm .color-circle .cursor {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border: 1px solid white;
+    outline: 1px solid black;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* ------------ Color Preview ------------ */
+
+.color-preview {
+    --preview-color: #FFF;
+    --preview-color-opaque: #FFF;
+    --indicator-active: 0;
+    position: absolute;
+    width: 31px;
+    height: 31px;
+    border: 1px solid white;
+    outline: 1px solid black;
+}
+
+.color-preview .selected-indicator::before {
+    content: "";
+    position: absolute;
+    width: 29px;
+    height: 29px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 65% 100%, 50% calc(100% - var(--indicator-active) * 22%), 35% 100%, 0 100%);
+    background-image: linear-gradient(var(--preview-color-opaque), var(--preview-color));
+    transition: clip-path 0.2s, opacity 0.2s;
+}
+
+.color-preview .selected-indicator {
+    width: 29px;
+    height: 29px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 65% 100%, 50% calc(100% - var(--indicator-active) * 20%), 35% 100%, 0 100%);
+    background-color: #000000;
+    padding: 1px;
+    transition: clip-path 0.2s, opacity 0.2s;
+}
+
+.color-preview .selected-indicator:hover {
+    background-color: #000000;
+    opacity: 1 !important;
+}
+
 /* ------------ Scrollbar ------------ */
 :root {
     scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-background);
@@ -101,7 +220,12 @@ button {
     background-color: var(--color-button);
     color: var(--color-button-text);
     border: 1px solid var(--color-button-outline);
-    border-radius: 4px;
+    border-radius: 0;
     padding: 2px 10px;
     cursor: pointer;
+}
+
+/* ------------ Hr ------------ */
+hr {
+    border: 1px solid var(--color-slider-outline);
 }

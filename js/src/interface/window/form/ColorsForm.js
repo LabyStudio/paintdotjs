@@ -3,62 +3,61 @@ class ColorsForm extends Form {
     constructor() {
         super("colorsForm");
 
-        this.mainColor = 0xFF000000;
-        this.secondaryColor = 0xFFFFFFFF;
+        this.mainColor = Color.BLACK;
+        this.secondaryColor = Color.WHITE;
         this.selectedIsPrimary = true;
 
-        this.expanded = false;
+        this.expanded = true; // TODO false
 
         this.palette = [];
 
         // Generate palette
-        for (let row = 0; row < 14; row++) {
-            if (row === 0) {
-                this.palette.push(0xFF000000);
-                this.palette.push(0xFF404040);
-            } else {
-                this.palette.push(0xFFFFFFFF);
-                this.palette.push(0xFF808080);
-            }
-            for (let column = 0; column < 14; column++) {
-                let hue = column / 14;
-                let saturation = 1;
-                let lightness = row === 0 ? 0.5 : 0.25;
-                let packed = Color.hslToRgb(hue, saturation, lightness);
-                this.palette.push(packed);
+        for (let loop = 0; loop < 3; loop++) {
+            for (let row = 0; row < 2; row++) {
+                for (let column = 0; column < 16; column++) {
+                    let hue = (column - 2) / 14;
+                    let saturation = column < 2 ? 0 : 1;
+                    let lightness = column < 2
+                        ? (row % 2 === 0 ? (column === 0 ? 0 : 0.25) : (column === 0 ? 1 : 0.5))
+                        : row % 2 === 0 ? 0.5 : 0.25;
+                    if (loop === 1) {
+                        if (column < 2) {
+                            lightness = (row % 2 === 0 ? (column === 0 ? 0.6 : 0.2) : (column === 0 ? 0.75 : 0.4));
+                        } else {
+                            saturation = row % 2 === 0 ? 1 : 0.25;
+                            lightness = row % 2 === 0 ? 0.75 : 0.25;
+                        }
+                    }
+                    let alpha = loop === 2 ? 127 : 255;
+                    let color = Color.fromHSL(hue, saturation, lightness, alpha);
+                    this.palette.push(color);
+                }
             }
         }
 
-        this.mainColorElement = null;
-        this.secondaryColorElement = null;
-        this.circleCanvasElement = null;
-        this.cursorAddElement = null;
-        this.cursorElement = null;
+        this.mainColorItem = null;
+        this.secondaryColorItem = null;
         this.moreLessButtonElement = null;
+        this.sliderPanel = null;
 
-        document.addEventListener("mouseup", () => {
-            this.dragging = false;
-        });
-        document.addEventListener("mousemove", event => {
-            if (!this.dragging) {
-                return;
-            }
+        this.redSlider = null;
+        this.greenSlider = null;
+        this.blueSlider = null;
+        this.hueSlider = null;
+        this.saturationSlider = null;
+        this.lightnessSlider = null;
+        this.alphaSlider = null;
 
-            let rect = this.circleCanvasElement.getBoundingClientRect();
-            let x = event.clientX - rect.left;
-            let y = event.clientY - rect.top;
+        this.redField = null;
+        this.greenField = null;
+        this.blueField = null;
+        this.hexField = null;
+        this.hueField = null;
+        this.saturationField = null;
+        this.lightnessField = null;
+        this.alphaField = null;
 
-            let color = this.getColorAtCircle(this.circleCanvasElement, x, y, true);
-            if (color !== null) {
-                this.setSelectedColor(color);
-            }
-
-            // Update cursor position directly
-            if (this.getColorAtCircle(this.circleCanvasElement, x, y, false) !== null) {
-                this.cursorElement.style.left = x + "px";
-                this.cursorElement.style.top = y + "px";
-            }
-        });
+        this.updating = false;
     }
 
     initialize(window) {
@@ -78,34 +77,20 @@ class ColorsForm extends Form {
         currentColors.id = "currentColors";
         {
             // Main color
-            this.mainColorElement = document.createElement("div")
-            this.mainColorElement.classList.add("currentColor");
-            this.mainColorElement.id = "mainColor";
-            this.mainColorElement.onclick = () => {
+            this.mainColorItem = new ColorPreviewItem("mainColor");
+            this.mainColorItem.initialize(currentColors);
+            this.mainColorItem.setPressable(() => {
                 this.setSelectedIsPrimary(true);
-            }
-            {
-                // Selected color indicator
-                let selectedColorIndicator = document.createElement("div");
-                selectedColorIndicator.classList.add("selectedColorIndicator");
-                this.mainColorElement.appendChild(selectedColorIndicator);
-            }
-            currentColors.appendChild(this.mainColorElement);
+            });
+            currentColors.appendChild(this.mainColorItem.getElement());
 
             // Secondary color
-            this.secondaryColorElement = document.createElement("div");
-            this.secondaryColorElement.classList.add("currentColor");
-            this.secondaryColorElement.id = "secondaryColor";
-            this.secondaryColorElement.onclick = () => {
+            this.secondaryColorItem = new ColorPreviewItem("secondaryColor");
+            this.secondaryColorItem.initialize(currentColors);
+            this.secondaryColorItem.setPressable(() => {
                 this.setSelectedIsPrimary(false);
-            }
-            {
-                // Selected color indicator
-                let selectedColorIndicator = document.createElement("div");
-                selectedColorIndicator.classList.add("selectedColorIndicator");
-                this.secondaryColorElement.appendChild(selectedColorIndicator);
-            }
-            currentColors.appendChild(this.secondaryColorElement);
+            });
+            currentColors.appendChild(this.secondaryColorItem.getElement());
 
             // Swap colors button
             let swapColorsButton = document.createElement("img");
@@ -113,20 +98,18 @@ class ColorsForm extends Form {
             swapColorsButton.src = "assets/icons/swap_icon.png";
             swapColorsButton.onclick = () => {
                 let temp = this.mainColor;
-                this.setMainColor(this.secondaryColor);
-                this.setSecondaryColor(temp);
-                this.updateElements();
+                this.setMainColor(this.secondaryColor, "swap");
+                this.setSecondaryColor(temp, "swap");
             };
             currentColors.appendChild(swapColorsButton)
 
-            // Black and white button
+            // Reset button
             let blackAndWhiteButton = document.createElement("img");
             blackAndWhiteButton.id = "blackAndWhiteButton";
             blackAndWhiteButton.src = "assets/icons/black_and_white_icon.png";
             blackAndWhiteButton.onclick = () => {
-                this.setMainColor(0xFF000000);
-                this.setSecondaryColor(0xFFFFFFFF);
-                this.updateElements();
+                this.setMainColor(Color.BLACK, "reset");
+                this.setSecondaryColor(Color.WHITE, "reset");
             };
             currentColors.appendChild(blackAndWhiteButton);
         }
@@ -141,38 +124,12 @@ class ColorsForm extends Form {
         grid.appendChild(this.moreLessButtonElement);
 
         // Color circle
-        let colorCircle = document.createElement("div");
-        colorCircle.id = "colorCircle";
-        {
-            // Canvas
-            this.circleCanvasElement = document.createElement("canvas");
-            this.circleCanvasElement.id = "colorCircleCanvas";
-            this.circleCanvasElement.onmousedown = event => {
-                let rect = this.circleCanvasElement.getBoundingClientRect();
-                let x = event.clientX - rect.left;
-                let y = event.clientY - rect.top;
-
-                let color = this.getColorAtCircle(this.circleCanvasElement, x, y, false);
-                if (color !== null) {
-                    this.setSelectedColor(color);
-
-                    // Update cursor position directly
-                    this.cursorElement.style.left = x + "px";
-                    this.cursorElement.style.top = y + "px";
-                }
-                this.dragging = true;
-            }
-            this.renderPalette(this.circleCanvasElement);
-            colorCircle.appendChild(this.circleCanvasElement);
-
-            // Cursor
-            this.cursorElement = document.createElement("div");
-            this.cursorElement.id = "colorCircleCursor";
-            this.cursorElement.style.left = "50%";
-            this.cursorElement.style.top = "50%";
-            colorCircle.appendChild(this.cursorElement);
-        }
-        grid.appendChild(colorCircle);
+        this.colorCircle = new ColorCircleItem("colorCircle");
+        this.colorCircle.initialize(this);
+        this.colorCircle.setChangeCallback(color => {
+            this.setSelectedColor(color, "circle");
+        });
+        grid.appendChild(this.colorCircle.getElement());
 
         // Color settings strip
         let colorSettingsStrip = document.createElement("div");
@@ -191,18 +148,19 @@ class ColorsForm extends Form {
 
         // Color palette
         let colorPalette = document.createElement("div");
-        colorPalette.id = "colorPalette";
+        colorPalette.id = "basicColorPalette";
+        colorPalette.classList.add("color-palette");
         {
             for (let i = 0; i < 32; i++) {
                 let colorElement = document.createElement("div");
                 colorElement.classList.add("color");
-                colorElement.style.backgroundColor = Color.packed2Hex(this.palette[i]);
+                colorElement.style.backgroundImage = this.paletteColor(i);
                 colorElement.onmousedown = event => {
                     let isLeftClick = event.button === 0;
                     if (isLeftClick) {
-                        this.setSelectedColor(this.palette[i]);
+                        this.setSelectedColor(this.palette[i], "palette");
                     } else {
-                        this.setNotSelectedColor(this.palette[i]);
+                        this.setNotSelectedColor(this.palette[i], "palette");
                     }
                 }
                 colorPalette.appendChild(colorElement);
@@ -210,166 +168,475 @@ class ColorsForm extends Form {
         }
         grid.appendChild(colorPalette);
 
-        this.updateElements();
+        // Extended palette
+        this.extendedPalette = document.createElement("div");
+        this.extendedPalette.id = "extendedColorPalette";
+        this.extendedPalette.classList.add("color-palette");
+        {
+            for (let i = 32; i < 32 * 3; i++) {
+                let colorElement = document.createElement("div");
+                colorElement.classList.add("color");
+                colorElement.style.backgroundImage = this.paletteColor(i);
+                colorElement.onmousedown = event => {
+                    let isLeftClick = event.button === 0;
+                    if (isLeftClick) {
+                        this.setSelectedColor(this.palette[i], "palette");
+                    } else {
+                        this.setNotSelectedColor(this.palette[i], "palette");
+                    }
+                }
+                this.extendedPalette.appendChild(colorElement);
+            }
+        }
+        grid.appendChild(this.extendedPalette);
+
+        // Slider panel (Extended)
+        this.sliderPanel = document.createElement("div");
+        this.sliderPanel.id = "sliderPanel";
+        {
+            // RGB Header
+            this.sliderPanel.appendChild(this.createHeader("rgbHeader"));
+
+            // Red
+            this.sliderPanel.appendChild(this.createChannel(
+                "redLabel",
+                ColorSliderItem.rangeProvider(
+                    Color.fromRGB(0, 0, 0),
+                    Color.fromRGB(255, 0, 0)
+                ),
+                (slider, field) => {
+                    this.redSlider = slider;
+                    this.redField = field;
+
+                    this.redSlider.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setRed(Math.round(value * 255));
+                        this.setSelectedColor(color, "redSlider");
+                    });
+
+                    this.redField.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setRed(value);
+                        this.setSelectedColor(color, "redField");
+                    });
+                }
+            ));
+
+            // Green
+            this.sliderPanel.appendChild(this.createChannel(
+                "greenLabel",
+                ColorSliderItem.rangeProvider(
+                    Color.fromRGB(0, 0, 0),
+                    Color.fromRGB(0, 255, 0)
+                ),
+                (slider, field) => {
+                    this.greenSlider = slider;
+                    this.greenField = field;
+
+                    this.greenSlider.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setGreen(Math.round(value * 255));
+                        this.setSelectedColor(color, "greenSlider");
+                    });
+
+                    this.greenField.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setGreen(value);
+                        this.setSelectedColor(color, "greenField");
+                    });
+                }
+            ));
+
+            // Blue
+            this.sliderPanel.appendChild(this.createChannel(
+                "blueLabel",
+                ColorSliderItem.rangeProvider(
+                    Color.fromRGB(0, 0, 0),
+                    Color.fromRGB(0, 0, 255)
+                ),
+                (slider, field) => {
+                    this.blueSlider = slider;
+                    this.blueField = field;
+
+                    this.blueSlider.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setBlue(Math.round(value * 255));
+                        this.setSelectedColor(color, "blueSlider");
+                    });
+
+                    this.blueField.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setBlue(value);
+                        this.setSelectedColor(color, "blueField");
+                    });
+                }
+            ));
+
+            // Hex
+            this.sliderPanel.appendChild(this.createEntry("hexLabel", "field", () => {
+                this.hexField = new TextFieldItem("hex");
+                this.hexField.initialize(this);
+                this.hexField.setChangeCallback(value => {
+                    let red = parseInt(value.substring(0, 2), 16);
+                    let green = parseInt(value.substring(2, 4), 16);
+                    let blue = parseInt(value.substring(4, 6), 16);
+                    if (isNaN(red) || isNaN(green) || isNaN(blue)) {
+                        return;
+                    }
+
+                    let color = this.getSelectedColor().copy();
+                    color.setRed(red);
+                    color.setGreen(green);
+                    color.setBlue(blue);
+                    this.setSelectedColor(color, "hex");
+                });
+                return this.hexField.getElement();
+            }));
+
+            // HSV Header
+            this.sliderPanel.appendChild(this.createHeader("hsvHeader"));
+
+            // Hue
+            this.sliderPanel.appendChild(this.createChannel(
+                "hueLabel",
+                v => Color.fromHSL(v, 1, 0.5),
+                (slider, field) => {
+                    this.hueSlider = slider;
+                    this.hueField = field;
+
+                    this.hueSlider.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setHue(value);
+                        this.setSelectedColor(color, "hueSlider");
+                    });
+
+                    this.hueField.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setHue(value / 360);
+                        this.setSelectedColor(color, "hueField");
+                    });
+                }
+            ));
+
+            // Saturation
+            this.sliderPanel.appendChild(this.createChannel(
+                "saturationLabel",
+                v => Color.fromHSL(0, v, 0.5),
+                (slider, field) => {
+                    this.saturationSlider = slider;
+                    this.saturationField = field;
+
+                    this.saturationSlider.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setSaturation(value);
+                        this.setSelectedColor(color, "saturationSlider");
+                    });
+
+                    this.saturationField.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setSaturation(value / 100);
+                        this.setSelectedColor(color, "saturationField");
+                    });
+                }
+            ));
+
+            // Lightness
+            this.sliderPanel.appendChild(this.createChannel(
+                "valueLabel",
+                ColorSliderItem.rangeProvider(
+                    Color.fromRGB(0, 0, 0),
+                    Color.fromRGB(255, 255, 255)
+                ),
+                (slider, field) => {
+                    this.lightnessSlider = slider;
+                    this.lightnessField = field;
+
+                    this.lightnessSlider.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setLightness(value);
+                        this.setSelectedColor(color, "lightnessSlider");
+                    });
+
+                    this.lightnessField.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setLightness(value / 100);
+                        this.setSelectedColor(color, "lightnessField");
+                    });
+                }
+            ));
+
+            // Alpha Header
+            this.sliderPanel.appendChild(this.createHeader("alphaHeader"));
+
+            // Alpha
+            this.sliderPanel.appendChild(this.createChannel(
+                null,
+                ColorSliderItem.rangeProvider(
+                    Color.fromRGBA(0, 0, 0, 0),
+                    Color.fromRGBA(0, 0, 0, 255)
+                ),
+                (slider, field) => {
+                    this.alphaSlider = slider;
+                    this.alphaField = field;
+
+                    this.alphaSlider.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setAlpha(Math.round(value * 255));
+                        this.setSelectedColor(color, "alphaSlider");
+                    });
+
+                    this.alphaField.setChangeCallback(value => {
+                        let color = this.getSelectedColor().copy();
+                        color.setAlpha(value);
+                        this.setSelectedColor(color, "alphaField");
+                    });
+                }
+            ));
+        }
+        grid.appendChild(this.sliderPanel);
+
+        this.updateElements("init");
 
         return grid;
     }
 
-    setMainColor(color) {
-        this.mainColor = color;
-        this.updateElements();
+    createEntry(id, className, callback) {
+        // Header entry
+        let entry = document.createElement("div");
+        entry.classList.add("entry", className);
+        {
+            // Text
+            let text = document.createElement("div");
+            text.classList.add("text");
+            text.textContent = id === null ? "" : i18n("colorsForm." + id + ".text");
+            entry.appendChild(text);
+
+            // Value
+            entry.appendChild(callback());
+        }
+        return entry;
     }
 
-    setSecondaryColor(color) {
+    createHeader(id) {
+        return this.createEntry(id, "header", () => {
+            // Divider
+            let divider = document.createElement("hr");
+            divider.classList.add("divider");
+            return divider;
+        })
+    }
+
+    createChannel(id, colorProvider, itemCallback) {
+        return this.createEntry(id, "channel", () => {
+            // Row
+            let row = document.createElement("div");
+            row.classList.add("row");
+            {
+                // Slider
+                let slider = new ColorSliderItem(id, colorProvider);
+                slider.initialize(this);
+                row.appendChild(slider.getElement());
+
+                // Value
+                let field = new NumberItem(id);
+                field.initialize(this);
+                field.setMax(255);
+                row.appendChild(field.getElement());
+
+                itemCallback(slider, field);
+            }
+
+            return row;
+        })
+    }
+
+    setMainColor(color, initiator = null) {
+        if (!(color instanceof Color)) {
+            throw new Error("Not a color class");
+        }
+        if (this.updating) {
+            return;
+        }
+
+        this.mainColor = color;
+        this.updateElements(initiator);
+    }
+
+    setSecondaryColor(color, initiator = null) {
+        if (!(color instanceof Color)) {
+            throw new Error("Not a color class");
+        }
+        if (this.updating) {
+            return;
+        }
+
         this.secondaryColor = color;
-        this.updateElements();
+        this.updateElements(initiator);
     }
 
     getSelectedColor() {
         return this.selectedIsPrimary ? this.mainColor : this.secondaryColor;
     }
 
-    setSelectedColor(color) {
+    setSelectedColor(color, initiator = null) {
         if (this.selectedIsPrimary) {
-            this.setMainColor(color);
+            this.setMainColor(color, initiator);
         } else {
-            this.setSecondaryColor(color);
-        }
-        this.updateElements();
-    }
-
-    setNotSelectedColor(color) {
-        if (this.selectedIsPrimary) {
-            this.setSecondaryColor(color);
-        } else {
-            this.setMainColor(color);
+            this.setSecondaryColor(color, initiator);
         }
     }
 
-    setSelectedIsPrimary(isPrimary) {
+    setNotSelectedColor(color, initiator = null) {
+        if (this.selectedIsPrimary) {
+            this.setSecondaryColor(color, initiator);
+        } else {
+            this.setMainColor(color, initiator);
+        }
+    }
+
+    setSelectedIsPrimary(isPrimary, initiator = null) {
         this.selectedIsPrimary = isPrimary;
-        this.updateElements();
+        this.updateElements(initiator);
     }
 
     setExpanded(expanded) {
         this.expanded = expanded;
 
         this.updateWindowSize();
-        this.updateElements();
+        this.updateElements("expand");
     }
 
     updateWindowSize() {
         if (this.expanded) {
-            this.window.setSize(386, 266);
+            this.window.setSize(386, 266 + 30);
         } else {
             this.window.setSize(209, 248);
         }
     }
 
-    updateElements() {
-        // Update cursor position
-        let selectedColor = this.getSelectedColor();
-        let position = this.getPositionOfColor(this.circleCanvasElement, selectedColor);
-        this.cursorElement.style.left = position.x + "px";
-        this.cursorElement.style.top = position.y + "px";
+    updateElements(initiator = null) {
+        if (this.updating) {
+            return;
+        }
+        this.updating = true;
 
-        // Update cursor color
-        let cursorColor = this.getColorAtCircle(this.circleCanvasElement, position.x, position.y, true);
-        this.cursorElement.style.backgroundColor = Color.packed2Hex(cursorColor);
+        let selectedColor = this.getSelectedColor();
+        let isPrimary = this.selectedIsPrimary;
+
+        // Update circle
+        if (initiator !== "circle") {
+            this.colorCircle.setColor(selectedColor);
+        }
 
         // Update color add item
         this.colorAddElement.setColor(selectedColor);
 
         // Update selected color indicators
-        let isPrimary = this.selectedIsPrimary;
-        this.mainColorElement.children[0].style.opacity = isPrimary ? "1" : "0";
-        this.mainColorElement.style.backgroundColor = isPrimary ? '#FFF' : "var(--selected-color)";
-        this.mainColorElement.style.setProperty('--indicator-active', isPrimary ? "1" : "0");
-        this.mainColorElement.style.setProperty('--selected-color', Color.packed2Hex(this.mainColor));
-        this.secondaryColorElement.children[0].style.opacity = isPrimary ? "0" : "1";
-        this.secondaryColorElement.style.backgroundColor = isPrimary ? "var(--selected-color)" : '#FFF';
-        this.secondaryColorElement.style.setProperty('--indicator-active', isPrimary ? "0" : "1");
-        this.secondaryColorElement.style.setProperty('--selected-color', Color.packed2Hex(this.secondaryColor));
+        this.mainColorItem.setColor(this.mainColor);
+        this.mainColorItem.setSelected(isPrimary);
+        this.secondaryColorItem.setColor(this.secondaryColor);
+        this.secondaryColorItem.setSelected(!isPrimary);
 
         this.moreLessButtonElement.textContent = this.expanded
             ? i18n("colorsForm.moreLessButton.text.less") + " <<"
             : i18n("colorsForm.moreLessButton.text.more") + " >>";
-    }
+        this.sliderPanel.style.display = this.expanded ? "block" : "none";
+        this.extendedPalette.style.display = this.expanded ? "flex" : "none";
 
-    renderPalette(canvas) {
-        let ctx = canvas.getContext("2d");
-        let radius = canvas.width / 2;
-
-        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        let data = imageData.data;
-
-        for (let i = 0; i < data.length; i += 4) {
-            let x = (i / 4) % canvas.width;
-            let y = (i / 4) / canvas.height;
-
-            let angle = Math.atan2(y - radius, x - radius);
-            let distance = Math.sqrt(Math.pow(x - radius, 2) + Math.pow(y - radius, 2));
-
-            if (distance <= radius) {
-                let hue = angle / (2 * Math.PI);
-                let saturation = distance / radius;
-                let lightness = 1 - Math.min(distance / (radius * 1.7), 0.5);
-
-                let rgba = Color.hslToRgb(hue, saturation, lightness);
-                let alpha = Math.min((radius - distance) / 2, 1) * 255;
-
-                data[i] = rgba & 0xFF;
-                data[i + 1] = (rgba >> 8) & 0xFF;
-                data[i + 2] = (rgba >> 16) & 0xFF;
-                data[i + 3] = alpha;
-            }
+        // Update hex field
+        if (initiator !== "hex") {
+            this.hexField.setText((selectedColor.getRed().toString(16).padStart(2, "0")
+                + selectedColor.getGreen().toString(16).padStart(2, "0")
+                + selectedColor.getBlue().toString(16).padStart(2, "0"))
+                .toUpperCase());
         }
 
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
+        let isHSVInitiator = initiator === "hueSlider"
+            || initiator === "saturationSlider"
+            || initiator === "lightnessSlider"
+            || initiator === "hueField"
+            || initiator === "saturationField"
+            || initiator === "lightnessField";
 
-        ctx.putImageData(imageData, 0, 0);
-    }
-
-
-    getColorAtCircle(canvas, x, y, clamp = true) {
-        let radius = canvas.width / 4 - 4;
-
-        let angle = Math.atan2(y - radius, x - radius);
-        let distance = Math.sqrt(Math.pow(x - radius, 2) + Math.pow(y - radius, 2));
-        if (distance > radius) {
-            if (clamp) {
-                distance = radius;
-            } else {
-                return null;
+        // Update sliders
+        if (initiator !== "redSlider") {
+            this.redSlider.setPercentage(selectedColor.getRed() / 255);
+        }
+        if (initiator !== "greenSlider") {
+            this.greenSlider.setPercentage(selectedColor.getGreen() / 255);
+        }
+        if (initiator !== "blueSlider") {
+            this.blueSlider.setPercentage(selectedColor.getBlue() / 255);
+        }
+        if (isHSVInitiator) {
+            // Take the HSV values from the fields, so we are not losing any data when converting back and forth
+            if (initiator === "hueField") {
+                this.hueSlider.setPercentage(this.hueField.getValue() / 360);
+            }
+            if (initiator === "saturationField") {
+                this.saturationSlider.setPercentage(this.saturationField.getValue() / 100);
+            }
+            if (initiator === "lightnessField") {
+                this.lightnessSlider.setPercentage(this.lightnessField.getValue() / 100);
+            }
+        } else {
+            // Update HSV sliders with the color
+            if (initiator !== "hueSlider") {
+                this.hueSlider.setPercentage(selectedColor.getHue());
+            }
+            if (initiator !== "saturationSlider") {
+                this.saturationSlider.setPercentage(selectedColor.getSaturation());
+            }
+            if (initiator !== "lightnessSlider") {
+                this.lightnessSlider.setPercentage(selectedColor.getLightness());
             }
         }
+        if (initiator !== "alphaSlider") {
+            this.alphaSlider.setPercentage(selectedColor.getAlpha() / 255);
+        }
 
-        let hue = angle / (2 * Math.PI);
-        let saturation = distance / radius;
-        let lightness = 1 - Math.min(distance / (radius * 1.7), 0.5);
+        // Update fields
+        if (initiator !== "redField") {
+            this.redField.setText(selectedColor.getRed());
+        }
+        if (initiator !== "greenField") {
+            this.greenField.setText(selectedColor.getGreen());
+        }
+        if (initiator !== "blueField") {
+            this.blueField.setText(selectedColor.getBlue());
+        }
+        if (isHSVInitiator) {
+            // Take the HSV values from the sliders, so we are not losing any data when converting back and forth
+            if (initiator === "hueSlider") {
+                this.hueField.setText(Math.floor(this.hueSlider.getPercentage() * 360));
+            }
+            if (initiator === "saturationSlider") {
+                this.saturationField.setText(Math.floor(this.saturationSlider.getPercentage() * 100));
+            }
+            if (initiator === "lightnessSlider") {
+                this.lightnessField.setText(Math.floor(this.lightnessSlider.getPercentage() * 100));
+            }
+        } else {
+            // Update HSV fields with the color
+            if (initiator !== "hueField") {
+                this.hueField.setText(Math.floor(selectedColor.getHue() * 360));
+            }
+            if (initiator !== "saturationField") {
+                this.saturationField.setText(Math.floor(selectedColor.getSaturation() * 100));
+            }
+            if (initiator !== "lightnessField") {
+                this.lightnessField.setText(Math.floor(selectedColor.getLightness() * 100));
+            }
+        }
+        if (initiator !== "alphaField") {
+            this.alphaField.setText(selectedColor.getAlpha());
+        }
 
-        return Color.hslToRgb(hue, saturation, lightness);
+        this.updating = false;
     }
 
-    getPositionOfColor(canvas, color) {
-        let radius = canvas.width / 4 - 4;
-
-        let red = (color >> 16) & 0xFF;
-        let green = (color >> 8) & 0xFF;
-        let blue = color & 0xFF;
-
-        let hsl = Color.rgbToHsl(red, green, blue);
-        let hue = hsl[0] * 2 * Math.PI + 0.5;
-        let saturation = hsl[1];
-        let lightness = hsl[2];
-
-        let angle = hue;
-        let distance = saturation * radius;
-
-        let x = radius - distance * Math.sin(angle);
-        let y = radius - distance * Math.cos(angle);
-
-        return {x: x, y: y};
+    paletteColor(index) {
+        let color = this.palette[index];
+        return "linear-gradient(" + color.copy().setAlpha(255).toHex() + ", " + color.toHex() + ")"
     }
 }

@@ -1,7 +1,9 @@
 class SliderItem extends Item {
 
-    constructor(id, callback = null) {
-        super(id, callback);
+    constructor(id) {
+        super(id);
+
+        this.changeCallback = null;
     }
 
     buildElement() {
@@ -33,8 +35,8 @@ class SliderItem extends Item {
     }
 
     onChange(value) {
-        if (this.callback !== null && this.callback !== undefined) {
-            this.callback(value);
+        if (this.changeCallback !== null) {
+            this.changeCallback(value);
         }
     }
 
@@ -68,6 +70,10 @@ class SliderItem extends Item {
 
     isClickable() {
         return false;
+    }
+
+    setChangeCallback(callback) {
+        this.changeCallback = callback;
     }
 
 }

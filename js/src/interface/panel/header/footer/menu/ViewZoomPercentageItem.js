@@ -5,6 +5,7 @@ class ViewZoomPercentageItem extends DropMenuItem {
 
         this.textField = new TextFieldItem("zoomPercentageField");
         this.textField.setText(this.getText());
+        this.textField.setAutoSelect(true);
         this.textField.setSubmitCallback(text => {
             this.close();
         });

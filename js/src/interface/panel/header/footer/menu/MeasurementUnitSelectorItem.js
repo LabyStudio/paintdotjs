@@ -23,10 +23,10 @@ class MeasurementUnitSelectorItem extends SelectorMenuItem {
         this.setSelectedId(this.id + ".pixel");
     }
 
-    run(event) {
+    onPress(event) {
         let separator = this.element.children[0];
         if (event.clientX >= separator.getBoundingClientRect().right) {
-            super.run(event);
+            super.onPress(event);
         } else {
             this.selectNextEntry();
         }

@@ -2,6 +2,13 @@ class FormRegistry {
 
     static {
         this.forms = {};
+
+        // Keep windows in bounds
+        window.addEventListener("resize", () => {
+            for (let form of this.list()) {
+                form.window.setPosition(form.window.x, form.window.y);
+            }
+        });
     }
 
     static initialize() {

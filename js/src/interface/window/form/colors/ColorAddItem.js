@@ -20,6 +20,6 @@ class ColorAddItem extends IconItem {
     }
 
     setColor(color) {
-        this.colorElement.style.backgroundColor = Color.packed2Hex(color);
+        this.colorElement.style.backgroundColor = color.toHex();
     }
 }

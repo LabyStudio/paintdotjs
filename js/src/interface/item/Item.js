@@ -1,8 +1,8 @@
 class Item extends UIElement {
 
-    constructor(id, callback = null) {
+    constructor(id, pressable = null) {
         super(id);
-        this.callback = callback;
+        this.pressable = pressable;
         this.enabled = this.isImplemented();
         this.element = null;
     }
@@ -19,7 +19,7 @@ class Item extends UIElement {
         this.setEnabled(this.enabled);
 
         this.element.onclick = event => {
-            this.run(event);
+            this.onPress(event);
 
             if (!this.isClickable()) {
                 event.stopPropagation();
@@ -47,18 +47,22 @@ class Item extends UIElement {
         }
     }
 
-    shouldRun(event) {
+    shouldPress(event) {
         return true;
     }
 
-    run(event) {
-        if (this.callback !== null) {
-            this.callback();
+    onPress(event) {
+        if (this.pressable !== null) {
+            this.pressable();
         }
     }
 
+    setPressable(pressable) {
+        this.pressable = pressable;
+    }
+
     isImplemented() {
-        return !this.isClickable() || this.callback !== null;
+        return !this.isClickable() || this.pressable !== null;
     }
 
     isEnabled() {
@@ -78,5 +82,22 @@ class Item extends UIElement {
 
     updateParent(parent) {
         this.parent = parent;
+    }
+
+    registerMouseEventsCombined(element, onMouseEvent) {
+        this.registerMouseEvents(element, onMouseEvent, onMouseEvent, onMouseEvent);
+    }
+
+    registerMouseEvents(element, onMouseDown, onMouseMove, onMouseUp) {
+        element.onmousedown = event => {
+            onMouseDown(event.clientX, event.clientY, event.button);
+            document.addEventListener("mouseup", event => {
+                onMouseUp(event.clientX, event.clientY, event.button);
+                document.removeEventListener("mousemove", this.moveEvent);
+            }, {once: true});
+            document.addEventListener("mousemove", this.moveEvent = event => {
+                onMouseMove(event.clientX, event.clientY, event.button);
+            });
+        }
     }
 }

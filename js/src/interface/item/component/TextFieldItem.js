@@ -1,11 +1,12 @@
 class TextFieldItem extends Item {
 
     constructor(id) {
-        super(id, null);
+        super(id);
 
         this.changeCallback = null;
         this.submitCallback = null;
         this.text = "";
+        this.autoSelect = false;
     }
 
     buildElement() {
@@ -30,22 +31,25 @@ class TextFieldItem extends Item {
             }
         };
 
-        setTimeout(_ => {
-            element.focus();
-            element.select();
+        // Auto select text
+        if (this.autoSelect) {
+            setTimeout(_ => {
+                element.focus();
+                element.select();
 
-            let initial = true;
-            element.onclick = e => {
-                // Set cursor at end at the first time clicked
-                if (initial) {
-                    initial = false;
-                    element.selectionStart = element.selectionEnd = element.value.length;
-                }
+                let initial = true;
+                element.onclick = e => {
+                    // Set cursor at end at the first time clicked
+                    if (initial) {
+                        initial = false;
+                        element.selectionStart = element.selectionEnd = element.value.length;
+                    }
 
-                // Prevent closing drop menu
-                e.stopPropagation();
-            };
-        });
+                    // Prevent closing drop menu
+                    e.stopPropagation();
+                };
+            });
+        }
 
         return element;
     }
@@ -64,6 +68,10 @@ class TextFieldItem extends Item {
         if (this.element !== null) {
             this.element.value = text;
         }
+    }
+
+    setAutoSelect(autoSelect) {
+        this.autoSelect = autoSelect;
     }
 
     getText() {
