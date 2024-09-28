@@ -11,6 +11,8 @@
     --color-menu-item-text: #ffffff;
     --color-menu-item-hover: #18324B;
     --color-menu-item-border: #074F97;
+    --color-menu-item-selected: rgba(0, 120, 215, 0.4);
+    --color-menu-item-selected-border: #0078D7;
 
     /* Scrollbar */
     --color-scrollbar-background: #171717;
@@ -32,6 +34,7 @@
     --color-button: #FDFDFD;
     --color-button-text: #000000;
     --color-button-outline: #D0D0D0;
+    --color-checkbox-checked: #005FB8;
 
     --image-transparency: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAJUlEQVR4nGNsaGhggIH6+no4m4kBByBdgvH///9wTmNjIy3sAADr");
 

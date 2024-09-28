@@ -5,8 +5,13 @@ class Panel extends UIElement {
 
         this.element = document.getElementById(elementId);
         if (this.element == null) {
-            throw new Error("Element with id \'" + elementId + "\' not found");
+            this.element = document.createElement("div");
+            this.element.id = elementId;
         }
+    }
+
+    getElement() {
+        return this.element;
     }
 
 }

@@ -14,6 +14,7 @@ class FormRegistry {
     static initialize() {
         FormRegistry.register(new ToolForm());
         FormRegistry.register(new ColorsForm());
+        FormRegistry.register(new LayerForm());
     }
 
     static register(form) {

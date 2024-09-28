@@ -1,13 +1,15 @@
 class MenuItem extends Item {
 
-    constructor(id, callback = null) {
+    constructor(id = null, callback = null) {
         super(id, callback);
     }
 
     buildElement() {
         let element = document.createElement("div");
         element.className = "menu-item";
-        element.id = this.id;
+        if (this.id !== null) {
+            element.id = this.id;
+        }
         if (this.isClickable()) {
             element.className += " clickable";
         }

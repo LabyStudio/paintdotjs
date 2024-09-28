@@ -47,6 +47,22 @@ input[type=number]::-webkit-inner-spin-button {
     -webkit-appearance: none;
 }
 
+/* ------------ Checkbox ------------ */
+
+input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    background-color: var(--color-button);
+    border-radius: 2px;
+    outline: 1px solid var(--color-button-outline);
+}
+
+input[type="checkbox"]:checked {
+    background-color: var(--color-checkbox-checked);
+    outline: 1px solid var(--color-checkbox-checked);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff' width='12px' height='12px'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+}
+
 /* ------------ Slider ------------ */
 
 .slider-wrapper {

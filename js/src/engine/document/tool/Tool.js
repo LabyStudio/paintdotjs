@@ -5,6 +5,10 @@ class Tool {
         this.app = app;
     }
 
+    getId() {
+        return this.id;
+    }
+
     onActivate() {
 
     }

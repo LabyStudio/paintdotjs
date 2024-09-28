@@ -78,10 +78,6 @@ class TextFieldItem extends Item {
         return this.text;
     }
 
-    isImplemented() {
-        return true;
-    }
-
     isClickable() {
         return false;
     }

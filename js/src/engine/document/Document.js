@@ -41,4 +41,8 @@ class Document {
     getHeight() {
         return this.height;
     }
+
+    getLayers() {
+        return this.layers;
+    }
 }

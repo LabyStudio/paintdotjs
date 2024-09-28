@@ -204,4 +204,12 @@ class DocumentView {
         this.setViewPosition(x, y);
     }
 
+    getDocument() {
+        return this.document;
+    }
+
+    getApp() {
+        return this.app;
+    }
+
 }

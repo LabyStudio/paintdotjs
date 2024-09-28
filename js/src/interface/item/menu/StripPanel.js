@@ -17,6 +17,9 @@ class StripPanel extends Panel {
     initialize(parent) {
         super.initialize(parent);
 
+        // Clear
+        this.element.innerHTML = "";
+
         for (let item of this.itemsList) {
             item.initialize(this);
             this.element.appendChild(item.getElement());

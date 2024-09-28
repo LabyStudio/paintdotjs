@@ -27,7 +27,7 @@ class AppWorkspace extends AppView {
         documentWorkspace.fitViewport();
 
         // Add default background layer
-        let backgroundLayer = Layer.createBackgroundLayer(width, height);
+        let backgroundLayer = Layer.createBackgroundLayer(this, width, height);
         document.addLayer(backgroundLayer);
 
         // TODO improve invalidating?
@@ -119,6 +119,14 @@ class AppWorkspace extends AppView {
             tool.onActivate();
         }
         this.fire("app:active_tool_updated", tool);
+    }
+
+    setActiveToolFromId(id) {
+        let tool = ToolRegistry.get(id);
+        if (tool === null) {
+            throw new Error("Tool not found: " + id);
+        }
+        this.setActiveTool(tool);
     }
 
     getActiveTool() {
