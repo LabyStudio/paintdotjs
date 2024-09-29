@@ -10,7 +10,7 @@ class HistoryMemento {
         throw new Error("Not implemented");
     }
 
-    PerformUndo() {
+    performUndo() {
         return this.onUndo();
     }
 

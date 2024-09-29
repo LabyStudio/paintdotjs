@@ -4,6 +4,7 @@ class LayerForm extends Form {
         super("layerForm");
 
         this.layerListItem = null;
+        this.stripPanel = null;
 
         this.app.on("app:update_active_document", () => {
             this.updateContent();
@@ -40,6 +41,7 @@ class LayerForm extends Form {
             let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
             if (activeDocumentWorkspace !== null) {
                 activeDocumentWorkspace.setActiveLayer(layer);
+                this.updateActionEnabledStates();
             }
         });
         {
@@ -51,7 +53,7 @@ class LayerForm extends Form {
                 // Fill the layer list with the layers of the active document
                 let layers = document.getLayers();
                 for (let layer of layers.list()) {
-                    this.layerListItem.addLayer(layer);
+                    this.layerListItem.addLayerAt(0, layer);
                 }
 
                 // Set the selected layer to the active layer of the active document
@@ -61,45 +63,58 @@ class LayerForm extends Form {
         this.layerListItem.appendTo(element, this);
 
         // Footer strip panel
-        let stripPanel = new StripPanel("layerStripPanel", {
+        this.stripPanel = new StripPanel("layerStripPanel", {
             items: [
-                LayerForm.ref("add.new.layer", "addNewLayerButton", () => {
-                    let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
-                    if (activeDocumentWorkspace !== null) {
-                        activeDocumentWorkspace.executeFunction(new AddNewBlankLayerFunction());
-                    }
+                LayerForm.ref(this.app, "add.new.layer", "addNewLayerButton", documentWorkspace => {
+                    documentWorkspace.executeFunction(new AddNewBlankLayerFunction());
                 }),
-                LayerForm.ref("delete.layer", "deleteLayerButton", () => {
-                    let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
-                    if (activeDocumentWorkspace !== null) {
-                        let index = activeDocumentWorkspace.getActiveLayerIndex();
-                        activeDocumentWorkspace.executeFunction(new DeleteLayerFunction(index));
-                    }
+                LayerForm.ref(this.app, "delete.layer", "deleteLayerButton", documentWorkspace => {
+                    let index = documentWorkspace.getActiveLayerIndex();
+                    documentWorkspace.executeFunction(new DeleteLayerFunction(index));
                 }),
-                LayerForm.ref("duplicate.layer", "duplicateLayerButton", () => {
+                LayerForm.ref(this.app, "duplicate.layer", "duplicateLayerButton", documentWorkspace => {
 
                 }),
-                LayerForm.ref("merge.layer.down", "mergeLayerDownButton", () => {
+                LayerForm.ref(this.app, "merge.layer.down", "mergeLayerDownButton", documentWorkspace => {
 
                 }),
-                LayerForm.ref("move.layer.up", "moveLayerUpButton", () => {
-
+                LayerForm.ref(this.app, "move.layer.up", "moveLayerUpButton", documentWorkspace => {
+                    documentWorkspace.performAction(new MoveActiveLayerUpAction());
                 }),
-                LayerForm.ref("move.layer.down", "moveLayerDownButton", () => {
-
+                LayerForm.ref(this.app, "move.layer.down", "moveLayerDownButton", documentWorkspace => {
+                    documentWorkspace.performAction(new MoveActiveLayerDownAction());
                 }),
-                LayerForm.ref("layer.properties", "propertiesButton", () => {
+                LayerForm.ref(this.app, "layer.properties", "propertiesButton", documentWorkspace => {
 
                 }),
             ]
         });
-        stripPanel.appendTo(element, this);
+        this.stripPanel.appendTo(element, this);
+
+        this.updateActionEnabledStates();
 
         return element;
     }
 
-    static ref(id, toolTip, callback) {
-        let item = new IconItem("menu.layers." + id, callback);
+    updateActionEnabledStates() {
+        let activeDocumentWorkspace = app.getActiveDocumentWorkspace();
+        if (activeDocumentWorkspace !== null) {
+            let index = activeDocumentWorkspace.getActiveLayerIndex();
+            let size = activeDocumentWorkspace.getDocument().getLayers().size();
+            this.stripPanel.get("menu.layers.move.layer.up").setEnabled(index !== size - 1);
+            this.stripPanel.get("menu.layers.move.layer.down").setEnabled(index !== 0);
+            this.stripPanel.get("menu.layers.merge.layer.down").setEnabled(index !== 0);
+            this.stripPanel.get("menu.layers.delete.layer").setEnabled(size > 1);
+        }
+    }
+
+    static ref(app, id, toolTip, callback) {
+        let item = new IconItem("menu.layers." + id, () => {
+            let activeDocumentWorkspace = app.getActiveDocumentWorkspace();
+            if (activeDocumentWorkspace !== null && item.isEnabled()) {
+                callback(activeDocumentWorkspace);
+            }
+        });
         item.withTranslationKey("layerForm." + toolTip + ".toolTipText");
         return item;
     }

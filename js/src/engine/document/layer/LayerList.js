@@ -6,10 +6,17 @@ class LayerList {
 
         this.changing = new EventHandler();
         this.changed = new EventHandler();
+
+        this.removingAt = new EventHandler();
+        this.removedAt = new EventHandler();
+
+        this.insertingAt = new EventHandler();
+        this.insertedAt = new EventHandler();
     }
 
     getAt(index) {
-        return this.layers[index];
+        let layer = this.layers[index];
+        return typeof layer !== "undefined" ? layer : null;
     }
 
     getLayerCount() {
@@ -20,9 +27,16 @@ class LayerList {
         this.insertLayerAt(this.layers.length, layer);
     }
 
+    setLayerAt(index, layer) {
+        // Note: Do not fire any events here because we invalidate the layer after swapping
+        this.layers[index] = layer;
+    }
+
     insertLayerAt(index, layer) {
         this.changing.fire(this);
+        this.insertingAt.fire(index);
         this.layers.splice(index, 0, layer);
+        this.insertedAt.fire(index);
         this.changed.fire(this);
     }
 
@@ -35,7 +49,9 @@ class LayerList {
 
     removeLayerAt(index) {
         this.changing.fire(this);
+        this.removingAt.fire(index);
         this.layers.splice(index, 1);
+        this.removedAt.fire(index);
         this.changed.fire(this);
     }
 

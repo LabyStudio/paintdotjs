@@ -6,13 +6,68 @@ class DocumentWorkspace extends DocumentView {
         this.filePath = null;
         this.activeLayer = null;
         this.history = new HistoryStack(this);
+
+        // Bind instance methods
+        this.onLayerRemoving = this.onLayerRemoving.bind(this);
+        this.onLayerInserted = this.onLayerInserted.bind(this);
+    }
+
+    onDocumentChanging() {
+        super.onDocumentChanging();
+
+        // Remove event handlers from old document
+        if (this.document !== null) {
+            this.document.getLayers().removingAt.remove(this.onLayerRemoving);
+            this.document.getLayers().insertedAt.remove(this.onLayerInserted);
+        }
+    }
+
+    onDocumentChanged() {
+        super.onDocumentChanged();
+
+        // Add event handlers to new document
+        this.document.getLayers().removingAt.add(this.onLayerRemoving);
+        this.document.getLayers().insertedAt.add(this.onLayerInserted);
+    }
+
+    onLayerRemoving(index) {
+        let newLayerIndex;
+
+        // Let's pick a new layer to be active
+        let layers = this.document.getLayers();
+        if (index === layers.getLayerCount() - 1) {
+            newLayerIndex = index - 1;
+        } else {
+            newLayerIndex = index + 1;
+        }
+
+        if (newLayerIndex >= 0 && newLayerIndex < layers.getLayerCount()) {
+            this.setActiveLayer(layers.getAt(newLayerIndex));
+        } else {
+            if (layers.getLayerCount() === 0) {
+                this.setActiveLayer(null);
+            } else {
+                this.setActiveLayer(layers.getAt(0));
+            }
+        }
+    }
+
+    onLayerInserted(index) {
+        let layer = this.document.getLayers().getAt(index);
+        if (layer === null) {
+            throw new Error("Inserted layer at index " + index + " does not exist");
+        }
+        this.activeLayer = layer;
     }
 
     executeFunction(historyFunction) {
         let result;
         try {
             let memento = historyFunction.execute(this);
-            this.history.pushNewMemento(memento);
+
+            if (memento !== null) {
+                this.history.pushNewMemento(memento);
+            }
 
             result = HistoryFunctionResult.SUCCESS;
 
@@ -22,6 +77,13 @@ class DocumentWorkspace extends DocumentView {
             throw e; // TODO log instead in future
         }
         return result;
+    }
+
+    performAction(action) {
+        let memento = action.performAction(this);
+        if (memento !== null) {
+            this.history.pushNewMemento(memento);
+        }
     }
 
     getFriendlyName() {
@@ -35,9 +97,21 @@ class DocumentWorkspace extends DocumentView {
     }
 
     getActiveLayerIndex() {
+        if (this.activeLayer === null || this.activeLayer === undefined) {
+            throw new Error("No active layer");
+        }
+
         let index = this.document.getLayers().indexOf(this.activeLayer);
         if (index === -1) {
-            throw new Error("Active layer not in document");
+            let layers = this.document.getLayers();
+            if (layers.size() === 0) {
+                throw new Error("No layers in document");
+            }
+            let msg = "Active layer \"" + this.activeLayer.properties.name + "\" not in document: ";
+            for (let layer of layers.list()) {
+                msg += "\"" + layer.properties.name + "\", ";
+            }
+            throw new Error(msg);
         }
         return index;
     }

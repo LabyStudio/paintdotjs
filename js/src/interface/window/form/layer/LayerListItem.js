@@ -58,6 +58,10 @@ class LayerListItem extends Item {
         this.layers.push(layer);
     }
 
+    addLayerAt(index, layer) {
+        this.layers.splice(index, 0, layer);
+    }
+
     setSelectedLayer(layer) {
         this.selectedLayer = layer;
         this.reinitialize();

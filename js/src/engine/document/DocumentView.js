@@ -30,7 +30,17 @@ class DocumentView {
         this.app.fire("document:invalidated", this.document);
     }
 
+    onDocumentChanging(newDocument) {
+        this.app.fire("document:changing", newDocument);
+    }
+
+    onDocumentChanged() {
+        this.app.fire("document:changed", this.document);
+    }
+
     setDocument(document) {
+        this.onDocumentChanging(document)
+
         // Unregister from previous document
         if (this.document !== null) {
             this.document.invalidated.remove(this.onDocumentInvalidated);
@@ -46,6 +56,8 @@ class DocumentView {
         if (this.compositionSurface === null) {
             this.compositionSurface = new Surface(document.getWidth(), document.getHeight());
         }
+
+        this.onDocumentChanged();
     }
 
     fitViewport() {
