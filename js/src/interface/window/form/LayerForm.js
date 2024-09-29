@@ -65,26 +65,27 @@ class LayerForm extends Form {
         // Footer strip panel
         this.stripPanel = new StripPanel("layerStripPanel", {
             items: [
-                LayerForm.ref(this.app, "add.new.layer", "addNewLayerButton", documentWorkspace => {
+                this.create("add.new.layer", "addNewLayerButton", documentWorkspace => {
                     documentWorkspace.executeFunction(new AddNewBlankLayerFunction());
                 }),
-                LayerForm.ref(this.app, "delete.layer", "deleteLayerButton", documentWorkspace => {
+                this.create("delete.layer", "deleteLayerButton", documentWorkspace => {
                     let index = documentWorkspace.getActiveLayerIndex();
                     documentWorkspace.executeFunction(new DeleteLayerFunction(index));
                 }),
-                LayerForm.ref(this.app, "duplicate.layer", "duplicateLayerButton", documentWorkspace => {
+                this.create("duplicate.layer", "duplicateLayerButton", documentWorkspace => {
+                    let index = documentWorkspace.getActiveLayerIndex();
+                    documentWorkspace.executeFunction(new DuplicateLayerFunction(index));
+                }),
+                this.create("merge.layer.down", "mergeLayerDownButton", documentWorkspace => {
 
                 }),
-                LayerForm.ref(this.app, "merge.layer.down", "mergeLayerDownButton", documentWorkspace => {
-
-                }),
-                LayerForm.ref(this.app, "move.layer.up", "moveLayerUpButton", documentWorkspace => {
+                this.create("move.layer.up", "moveLayerUpButton", documentWorkspace => {
                     documentWorkspace.performAction(new MoveActiveLayerUpAction());
                 }),
-                LayerForm.ref(this.app, "move.layer.down", "moveLayerDownButton", documentWorkspace => {
+                this.create("move.layer.down", "moveLayerDownButton", documentWorkspace => {
                     documentWorkspace.performAction(new MoveActiveLayerDownAction());
                 }),
-                LayerForm.ref(this.app, "layer.properties", "propertiesButton", documentWorkspace => {
+                this.create("layer.properties", "propertiesButton", documentWorkspace => {
 
                 }),
             ]
@@ -108,9 +109,9 @@ class LayerForm extends Form {
         }
     }
 
-    static ref(app, id, toolTip, callback) {
+    create(id, toolTip, callback) {
         let item = new IconItem("menu.layers." + id, () => {
-            let activeDocumentWorkspace = app.getActiveDocumentWorkspace();
+            let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
             if (activeDocumentWorkspace !== null && item.isEnabled()) {
                 callback(activeDocumentWorkspace);
             }

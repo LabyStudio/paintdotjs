@@ -19,4 +19,11 @@ class BitmapLayer extends Layer {
         this.app.fire("document:render_layer_region", this, rectangle);
     }
 
+    clone() {
+        let layer = new BitmapLayer(this.app, this.width, this.height);
+        layer.surface = this.surface.clone();
+        layer.properties = this.properties.clone();
+        return layer;
+    }
+
 }

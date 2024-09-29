@@ -1,4 +1,4 @@
-class DeleteLayerFunction extends HistoryFunction {
+class DuplicateLayerFunction extends HistoryFunction {
 
     constructor(layerIndex) {
         super();
@@ -13,14 +13,20 @@ class DeleteLayerFunction extends HistoryFunction {
             throw new Error("layerIndex = " + this.layerIndex + ", expected [0, " + layers.size() + ")");
         }
 
-        let memento = new DeleteLayerHistoryMemento(
-            i18n("deleteLayer.historyMementoName"),
-            "assets/icons/menu_layers_delete_layer_icon.png",
+        // Duplicate the active layer
+        let newLayer = documentWorkspace.getActiveLayer().clone();
+        newLayer.properties.isBackground = false;
+        let newLayerIndex = this.layerIndex + 1;
+
+        let memento = new NewLayerHistoryMemento(
+            i18n("duplicateLayer.historyMementoName"),
+            "assets/icons/menu_layers_duplicate_layer_icon.png",
             documentWorkspace,
             layers.getAt(this.layerIndex)
         );
 
-        layers.removeLayerAt(this.layerIndex);
+        layers.insertLayerAt(newLayerIndex, newLayer);
+        newLayer.invalidate();
 
         return memento;
     }

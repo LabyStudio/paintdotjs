@@ -28,4 +28,10 @@ class Surface {
             rectangle.width, rectangle.height
         );
     }
+
+    clone() {
+        let surface = new Surface(this.width, this.height);
+        surface.context.drawImage(this.canvas, 0, 0);
+        return surface;
+    }
 }

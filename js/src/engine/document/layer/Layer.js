@@ -30,6 +30,10 @@ class Layer {
         this.invalidate();
     }
 
+    clone() {
+        throw new Error("Not implemented");
+    }
+
     static createLayer(app, width, height, name) {
         let layer = new BitmapLayer(app, width, height);
         layer.properties.name = name;

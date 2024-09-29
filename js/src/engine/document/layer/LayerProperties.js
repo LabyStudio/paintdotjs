@@ -7,4 +7,12 @@ class LayerProperties {
         this.opacity = opacity;
     }
 
+    clone() {
+        return new LayerProperties(
+            this.name,
+            this.visible,
+            this.isBackground,
+            this.opacity
+        );
+    }
 }

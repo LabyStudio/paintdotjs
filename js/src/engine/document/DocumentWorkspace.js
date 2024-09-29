@@ -31,15 +31,9 @@ class DocumentWorkspace extends DocumentView {
     }
 
     onLayerRemoving(index) {
-        let newLayerIndex;
-
         // Let's pick a new layer to be active
         let layers = this.document.getLayers();
-        if (index === layers.getLayerCount() - 1) {
-            newLayerIndex = index - 1;
-        } else {
-            newLayerIndex = index + 1;
-        }
+        let newLayerIndex = index === 0 ? index + 1 : index - 1;
 
         if (newLayerIndex >= 0 && newLayerIndex < layers.getLayerCount()) {
             this.setActiveLayer(layers.getAt(newLayerIndex));
