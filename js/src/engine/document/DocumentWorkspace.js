@@ -35,7 +35,11 @@ class DocumentWorkspace extends DocumentView {
     }
 
     getActiveLayerIndex() {
-        return this.document.getLayers().indexOf(this.activeLayer);
+        let index = this.document.getLayers().indexOf(this.activeLayer);
+        if (index === -1) {
+            throw new Error("Active layer not in document");
+        }
+        return index;
     }
 
     setActiveLayer(layer) {

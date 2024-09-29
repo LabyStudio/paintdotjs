@@ -43,8 +43,26 @@ class ImageUtil {
                 imageContext.drawImage(stepCanvas, 0, 0, imageCanvas.width, imageCanvas.height)
             }
 
-            context.drawImage(imageCanvas, dx, dy)
+            context.drawImage(imageCanvas, dx, dy, dWidth, dHeight)
         }
+    }
+
+    static createTransparentPattern(context, size) {
+        let patternCanvas = document.createElement('canvas');
+        patternCanvas.width = size * 2;
+        patternCanvas.height = size * 2;
+
+        // Render pattern
+        let patternContext = patternCanvas.getContext('2d');
+        patternContext.fillStyle = '#BFBFBF';
+        patternContext.fillRect(0, 0, size, size);
+        patternContext.fillRect(size, size, size, size);
+
+        patternContext.fillStyle = '#FFFFFF';
+        patternContext.fillRect(size, 0, size, size);
+        patternContext.fillRect(0, size, size, size);
+
+        return context.createPattern(patternCanvas, 'repeat');
     }
 
 }

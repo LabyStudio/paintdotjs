@@ -4,6 +4,7 @@ class LayerList {
         this.document = document;
         this.layers = [];
 
+        this.changing = new EventHandler();
         this.changed = new EventHandler();
     }
 
@@ -16,10 +17,11 @@ class LayerList {
     }
 
     addLayer(layer) {
-        this.insertLayer(this.layers.length, layer);
+        this.insertLayerAt(this.layers.length, layer);
     }
 
-    insertLayer(index, layer) {
+    insertLayerAt(index, layer) {
+        this.changing.fire(this);
         this.layers.splice(index, 0, layer);
         this.changed.fire(this);
     }
@@ -32,10 +34,15 @@ class LayerList {
     }
 
     removeLayerAt(index) {
+        this.changing.fire(this);
         this.layers.splice(index, 1);
+        this.changed.fire(this);
     }
 
     indexOf(layer) {
+        if (layer === null) {
+            throw new Error("layer is null");
+        }
         return this.layers.indexOf(layer);
     }
 

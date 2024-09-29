@@ -4,8 +4,19 @@ class Document {
         this.width = width;
         this.height = height;
 
+        // Bind event handlers
+        this.onLayerInvalidated = this.onLayerInvalidated.bind(this);
+
         this.layers = new LayerList(this);
+        this.layers.changing.add(() => {
+            for (let layer of this.layers.layers) {
+                layer.invalidated.remove(this.onLayerInvalidated);
+            }
+        });
         this.layers.changed.add(() => {
+            for (let layer of this.layers.layers) {
+                layer.invalidated.add(this.onLayerInvalidated);
+            }
             this.invalidate();
         });
 
@@ -24,9 +35,7 @@ class Document {
         updateScansContext.update(renderArgs);
     }
 
-    invalidate() {
-        let rectangle = Rectangle.relative(0, 0, this.width, this.height);
-
+    invalidate(rectangle = Rectangle.relative(0, 0, this.width, this.height)) {
         // Invalidate whole document
         this.updateRegion = [];
         this.updateRegion.push(rectangle);
@@ -35,7 +44,22 @@ class Document {
         this.invalidated.fire(this, rectangle);
     }
 
+    onLayerInvalidated(layer, rectangle) {
+        this.invalidate(rectangle);
+    }
+
     renderRegion(renderArgs, region) {
+        // Clear region
+        for (let rectangle of region.rectangles) {
+            renderArgs.surface.context.clearRect(
+                rectangle.x,
+                rectangle.y,
+                rectangle.width,
+                rectangle.height,
+            );
+        }
+
+        // Render layers
         for (let layer of this.layers.layers) {
             if (!layer.isVisible()) {
                 continue;

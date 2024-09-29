@@ -18,7 +18,7 @@ class CheckboxItem extends Item {
             this.checked = element.checked;
 
             if (this.changeCallback !== null) {
-                this.changeCallback(this.text);
+                this.changeCallback(this.checked);
             }
         };
         return element;

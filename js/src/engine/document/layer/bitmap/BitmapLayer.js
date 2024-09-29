@@ -1,12 +1,14 @@
 class BitmapLayer extends Layer {
 
-    constructor(app, width, height, fillColor = Color.WHITE) {
+    constructor(app, width, height, fillColor = null) {
         super(width, height);
 
         this.app = app;
 
         this.surface = new Surface(width, height);
-        this.surface.clear(fillColor);
+        if (fillColor !== null) {
+            this.surface.clear(fillColor);
+        }
     }
 
     render(renderArgs, rectangle) {

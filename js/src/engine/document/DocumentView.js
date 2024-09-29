@@ -17,7 +17,12 @@ class DocumentView {
         this.app.on("document:update_viewport", () => {
             this.app.setViewPosition(this.viewportX, this.viewportY);
 
-            this.update();
+            // TODO Surface box pre-paint
+            this.updateComposition();
+        });
+        this.app.on("document:invalidated", () => {
+            // TODO Surface box pre-paint
+            this.updateComposition();
         });
     }
 
@@ -82,7 +87,7 @@ class DocumentView {
         this.app.fire("document:update_viewport");
     }
 
-    update() {
+    updateComposition() {
         this.document.update(new RenderArgs(this.compositionSurface));
     }
 

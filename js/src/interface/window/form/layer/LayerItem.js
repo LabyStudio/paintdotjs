@@ -31,6 +31,7 @@ class LayerItem extends MenuItem {
             this.thumbnail.height = thumbnailHeight;
             this.thumbnail.style.paddingLeft = thumbnailMargin + "px";
             this.thumbnail.style.paddingRight = thumbnailMargin + "px";
+            this.renderThumbnail();
             element.appendChild(this.thumbnail);
 
             // Name
@@ -43,11 +44,10 @@ class LayerItem extends MenuItem {
             visibleCheckbox.type = "checkbox";
             visibleCheckbox.checked = this.layer.properties.visible;
             visibleCheckbox.setChangeCallback((checked) => {
-                this.layer.properties.visible = checked;
+                this.layer.setVisible(checked);
                 this.app.fire("document:layer_properties_changed");
             });
-            visibleCheckbox.initialize(this);
-            element.appendChild(visibleCheckbox.getElement());
+            visibleCheckbox.appendTo(element, this);
         }
         return element;
     }
@@ -65,6 +65,17 @@ class LayerItem extends MenuItem {
 
         // Render thumbnail
         let context = this.thumbnail.getContext("2d");
-        context.drawImage(layerCanvas, 0, 0, layerCanvas.width, layerCanvas.height, 0, 0, this.thumbnail.width, this.thumbnail.height);
+        ImageUtil.drawImage(
+            context,
+            layerCanvas,
+            0,
+            0,
+            layerCanvas.width,
+            layerCanvas.height,
+            0,
+            0,
+            this.thumbnail.width,
+            this.thumbnail.height
+        );
     }
 }

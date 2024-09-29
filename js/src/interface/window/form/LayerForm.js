@@ -43,13 +43,18 @@ class LayerForm extends Form {
             }
         });
         {
+            // Get the active document
             let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
             if (activeDocumentWorkspace !== null) {
                 let document = activeDocumentWorkspace.getDocument();
+
+                // Fill the layer list with the layers of the active document
                 let layers = document.getLayers();
                 for (let layer of layers.list()) {
                     this.layerListItem.addLayer(layer);
                 }
+
+                // Set the selected layer to the active layer of the active document
                 this.layerListItem.setSelectedLayer(activeDocumentWorkspace.getActiveLayer());
             }
         }
@@ -65,7 +70,11 @@ class LayerForm extends Form {
                     }
                 }),
                 LayerForm.ref("delete.layer", "deleteLayerButton", () => {
-
+                    let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
+                    if (activeDocumentWorkspace !== null) {
+                        let index = activeDocumentWorkspace.getActiveLayerIndex();
+                        activeDocumentWorkspace.executeFunction(new DeleteLayerFunction(index));
+                    }
                 }),
                 LayerForm.ref("duplicate.layer", "duplicateLayerButton", () => {
 

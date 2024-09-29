@@ -14,7 +14,7 @@ class AddNewBlankLayerFunction extends HistoryFunction {
             newLayerIndex
         )
 
-        document.getLayers().insertLayer(newLayerIndex, newLayer);
+        document.getLayers().insertLayerAt(newLayerIndex, newLayer);
 
         return memento;
     }

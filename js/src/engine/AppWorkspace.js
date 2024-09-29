@@ -29,10 +29,10 @@ class AppWorkspace extends AppView {
         // Add default background layer
         let backgroundLayer = Layer.createBackgroundLayer(this, width, height);
         document.addLayer(backgroundLayer);
+        documentWorkspace.setActiveLayer(backgroundLayer);
 
         // TODO improve invalidating?
         document.invalidate();
-        documentWorkspace.update();
 
         // Add document workspace to list
         this.documentWorkspaces.push(documentWorkspace);

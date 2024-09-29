@@ -275,6 +275,7 @@
     margin-right: 5px;
     margin-left: 2px;
     box-shadow: 0 0 2px var(--color-title-bar-border);
+    background-image: var(--image-transparency);
 }
 
 #layerForm #layerList .layer-item input[type="checkbox"] {

@@ -9,6 +9,7 @@ class AppView {
         this.view = document.getElementById('view');
 
         this.context = this.canvas.getContext('2d');
+        this.transparentPattern = ImageUtil.createTransparentPattern(this.context, 5);
 
         this.lastMouseX = 0;
         this.lastMouseY = 0;
@@ -164,12 +165,22 @@ class AppView {
             return;
         }
 
-        // Clear
-        this.context.clearRect(0, 0, this.getViewWidth(), this.getViewHeight());
-
-        // Render the composition of the active document workspace
         let surface = documentWorkspace.getCompositionSurface();
         let renderBounds = documentWorkspace.getRenderBounds();
+
+        // Clear view
+        this.context.clearRect(0, 0, this.getViewWidth(), this.getViewHeight());
+
+        // Render transparent background pattern
+        this.context.fillStyle = this.transparentPattern;
+        this.context.fillRect(
+            renderBounds.getX(),
+            renderBounds.getY(),
+            renderBounds.getWidth(),
+            renderBounds.getHeight()
+        );
+
+        // Render the composition of the active document workspace
         ImageUtil.drawImage(
             this.context,
             surface.canvas,

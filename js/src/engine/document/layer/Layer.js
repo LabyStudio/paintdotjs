@@ -4,6 +4,7 @@ class Layer {
         this.width = width;
         this.height = height;
         this.properties = new LayerProperties(null, true, false, 255);
+        this.invalidated = new EventHandler();
     }
 
     render(renderArgs, rectangle) {
@@ -11,7 +12,7 @@ class Layer {
     }
 
     invalidate() {
-        // TODO fire event
+        this.invalidated.fire();
     }
 
     renderRegion(renderArgs, region) {
@@ -24,8 +25,13 @@ class Layer {
         return this.properties.visible;
     }
 
+    setVisible(visible) {
+        this.properties.visible = visible;
+        this.invalidate();
+    }
+
     static createLayer(app, width, height, name) {
-        let layer = new BitmapLayer(app, width, height, Color.TRANSPARENT);
+        let layer = new BitmapLayer(app, width, height);
         layer.properties.name = name;
         layer.properties.isBackground = false;
         return layer;

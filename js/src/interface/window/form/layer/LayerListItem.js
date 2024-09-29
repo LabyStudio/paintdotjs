@@ -26,10 +26,12 @@ class LayerListItem extends Item {
 
             this.layerItemMap.clear();
             for (let layer of this.layers) {
+                // Set the selected layer to the first layer if it is not set
                 if (this.selectedLayer === null) {
                     this.selectedLayer = layer;
                 }
 
+                // Layer item
                 let layerItem = new LayerItem(layer);
                 layerItem.setSelected(layer === this.selectedLayer);
                 layerItem.setPressable(() => {
@@ -39,9 +41,7 @@ class LayerListItem extends Item {
                     }
                     this.reinitialize();
                 });
-                layerItem.renderThumbnail();
-                layerItem.initialize(this);
-                element.appendChild(layerItem.getElement());
+                layerItem.appendTo(element, this);
                 this.layerItemMap.set(layer, layerItem);
             }
 
