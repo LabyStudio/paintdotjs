@@ -8,6 +8,9 @@ class LayerForm extends Form {
         this.app.on("app:update_active_document", () => {
             this.updateContent();
         });
+        this.app.on("document:invalidated", () => {
+            this.updateContent();
+        });
         this.app.on("document:render_layer_region", (layer, region) => {
             let layerItem = this.layerListItem.getLayerItem(layer);
             if (layerItem !== null) {
@@ -33,6 +36,12 @@ class LayerForm extends Form {
 
         // Layer list
         this.layerListItem = new LayerListItem("layerList");
+        this.layerListItem.setSelectCallback((layer) => {
+            let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
+            if (activeDocumentWorkspace !== null) {
+                activeDocumentWorkspace.setActiveLayer(layer);
+            }
+        });
         {
             let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
             if (activeDocumentWorkspace !== null) {
@@ -41,12 +50,10 @@ class LayerForm extends Form {
                 for (let layer of layers.list()) {
                     this.layerListItem.addLayer(layer);
                 }
-
                 this.layerListItem.setSelectedLayer(activeDocumentWorkspace.getActiveLayer());
             }
         }
-        this.layerListItem.initialize(element);
-        element.appendChild(this.layerListItem.getElement());
+        this.layerListItem.appendTo(element, this);
 
         // Footer strip panel
         let stripPanel = new StripPanel("layerStripPanel", {
@@ -77,8 +84,7 @@ class LayerForm extends Form {
                 }),
             ]
         });
-        stripPanel.initialize(element);
-        element.appendChild(stripPanel.getElement());
+        stripPanel.appendTo(element, this);
 
         return element;
     }

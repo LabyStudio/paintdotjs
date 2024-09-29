@@ -11,6 +11,9 @@ class DocumentView {
         this.zoom = 1;
         this.zoomToWindow = false;
 
+        // Bind instance methods
+        this.onDocumentInvalidated = this.onDocumentInvalidated.bind(this);
+
         this.app.on("document:update_viewport", () => {
             this.app.setViewPosition(this.viewportX, this.viewportY);
 
@@ -18,8 +21,21 @@ class DocumentView {
         });
     }
 
+    onDocumentInvalidated() {
+        this.app.fire("document:invalidated", this.document);
+    }
+
     setDocument(document) {
+        // Unregister from previous document
+        if (this.document !== null) {
+            this.document.invalidated.remove(this.onDocumentInvalidated);
+        }
+
+        // Set new document
         this.document = document;
+
+        // Register for new document
+        this.document.invalidated.add(this.onDocumentInvalidated);
 
         // Create surface for composition (Canvas that combines all layers)
         if (this.compositionSurface === null) {

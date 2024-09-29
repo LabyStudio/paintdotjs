@@ -5,30 +5,53 @@ class LayerListItem extends Item {
 
         this.layers = [];
         this.selectedLayer = null;
+        this.selectCallback = null;
         this.enabled = true;
 
         this.layerItemMap = new Map();
+        this.previousScrollPosition = 0;
     }
 
     buildElement() {
-        let element = document.createElement("div");
-        element.id = this.id;
+        this.previousScrollPosition = this.element === null ? 0 : this.element.scrollTop;
 
-        this.layerItemMap.clear();
-        for (let layer of this.layers) {
-            if (this.selectedLayer === null) {
-                this.selectedLayer = layer;
+        // Scroll
+        let scroll = document.createElement("div");
+        scroll.id = this.id;
+        scroll.className = "layer-list-scroll";
+        {
+            // Content
+            let element = document.createElement("div");
+            element.className = "layer-list-content";
+
+            this.layerItemMap.clear();
+            for (let layer of this.layers) {
+                if (this.selectedLayer === null) {
+                    this.selectedLayer = layer;
+                }
+
+                let layerItem = new LayerItem(layer);
+                layerItem.setSelected(layer === this.selectedLayer);
+                layerItem.setPressable(() => {
+                    this.selectedLayer = layer;
+                    if (this.selectCallback !== null) {
+                        this.selectCallback(layer);
+                    }
+                    this.reinitialize();
+                });
+                layerItem.renderThumbnail();
+                layerItem.initialize(this);
+                element.appendChild(layerItem.getElement());
+                this.layerItemMap.set(layer, layerItem);
             }
 
-            let layerItem = new LayerItem(layer);
-            layerItem.setSelected(layer === this.selectedLayer);
-            layerItem.renderThumbnail();
-            layerItem.initialize(this);
-            element.appendChild(layerItem.buildElement());
-            this.layerItemMap.set(layer, layerItem);
+            scroll.appendChild(element);
         }
+        return scroll;
+    }
 
-        return element;
+    postInitialize() {
+        this.element.scrollTop = this.previousScrollPosition;
     }
 
     addLayer(layer) {
@@ -37,7 +60,11 @@ class LayerListItem extends Item {
 
     setSelectedLayer(layer) {
         this.selectedLayer = layer;
-        this.updateDocument();
+        this.reinitialize();
+    }
+
+    setSelectCallback(callback) {
+        this.selectCallback = callback;
     }
 
     getLayerItem(layer) {
@@ -45,8 +72,7 @@ class LayerListItem extends Item {
         return item !== undefined ? item : null;
     }
 
-    isClickable() {
-        return false;
+    isImplemented() {
+        return true;
     }
-
 }

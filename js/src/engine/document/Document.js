@@ -5,6 +5,11 @@ class Document {
         this.height = height;
 
         this.layers = new LayerList(this);
+        this.layers.changed.add(() => {
+            this.invalidate();
+        });
+
+        this.invalidated = new EventHandler();
 
         this.updateRegion = [];
     }
@@ -20,9 +25,14 @@ class Document {
     }
 
     invalidate() {
+        let rectangle = Rectangle.relative(0, 0, this.width, this.height);
+
         // Invalidate whole document
         this.updateRegion = [];
-        this.updateRegion.push(Rectangle.relative(0, 0, this.width, this.height));
+        this.updateRegion.push(rectangle);
+
+        // Fire event
+        this.invalidated.fire(this, rectangle);
     }
 
     renderRegion(renderArgs, region) {

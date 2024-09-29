@@ -27,15 +27,20 @@ class Item extends UIElement {
         }
     }
 
-    updateDocument() {
+    postInitialize() {
+
+    }
+
+    reinitialize() {
         if (this.element === null || this.element.parentElement === null) {
             return;
         }
 
         let parent = this.element.parentElement;
         let previousElement = this.element;
-        parent.replaceChild(this.element = this.buildElement(), previousElement);
-        this.element.onclick = previousElement.onclick;
+        this.initialize(this.parent);
+        parent.replaceChild(this.element, previousElement);
+        this.postInitialize();
     }
 
     setEnabled(enabled) {
@@ -45,6 +50,15 @@ class Item extends UIElement {
         } else {
             this.element.setAttribute("disabled", "")
         }
+    }
+
+    appendTo(element, parent) {
+        // Initialize
+        this.initialize(parent);
+
+        // Append and post initialize
+        element.appendChild(this.element);
+        this.postInitialize();
     }
 
     shouldPress(event) {

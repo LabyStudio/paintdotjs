@@ -5,6 +5,7 @@ class LayerItem extends MenuItem {
 
         this.layer = layer;
         this.selected = false;
+        this.enabled = true;
 
         this.thumbnail = null;
     }

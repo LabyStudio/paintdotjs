@@ -16,7 +16,7 @@ class ViewActualSizeItem extends IconItem {
                 : "menu_view_actual_size_icon",
             true
         );
-        this.updateDocument();
+        this.reinitialize();
 
         let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
         if (activeDocumentWorkspace !== null) {

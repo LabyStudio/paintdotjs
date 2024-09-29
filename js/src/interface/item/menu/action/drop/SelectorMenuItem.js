@@ -54,7 +54,7 @@ class SelectorMenuItem extends DropMenuItem {
 
     setSelectedId(id) {
         this.selected = id;
-        this.updateDocument();
+        this.reinitialize();
     }
 
     showSelectedIcon() {

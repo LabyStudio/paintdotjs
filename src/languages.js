@@ -27,7 +27,7 @@ window.i18n = function (path, variables) {
         }
 
         for (let i = 0; i < variables.length; i++) {
-            translation = translation.replace(new RegExp('%' + i, 'g'), variables[i]);
+            translation = translation.replace('{' + i + '}', variables[i]);
         }
     }
     return translation;

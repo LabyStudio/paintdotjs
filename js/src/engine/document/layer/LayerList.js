@@ -3,6 +3,8 @@ class LayerList {
     constructor(document) {
         this.document = document;
         this.layers = [];
+
+        this.changed = new EventHandler();
     }
 
     getAt(index) {
@@ -14,11 +16,12 @@ class LayerList {
     }
 
     addLayer(layer) {
-        this.layers.push(layer);
+        this.insertLayer(this.layers.length, layer);
     }
 
     insertLayer(index, layer) {
         this.layers.splice(index, 0, layer);
+        this.changed.fire(this);
     }
 
     removeLayer(layer) {

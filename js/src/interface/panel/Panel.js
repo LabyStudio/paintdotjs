@@ -10,6 +10,11 @@ class Panel extends UIElement {
         }
     }
 
+    appendTo(element, parent) {
+        this.initialize(parent);
+        element.appendChild(this.element);
+    }
+
     getElement() {
         return this.element;
     }

@@ -10,4 +10,13 @@ class UIElement {
         this.parent = parent;
     }
 
+    appendTo(element, parent) {
+        this.initialize(parent);
+        element.appendChild(this.getElement());
+    }
+
+    getElement() {
+        throw new Error("Not implemented for " + this.constructor.name);
+    }
+
 }

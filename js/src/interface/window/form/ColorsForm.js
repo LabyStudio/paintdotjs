@@ -138,11 +138,13 @@ class ColorsForm extends Form {
         {
             // Color add
             this.colorAddElement = new ColorAddItem();
-            colorSettingsStrip.appendChild(this.colorAddElement.buildElement());
+            this.colorAddElement.initialize(this);
+            colorSettingsStrip.appendChild(this.colorAddElement.getElement());
 
             // Swatch
             let swatch = new SwatchItem();
-            colorSettingsStrip.appendChild(swatch.buildElement());
+            swatch.initialize(this);
+            colorSettingsStrip.appendChild(swatch.getElement());
         }
         grid.appendChild(colorSettingsStrip);
 
