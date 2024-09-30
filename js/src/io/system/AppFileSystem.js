@@ -1,0 +1,3 @@
+class AppFileSystem extends FileSystem {
+
+}

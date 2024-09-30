@@ -61,7 +61,7 @@ class LayerItem extends MenuItem {
             return;
         }
 
-        let layerCanvas = this.layer.surface.canvas;
+        let layerCanvas = this.layer.getSurface().canvas;
 
         // Render thumbnail
         let context = this.thumbnail.getContext("2d");

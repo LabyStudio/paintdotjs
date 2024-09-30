@@ -77,7 +77,7 @@ class LayerForm extends Form {
                     documentWorkspace.executeFunction(new DuplicateLayerFunction(index));
                 }),
                 this.create("merge.layer.down", "mergeLayerDownButton", documentWorkspace => {
-
+                    documentWorkspace.performAction(new MergeLayerDownAction());
                 }),
                 this.create("move.layer.up", "moveLayerUpButton", documentWorkspace => {
                     documentWorkspace.performAction(new MoveActiveLayerUpAction());

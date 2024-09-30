@@ -51,7 +51,7 @@ class Document {
     renderRegion(renderArgs, region) {
         // Clear region
         for (let rectangle of region.rectangles) {
-            renderArgs.surface.context.clearRect(
+            renderArgs.getSurface().context.clearRect(
                 rectangle.x,
                 rectangle.y,
                 rectangle.width,
@@ -78,5 +78,9 @@ class Document {
 
     getLayers() {
         return this.layers;
+    }
+
+    getBounds() {
+        return new Rectangle(0, 0, this.width, this.height);
     }
 }

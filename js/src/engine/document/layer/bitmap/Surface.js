@@ -19,7 +19,7 @@ class Surface {
 
     render(renderArgs, rectangle) {
         // Render surface to renderArgs.surface
-        renderArgs.surface.context.drawImage(
+        renderArgs.getSurface().context.drawImage(
             this.canvas,
             rectangle.x,
             rectangle.y,

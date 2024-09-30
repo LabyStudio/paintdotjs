@@ -26,4 +26,8 @@ class BitmapLayer extends Layer {
         return layer;
     }
 
+    getSurface() {
+        return this.surface;
+    }
+
 }

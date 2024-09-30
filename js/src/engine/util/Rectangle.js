@@ -97,6 +97,10 @@ class Rectangle {
         this.height = height;
     }
 
+    clone() {
+        return new Rectangle(this.x, this.y, this.width, this.height);
+    }
+
     static relative(x, y, width, height) {
         return new Rectangle(x, y, width, height);
     }

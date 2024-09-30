@@ -14,4 +14,12 @@ class HistoryMemento {
         return this.onUndo();
     }
 
+    getName() {
+        return this.name;
+    }
+
+    getImage() {
+        return this.image;
+    }
+
 }

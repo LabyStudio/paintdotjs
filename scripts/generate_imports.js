@@ -21,6 +21,15 @@ function walk(dir) {
     });
 }
 
+function getSortedPositionIndex(list, item) {
+    let sortedList = list.slice();
+    sortedList.push(item);
+    sortedList.sort();
+    let indexInSorted = sortedList.indexOf(item);
+    let itemAboveInOriginal = sortedList[indexInSorted - 1];
+    return list.indexOf(itemAboveInOriginal) + 1;
+}
+
 walk(srcDir);
 
 files.forEach(file => {
@@ -40,8 +49,13 @@ const newImports = imports.filter(i => !prevImports.includes(i));
 
 prevImports = prevImports.filter(i => imports.includes(i));
 
+let mergedImports = prevImports.slice();
+for (let item of newImports) {
+    let index = getSortedPositionIndex(mergedImports, item);
+    mergedImports.splice(index, 0, item); // Add the new import in sorted order
+}
+
 const newContent = index.substring(0, startIndex) + '\n'
-    + prevImports.join('\n') + (prevImports.length === 0 ? '' : '\n')
-    + newImports.join('\n') + (newImports.length === 0 ? '' : '\n')
+    + mergedImports.join('\n') + (mergedImports.length === 0 ? '' : '\n')
     + index.substring(endIndex);
 fs.writeFileSync(indexFile, newContent);

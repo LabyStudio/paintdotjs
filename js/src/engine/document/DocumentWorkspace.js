@@ -115,6 +115,6 @@ class DocumentWorkspace extends DocumentView {
     }
 
     setActiveLayerIndex(index) {
-        this.activeLayer = this.document.getLayers().get(index);
+        this.activeLayer = this.document.getLayers().getAt(index);
     }
 }
