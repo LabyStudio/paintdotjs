@@ -4,6 +4,8 @@ class ScrollSession {
         this.scrollPosition = 0;
         this.itemPositionCache = new Map();
         this.lastAnimationFrames = new Map();
+        this.draggingItem = null;
+        this.lastClientY = 0;
     }
 
     getScrollPosition() {
@@ -12,6 +14,22 @@ class ScrollSession {
 
     setScrollPosition(scrollPosition) {
         this.scrollPosition = scrollPosition;
+    }
+
+    setDraggingItem(item) {
+        this.draggingItem = item;
+    }
+
+    getDraggingItem() {
+        return this.draggingItem;
+    }
+
+    setLastClientY(clientY) {
+        this.lastClientY = clientY;
+    }
+
+    getLastClientY() {
+        return this.lastClientY;
     }
 
     cacheItemPosition(itemKey, position) {

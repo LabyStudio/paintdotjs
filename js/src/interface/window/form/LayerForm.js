@@ -47,6 +47,21 @@ class LayerForm extends Form {
                 this.updateActionEnabledStates();
             }
         });
+        this.layerListItem.setItemSwapper((item1, item2) => {
+            let documentWorkspace = this.app.getActiveDocumentWorkspace();
+            if (documentWorkspace !== null) {
+                let document = documentWorkspace.getDocument();
+
+                let layers = document.getLayers();
+                let index1 = layers.indexOf(item1.getLayer());
+                let index2 = layers.indexOf(item2.getLayer());
+
+                let swapLayerFunction = new SwapLayerFunction(index1, index2);
+                documentWorkspace.executeFunction(swapLayerFunction);
+
+                this.layerListItem.scrollToItem(item2);
+            }
+        });
         {
             // Get the active document
             let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();

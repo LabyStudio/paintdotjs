@@ -125,10 +125,9 @@ class Item extends UIElement {
     }
 
     addClassName(className) {
-        if (this.classNames.includes(className)) {
-            return;
+        if (!this.classNames.includes(className)) {
+            this.classNames.push(className);
         }
-        this.classNames.push(className);
 
         if (this.isInitialized()) {
             this.element.classList.add(className);
