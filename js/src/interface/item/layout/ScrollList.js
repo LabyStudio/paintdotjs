@@ -79,7 +79,7 @@ class ScrollList extends Item {
         let timeContinuedDragging = 0;
         let dragging = false;
 
-        let startDraggingItem = (item, clientY) => {
+        let startDraggingItem = (item) => {
             // Start dragging the item if the item swapper is available
             if (this.itemSwapper === null) {
                 return;
@@ -90,10 +90,6 @@ class ScrollList extends Item {
             // Reset the transform before calculating the new position
             element.style.transform = "translate(0, 0)";
             element.style.zIndex = "1";
-
-            // Calculate the offset of the mouse position to the item
-            let offsetY = clientY - element.getBoundingClientRect().top - element.clientHeight / 2;
-            element.style.transform = "translate(0, " + offsetY + "px)";
 
             timeContinuedDragging = Date.now();
             dragging = true;
@@ -150,16 +146,20 @@ class ScrollList extends Item {
         let draggingItem = this.scrollSession.getDraggingItem();
         if (draggingItem !== null && !dragging) {
             let itemByKey = this.items.find(i => i.getKey() === draggingItem.getKey());
+            startDraggingItem(itemByKey);
 
             // We don't have the mouse position yet, so we use the last stored clientY position to place the item at the correct position
-            startDraggingItem(itemByKey, this.scrollSession.getLastClientY());
+            let element = itemByKey.getElement();
+            let clientY = this.scrollSession.getLastClientY();
+            let offsetY = clientY - element.getBoundingClientRect().top - element.clientHeight / 2;
+            element.style.transform = "translate(0, " + offsetY + "px)";
         }
 
         // Start dragging the item
         for (let item of this.items) {
             let element = item.getElement();
             element.addEventListener("mousedown", event => {
-                startDraggingItem(item, event.clientY);
+                startDraggingItem(item);
             });
         }
 
@@ -202,12 +202,6 @@ class ScrollList extends Item {
                     continue;
                 }
 
-                // Don't animate the dragging item
-                let draggingItem = this.scrollSession.getDraggingItem();
-                if (draggingItem !== null && item.getKey() === draggingItem.getKey()) {
-                    continue;
-                }
-
                 let key = item.getKey(); // Use key because the instance of the item may change
                 let currentItemPosition = item.element.offsetTop;
 
@@ -219,15 +213,21 @@ class ScrollList extends Item {
                         continue;
                     }
 
+                    // Don't animate the dragging item
+                    let draggingItem = this.scrollSession.getDraggingItem();
+                    let isDraggingItem = draggingItem !== null && item.getKey() === draggingItem.getKey();
+
                     // Animate the item to its new position
-                    item.element.style.position = "relative";
-                    item.element.animate([
-                        {top: -diff + "px"},
-                        {top: 0}
-                    ], {
-                        duration: 200,
-                        easing: "ease-out"
-                    });
+                    if (!isDraggingItem) {
+                        item.element.style.position = "relative";
+                        item.element.animate([
+                            {top: -diff + "px"},
+                            {top: 0}
+                        ], {
+                            duration: 200,
+                            easing: "ease-out"
+                        });
+                    }
                 }
                 this.scrollSession.cacheItemPosition(key, currentItemPosition);
             }
