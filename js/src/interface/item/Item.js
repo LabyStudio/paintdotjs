@@ -5,6 +5,7 @@ class Item extends UIElement {
         this.pressable = pressable;
         this.enabled = this.isImplemented();
         this.element = null;
+        this.classNames = [];
     }
 
     initialize(parent) {
@@ -15,8 +16,18 @@ class Item extends UIElement {
             this.element.setAttribute("title", "Not implemented");
         }
 
+        // Set id
+        if (this.id !== null) {
+            this.element.id = this.id
+        }
+
         // Update enabled state on element
         this.setEnabled(this.enabled);
+
+        // Add class names
+        for (let className of this.classNames) {
+            this.element.classList.add(className);
+        }
 
         this.element.onclick = event => {
             this.onPress(event);
@@ -45,10 +56,13 @@ class Item extends UIElement {
 
     setEnabled(enabled) {
         this.enabled = enabled;
-        if (enabled) {
-            this.element.removeAttribute("disabled");
-        } else {
-            this.element.setAttribute("disabled", "")
+
+        if (this.isInitialized()) {
+            if (enabled) {
+                this.element.removeAttribute("disabled");
+            } else {
+                this.element.setAttribute("disabled", "")
+            }
         }
     }
 
@@ -96,6 +110,45 @@ class Item extends UIElement {
 
     updateParent(parent) {
         this.parent = parent;
+    }
+
+    setClassName(className, enabled) {
+        if (enabled) {
+            this.addClassName(className);
+        } else {
+            this.removeClass(className);
+        }
+    }
+
+    isInitialized() {
+        return this.element !== null
+    }
+
+    addClassName(className) {
+        if (this.classNames.includes(className)) {
+            return;
+        }
+        this.classNames.push(className);
+
+        if (this.isInitialized()) {
+            this.element.classList.add(className);
+        }
+    }
+
+    removeClass(className) {
+        this.classNames = this.classNames.filter(c => c !== className);
+
+        if (this.isInitialized()) {
+            this.element.classList.remove(className);
+        }
+    }
+
+    setId(id) {
+        this.id = id;
+
+        if (this.isInitialized()) {
+            this.element.id = id;
+        }
     }
 
     registerMouseEventsCombined(element, onMouseEvent) {

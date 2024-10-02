@@ -4,7 +4,6 @@ class LayerItem extends MenuItem {
         super();
 
         this.layer = layer;
-        this.selected = false;
         this.enabled = true;
 
         this.thumbnail = null;
@@ -13,9 +12,6 @@ class LayerItem extends MenuItem {
     buildElement() {
         let element = super.buildElement();
         element.className += " layer-item";
-        if (this.selected) {
-            element.className += " selected-layer";
-        }
         element.innerHTML = "";
         {
             let maxThumbnailSize = 40;
@@ -52,10 +48,6 @@ class LayerItem extends MenuItem {
         return element;
     }
 
-    setSelected(selected) {
-        this.selected = selected;
-    }
-
     renderThumbnail() {
         if (this.thumbnail === null) {
             return;
@@ -77,5 +69,9 @@ class LayerItem extends MenuItem {
             this.thumbnail.width,
             this.thumbnail.height
         );
+    }
+
+    getLayer() {
+        return this.layer;
     }
 }

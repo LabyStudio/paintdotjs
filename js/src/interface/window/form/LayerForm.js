@@ -6,6 +6,8 @@ class LayerForm extends Form {
         this.layerListItem = null;
         this.stripPanel = null;
 
+        this.scrollSession = new ScrollSession();
+
         this.app.on("app:update_active_document", () => {
             this.updateContent();
         });
@@ -13,9 +15,9 @@ class LayerForm extends Form {
             this.updateContent();
         });
         this.app.on("document:render_layer_region", (layer, region) => {
-            let layerItem = this.layerListItem.getLayerItem(layer);
-            if (layerItem !== null) {
-                layerItem.renderThumbnail();
+            let item = this.getItemByLayer(layer);
+            if (item !== null) {
+                item.renderThumbnail();
             }
         });
     }
@@ -24,7 +26,7 @@ class LayerForm extends Form {
         super.initialize(window);
 
         let viewBounds = this.app.getViewBounds();
-        window.setSize(180, 206);
+        window.setSize(180, 256);
         window.setPosition(
             viewBounds.getRight() - window.getWidth() - 20,
             this.app.getViewBounds().getBottom() - window.getHeight() - 20 - 5
@@ -36,11 +38,12 @@ class LayerForm extends Form {
         element.id = "layerForm";
 
         // Layer list
-        this.layerListItem = new LayerListItem("layerList");
-        this.layerListItem.setSelectCallback((layer) => {
+        this.layerListItem = new ScrollList("layerList", this.scrollSession);
+        this.layerListItem.setScrollSpeed(0.4);
+        this.layerListItem.setSelectCallback((item) => {
             let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
             if (activeDocumentWorkspace !== null) {
-                activeDocumentWorkspace.setActiveLayer(layer);
+                activeDocumentWorkspace.setActiveLayer(item.getLayer());
                 this.updateActionEnabledStates();
             }
         });
@@ -53,11 +56,12 @@ class LayerForm extends Form {
                 // Fill the layer list with the layers of the active document
                 let layers = document.getLayers();
                 for (let layer of layers.list()) {
-                    this.layerListItem.addLayerAt(0, layer);
+                    this.layerListItem.addAt(0, new LayerItem(layer));
                 }
 
                 // Set the selected layer to the active layer of the active document
-                this.layerListItem.setSelectedLayer(activeDocumentWorkspace.getActiveLayer());
+                let item = this.getItemByLayer(activeDocumentWorkspace.getActiveLayer());
+                this.layerListItem.setSelected(item);
             }
         }
         this.layerListItem.appendTo(element, this);
@@ -67,23 +71,29 @@ class LayerForm extends Form {
             items: [
                 this.create("add.new.layer", "addNewLayerButton", documentWorkspace => {
                     documentWorkspace.executeFunction(new AddNewBlankLayerFunction());
+                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("delete.layer", "deleteLayerButton", documentWorkspace => {
                     let index = documentWorkspace.getActiveLayerIndex();
                     documentWorkspace.executeFunction(new DeleteLayerFunction(index));
+                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("duplicate.layer", "duplicateLayerButton", documentWorkspace => {
                     let index = documentWorkspace.getActiveLayerIndex();
                     documentWorkspace.executeFunction(new DuplicateLayerFunction(index));
+                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("merge.layer.down", "mergeLayerDownButton", documentWorkspace => {
                     documentWorkspace.performAction(new MergeLayerDownAction());
+                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("move.layer.up", "moveLayerUpButton", documentWorkspace => {
                     documentWorkspace.performAction(new MoveActiveLayerUpAction());
+                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("move.layer.down", "moveLayerDownButton", documentWorkspace => {
                     documentWorkspace.performAction(new MoveActiveLayerDownAction());
+                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("layer.properties", "propertiesButton", documentWorkspace => {
 
@@ -107,6 +117,15 @@ class LayerForm extends Form {
             this.stripPanel.get("menu.layers.merge.layer.down").setEnabled(index !== 0);
             this.stripPanel.get("menu.layers.delete.layer").setEnabled(size > 1);
         }
+    }
+
+    getItemByLayer(layer) {
+        for (let item of this.layerListItem.items) {
+            if (item.getLayer() === layer) {
+                return item;
+            }
+        }
+        return null;
     }
 
     create(id, toolTip, callback) {
