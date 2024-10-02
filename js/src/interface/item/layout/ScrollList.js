@@ -11,6 +11,8 @@ class ScrollList extends Item {
         this.scrollSession = scrollSession;
         this.timeLastScrolled = 0;
         this.scrollSpeed = 1.0;
+
+        this.test = 0;
     }
 
     buildElement() {
@@ -26,6 +28,14 @@ class ScrollList extends Item {
                 return;
             }
             this.timeLastScrolled = Date.now();
+
+            // Check if it would hit the top or bottom and then return
+            let wouldHitTop = this.element.scrollTop + event.deltaY * this.scrollSpeed < 0;
+            let wouldHitBottom = this.element.scrollTop + this.element.clientHeight
+                + event.deltaY * this.scrollSpeed > this.element.scrollHeight;
+            if (wouldHitTop || wouldHitBottom) {
+                return;
+            }
 
             event.preventDefault();
             scroll.scrollBy({
@@ -64,8 +74,51 @@ class ScrollList extends Item {
     }
 
     postInitialize() {
-        requestAnimationFrame(() => {
+        // Set the scroll position
+        this.element.scrollTop = this.scrollSession.getScrollPosition();
+
+        // Animate the changes of the item positions
+        this.scrollSession.debounce("postInitialize", () => {
+            // Set the scroll position again in case it has changed
             this.element.scrollTop = this.scrollSession.getScrollPosition();
+
+            // Animate the changes of the item positions
+            for (let item of this.items) {
+                if (typeof item.getKey !== 'function') {
+                    console.error("Item does not have a getKey function");
+                    continue;
+                }
+                let key = item.getKey();
+                let currentItemPosition = item.element.offsetTop;
+
+                // Check if the item position has changed
+                let prevItemPosition = this.scrollSession.getItemPosition(key);
+                if (prevItemPosition !== null) {
+                    let diff = currentItemPosition - prevItemPosition;
+                    if (Math.abs(diff) <= 1) {
+                        continue;
+                    }
+
+                    // Animate the item to its new position
+                    item.element.style.position = "relative";
+                    item.element.animate([
+                        {top: -diff + "px"},
+                        {top: 0}
+                    ], {
+                        duration: 200,
+                        easing: "ease-out"
+                    });
+                }
+                this.scrollSession.cacheItemPosition(key, currentItemPosition);
+            }
+
+            // Remove unused item positions
+            let itemKeys = this.items.map(item => item.getKey());
+            for (let key of this.scrollSession.itemPositionCache.keys()) {
+                if (!itemKeys.includes(key)) {
+                    this.scrollSession.removeItemPosition(key);
+                }
+            }
         });
     }
 

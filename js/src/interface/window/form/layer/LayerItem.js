@@ -74,4 +74,8 @@ class LayerItem extends MenuItem {
     getLayer() {
         return this.layer;
     }
+
+    getKey() {
+        return this.layer;
+    }
 }
