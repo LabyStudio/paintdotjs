@@ -14,7 +14,11 @@ class DocumentView {
         // Bind instance methods
         this.onDocumentInvalidated = this.onDocumentInvalidated.bind(this);
 
-        this.app.on("document:update_viewport", () => {
+        this.app.on("document:update_viewport", documentView => {
+            if (documentView !== this) {
+                return;
+            }
+
             this.app.setViewPosition(this.viewportX, this.viewportY);
 
             // TODO Surface box pre-paint
@@ -96,7 +100,7 @@ class DocumentView {
 
         this.centerView();
 
-        this.app.fire("document:update_viewport");
+        this.app.fire("document:update_viewport", this);
     }
 
     updateComposition() {
@@ -183,28 +187,28 @@ class DocumentView {
         this.zoom = factor;
 
         this.app.updateCanvasBounds();
-        this.app.fire("document:update_viewport");
+        this.app.fire("document:update_viewport", this);
     }
 
     setViewPosition(x, y) {
         this.viewportX = x;
         this.viewportY = y;
 
-        this.app.fire("document:update_viewport");
+        this.app.fire("document:update_viewport", this);
     }
 
     shiftViewPosition(deltaX, deltaY) {
         this.viewportX += deltaX;
         this.viewportY += deltaY;
 
-        this.app.fire("document:update_viewport");
+        this.app.fire("document:update_viewport", this);
     }
 
     setZoomToWindow(zoomToWindow) {
         this.zoomToWindow = zoomToWindow;
 
         this.app.updateCanvasBounds();
-        this.app.fire("document:update_viewport");
+        this.app.fire("document:update_viewport", this);
 
         this.fitViewport();
     }

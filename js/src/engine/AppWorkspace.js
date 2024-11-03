@@ -60,10 +60,10 @@ class AppWorkspace extends AppView {
     setActiveDocumentWorkspace(documentWorkspace) {
         this.activeDocumentWorkspace = documentWorkspace;
         this.updateTitle();
-        this.updateCanvasBounds();
+        this.updateCanvasBounds(false);
 
+        this.fire("document:update_viewport", documentWorkspace);
         this.fire("app:update_active_document", documentWorkspace);
-        this.fire("document:update_viewport");
     }
 
     performAction(action) {

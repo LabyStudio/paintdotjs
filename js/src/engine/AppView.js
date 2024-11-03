@@ -125,7 +125,7 @@ class AppView {
         });
     }
 
-    updateCanvasBounds() {
+    updateCanvasBounds(shiftView = true) {
         let viewWidth = this.getViewWidth();
         let viewHeight = this.getViewHeight();
 
@@ -144,7 +144,9 @@ class AppView {
         let offsetY = this.environment.clientHeight - envHeight;
 
         // Shift the view position so it stays centered
-        documentWorkspace.shiftViewPosition(-offsetX / 2, -offsetY / 2);
+        if (shiftView) {
+            documentWorkspace.shiftViewPosition(-offsetX / 2, -offsetY / 2);
+        }
 
         // Update environment size
         let environment = document.getElementById("environment")

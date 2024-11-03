@@ -11,6 +11,9 @@ class HistoryForm extends Form {
         this.app.on("document:history_changed", (documentWorkspace) => {
             this.reinitialize();
         });
+        this.app.on("app:update_active_document", (documentWorkspace) => {
+            this.reinitialize();
+        });
     }
 
     initializeDefault(window) {
