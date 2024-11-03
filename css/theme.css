@@ -37,6 +37,12 @@
     --color-button-outline: #D0D0D0;
     --color-checkbox-checked: #005FB8;
 
+    /* Misc */
+    --color-item-redo-background: #5D5D5D;
+    --color-item-redo-text: #000000;
+    --color-item-redo-hover-background: #466079;
+    --color-item-redo-hover-text: #FFFFFF;
+
     --image-transparency: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIBAMAAAA2IaO4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAGUExURb+/v////5nD/3QAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAASSURBVBjTY2BgEBREJzBEGBgAFWgBEZPDxfIAAAAASUVORK5CYII=');
 
     --font-family: 'Microsoft Sans Serif', sans-serif;

@@ -14,6 +14,7 @@ class NewLayerHistoryMemento extends HistoryMemento {
             this.documentWorkspace,
             this.documentWorkspace.getDocument().getLayers().getAt(this.layerIndex)
         );
+        memento.setId(this.getId());
 
         let document = this.documentWorkspace.getDocument();
         document.getLayers().removeLayerAt(this.layerIndex);

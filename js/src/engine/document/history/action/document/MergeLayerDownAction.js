@@ -8,11 +8,8 @@ class MergeLayerDownAction extends DocumentWorkspaceAction {
             let layers = document.getLayers();
             let newLayerIndex = MathHelper.clamp(index - 1, 0, layers.size() - 1);
 
-            let memento = documentWorkspace.executeFunction(new MergeLayerDownFunction(index));
-
+            documentWorkspace.executeFunction(new MergeLayerDownFunction(index));
             documentWorkspace.setActiveLayerIndex(newLayerIndex);
-
-            return memento;
         }
 
         return null;

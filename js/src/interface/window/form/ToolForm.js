@@ -4,13 +4,11 @@ class ToolForm extends Form {
         super("mainToolBarForm");
 
         this.app.on("app:active_tool_updated", tool => {
-            this.updateContent();
+            this.reinitialize();
         });
     }
 
-    initialize(window) {
-        super.initialize(window);
-
+    initializeDefaultPosition(window) {
         window.setSize(50, 284);
         window.setPosition(5, 250);
     }

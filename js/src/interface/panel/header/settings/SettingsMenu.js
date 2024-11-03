@@ -9,7 +9,7 @@ class SettingsMenu extends StripPanel {
                 new HorizontalSeparator(),
                 new ToggleFormItem("menu.window.colors", "colorsForm"),
                 new ToggleFormItem("menu.window.layers", "layerForm"),
-                new ToggleFormItem("menu.window.history", null),
+                new ToggleFormItem("menu.window.history", "historyForm"),
                 new ToggleFormItem("menu.window.tools", "mainToolBarForm")
                     .withIconPathKey("settings_tools16")
             ]

@@ -9,10 +9,10 @@ class LayerForm extends Form {
         this.scrollSession = new ScrollSession();
 
         this.app.on("app:update_active_document", () => {
-            this.updateContent();
+            this.reinitialize();
         });
         this.app.on("document:invalidated", () => {
-            this.updateContent();
+            this.reinitialize();
         });
         this.app.on("document:render_layer_region", (layer, region) => {
             let item = this.getItemByLayer(layer);
@@ -22,15 +22,19 @@ class LayerForm extends Form {
         });
     }
 
-    initialize(window) {
-        super.initialize(window);
-
+    initializeDefaultPosition(window) {
         let viewBounds = this.app.getViewBounds();
         window.setSize(180, 256);
         window.setPosition(
             viewBounds.getRight() - window.getWidth() - 20,
             this.app.getViewBounds().getBottom() - window.getHeight() - 20 - 5
         );
+    }
+
+    postInitialize() {
+        super.postInitialize();
+
+        this.layerListItem.postInitialize();
     }
 
     buildContent() {
@@ -76,7 +80,7 @@ class LayerForm extends Form {
 
                 // Set the selected layer to the active layer of the active document
                 let item = this.getItemByLayer(activeDocumentWorkspace.getActiveLayer());
-                this.layerListItem.setSelected(item);
+                this.layerListItem.setSelected(item, true);
             }
         }
         this.layerListItem.appendTo(element, this);
@@ -86,29 +90,23 @@ class LayerForm extends Form {
             items: [
                 this.create("add.new.layer", "addNewLayerButton", documentWorkspace => {
                     documentWorkspace.executeFunction(new AddNewBlankLayerFunction());
-                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("delete.layer", "deleteLayerButton", documentWorkspace => {
                     let index = documentWorkspace.getActiveLayerIndex();
                     documentWorkspace.executeFunction(new DeleteLayerFunction(index));
-                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("duplicate.layer", "duplicateLayerButton", documentWorkspace => {
                     let index = documentWorkspace.getActiveLayerIndex();
                     documentWorkspace.executeFunction(new DuplicateLayerFunction(index));
-                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("merge.layer.down", "mergeLayerDownButton", documentWorkspace => {
                     documentWorkspace.performAction(new MergeLayerDownAction());
-                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("move.layer.up", "moveLayerUpButton", documentWorkspace => {
                     documentWorkspace.performAction(new MoveActiveLayerUpAction());
-                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("move.layer.down", "moveLayerDownButton", documentWorkspace => {
                     documentWorkspace.performAction(new MoveActiveLayerDownAction());
-                    this.layerListItem.scrollToSelected();
                 }),
                 this.create("layer.properties", "propertiesButton", documentWorkspace => {
 
@@ -135,6 +133,9 @@ class LayerForm extends Form {
     }
 
     getItemByLayer(layer) {
+        if (this.layerListItem === null) {
+            return null;
+        }
         for (let item of this.layerListItem.items) {
             if (item.getLayer() === layer) {
                 return item;

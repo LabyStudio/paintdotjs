@@ -42,6 +42,13 @@ class AppWorkspace extends AppView {
             this.setActiveDocumentWorkspace(documentWorkspace);
         }
 
+        let history = documentWorkspace.getHistory();
+        history.clearAll();
+        history.pushNewMemento(new NullHistoryMemento(
+            i18n("newImageAction.name"),
+            "assets/icons/menu_file_new_icon.png"
+        ));
+
         // Update title
         this.updateTitle();
 
@@ -53,6 +60,10 @@ class AppWorkspace extends AppView {
         this.updateTitle();
 
         this.fire("app:update_active_document", documentWorkspace);
+    }
+
+    performAction(action) {
+        action.performAction(this);
     }
 
     updateTitle() {

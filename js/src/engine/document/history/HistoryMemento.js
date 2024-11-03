@@ -1,9 +1,13 @@
 class HistoryMemento {
 
+    static nextId = 0;
+
     constructor(name, image) {
         this.name = name;
         this.image = image;
         this.data = null;
+
+        this.id = HistoryMemento.nextId++;
     }
 
     onUndo() {
@@ -11,7 +15,9 @@ class HistoryMemento {
     }
 
     performUndo() {
-        return this.onUndo();
+        let memento = this.onUndo();
+        memento.setId(this.getId());
+        return memento;
     }
 
     getName() {
@@ -20,6 +26,14 @@ class HistoryMemento {
 
     getImage() {
         return this.image;
+    }
+
+    getId() {
+        return this.id;
+    }
+
+    setId(id) {
+        this.id = id;
     }
 
 }

@@ -15,6 +15,7 @@ class DeleteLayerHistoryMemento extends HistoryMemento {
             this.documentWorkspace,
             this.index
         );
+        memento.setId(this.getId());
 
         let layers = this.documentWorkspace.getDocument().getLayers();
         layers.insertLayerAt(this.index, this.data.getLayer());

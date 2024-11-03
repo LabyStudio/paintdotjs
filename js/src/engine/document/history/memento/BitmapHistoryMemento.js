@@ -32,6 +32,7 @@ class BitmapHistoryMemento extends HistoryMemento {
             this.documentWorkspace,
             this.layerIndex
         )
+        redo.setId(this.getId());
 
         // TODO invalidate simplified region
 

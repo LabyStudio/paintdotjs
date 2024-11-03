@@ -15,6 +15,7 @@ class FormRegistry {
         FormRegistry.register(new ToolForm());
         FormRegistry.register(new ColorsForm());
         FormRegistry.register(new LayerForm());
+        FormRegistry.register(new HistoryForm());
     }
 
     static register(form) {
@@ -26,6 +27,8 @@ class FormRegistry {
 
         let window = new WebWindow();
         form.initialize(window);
+        form.initializeDefaultPosition(window);
+        form.postInitialize();
         window.create();
     }
 

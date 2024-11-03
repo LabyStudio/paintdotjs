@@ -1,12 +1,13 @@
 window.app = new AppWorkspace();
 app.initialize();
-let documentView = app.createBlankDocumentInNewWorkspace(1920, 1017);
+app.performAction(new NewImageAction());
 
 // Draw test image to background
 let img = new Image();
 img.src = "run/test.png";
 img.onload = () => {
-    documentView.document.layers.layers[0].surface.context.drawImage(
+    let documentView = app.getActiveDocumentWorkspace();
+    documentView.getDocument().getLayers().getAt(0).getSurface().context.drawImage(
         img,
         0, 0, 1920, 1017
     );

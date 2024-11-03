@@ -60,11 +60,7 @@ class ScrollList extends Item {
 
                 // Layer item
                 item.setPressable(() => {
-                    this.selectedItem = item;
-                    if (this.selectCallback !== null) {
-                        this.selectCallback(item);
-                    }
-                    this.reinitialize();
+                    this.setSelected(item);
                 });
                 item.appendTo(element, this);
             }
@@ -107,6 +103,9 @@ class ScrollList extends Item {
             let offsetY = event.clientY - element.getBoundingClientRect().top - element.clientHeight / 2;
             element.style.transform = "translate(0, " + offsetY + "px)";
             this.scrollSession.setLastClientY(event.clientY);
+
+            this.setSelected(item);
+            this.scrollToSelected();
 
             // Cooldown time before swapping the items
             let timePassed = Date.now() - timeContinuedDragging;
@@ -187,62 +186,57 @@ class ScrollList extends Item {
     }
 
     postInitialize() {
-        // Set the scroll position
+        // Set the scroll position again in case it has changed
         this.element.scrollTop = this.scrollSession.getScrollPosition();
 
         // Animate the changes of the item positions
-        this.scrollSession.debounce("postInitialize", () => {
-            // Set the scroll position again in case it has changed
-            this.element.scrollTop = this.scrollSession.getScrollPosition();
+        for (let item of this.items) {
+            if (typeof item.getKey !== 'function') {
+                console.error("Item does not have a getKey function");
+                continue;
+            }
 
-            // Animate the changes of the item positions
-            for (let item of this.items) {
-                if (typeof item.getKey !== 'function') {
-                    console.error("Item does not have a getKey function");
+            let key = item.getKey(); // Use key because the instance of the item may change
+            let currentItemPosition = item.element.offsetTop;
+
+            // Check if the item position has changed
+            let prevItemPosition = this.scrollSession.getItemPosition(key);
+            if (prevItemPosition !== null) {
+                let diff = currentItemPosition - prevItemPosition;
+                if (Math.abs(diff) <= 1) {
                     continue;
                 }
 
-                let key = item.getKey(); // Use key because the instance of the item may change
-                let currentItemPosition = item.element.offsetTop;
+                // Don't animate the dragging item
+                let draggingItem = this.scrollSession.getDraggingItem();
+                let isDraggingItem = draggingItem !== null && item.getKey() === draggingItem.getKey();
 
-                // Check if the item position has changed
-                let prevItemPosition = this.scrollSession.getItemPosition(key);
-                if (prevItemPosition !== null) {
-                    let diff = currentItemPosition - prevItemPosition;
-                    if (Math.abs(diff) <= 1) {
-                        continue;
-                    }
-
-                    // Don't animate the dragging item
-                    let draggingItem = this.scrollSession.getDraggingItem();
-                    let isDraggingItem = draggingItem !== null && item.getKey() === draggingItem.getKey();
-
-                    // Animate the item to its new position
-                    if (!isDraggingItem) {
-                        item.element.style.position = "relative";
-                        item.element.animate([
-                            {top: -diff + "px"},
-                            {top: 0}
-                        ], {
-                            duration: 200,
-                            easing: "ease-out"
-                        });
-                    }
-                }
-                this.scrollSession.cacheItemPosition(key, currentItemPosition);
-            }
-
-            // Remove unused item positions
-            let itemKeys = this.items.map(item => item.getKey());
-            for (let key of this.scrollSession.itemPositionCache.keys()) {
-                if (!itemKeys.includes(key)) {
-                    this.scrollSession.removeItemPosition(key);
+                // Animate the item to its new position
+                if (!isDraggingItem) {
+                    item.element.style.position = "relative";
+                    item.element.animate([
+                        {top: -diff + "px"},
+                        {top: 0}
+                    ], {
+                        duration: 200,
+                        easing: "ease-out"
+                    });
+                    this.scrollToSelected();
                 }
             }
+            this.scrollSession.cacheItemPosition(key, currentItemPosition);
+        }
 
-            // Initialize drag and drop for item swapping
-            this.initializeDragAndDrop();
-        });
+        // Remove unused item positions
+        let itemKeys = this.items.map(item => item.getKey());
+        for (let key of this.scrollSession.itemPositionCache.keys()) {
+            if (!itemKeys.includes(key)) {
+                this.scrollSession.removeItemPosition(key);
+            }
+        }
+
+        // Initialize drag and drop for item swapping
+        this.initializeDragAndDrop();
     }
 
     add(item) {
@@ -253,9 +247,14 @@ class ScrollList extends Item {
         this.items.splice(index, 0, item);
     }
 
-    setSelected(item) {
-        this.selectedItem = item;
-        this.reinitialize();
+    setSelected(item, silent = false) {
+        if (item !== this.selectedItem) {
+            this.selectedItem = item;
+            if (!silent && this.selectCallback !== null) {
+                this.selectCallback(item);
+            }
+            this.reinitialize();
+        }
     }
 
     setSelectCallback(callback) {
@@ -287,6 +286,9 @@ class ScrollList extends Item {
     }
 
     scrollToSelected() {
+        if (this.selectedItem === null) {
+            return;
+        }
         this.scrollToItem(this.selectedItem);
     }
 
@@ -299,11 +301,35 @@ class ScrollList extends Item {
                 }
                 // Use key because the instance of the item may change
                 let itemByKey = this.items.find(i => i.getKey() === item.getKey());
+                if (this.isItemInViewport(itemByKey)) {
+                    return;
+                }
+
+                let position = itemByKey.element.offsetTop - this.element.clientHeight / 2 + itemByKey.element.clientHeight / 2;
                 this.element.scrollTo({
-                    top: itemByKey.element.offsetTop - this.element.clientHeight / 2 + itemByKey.element.clientHeight / 2,
+                    top: position,
                     behavior: 'smooth'
                 });
             });
+        }
+    }
+
+    isItemInViewport(item) {
+        let listBounds = this.element.children[0].getBoundingClientRect();
+        let itemBounds = item.element.getBoundingClientRect();
+        let viewBounds = this.element.getBoundingClientRect();
+
+        let relItemTopY = itemBounds.top - listBounds.top;
+        let relItemBottomY = itemBounds.bottom - listBounds.top;
+
+        let scrollPosition = this.scrollSession.getScrollPosition();
+
+        return relItemTopY >= scrollPosition && relItemBottomY <= scrollPosition + viewBounds.height;
+    }
+
+    scrollToBottom() {
+        if (this.isInitialized()) {
+            this.setScrollPosition(this.element.scrollHeight);
         }
     }
 }

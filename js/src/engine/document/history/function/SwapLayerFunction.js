@@ -16,7 +16,7 @@ class SwapLayerFunction extends HistoryFunction {
         }
 
         let memento = new SwapLayerHistoryMemento(
-            i18n("swapLayerFunction.Name"),
+            i18n("swapLayerFunction.name"),
             "assets/icons/menu_layers_move_layer_up_icon.png",
             documentWorkspace,
             this.index1,

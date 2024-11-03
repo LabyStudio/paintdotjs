@@ -28,6 +28,7 @@ class SwapLayerHistoryMemento extends HistoryMemento {
             this.layerIndex2,
             this.layerIndex1
         );
+        memento.setId(this.getId());
 
         let layers = this.documentWorkspace.getDocument().getLayers();
         let layer1 = layers.getAt(this.layerIndex1);

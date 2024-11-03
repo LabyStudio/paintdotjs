@@ -72,7 +72,6 @@ class Item extends UIElement {
 
         // Append and post initialize
         element.appendChild(this.element);
-        this.postInitialize();
     }
 
     shouldPress(event) {

@@ -1,18 +1,33 @@
-class Form {
+class Form extends Debounced {
 
     constructor(id) {
+        super();
         this.id = id;
         this.window = null;
         this.app = app;
+    }
+
+    initializeDefaultPosition(window) {
+
     }
 
     initialize(window) {
         this.window = window;
 
         window.setTitle(this.getTitle());
-        window.setSize(300, 300);
 
-        this.updateContent();
+        this.window.setContent(this.buildContent());
+    }
+
+    postInitialize() {
+
+    }
+
+    reinitialize() {
+        this.debounce("reinitialize", () => {
+            this.initialize(this.window);
+            this.postInitialize();
+        });
     }
 
     getTitle() {
@@ -21,10 +36,6 @@ class Form {
 
     buildContent() {
         return document.createElement("div");
-    }
-
-    updateContent() {
-        this.window.setContent(this.buildContent());
     }
 
     getWindow() {

@@ -1,9 +1,9 @@
-class ScrollSession {
+class ScrollSession extends Debounced {
 
     constructor() {
+        super();
         this.scrollPosition = 0;
         this.itemPositionCache = new Map();
-        this.lastAnimationFrames = new Map();
         this.draggingItem = null;
         this.lastClientY = 0;
     }
@@ -46,15 +46,4 @@ class ScrollSession {
     removeItemPosition(itemKey) {
         this.itemPositionCache.delete(itemKey);
     }
-
-    debounce(id, callback) {
-        if (this.lastAnimationFrames.has(id)) {
-            cancelAnimationFrame(this.lastAnimationFrames.get(id));
-        }
-        this.lastAnimationFrames.set(id, requestAnimationFrame(() => {
-            this.lastAnimationFrames.delete(id);
-            callback();
-        }));
-    }
-
 }

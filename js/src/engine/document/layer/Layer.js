@@ -30,6 +30,10 @@ class Layer {
         this.invalidate();
     }
 
+    getProperties() {
+        return this.properties;
+    }
+
     clone() {
         throw new Error("Not implemented");
     }

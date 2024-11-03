@@ -15,7 +15,7 @@ class CompoundHistoryMemento extends HistoryMemento {
 
         for (let i = this.actions.length - 1; i >= 0; i--) {
             let action = this.actions[i];
-            let memento = action.onUndo();
+            let memento = action.performUndo();
 
             if (memento !== null) {
                 mementos.push(memento);

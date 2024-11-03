@@ -15,14 +15,14 @@ class DuplicateLayerFunction extends HistoryFunction {
 
         // Duplicate the active layer
         let newLayer = documentWorkspace.getActiveLayer().clone();
-        newLayer.properties.isBackground = false;
+        newLayer.getProperties().isBackground = false;
         let newLayerIndex = this.layerIndex + 1;
 
         let memento = new NewLayerHistoryMemento(
             i18n("duplicateLayer.historyMementoName"),
             "assets/icons/menu_layers_duplicate_layer_icon.png",
             documentWorkspace,
-            layers.getAt(this.layerIndex)
+            this.layerIndex
         );
 
         layers.insertLayerAt(newLayerIndex, newLayer);

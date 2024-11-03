@@ -14,12 +14,18 @@ class CheckboxItem extends Item {
         }
         element.type = "checkbox";
         element.checked = this.checked;
-        element.oninput = _ => {
+        element.addEventListener("mousedown", event => {
+            event.stopPropagation();
+            event.preventDefault();
+        });
+        element.oninput = event => {
             this.checked = element.checked;
 
             if (this.changeCallback !== null) {
                 this.changeCallback(this.checked);
             }
+
+            event.stopPropagation();
         };
         return element;
     }

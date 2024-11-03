@@ -5,7 +5,7 @@ class DocumentWorkspace extends DocumentView {
 
         this.filePath = null;
         this.activeLayer = null;
-        this.history = new HistoryStack(this);
+        this.history = new HistoryStack(app, this);
 
         // Bind instance methods
         this.onLayerRemoving = this.onLayerRemoving.bind(this);
@@ -88,6 +88,10 @@ class DocumentWorkspace extends DocumentView {
 
     getActiveLayer() {
         return this.activeLayer;
+    }
+
+    getHistory() {
+        return this.history;
     }
 
     getActiveLayerIndex() {
