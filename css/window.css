@@ -31,7 +31,7 @@
     max-width: calc(100% - 20px);
 }
 
-.window .title-bar .close-button {
+.window-close-button {
     width: 19px;
     height: 19px;
     margin: 0;
@@ -46,7 +46,7 @@
     color: var(--color-close-button-text);
 }
 
-.window .title-bar .close-button:hover {
+.window-close-button:hover {
     background-color: var(--color-close-button-hover);
 }
 
@@ -245,6 +245,10 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+}
+
+#layerForm #layerList .layer-item {
+    height: 41px;
 }
 
 #layerForm #layerList .layer-item .thumbnail {

@@ -34,4 +34,8 @@ class Surface {
         surface.context.drawImage(this.canvas, 0, 0);
         return surface;
     }
+
+    getCanvas() {
+        return this.canvas;
+    }
 }

@@ -250,25 +250,46 @@ hr {
 
 .scroll-list {
     flex: auto;
-    overflow-y: auto;
     padding: 0;
     margin: 0;
+    display: flex;
+}
+
+.scroll-list-vertical {
+    overflow-y: auto;
+    flex-direction: column;
+}
+
+.scroll-list-vertical .scroll-content {
     display: flex;
     flex-direction: column;
 }
 
-.scroll-list .scroll-content {
+.scroll-list-horizontal {
+    overflow-x: auto;
+    flex-direction: row;
+}
 
+.scroll-list-horizontal .scroll-content {
+    display: flex;
 }
 
 .scroll-list .scroll-content .scroll-item {
-    height: 41px;
     display: flex;
     justify-content: flex-start;
     align-items: center;
     padding: 2px;
-    width: auto;
     position: relative;
+}
+
+.scroll-list .scroll-content .vertical-scroll-item {
+    height: fit-content;
+    width: auto;
+}
+
+.scroll-list .scroll-content .horizontal-scroll-item {
+    height: auto;
+    width: fit-content;
 }
 
 .scroll-list .scroll-content .selected-item {
@@ -280,4 +301,16 @@ hr {
 .scroll-list .scroll-content .dragging-item {
     background-color: var(--color-menu-item-hover);
     border: 1px solid var(--color-menu-item-border);
+}
+
+.scroll-list .scroll-content .selected-item:before {
+    border: 1px solid var(--color-menu-background);
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
 }

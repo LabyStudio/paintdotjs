@@ -38,7 +38,7 @@ class LayerForm extends Form {
         element.id = "layerForm";
 
         // Layer list
-        this.layerListItem = new ScrollList("layerList", this.scrollSession);
+        this.layerListItem = new ScrollList(ScrollOrientation.VERTICAL, "layerList", this.scrollSession);
         this.layerListItem.setScrollSpeed(0.4);
         this.layerListItem.setSelectCallback((item) => {
             let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();

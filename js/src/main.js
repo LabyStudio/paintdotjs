@@ -12,3 +12,5 @@ img.onload = () => {
         0, 0, 1920, 1017
     );
 };
+
+// app.performAction(new NewImageAction());

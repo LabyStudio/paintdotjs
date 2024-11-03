@@ -38,15 +38,15 @@ class Layer {
         throw new Error("Not implemented");
     }
 
-    static createLayer(app, width, height, name) {
-        let layer = new BitmapLayer(app, width, height);
+    static createLayer(documentWorkspace, width, height, name) {
+        let layer = new BitmapLayer(documentWorkspace, width, height);
         layer.properties.name = name;
         layer.properties.isBackground = false;
         return layer;
     }
 
-    static createBackgroundLayer(app, width, height) {
-        let layer = new BitmapLayer(app, width, height, Color.WHITE);
+    static createBackgroundLayer(documentWorkspace, width, height) {
+        let layer = new BitmapLayer(documentWorkspace, width, height, Color.WHITE);
         layer.properties.name = i18n("layer.backgroundLayer.defaultName");
         layer.properties.isBackground = true;
         return layer;

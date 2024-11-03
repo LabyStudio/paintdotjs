@@ -18,7 +18,7 @@ class MenuItem extends Item {
     }
 
     updateText(text = this.getText()) {
-        if (this.element === null) {
+        if (this.element === null || text === null) {
             return;
         }
         this.element.innerHTML = text;

@@ -13,6 +13,8 @@
     --color-menu-item-border: #074F97;
     --color-menu-item-selected: rgba(0, 120, 215, 0.4);
     --color-menu-item-selected-border: #0078D7;
+    --color-menu-item-disabled-hover: #2A2A2A;
+    --color-menu-item-disabled-hover-border: #454545;
 
     /* Scrollbar */
     --color-scrollbar-background: #171717;

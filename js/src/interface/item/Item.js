@@ -101,6 +101,7 @@ class Item extends UIElement {
     }
 
     buildElement() {
+        throw new Error("Building element is not implemented for " + this.constructor.name);
     }
 
     isClickable() {

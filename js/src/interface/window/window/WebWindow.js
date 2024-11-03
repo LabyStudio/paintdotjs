@@ -52,7 +52,7 @@ class WebWindow extends AbstractWindow {
 
                 // Close button
                 this.closeButtonElement = document.createElement("button");
-                this.closeButtonElement.className = "close-button";
+                this.closeButtonElement.className = "window-close-button";
                 this.closeButtonElement.innerHTML = "x";
                 this.closeButtonElement.onclick = () => this.close();
                 this.titleBarElement.appendChild(this.closeButtonElement);
@@ -183,7 +183,6 @@ class WebWindow extends AbstractWindow {
                 y = rectangle.getBottom() + threshold / 2;
             }
         }
-
         this.setPosition(x, y);
     }
 
@@ -221,11 +220,11 @@ class WebWindow extends AbstractWindow {
     getViewBounds() {
         let viewBounds = this.view.getBoundingClientRect();
         let margin = 10;
-        return Rectangle.absolute(
+        return Rectangle.relative(
             viewBounds.x + margin,
-            viewBounds.y + margin,
-            viewBounds.x + this.view.clientWidth - margin,
-            viewBounds.y + this.view.clientHeight - margin
+            viewBounds.y + margin - windowTop(),
+            this.view.clientWidth - margin * 2,
+            this.view.clientHeight - margin * 2
         );
     }
 

@@ -30,7 +30,7 @@ class HistoryForm extends Form {
         element.id = "historyForm";
 
         // Layer list
-        this.historyListItem = new ScrollList("historyList", this.scrollSession);
+        this.historyListItem = new ScrollList(ScrollOrientation.VERTICAL,"historyList", this.scrollSession);
         this.historyListItem.setScrollSpeed(0.4);
         this.historyListItem.setSelectCallback((item) => {
             let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();

@@ -1,7 +1,9 @@
 class ScrollList extends Item {
 
-    constructor(id, scrollSession) {
+    constructor(orientation, id, scrollSession) {
         super(id);
+
+        this.orientation = orientation;
 
         this.items = [];
         this.selectedItem = null;
@@ -20,7 +22,7 @@ class ScrollList extends Item {
         // Scroll
         let scroll = document.createElement("div");
         scroll.id = this.id;
-        scroll.className = "scroll-list";
+        scroll.className = "scroll-list scroll-list-" + (this.orientation === ScrollOrientation.HORIZONTAL ? "horizontal" : "vertical");
         scroll.addEventListener("scroll", event => {
             this.scrollSession.setScrollPosition(this.getScrollPosition());
         });
@@ -57,6 +59,11 @@ class ScrollList extends Item {
 
                 item.setClassName("selected-item", this.selectedItem === item);
                 item.addClassName("scroll-item");
+                if (this.orientation === ScrollOrientation.HORIZONTAL) {
+                    item.addClassName("horizontal-scroll-item");
+                } else {
+                    item.addClassName("vertical-scroll-item");
+                }
 
                 // Layer item
                 item.setPressable(() => {
@@ -101,6 +108,10 @@ class ScrollList extends Item {
 
             // Calculate the new position of the item
             let offsetY = event.clientY - element.getBoundingClientRect().top - element.clientHeight / 2;
+            if (Math.abs(offsetY) < 10) {
+                return; // Threshold before starting to drag the item
+            }
+
             element.style.transform = "translate(0, " + offsetY + "px)";
             this.scrollSession.setLastClientY(event.clientY);
 

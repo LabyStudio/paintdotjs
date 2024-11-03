@@ -12,7 +12,6 @@ class HistoryMementoItem extends MenuItem {
     buildElement() {
         let element = super.buildElement();
         element.className += " history-item " + (this.type === ItemType.UNDO ? "undo" : "redo");
-        element.innerHTML = "";
         {
             // Icon
             let icon = document.createElement("img");
@@ -26,6 +25,10 @@ class HistoryMementoItem extends MenuItem {
             element.appendChild(name);
         }
         return element;
+    }
+
+    getText() {
+        return null;
     }
 
     getType() {

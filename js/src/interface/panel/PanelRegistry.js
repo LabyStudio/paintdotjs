@@ -6,6 +6,7 @@ class PanelRegistry {
 
     static initialize() {
         PanelRegistry.register(new MainMenu());
+        PanelRegistry.register(new DocumentStrip());
         PanelRegistry.register(new CommonMenu());
         PanelRegistry.register(new SettingsMenu());
         PanelRegistry.register(new ToolMenu());

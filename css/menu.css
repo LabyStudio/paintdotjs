@@ -1,6 +1,7 @@
 /* ------------ Menu Bar Plugin ------------ */
 .cet-titlebar {
     height: 30px !important;
+    z-index: 100 !important;
 }
 
 .cet-title {
@@ -9,7 +10,8 @@
 
 .cet-container {
     top: 30px !important;
-    overflow: hidden !important;
+    overflow: visible !important;
+    z-index: unset !important;
 }
 
 /* ------------ Menu Item ------------- */
@@ -21,12 +23,12 @@
     border: 1px solid transparent;
     color: var(--color-menu-item-text);
     display: inline-block;
+    position: relative;
 }
 
 .menu-item[active] {
     background-color: var(--color-menu-item-selected);
     border: 1px solid var(--color-menu-item-selected-border);
-    position: relative;
 }
 
 .clickable:hover.menu-item:not([disabled]), .clickable.open {
@@ -46,6 +48,11 @@
     right: 0;
     bottom: 0;
     pointer-events: none;
+}
+
+.menu-item[disabled]:hover {
+    background-color: var(--color-menu-item-disabled-hover);
+    border: 1px solid var(--color-menu-item-disabled-hover-border);
 }
 
 .menu-item[disabled] {
@@ -138,7 +145,7 @@
     width: fit-content;
     background-color: var(--color-menu-background);
     border: 1px solid var(--color-title-bar-border);
-    z-index: 1;
+    z-index: 3000;
     animation: fadeIn 0.15s ease-in-out;
 }
 

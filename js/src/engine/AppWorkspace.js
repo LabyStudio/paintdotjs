@@ -27,7 +27,7 @@ class AppWorkspace extends AppView {
         documentWorkspace.fitViewport();
 
         // Add default background layer
-        let backgroundLayer = Layer.createBackgroundLayer(this, width, height);
+        let backgroundLayer = Layer.createBackgroundLayer(documentWorkspace, width, height);
         document.addLayer(backgroundLayer);
         documentWorkspace.setActiveLayer(backgroundLayer);
 
@@ -52,14 +52,18 @@ class AppWorkspace extends AppView {
         // Update title
         this.updateTitle();
 
+        this.fire("app:create_document", documentWorkspace);
+
         return documentWorkspace;
     }
 
     setActiveDocumentWorkspace(documentWorkspace) {
         this.activeDocumentWorkspace = documentWorkspace;
         this.updateTitle();
+        this.updateCanvasBounds();
 
         this.fire("app:update_active_document", documentWorkspace);
+        this.fire("document:update_viewport");
     }
 
     performAction(action) {
@@ -146,6 +150,10 @@ class AppWorkspace extends AppView {
 
     getActiveDocumentWorkspace() {
         return this.activeDocumentWorkspace;
+    }
+
+    getDocumentWorkspaces() {
+        return this.documentWorkspaces;
     }
 
     setMeasurementUnit(unit) {

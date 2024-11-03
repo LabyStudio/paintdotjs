@@ -198,14 +198,14 @@ class AppView {
         this.context.font = "16px Arial";
         this.context.fillStyle = "white";
 
-        this.context.fillText(documentWorkspace.getWidth() + "x" + documentWorkspace.getHeight(), 10, 20 + 16);
-        this.context.fillText(documentWorkspace.getViewportX() + ", " + documentWorkspace.getViewportY(), 10, 20 + 16 * 2);
+        this.context.fillText(documentWorkspace.getWidth() + "x" + documentWorkspace.getHeight(), 70, 20 + 16);
+        this.context.fillText(documentWorkspace.getViewportX() + ", " + documentWorkspace.getViewportY(), 70, 20 + 16 * 2);
 
-        this.context.fillText(parseInt(renderBounds.getX()) + ", " + parseInt(renderBounds.getY()), 10, 20 + 16 * 4);
-        this.context.fillText(parseInt(renderBounds.getWidth()) + "x" + parseInt(renderBounds.getHeight()), 10, 20 + 16 * 5);
+        this.context.fillText(parseInt(renderBounds.getX()) + ", " + parseInt(renderBounds.getY()), 70, 20 + 16 * 4);
+        this.context.fillText(parseInt(renderBounds.getWidth()) + "x" + parseInt(renderBounds.getHeight()), 70, 20 + 16 * 5);
 
-        this.context.fillText(parseInt(documentWorkspace.getZoom() * 100) / 100, 10, 20 + 16 * 7);
-        this.context.fillText(parseInt(this.getLastMouseX()) + ", " + parseInt(this.getLastMouseY()), 10, 20 + 16 * 8);
+        this.context.fillText(parseInt(documentWorkspace.getZoom() * 100) / 100, 70, 20 + 16 * 7);
+        this.context.fillText(parseInt(this.getLastMouseX()) + ", " + parseInt(this.getLastMouseY()), 70, 20 + 16 * 8);
     }
 
     setCursor(cursor) {

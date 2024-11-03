@@ -1,9 +1,9 @@
 class BitmapLayer extends Layer {
 
-    constructor(app, width, height, fillColor = null) {
+    constructor(documentWorkspace, width, height, fillColor = null) {
         super(width, height);
 
-        this.app = app;
+        this.documentWorkspace = documentWorkspace;
 
         this.surface = new Surface(width, height);
         if (fillColor !== null) {
@@ -16,11 +16,12 @@ class BitmapLayer extends Layer {
         this.surface.render(renderArgs, rectangle);
 
         // Fire event
-        this.app.fire("document:render_layer_region", this, rectangle);
+        let app = this.documentWorkspace.getApp();
+        app.fire("document:render_layer_region", this, rectangle);
     }
 
     clone() {
-        let layer = new BitmapLayer(this.app, this.width, this.height);
+        let layer = new BitmapLayer(this.documentWorkspace, this.width, this.height);
         layer.surface = this.surface.clone();
         layer.properties = this.properties.clone();
         return layer;
@@ -28,6 +29,10 @@ class BitmapLayer extends Layer {
 
     getSurface() {
         return this.surface;
+    }
+
+    getDocumentWorkspace() {
+        return this.documentWorkspace;
     }
 
 }

@@ -12,7 +12,6 @@ class LayerItem extends MenuItem {
     buildElement() {
         let element = super.buildElement();
         element.className += " layer-item";
-        element.innerHTML = "";
         {
             let maxThumbnailSize = 40;
             let ratio = this.layer.width / this.layer.height;
@@ -69,6 +68,10 @@ class LayerItem extends MenuItem {
             this.thumbnail.width,
             this.thumbnail.height
         );
+    }
+
+    getText() {
+        return null;
     }
 
     getLayer() {

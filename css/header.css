@@ -2,8 +2,9 @@
 #titleBar {
     background-color: var(--color-title-bar);
     width: 100%;
-    height: 27px;
+    height: 28px;
     border: 0 solid var(--color-title-bar-border);
+    border-top: 1px solid var(--color-title-bar);
     border-bottom-width: 1px;
 }
 
@@ -25,6 +26,79 @@
     padding-bottom: 1px;
     padding-top: 2px;
     margin-top: 1px;
+}
+
+/* ------------ Documents Panel ------------ */
+
+#documentStrip {
+    --document-item-size: 58px;
+
+    position: absolute;
+    top: calc(2px - var(--window-top));
+    left: 340px;
+    right: 160px;
+    height: calc(var(--document-item-size) + var(--window-top));
+    z-index: 200;
+    -webkit-app-region: drag;
+}
+
+#documentStrip #documentsList {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+#documentStrip #documentsList .scroll-content {
+    height: 100%;
+}
+
+#documentStrip #documentsList .scroll-content .scroll-item {
+    position: relative;
+    display: flex;
+    height: calc(100% - 2px);
+    width: calc(var(--document-item-size) + var(--window-top));
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    margin: 0;
+    -webkit-app-region: no-drag;
+}
+
+#documentStrip #documentsList .scroll-content .scroll-item .header {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    display: flex;
+    height: 16px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px;
+}
+
+#documentStrip #documentsList .scroll-content .scroll-item .header .dirty-indicator {
+    width: 10px;
+    height: 10px;
+}
+
+#documentStrip #documentsList .scroll-content .scroll-item .header .window-close-button {
+    opacity: 0;
+    transition: opacity 0.2s;
+    width: 14px;
+    height: 14px;
+}
+
+#documentStrip #documentsList .scroll-content .scroll-item:hover .header .window-close-button {
+    opacity: 1;
+}
+
+#documentStrip #documentsList .scroll-content .scroll-item .thumbnail {
+    position: absolute;
+    width: calc(100% - 4px);
+    height: auto;
+    bottom: 0;
+    margin: 2px;
+    object-fit: contain;
 }
 
 /* ------------ Settings Menu ------------ */
