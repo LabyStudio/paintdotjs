@@ -26,4 +26,8 @@ class Form {
     updateContent() {
         this.window.setContent(this.buildContent());
     }
+
+    getWindow() {
+        return this.window;
+    }
 }

@@ -46,6 +46,10 @@
     color: var(--color-close-button-text);
 }
 
+.window .title-bar .close-button:hover {
+    background-color: var(--color-close-button-hover);
+}
+
 .window .content {
     flex-grow: 1;
     width: 100%;

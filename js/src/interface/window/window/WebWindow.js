@@ -80,6 +80,8 @@ class WebWindow extends AbstractWindow {
         document.addEventListener("mouseup", () => {
             this.dragging = false;
         });
+
+        super.create();
     }
 
     setTitle(title) {
@@ -133,5 +135,8 @@ class WebWindow extends AbstractWindow {
 
     close() {
         this.overlay.removeChild(this.windowElement);
+        this.windowElement = null;
+
+        super.close();
     }
 }

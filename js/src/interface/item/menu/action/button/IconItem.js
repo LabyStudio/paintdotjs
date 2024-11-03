@@ -1,6 +1,6 @@
 class IconItem extends ActionItem {
 
-    constructor(id, callback) {
+    constructor(id, callback = null) {
         super(id, callback);
     }
 

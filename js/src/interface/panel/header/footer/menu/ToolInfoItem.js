@@ -2,6 +2,10 @@ class ToolInfoItem extends LabelMenuItem {
 
     constructor() {
         super("toolInfoItem");
+
+        this.app.on("app:active_tool_updated", tool => {
+            this.reinitialize();
+        });
     }
 
     getSelectedTool() {
@@ -15,7 +19,11 @@ class ToolInfoItem extends LabelMenuItem {
 
     getText() {
         let selectedTool = this.getSelectedTool();
-        return i18n(selectedTool.getText()) + ": " + i18n(selectedTool.id + ".helpText");
+        let helpText = i18n(selectedTool.id + ".helpText");
+        if (typeof helpText !== "string") {
+            helpText = i18n(selectedTool.id + ".helpText.text");
+        }
+        return i18n(selectedTool.getText()) + ": " + helpText;
     }
 
 }

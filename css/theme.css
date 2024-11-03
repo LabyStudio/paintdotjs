@@ -20,6 +20,7 @@
 
     /* Window */
     --color-close-button: #C75050;
+    --color-close-button-hover: #E04343;
     --color-close-button-text: #FFFFFF;
     --color-window-background: #282828;
     --color-window-border: rgba(195, 195, 195, 0.21);

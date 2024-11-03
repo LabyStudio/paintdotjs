@@ -9,6 +9,10 @@ footer {
     display: flex;
 }
 
+#footerMenu #toolInfoItem .icon {
+    margin: 5px 0 0 5px;
+}
+
 #footerMenu .menu-item {
     padding: 5px 5px 5px 5px;
     height: 11px;

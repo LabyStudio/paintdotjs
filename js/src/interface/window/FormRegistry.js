@@ -34,6 +34,9 @@ class FormRegistry {
     }
 
     static get(id) {
+        if (!this.forms.hasOwnProperty(id)) {
+            return null;
+        }
         return this.forms[id];
     }
 

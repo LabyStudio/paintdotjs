@@ -55,7 +55,8 @@ class DropMenuItem extends MenuItem {
             + (this.isDropUp() ? -dropMenu.offsetHeight : this.element.offsetHeight)
             + "px";
 
-        this.element.setAttribute("active", "");
+        this.addClassName("open");
+
 
         // Register close listener
         setTimeout(_ => {
@@ -72,7 +73,7 @@ class DropMenuItem extends MenuItem {
         }
         this.openMenu = false;
 
-        this.element.removeAttribute("active");
+        this.removeClass("open");
     }
 
     isDropUp() {

@@ -7,10 +7,10 @@ class SettingsMenu extends StripPanel {
                 new IconItem("menu.settings", null)
                     .withIconPathKey("menu_utilities_settings_icon"),
                 new HorizontalSeparator(),
-                new IconItem("menu.window.colors", null),
-                new IconItem("menu.window.layers", null),
-                new IconItem("menu.window.history", null),
-                new IconItem("menu.window.tools", null)
+                new ToggleFormItem("menu.window.colors", "colorsForm"),
+                new ToggleFormItem("menu.window.layers", "layerForm"),
+                new ToggleFormItem("menu.window.history", null),
+                new ToggleFormItem("menu.window.tools", "mainToolBarForm")
                     .withIconPathKey("settings_tools16")
             ]
         });
