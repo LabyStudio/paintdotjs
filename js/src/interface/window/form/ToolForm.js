@@ -8,9 +8,13 @@ class ToolForm extends Form {
         });
     }
 
-    initializeDefaultPosition(window) {
+    initialize(window) {
+        super.initialize(window);
         window.setSize(50, 284);
-        window.setPosition(5, 250);
+    }
+
+    initializeDefault(window) {
+        window.setAnchor(0, 0)
     }
 
     buildContent() {

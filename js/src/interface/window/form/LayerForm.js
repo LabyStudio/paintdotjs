@@ -22,13 +22,9 @@ class LayerForm extends Form {
         });
     }
 
-    initializeDefaultPosition(window) {
-        let viewBounds = this.app.getViewBounds();
+    initializeDefault(window) {
         window.setSize(180, 256);
-        window.setPosition(
-            viewBounds.getRight() - window.getWidth() - 20,
-            this.app.getViewBounds().getBottom() - window.getHeight() - 20 - 5
-        );
+        window.setAnchor(1, 1);
     }
 
     postInitialize() {

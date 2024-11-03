@@ -13,13 +13,9 @@ class HistoryForm extends Form {
         });
     }
 
-    initializeDefaultPosition(window) {
-        let viewBounds = this.app.getViewBounds();
+    initializeDefault(window) {
         window.setSize(180, 200);
-        window.setPosition(
-            viewBounds.getRight() - window.getWidth() - 20,
-            85
-        );
+        window.setAnchor(1, 0);
     }
 
     postInitialize() {

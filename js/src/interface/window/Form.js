@@ -7,7 +7,7 @@ class Form extends Debounced {
         this.app = app;
     }
 
-    initializeDefaultPosition(window) {
+    initializeDefault(window) {
 
     }
 

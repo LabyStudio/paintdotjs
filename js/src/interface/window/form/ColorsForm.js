@@ -60,15 +60,14 @@ class ColorsForm extends Form {
         this.updating = false;
     }
 
-    initializeDefaultPosition(window) {
-        this.updateWindowSize();
-        window.setPosition(5, this.app.getViewBounds().getBottom() - window.getHeight() - 20 - 5);
-    }
-
     initialize(window) {
         super.initialize(window);
-
         this.updateWindowSize();
+    }
+
+    initializeDefault(window) {
+        this.updateWindowSize();
+        window.setAnchor(0, 1);
     }
 
     buildContent() {

@@ -4,6 +4,7 @@ class WebWindow extends AbstractWindow {
         super();
 
         this.overlay = document.getElementById("windowOverlay");
+        this.view = document.getElementById("view");
 
         this.title = "Untitled Window";
         this.content = null;
@@ -17,6 +18,16 @@ class WebWindow extends AbstractWindow {
         this.dragging = false;
         this.dragStartX = 0;
         this.dragStartY = 0;
+
+        this.x = 0;
+        this.y = 0;
+
+        this.anchorX = 0;
+        this.anchorY = 0;
+
+        window.addEventListener("resize", () => {
+            this.applyAnchor();
+        });
     }
 
     create() {
@@ -71,7 +82,7 @@ class WebWindow extends AbstractWindow {
                 let x = event.clientX - this.dragStartX;
                 let y = event.clientY - this.dragStartY;
 
-                this.setPosition(x, y);
+                this.setPositionAligned(x, y);
 
                 event.preventDefault();
                 event.stopPropagation();
@@ -119,10 +130,84 @@ class WebWindow extends AbstractWindow {
         this.x = x;
         this.y = y;
 
+        let viewBounds = this.getViewBounds();
+        this.anchorX = (x - viewBounds.getLeft()) / (viewBounds.getRight() - this.width - viewBounds.getLeft());
+        this.anchorY = (y - viewBounds.getTop()) / (viewBounds.getBottom() - this.height - viewBounds.getTop());
+
         if (this.windowElement !== null) {
             this.windowElement.style.left = x + "px";
             this.windowElement.style.top = y + "px";
         }
+    }
+
+    setPositionAligned(x, y) {
+        let threshold = 15;
+        let border = this.getViewBounds();
+
+        // Align to border
+        if (Math.abs(x - border.getLeft()) < threshold) {
+            x = border.getLeft();
+        }
+        if (Math.abs(y - border.getTop()) < threshold) {
+            y = border.getTop();
+        }
+        if (Math.abs(x + this.width - border.getRight()) < threshold) {
+            x = border.getRight() - this.width;
+        }
+        if (Math.abs(y + this.height - border.getBottom()) < threshold) {
+            y = border.getBottom() - this.height;
+        }
+
+        // Add alignment rectangles of other windows
+        let alignmentRectangles = [];
+        for (let form of FormRegistry.list()) {
+            let window = form.getWindow();
+            if (window === this) {
+                continue
+            }
+            alignmentRectangles.push(window.getBounds());
+        }
+
+        // Align to other windows
+        for (let rectangle of alignmentRectangles) {
+            if (Math.abs(x + this.width - rectangle.getLeft()) < threshold) {
+                x = rectangle.getLeft() - this.width - threshold / 2;
+            }
+            if (Math.abs(y + this.height - rectangle.getTop()) < threshold) {
+                y = rectangle.getTop() - this.height - threshold / 2;
+            }
+            if (Math.abs(x - rectangle.getRight()) < threshold) {
+                x = rectangle.getRight() + threshold / 2;
+            }
+            if (Math.abs(y - rectangle.getBottom()) < threshold) {
+                y = rectangle.getBottom() + threshold / 2;
+            }
+        }
+
+        this.setPosition(x, y);
+    }
+
+    setAnchor(x, y) {
+        this.anchorX = x;
+        this.anchorY = y;
+
+        this.applyAnchor();
+    }
+
+    applyAnchor() {
+        let viewBounds = this.getViewBounds();
+
+        this.setPosition(
+            viewBounds.getLeft() + this.anchorX * (viewBounds.getRight() - this.width - viewBounds.getLeft()),
+            viewBounds.getTop() + this.anchorY * (viewBounds.getBottom() - this.height - viewBounds.getTop())
+        );
+    }
+
+    close() {
+        this.overlay.removeChild(this.windowElement);
+        this.windowElement = null;
+
+        super.close();
     }
 
     getWidth() {
@@ -133,10 +218,18 @@ class WebWindow extends AbstractWindow {
         return this.height;
     }
 
-    close() {
-        this.overlay.removeChild(this.windowElement);
-        this.windowElement = null;
+    getViewBounds() {
+        let viewBounds = this.view.getBoundingClientRect();
+        let margin = 10;
+        return Rectangle.absolute(
+            viewBounds.x + margin,
+            viewBounds.y + margin,
+            viewBounds.x + this.view.clientWidth - margin,
+            viewBounds.y + this.view.clientHeight - margin
+        );
+    }
 
-        super.close();
+    getBounds() {
+        return Rectangle.relative(this.x, this.y, this.width, this.height);
     }
 }
