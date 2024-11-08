@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, Menu} = require('electron')
+const {app, BrowserWindow, Menu, ipcMain} = require('electron')
 const {setupTitlebar} = require("custom-electron-titlebar/main");
 const path = require('path')
 
@@ -38,6 +38,17 @@ function createWindow() {
             mainWindow.webContents.isDevToolsOpened()
                 ? mainWindow.webContents.closeDevTools()
                 : mainWindow.webContents.openDevTools({mode: 'undocked'});
+        }
+    });
+
+    ipcMain.on('resize-window', (event, { width, height }) => {
+        if (mainWindow) {
+            mainWindow.setBounds({
+                x: mainWindow.getBounds().x,
+                y: mainWindow.getBounds().y,
+                width: Math.max(width, 100), // Minimum width
+                height: Math.max(height, 100), // Minimum height
+            });
         }
     });
 }

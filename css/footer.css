@@ -44,6 +44,7 @@ footer {
     margin-top: 11px;
     margin-right: 2px;
     background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMSAxMSIgeG1sbnM6dj0iaHR0cHM6Ly92ZWN0YS5pby9uYW5vIj48cGF0aCBkPSJNOSAxaDJ2Mkg5VjF6TTUgNWgydjJINVY1em00IDBoMnYySDlWNXpNMSA5aDJ2MkgxVjl6bTQgMGgydjJINVY5em00IDBoMnYySDlWOXoiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNOCAwaDJ2Mkg4VjB6TTQgNGgydjJINFY0em00IDBoMnYySDhWNHpNMCA4aDJ2MkgwVjh6bTQgMGgydjJINFY4em00IDBoMnYySDhWOHoiIGZpbGw9IiNhMGEwYTAiLz48L3N2Zz4=');
+    cursor: nwse-resize;
 }
 
 #zoomPercentageField {
