@@ -26,7 +26,7 @@ class Document {
     }
 
     addLayer(layer) {
-        this.layers.layers.push(layer);
+        this.layers.addLayer(layer);
     }
 
     update(renderArgs) {

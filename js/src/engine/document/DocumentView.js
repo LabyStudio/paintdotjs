@@ -21,8 +21,8 @@ class DocumentView {
 
             this.app.setViewPosition(this.viewportX, this.viewportY);
 
-            // TODO Surface box pre-paint
-            this.updateComposition();
+            // TODO Surface box pre-paint? (bad performance on scroll)
+            // this.updateComposition();
         });
         this.app.on("document:invalidated", () => {
             // TODO Surface box pre-paint
