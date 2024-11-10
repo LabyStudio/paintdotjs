@@ -2,14 +2,14 @@ window.app = new AppWorkspace();
 app.initialize();
 app.performAction(new NewImageAction());
 
+let mainView = app.getActiveDocumentWorkspace();
+mainView.debugName = "Main";
+
 // Draw test image to background
 let img = new Image();
 img.src = "run/test.png";
 img.onload = () => {
-    let documentView = app.getActiveDocumentWorkspace();
-    documentView.debugName = "Main";
-
-    let document = documentView.getDocument();
+    let document = mainView.getDocument();
     document.getLayers().getAt(0).getSurface().context.drawImage(
         img,
         0, 0, 1920, 1017
@@ -19,5 +19,13 @@ img.onload = () => {
 
 app.performAction(new NewImageAction());
 
-let documentView = app.getActiveDocumentWorkspace();
-documentView.debugName = "Secondary";
+let secondaryView = app.getActiveDocumentWorkspace();
+secondaryView.debugName = "Secondary";
+
+app.setActiveDocumentWorkspace(mainView);
+
+
+mainView.executeFunction(new SelectAllFunction());
+
+let mainSelection = mainView.getSelection();
+console.log(mainSelection.getBounds().toString())

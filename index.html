@@ -58,6 +58,7 @@
 <script src="./js/src/engine/util/Region.js"></script>
 <script src="./js/src/engine/util/ImageUtil.js"></script>
 <script src="./js/src/engine/util/MathHelper.js"></script>
+<script src="./js/src/engine/util/Point.js"></script>
 <script src="./js/src/interface/UIElement.js"></script>
 <script src="./js/src/interface/item/Item.js"></script>
 <script src="./js/src/interface/panel/Panel.js"></script>
@@ -130,8 +131,16 @@
 <script src="./js/src/engine/AppWorkspace.js"></script>
 <script src="./js/src/engine/document/event/EventHandler.js"></script>
 <script src="./js/src/engine/document/tool/Tool.js"></script>
+<script src="./js/src/engine/document/tool/tool/SelectionTool.js"></script>
 <script src="./js/src/engine/document/tool/tool/PanTool.js"></script>
+<script src="./js/src/engine/document/tool/tool/RectangleSelectTool.js"></script>
 <script src="./js/src/engine/document/tool/ToolRegistry.js"></script>
+<script src="./js/src/engine/document/selection/CombineMode.js"></script>
+<script src="./js/src/engine/document/selection/Data.js"></script>
+<script src="./js/src/engine/document/selection/GraphicsPath.js"></script>
+<script src="./js/src/engine/document/selection/Matrix.js"></script>
+<script src="./js/src/engine/document/selection/MatrixOrder.js"></script>
+<script src="./js/src/engine/document/selection/Selection.js"></script>
 <script src="./js/src/engine/document/DocumentView.js"></script>
 <script src="./js/src/engine/document/Document.js"></script>
 <script src="./js/src/engine/document/DocumentWorkspace.js"></script>
@@ -160,15 +169,22 @@
 <script src="./js/src/engine/document/history/function/SwapLayerFunction.js"></script>
 <script src="./js/src/engine/document/history/function/DuplicateLayerFunction.js"></script>
 <script src="./js/src/engine/document/history/function/MergeLayerDownFunction.js"></script>
+<script src="./js/src/engine/document/history/function/SelectAllFunction.js"></script>
 <script src="./js/src/engine/document/history/memento/DeleteLayerHistoryMemento.js"></script>
 <script src="./js/src/engine/document/history/memento/NewLayerHistoryMemento.js"></script>
 <script src="./js/src/engine/document/history/memento/NullHistoryMemento.js"></script>
+<script src="./js/src/engine/document/history/memento/SelectionHistoryMemento.js"></script>
 <script src="./js/src/engine/document/history/memento/ToolHistoryMemento.js"></script>
 <script src="./js/src/engine/document/history/memento/CompoundHistoryMemento.js"></script>
 <script src="./js/src/engine/document/history/memento/SwapLayerHistoryMemento.js"></script>
 <script src="./js/src/engine/document/history/memento/BitmapHistoryMemento.js"></script>
 <script src="./js/src/engine/document/render/RenderArgs.js"></script>
+<script src="./js/src/engine/document/render/SurfaceBox.js"></script>
+<script src="./js/src/engine/document/render/SurfaceBoxRenderer.js"></script>
 <script src="./js/src/engine/document/render/UpdateScansContext.js"></script>
+<script src="./js/src/engine/document/render/renderer/SelectionRenderer.js"></script>
+<script src="./js/src/engine/document/render/renderer/SurfaceBoxBaseRenderer.js"></script>
+<script src="./js/src/engine/document/render/renderer/SurfaceBoxGridRenderer.js"></script>
 <script src="./js/src/main.js"></script>
 <!-- Sources$end -->
 

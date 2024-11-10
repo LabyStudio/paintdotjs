@@ -3,19 +3,18 @@ class AppView {
     static PAN_SCALE_FACTOR = 2;
 
     constructor() {
-        this.canvas = document.getElementById('canvas');
+        this.canvas = Surface.fromCanvas(document.getElementById('canvas'));
         this.editor = document.getElementById('editor');
         this.environment = document.getElementById('environment');
         this.view = document.getElementById('view');
-
-        this.context = this.canvas.getContext('2d');
-        this.transparentPattern = ImageUtil.createTransparentPattern(this.context, 5);
 
         this.lastMouseX = 0;
         this.lastMouseY = 0;
 
         this.panTool = null;
         this.listeners = {};
+
+        this.gridVisible = false;
     }
 
     initialize() {
@@ -129,8 +128,8 @@ class AppView {
         let viewWidth = this.getViewWidth();
         let viewHeight = this.getViewHeight();
 
-        this.canvas.width = viewWidth;
-        this.canvas.height = viewHeight;
+        this.canvas.setWidth(viewWidth);
+        this.canvas.setHeight(viewHeight);
 
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace === null) {
@@ -163,51 +162,10 @@ class AppView {
         });
 
         let documentWorkspace = this.getActiveDocumentWorkspace();
-        if (documentWorkspace === null) {
-            return;
+        if (documentWorkspace !== null) {
+            let renderBounds = documentWorkspace.getRenderBounds();
+            documentWorkspace.render(this.canvas, renderBounds);
         }
-
-        let surface = documentWorkspace.getCompositionSurface();
-        let renderBounds = documentWorkspace.getRenderBounds();
-
-        // Clear view
-        this.context.clearRect(0, 0, this.getViewWidth(), this.getViewHeight());
-
-        // Render transparent background pattern
-        this.context.fillStyle = this.transparentPattern;
-        this.context.fillRect(
-            renderBounds.getX(),
-            renderBounds.getY(),
-            renderBounds.getWidth(),
-            renderBounds.getHeight()
-        );
-
-        // Render the composition of the active document workspace
-        ImageUtil.drawImage(
-            this.context,
-            surface.canvas,
-            0,
-            0,
-            documentWorkspace.getWidth(),
-            documentWorkspace.getHeight(),
-            renderBounds.getX(),
-            renderBounds.getY(),
-            renderBounds.getWidth(),
-            renderBounds.getHeight()
-        );
-
-        // Debug
-        this.context.font = "16px Arial";
-        this.context.fillStyle = "white";
-
-        this.context.fillText(documentWorkspace.getWidth() + "x" + documentWorkspace.getHeight(), 70, 20 + 16);
-        this.context.fillText(documentWorkspace.getViewportX() + ", " + documentWorkspace.getViewportY(), 70, 20 + 16 * 2);
-
-        this.context.fillText(parseInt(renderBounds.getX()) + ", " + parseInt(renderBounds.getY()), 70, 20 + 16 * 4);
-        this.context.fillText(parseInt(renderBounds.getWidth()) + "x" + parseInt(renderBounds.getHeight()), 70, 20 + 16 * 5);
-
-        this.context.fillText(parseInt(documentWorkspace.getZoom() * 100) / 100, 70, 20 + 16 * 7);
-        this.context.fillText(parseInt(this.getLastMouseX()) + ", " + parseInt(this.getLastMouseY()), 70, 20 + 16 * 8);
     }
 
     setCursor(cursor) {
@@ -308,6 +266,21 @@ class AppView {
 
     getLastMouseY() {
         return this.lastMouseY;
+    }
+
+    isGridVisible() {
+        return this.gridVisible;
+    }
+
+    setGridVisible(visible) {
+        this.gridVisible = visible;
+
+        let activeDocumentWorkspace = this.getActiveDocumentWorkspace();
+        if (activeDocumentWorkspace !== null) {
+            activeDocumentWorkspace.getGridRenderer().setVisible(visible);
+        }
+
+        this.fire("app:grid_visibility_changed", visible);
     }
 
     on(event, callback) {

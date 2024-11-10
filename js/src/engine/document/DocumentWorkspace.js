@@ -6,6 +6,10 @@ class DocumentWorkspace extends DocumentView {
         this.filePath = null;
         this.activeLayer = null;
         this.history = new HistoryStack(app, this);
+        this.selection = new Selection();
+
+        this.selectionRenderer = new SelectionRenderer(this.surfaceBox, this.selection);
+        this.surfaceBox.addRenderer(this.selectionRenderer);
 
         // Bind instance methods
         this.onLayerRemoving = this.onLayerRemoving.bind(this);
@@ -120,5 +124,9 @@ class DocumentWorkspace extends DocumentView {
 
     setActiveLayerIndex(index) {
         this.activeLayer = this.document.getLayers().getAt(index);
+    }
+
+    getSelection() {
+        return this.selection;
     }
 }

@@ -1,6 +1,6 @@
 class Rectangle {
 
-    constructor(x, y, width, height) {
+    constructor(x = 0, y = 0, width = 0, height = 0) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -99,6 +99,10 @@ class Rectangle {
 
     clone() {
         return new Rectangle(this.x, this.y, this.width, this.height);
+    }
+
+    toString() {
+        return this.x + ", " + this.y + " (" + this.width + "x" + this.height + ")";
     }
 
     static relative(x, y, width, height) {

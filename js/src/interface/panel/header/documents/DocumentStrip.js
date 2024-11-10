@@ -8,9 +8,14 @@ class DocumentStrip extends Panel {
         this.app.on("app:create_document", (documentWorkspace) => {
             this.documentsListItem.add(new DocumentItem(documentWorkspace));
             this.documentsListItem.reinitialize();
+            this.updateActiveDocument();
         });
         this.app.on("document:invalidated", () => {
             this.documentsListItem.reinitialize();
+        });
+        this.app.on("app:update_active_document", () => {
+            this.documentsListItem.reinitialize();
+            this.updateActiveDocument();
         });
         this.app.on("document:render_layer_region", (layer, region) => {
             if (!(layer instanceof BitmapLayer)) {
@@ -36,10 +41,23 @@ class DocumentStrip extends Panel {
         {
             let documentWorkspaces = this.app.getDocumentWorkspaces();
             for (let documentWorkspace of documentWorkspaces) {
-                this.documentsListItem.add(new DocumentItem(documentWorkspace));
+                let item = new DocumentItem(documentWorkspace);
+                this.documentsListItem.add(item);
+
+                if (documentWorkspaces === this.app.getActiveDocumentWorkspace()) {
+                    this.documentsListItem.setSelected(item);
+                }
             }
         }
         this.documentsListItem.appendTo(this.element, this);
+    }
+
+    updateActiveDocument() {
+        let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
+        let item = this.getItemByDocumentWorkspace(activeDocumentWorkspace);
+        if (item !== null) {
+            this.documentsListItem.setSelected(item);
+        }
     }
 
     getItemByDocumentWorkspace(documentWorkspace) {

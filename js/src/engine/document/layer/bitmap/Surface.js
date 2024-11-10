@@ -1,25 +1,33 @@
 class Surface {
 
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.width = canvas.width;
+        this.height = canvas.height;
 
-        this.canvas = document.createElement('canvas');
-        this.context = this.canvas.getContext('2d');
+        this.context = canvas.getContext('2d');
         this.context.imageSmoothingEnabled = false;
-        this.canvas.width = width;
-        this.canvas.height = height;
+
+        this.checkerboard = null;
     }
 
-    clear(color) {
-        this.context.clearRect(0, 0, this.width, this.height);
-        this.context.fillStyle = color.toHex();
-        this.context.fillRect(0, 0, this.width, this.height);
+    clear(color = null) {
+        this.clearRegion(0, 0, this.width, this.height, color);
+    }
+
+    clearRegion(x, y, width, height, color = null) {
+        this.context.clearRect(x, y, width, height);
+
+        if (color !== null) {
+            this.context.fillStyle = color.toHex();
+            this.context.fillRect(x, y, width, height);
+        }
     }
 
     render(renderArgs, rectangle) {
         // Render surface to renderArgs.surface
-        renderArgs.getSurface().context.drawImage(
+        let targetSurface = renderArgs.getSurface();
+        targetSurface.context.drawImage(
             this.canvas,
             rectangle.x,
             rectangle.y,
@@ -30,12 +38,56 @@ class Surface {
     }
 
     clone() {
-        let surface = new Surface(this.width, this.height);
+        let surface = Surface.create(this.width, this.height);
         surface.context.drawImage(this.canvas, 0, 0);
         return surface;
     }
 
+    renderCheckerboard(x, y, width, height) {
+        if (this.checkerboard === null) {
+            this.checkerboard = ImageUtil.createTransparentPattern(this.context, 5);
+        }
+
+        this.context.fillStyle = this.checkerboard;
+        this.context.fillRect(x, y, width, height);
+    }
+
     getCanvas() {
         return this.canvas;
+    }
+
+    getContext() {
+        return this.context;
+    }
+
+    getWidth() {
+        return this.width;
+    }
+
+    getHeight() {
+        return this.height;
+    }
+
+    setWidth(width) {
+        this.width = width;
+        this.canvas.width = width;
+    }
+
+    setHeight(height) {
+        this.height = height;
+        this.canvas.height = height;
+    }
+
+    static fromCanvas(canvas) {
+        let context = canvas.getContext('2d');
+        return new Surface(canvas, context);
+    }
+
+    static create(width, height) {
+        let canvas = document.createElement('canvas');
+        let surface = new Surface(canvas);
+        surface.setWidth(width);
+        surface.setHeight(height);
+        return surface;
     }
 }

@@ -7,6 +7,7 @@ class ToolRegistry {
     static initialize() {
         // Register all tools
         ToolRegistry.register(new PanTool());
+        ToolRegistry.register(new RectangleSelectTool());
 
         // Set default tool
         let selectedToolId = PanelRegistry.get("toolMenu")

@@ -5,7 +5,7 @@ class BitmapLayer extends Layer {
 
         this.documentWorkspace = documentWorkspace;
 
-        this.surface = new Surface(width, height);
+        this.surface = Surface.create(width, height);
         if (fillColor !== null) {
             this.surface.clear(fillColor);
         }

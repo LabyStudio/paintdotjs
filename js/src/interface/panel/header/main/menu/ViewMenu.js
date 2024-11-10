@@ -7,7 +7,9 @@ class ViewMenu extends DropMenuItem {
             new DropEntry("menu.view.zoomToSelection", null),
             new DropEntry("menu.view.actualSize", null),
             new VerticalSeparator(),
-            new DropEntry("menu.view.grid", null),
+            new DropEntry("menu.view.grid", () => {
+                this.app.setGridVisible(!this.app.isGridVisible());
+            }),
             new DropEntry("menu.view.rulers", null),
             new VerticalSeparator(),
             new DropEntry("measurementUnit.pixel", null)

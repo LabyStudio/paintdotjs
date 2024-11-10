@@ -5,6 +5,12 @@ class DocumentView {
         this.document = null
         this.compositionSurface = null;
 
+        this.surfaceBox = new SurfaceBox();
+
+        this.gridRenderer = new SurfaceBoxGridRenderer(this.surfaceBox);
+        this.gridRenderer.setVisible(false);
+        this.surfaceBox.addRenderer(this.gridRenderer);
+
         this.viewportX = 0;
         this.viewportY = 0;
 
@@ -58,10 +64,15 @@ class DocumentView {
 
         // Create surface for composition (Canvas that combines all layers)
         if (this.compositionSurface === null) {
-            this.compositionSurface = new Surface(document.getWidth(), document.getHeight());
+            this.compositionSurface = Surface.create(document.getWidth(), document.getHeight());
         }
+        this.surfaceBox.setSurface(this.compositionSurface);
 
         this.onDocumentChanged();
+    }
+
+    render(destination, renderBounds) {
+        this.surfaceBox.render(destination, renderBounds);
     }
 
     fitViewport() {
@@ -243,6 +254,14 @@ class DocumentView {
 
     getDocument() {
         return this.document;
+    }
+
+    getSurfaceBox() {
+        return this.surfaceBox;
+    }
+
+    getGridRenderer() {
+        return this.gridRenderer;
     }
 
     getApp() {

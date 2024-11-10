@@ -28,7 +28,7 @@ class IconItem extends ActionItem {
     }
 
     static fromActionItem(actionItem) {
-        let iconItem = new IconItem(actionItem.id, actionItem.callback);
+        let iconItem = new IconItem(actionItem.id, actionItem.pressable);
         iconItem.hasIconImage = actionItem.hasIconImage;
         iconItem.translationKey = actionItem.translationKey;
         iconItem.absoluteTranslationKey = actionItem.absoluteTranslationKey;

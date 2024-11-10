@@ -38,9 +38,7 @@ class AppWorkspace extends AppView {
         this.documentWorkspaces.push(documentWorkspace);
 
         // Set active document workspace
-        if (this.activeDocumentWorkspace == null || this.documentWorkspaces.length === 0) {
-            this.setActiveDocumentWorkspace(documentWorkspace);
-        }
+        this.setActiveDocumentWorkspace(documentWorkspace);
 
         let history = documentWorkspace.getHistory();
         history.clearAll();

@@ -24,7 +24,7 @@ class CommonMenu extends StripPanel {
         });
     }
 
-    static ref(menu, item) {
+    static ref(menu, item, callback = null) {
         let mainMenu = PanelRegistry.get("mainMenu");
         let dropEntry = mainMenu.get(menu).get(item)
         return IconItem.fromActionItem(dropEntry);
