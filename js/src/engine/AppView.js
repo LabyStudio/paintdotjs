@@ -18,7 +18,8 @@ class AppView {
     }
 
     initialize() {
-        this.panTool = ToolRegistry.get("panTool");
+        // Pseudo pan tool instance for middle mouse click pan
+        this.panTool = ToolType.PAN.create();
 
         this.updateCanvasBounds();
 
@@ -172,6 +173,10 @@ class AppView {
         this.editor.style.cursor = cursor;
     }
 
+    setCursorImg(name) {
+        this.setCursor("url('assets/cursors/" + name + ".png') 15 15, auto");
+    }
+
     onResize(width, height) {
         this.updateCanvasBounds();
 
@@ -185,9 +190,17 @@ class AppView {
     }
 
     onMouseDown(mouseX, mouseY, button) {
-        // Handle mouse down for middle mouse click pan
-        if (button === 1) {
-            return this.panTool.onMouseDown(mouseX, mouseY, button);
+        let documentWorkspace = this.getActiveDocumentWorkspace();
+        if (documentWorkspace !== null) {
+            let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
+            if (this.onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, position)) {
+                return true;
+            }
+
+            // Handle mouse down for middle mouse click pan
+            if (button === 1) {
+                return this.panTool.onMouseDown(mouseX, mouseY, button, position);
+            }
         }
         return false;
     }
@@ -196,18 +209,46 @@ class AppView {
         this.lastMouseX = mouseX;
         this.lastMouseY = mouseY;
 
-        // Handle mouse move for middle mouse click pan
-        if (this.panTool.isTracking()) {
-            return this.panTool.onMouseMove(mouseX, mouseY);
+        let documentWorkspace = this.getActiveDocumentWorkspace();
+        if (documentWorkspace !== null) {
+            let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
+            if (this.onDocumentMouseMove(mouseX, mouseY, documentWorkspace, position)) {
+                return true;
+            }
+
+            // Handle mouse move for middle mouse click pan
+            if (this.panTool.isTracking()) {
+                return this.panTool.onMouseMove(mouseX, mouseY, position);
+            }
         }
         return false;
     }
 
     onMouseUp(mouseX, mouseY, button) {
-        // Handle mouse up for active tool
-        if (this.panTool.isTracking()) {
-            return this.panTool.onMouseUp(mouseX, mouseY, button);
+        let documentWorkspace = this.getActiveDocumentWorkspace();
+        if (documentWorkspace !== null) {
+            let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
+            if (this.onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, position)) {
+                return true;
+            }
+
+            // Handle mouse up for active tool
+            if (this.panTool.isTracking()) {
+                return this.panTool.onMouseUp(mouseX, mouseY, button, position);
+            }
         }
+        return false;
+    }
+
+    onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, position) {
+        return false;
+    }
+
+    onDocumentMouseMove(mouseX, mouseY, documentWorkspace, position) {
+        return false;
+    }
+
+    onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, position) {
         return false;
     }
 

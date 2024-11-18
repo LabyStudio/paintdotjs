@@ -97,6 +97,17 @@ class Rectangle {
         this.height = height;
     }
 
+    intersect(rect) {
+        let x1 = Math.max(this.x, rect.x);
+        let x2 = Math.min(this.x + this.width, rect.x + rect.width);
+        let y1 = Math.max(this.y, rect.y);
+        let y2 = Math.min(this.y + this.height, rect.y + rect.height);
+        this.x = x1;
+        this.y = y1;
+        this.width = Math.max(0, x2 - x1);
+        this.height = Math.max(0, y2 - y1);
+    }
+
     clone() {
         return new Rectangle(this.x, this.y, this.width, this.height);
     }

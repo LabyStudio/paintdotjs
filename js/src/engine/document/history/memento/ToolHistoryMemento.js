@@ -4,15 +4,15 @@ class ToolHistoryMemento extends HistoryMemento {
         super(name, image);
 
         this.app = documentWorkspace.getApp();
-        this.toolId = this.app.getActiveTool().getId();
+        this.toolType = this.app.getActiveTool().getType();
     }
 
     getDocumentWorkspace() {
         return this.documentWorkspace;
     }
 
-    getToolId() {
-        return this.toolId;
+    getToolType() {
+        return this.toolType;
     }
 
     onToolUndo() {
@@ -20,8 +20,8 @@ class ToolHistoryMemento extends HistoryMemento {
     }
 
     onUndo() {
-        if (this.app.getActiveTool().getId() !== this.toolId) {
-            this.app.setActiveToolFromId(this.toolId);
+        if (this.app.getActiveTool().getType() !== this.toolType) {
+            this.app.setActiveToolFromType(this.toolType);
         }
 
         return this.onToolUndo();

@@ -1,15 +1,15 @@
 class PanTool extends Tool {
 
     constructor() {
-        super("panTool");
+        super(ToolType.PAN);
 
         this.tracking = false;
         this.mouseClickX = 0;
         this.mouseClickY = 0;
     }
 
-    onMouseDown(mouseX, mouseY, button) {
-        this.app.setCursor("grabbing");
+    onMouseDown(mouseX, mouseY, button, position) {
+        this.app.setCursorImg("hand_closed_cursor");
 
         this.tracking = true;
 
@@ -20,7 +20,7 @@ class PanTool extends Tool {
         return true;
     }
 
-    onMouseMove(mouseX, mouseY) {
+    onMouseMove(mouseX, mouseY, position) {
         if (!this.tracking) {
             return false;
         }
@@ -32,9 +32,9 @@ class PanTool extends Tool {
         return true;
     }
 
-    onMouseUp(mouseX, mouseY, button) {
+    onMouseUp(mouseX, mouseY, button, position) {
         if (this.tracking) {
-            this.app.setCursor("grab");
+            this.app.setCursorImg("hand_open_cursor");
             this.tracking = false;
             return true;
         }
@@ -43,7 +43,7 @@ class PanTool extends Tool {
     }
 
     onActivate() {
-        this.app.setCursor("grab");
+        this.app.setCursorImg("hand_open_cursor");
     }
 
     isTracking() {

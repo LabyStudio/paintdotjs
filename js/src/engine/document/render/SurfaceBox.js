@@ -26,6 +26,13 @@ class SurfaceBox {
         this.rendererList.push(renderer);
     }
 
+    removeRenderer(renderer) {
+        let index = this.rendererList.indexOf(renderer);
+        if (index !== -1) {
+            this.rendererList.splice(index, 1);
+        }
+    }
+
     getRendererList() {
         return this.rendererList;
     }

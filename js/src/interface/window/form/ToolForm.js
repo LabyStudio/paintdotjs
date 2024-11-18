@@ -25,14 +25,20 @@ class ToolForm extends Form {
 
         for (let entry of toolStripChooser.entries) {
             let isSelected = entry.id === toolStripChooser.getSelectedId();
+            let implemented = ToolType.getById(entry.id) !== null;
 
             let button = document.createElement("div");
             button.className = "menu-item clickable";
             button.onclick = () => {
-                toolStripChooser.setSelectedId(entry.id);
+                if (implemented) {
+                    toolStripChooser.setSelectedId(entry.id);
+                }
             };
             if (isSelected) {
                 button.setAttribute("active", "");
+            }
+            if (!implemented) {
+                button.setAttribute("disabled", "");
             }
             {
                 let isLargeIcon = entry.id === "shapesTool";

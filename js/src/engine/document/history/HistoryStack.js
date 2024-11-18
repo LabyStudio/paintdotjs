@@ -19,9 +19,9 @@ class HistoryStack {
         let topMemento = this.redoStack[0];
         let app = this.documentWorkspace.getApp();
 
-        if (topMemento instanceof ToolHistoryMemento && app.getActiveTool().getId() !== topMemento.getToolId()) {
+        if (topMemento instanceof ToolHistoryMemento && app.getActiveTool().getType() !== topMemento.getToolType()) {
             // Change tool and step forward again
-            app.setActiveToolFromId(topMemento.getToolId());
+            app.setActiveToolFromType(topMemento.getToolType());
             this.stepForward();
         } else {
             let redoMemento = this.redoStack[0];
@@ -43,9 +43,9 @@ class HistoryStack {
         let topMemento = this.undoStack[this.undoStack.length - 1];
         let app = this.documentWorkspace.getApp();
 
-        if (topMemento instanceof ToolHistoryMemento && app.getActiveTool().getId() !== topMemento.getToolId()) {
+        if (topMemento instanceof ToolHistoryMemento && app.getActiveTool().getType() !== topMemento.getToolType()) {
             // Change tool and step backward again
-            app.setActiveToolFromId(topMemento.getToolId());
+            app.setActiveToolFromType(topMemento.getToolType());
             this.stepBackward();
         } else {
             let undoMemento = this.undoStack[this.undoStack.length - 1];

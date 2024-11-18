@@ -27,9 +27,14 @@ class ToolSelector extends SelectorMenuItem {
 
         // Add the tools to the drop menu
         for (let id of toolIds) {
+            let implemented = ToolType.getById(id) !== null;
+
             let entry = new DropEntry(id, () => {
-                this.setSelectedId(id);
+                if (implemented) {
+                    this.setSelectedId(id);
+                }
             }).withTranslationKey("name", false);
+            entry.setEnabled(implemented);
 
             // Fix the icon path of the paint bucket and recolor tools
             if (id === "paintBucketTool") {
@@ -49,7 +54,10 @@ class ToolSelector extends SelectorMenuItem {
     setSelectedId(id) {
         super.setSelectedId(id);
 
-        let tool = ToolRegistry.get(id);
-        this.app.setActiveTool(tool);
+        let tool = ToolType.getById(id);
+        if (tool === null) {
+            throw new Error("Tool not found: " + id);
+        }
+        this.app.setActiveToolFromType(tool);
     }
 }

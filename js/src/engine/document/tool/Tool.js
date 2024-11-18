@@ -1,28 +1,44 @@
 class Tool {
 
-    constructor(id) {
-        this.id = id;
+    constructor(type) {
+        this.type = type;
         this.app = app;
     }
 
-    getId() {
-        return this.id;
+    getType() {
+        return this.type;
     }
 
     onActivate() {
 
     }
 
-    onMouseDown(mouseX, mouseY, button) {
+    onDeactivate() {
+
+    }
+
+    onMouseDown(mouseX, mouseY, button, position) {
         return false;
     }
 
-    onMouseMove(mouseX, mouseY) {
+    onMouseMove(mouseX, mouseY, position) {
         return false;
     }
 
-    onMouseUp(mouseX, mouseY, button) {
+    onMouseUp(mouseX, mouseY, button, position) {
         return false;
+    }
+
+    getDocumentWorkspace() {
+        return this.app.getActiveDocumentWorkspace();
+    }
+
+    getSurfaceBox() {
+        return this.getDocumentWorkspace().getSurfaceBox();
+    }
+
+    getSelection() {
+        return this.getDocumentWorkspace().getSelection();
     }
 
 }

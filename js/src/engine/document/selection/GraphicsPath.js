@@ -15,10 +15,9 @@ class GraphicsPath {
         }
 
         this.pathData = this.pathData.map(point => {
-            const [x, y] = point;
-            const transformedX = matrix.values[0][0] * x + matrix.values[0][1] * y + matrix.values[0][2];
-            const transformedY = matrix.values[1][0] * x + matrix.values[1][1] * y + matrix.values[1][2];
-            return [transformedX, transformedY];
+            const transformedX = matrix.values[0][0] * point.x + matrix.values[0][1] * point.y + matrix.values[0][2];
+            const transformedY = matrix.values[1][0] * point.x + matrix.values[1][1] * point.y + matrix.values[1][2];
+            return new Point(transformedX, transformedY);
         });
     }
 
@@ -30,11 +29,23 @@ class GraphicsPath {
 
         const {x, y, width, height} = rectangle;
 
-        this.pathData.push([x, y]); // Top-left
-        this.pathData.push([x + width, y]); // Top-right
-        this.pathData.push([x + width, y + height]); // Bottom-right
-        this.pathData.push([x, y + height]); // Bottom-left
-        this.pathData.push([x, y]); // Close the rectangle (return to start)
+        this.pathData.push(new Point(x, y)); // Top-left
+        this.pathData.push(new Point(x + width, y)); // Top-right
+        this.pathData.push(new Point(x + width, y + height)); // Bottom-right
+        this.pathData.push(new Point(x, y + height)); // Bottom-left
+        this.pathData.push(new Point(x, y)); // Close the rectangle (return to start)
+    }
+
+    addLines(points) {
+        if (!Array.isArray(points) || points.length === 0) {
+            throw new Error("Input must be a non-empty array of points");
+        }
+
+        if (points.some(point => !(point instanceof Point))) {
+            throw new Error("Input must be an array of Point objects");
+        }
+
+        this.pathData.push(...points);
     }
 
     // Reset the path to be empty
@@ -48,8 +59,8 @@ class GraphicsPath {
             const firstPoint = this.pathData[0];
             const lastPoint = this.pathData[this.pathData.length - 1];
 
-            if (firstPoint[0] !== lastPoint[0] || firstPoint[1] !== lastPoint[1]) {
-                this.pathData.push([...firstPoint]); // Close the figure
+            if (!firstPoint.equals(lastPoint)) {
+                this.pathData.push(firstPoint);
             }
         }
     }
@@ -62,7 +73,7 @@ class GraphicsPath {
     // Create a clone of the current path
     clone() {
         const clonedPath = new GraphicsPath();
-        clonedPath.pathData = this.pathData.map(point => [...point]);
+        clonedPath.pathData = this.pathData.map(point => point.clone());
         return clonedPath;
     }
 
@@ -77,70 +88,67 @@ class GraphicsPath {
         let maxX = -Infinity;
         let maxY = -Infinity;
 
-        this.pathData.forEach(([x, y]) => {
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
+        this.pathData.forEach(point => {
+            if (point.x < minX) minX = point.x;
+            if (point.y < minY) minY = point.y;
+            if (point.x > maxX) maxX = point.x;
+            if (point.y > maxY) maxY = point.y;
         });
 
         return new Rectangle(minX, minY, maxX - minX, maxY - minY);
     }
 
-    // Combine two paths using a specified combination mode
     static combine(subjectPath, combineMode, clipPath) {
-        if (!(subjectPath instanceof GraphicsPath) || !(clipPath instanceof GraphicsPath)) {
-            throw new Error("Both paths must be instances of GraphicsPath");
-        }
-
-        const combinedPath = new GraphicsPath();
-
-        // Simplified combination logic
         switch (combineMode) {
-            case CombineMode.UNION:
-                combinedPath.pathData = [...subjectPath.pathData, ...clipPath.pathData];
-                break;
-            case CombineMode.INTERSECT:
-                // Keep only the overlapping parts of subjectPath and clipPath
-                combinedPath.pathData = subjectPath.pathData.filter((point) =>
-                    clipPath.pathData.some(
-                        (clipPoint) =>
-                            clipPoint.x === point.x &&
-                            clipPoint.y === point.y
-                    )
-                );
-                break;
-            case CombineMode.XOR:
-                // Keep non-overlapping points from both paths
-                const subjectOnly = subjectPath.pathData.filter((point) =>
-                    !clipPath.pathData.some(
-                        (clipPoint) =>
-                            clipPoint.x === point.x &&
-                            clipPoint.y === point.y
-                    )
-                );
+            case CombineMode.COMPLEMENT:
+                return GraphicsPath.combine(clipPath, CombineMode.EXCLUDE, subjectPath);
 
-                const clipOnly = clipPath.pathData.filter((clipPoint) =>
-                    !subjectPath.pathData.some(
-                        (point) =>
-                            clipPoint.x === point.x &&
-                            clipPoint.y === point.y
-                    )
-                );
-
-                combinedPath.pathData = [...subjectOnly, ...clipOnly];
-                break;
-            case CombineMode.EXCLUDE:
-                // In a real implementation, calculate the subtraction of paths
-                combinedPath.pathData = subjectPath.pathData; // Placeholder for exclusion logic
-                break;
             case CombineMode.REPLACE:
-                combinedPath.pathData = [...clipPath.pathData];
-                break;
-            default:
-                throw new Error("Invalid combine mode");
-        }
+                return clipPath.clone();
 
-        return combinedPath;
+            case CombineMode.XOR:
+            case CombineMode.INTERSECT:
+            case CombineMode.UNION:
+            case CombineMode.EXCLUDE:
+                if (subjectPath.isEmpty() && clipPath.isEmpty()) {
+                    return new GraphicsPath(); // Empty path
+                } else if (subjectPath.isEmpty()) {
+                    switch (combineMode) {
+                        case CombineMode.XOR:
+                        case CombineMode.UNION:
+                            return clipPath.clone();
+
+                        case CombineMode.INTERSECT:
+                        case CombineMode.EXCLUDE:
+                            return new GraphicsPath();
+
+                        default:
+                            throw new Error("Invalid enum argument");
+                    }
+                } else if (clipPath.isEmpty()) {
+                    switch (combineMode) {
+                        case CombineMode.EXCLUDE:
+                        case CombineMode.XOR:
+                        case CombineMode.UNION:
+                            return subjectPath.clone();
+
+                        case CombineMode.INTERSECT:
+                            return new GraphicsPath();
+
+                        default:
+                            throw new Error("Invalid enum argument");
+                    }
+                } else {
+                    const resultPath = GraphicsPath.clipPath(subjectPath, combineMode, clipPath);
+                    return new GraphicsPath(resultPath);
+                }
+
+            default:
+                throw new Error("Invalid enum argument");
+        }
+    }
+
+    static clipPath(subjectPath, combineMode, clipPath) {
+        throw new Error("clipPath is not implemented");
     }
 }

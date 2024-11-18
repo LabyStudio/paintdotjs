@@ -5,5 +5,6 @@ class CombineMode {
     static INTERSECT = 2;
     static EXCLUDE = 3;
     static REPLACE = 4;
+    static COMPLEMENT = 5;
 
 }

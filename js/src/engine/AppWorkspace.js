@@ -11,7 +11,6 @@ class AppWorkspace extends AppView {
 
     initialize() {
         PanelRegistry.initialize();
-        ToolRegistry.initialize();
         FormRegistry.initialize();
 
         super.initialize();
@@ -81,52 +80,40 @@ class AppWorkspace extends AppView {
         }
     }
 
-    onMouseDown(mouseX, mouseY, button) {
+    onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, position) {
         // Handle mouse down for active tool
         if (this.activeTool !== null) {
-            if (this.activeTool.onMouseDown(mouseX, mouseY, button)) {
+            if (this.activeTool.onMouseDown(mouseX, mouseY, button, position)) {
                 return true;
             }
         }
-
-        if (super.onMouseDown(mouseX, mouseY, button)) {
-            return true;
-        }
-
-        return false;
+        return super.onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, position);
     }
 
-    onMouseMove(mouseX, mouseY) {
+    onDocumentMouseMove(mouseX, mouseY, documentWorkspace, position) {
         // Handle mouse move for active tool
         if (this.activeTool !== null) {
-            if (this.activeTool.onMouseMove(mouseX, mouseY)) {
+            if (this.activeTool.onMouseMove(mouseX, mouseY, position)) {
                 return true;
             }
         }
-
-        if (super.onMouseMove(mouseX, mouseY)) {
-            return true;
-        }
-
-        return false;
+        return super.onDocumentMouseMove(mouseX, mouseY, documentWorkspace, position);
     }
 
-    onMouseUp(mouseX, mouseY, button) {
+    onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, position) {
         // Handle mouse up for active tool
         if (this.activeTool !== null) {
-            if (this.activeTool.onMouseUp(mouseX, mouseY, button)) {
+            if (this.activeTool.onMouseUp(mouseX, mouseY, button, position)) {
                 return true;
             }
         }
-
-        if (super.onMouseUp(mouseX, mouseY, button)) {
-            return true;
-        }
-
-        return false;
+        return super.onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, position);
     }
 
     setActiveTool(tool) {
+        if (this.activeTool !== null) {
+            this.activeTool.onDeactivate();
+        }
         this.activeTool = tool;
         if (tool !== null) {
             tool.onActivate();
@@ -134,11 +121,8 @@ class AppWorkspace extends AppView {
         this.fire("app:active_tool_updated", tool);
     }
 
-    setActiveToolFromId(id) {
-        let tool = ToolRegistry.get(id);
-        if (tool === null) {
-            throw new Error("Tool not found: " + id);
-        }
+    setActiveToolFromType(type) {
+        let tool = type.create();
         this.setActiveTool(tool);
     }
 

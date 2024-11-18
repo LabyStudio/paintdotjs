@@ -66,8 +66,8 @@ class SelectionRenderer extends SurfaceBoxRenderer {
         context.beginPath();
         for (let i = 0; i < selectedPath.pathData.length; i++) {
             let point = selectedPath.pathData[i];
-            let x = point[0] * scaleX + renderBounds.getX();
-            let y = point[1] * scaleY + renderBounds.getY();
+            let x = point.x * scaleX + renderBounds.getX();
+            let y = point.y * scaleY + renderBounds.getY();
 
             if (i === 0) {
                 context.moveTo(x, y);

@@ -26,6 +26,39 @@ class Selection {
         this.pop();
     }
 
+    resetContinuation() {
+        this.push();
+        this.commitInterimTransform();
+        this.resetCumulativeTransform();
+        this.data.continuation.reset();
+        this.pop();
+    }
+
+    setContinuationPath(path, combineMode) {
+        if (!this.data.basePath.isEmpty()) {
+            throw new Error("base path must be empty to use this overload of SetContinuation");
+        }
+
+        this.push();
+        this.commitInterimTransform();
+        this.resetCumulativeTransform();
+        this.data.continuationCombineMode = combineMode;
+        this.data.continuation.dispose();
+        this.data.continuation = path;
+        this.pop();
+    }
+
+    setContinuationPoints(points, combineMode) {
+        this.push();
+
+        this.commitInterimTransform();
+        this.resetCumulativeTransform();
+        this.data.continuationCombineMode = combineMode;
+        this.data.continuation.reset();
+        this.data.continuation.addLines(points);
+        this.pop();
+    }
+
     setContinuation(rectangle, combineMode) {
         this.push();
         this.commitInterimTransform();
@@ -101,6 +134,10 @@ class Selection {
     getBounds(applyInterimTransformation = true) {
         let path = this.createPath(applyInterimTransformation);
         return path.getBounds();
+    }
+
+    isEmpty() {
+        return this.data.basePath.isEmpty() && this.data.continuation.isEmpty();
     }
 
 }
