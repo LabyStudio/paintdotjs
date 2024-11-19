@@ -172,9 +172,8 @@ class SelectionTool extends Tool {
             switch (whatToDo) {
                 case SelectionTool.CLEAR:
                     if (this.wasNotEmpty) {
-                        // TODO deselect function
-                        // this.undoAction.setName(DeselectFunction.staticName);
-                        // this.undoAction.setImage(DeselectFunction.staticImage);
+                        this.undoAction.setName(DeselectFunction.NAME);
+                        this.undoAction.setImage(DeselectFunction.IMAGE);
                         this.getDocumentWorkspace().getHistory().pushNewMemento(this.undoAction);
                     }
 
@@ -182,7 +181,7 @@ class SelectionTool extends Tool {
                     break;
 
                 case SelectionTool.EMIT:
-                    // this.undoAction.setName(this.getName());
+                    this.undoAction.setName(this.getType().getName());
                     this.getDocumentWorkspace().getHistory().pushNewMemento(this.undoAction);
                     selection.commitContinuation();
                     break;

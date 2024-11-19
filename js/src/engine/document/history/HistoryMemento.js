@@ -36,4 +36,12 @@ class HistoryMemento {
         this.id = id;
     }
 
+    setName(name) {
+        this.name = name;
+    }
+
+    setImage(image) {
+        this.image = image;
+    }
+
 }

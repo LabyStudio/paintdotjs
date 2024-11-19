@@ -30,8 +30,16 @@ class ToolType {
         return this.iconName;
     }
 
+    getName() {
+        return i18n(this.id + ".name");
+    }
+
     getIconSrc() {
-        return "assets/icons/" + this.getIconName() + ".png";
+        return "assets/icons/" + this.getIconName() + "_icon.png";
+    }
+
+    getId() {
+        return this.id;
     }
 
     static getById(id) {

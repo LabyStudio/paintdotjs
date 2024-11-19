@@ -174,7 +174,7 @@ class AppView {
     }
 
     setCursorImg(name) {
-        this.setCursor("url('assets/cursors/" + name + ".png') 15 15, auto");
+        this.setCursor("url('assets/cursors/" + name + ".png') 10 10, auto");
     }
 
     onResize(width, height) {
