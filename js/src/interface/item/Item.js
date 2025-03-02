@@ -23,6 +23,7 @@ class Item extends UIElement {
 
         // Update enabled state on element
         this.setEnabled(this.enabled);
+        this.setEnabledFromActionExecutable(); // Optional if available
 
         // Add class names
         for (let className of this.classNames) {
@@ -147,6 +148,13 @@ class Item extends UIElement {
 
         if (this.isInitialized()) {
             this.element.id = id;
+        }
+    }
+
+    setEnabledFromActionExecutable() {
+        let command = this.getAsAction();
+        if (command !== null) {
+            this.setEnabled(command.runIsActionExecutable());
         }
     }
 

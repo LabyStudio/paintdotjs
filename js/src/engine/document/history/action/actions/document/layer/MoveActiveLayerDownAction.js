@@ -1,4 +1,13 @@
-class MoveActiveLayerDownAction extends DocumentWorkspaceAction {
+class MoveActiveLayerDownAction extends LayerAction {
+
+    constructor() {
+        super(
+            "move.layer.down",
+            "moveLayerDown",
+            "moveLayerDownButton",
+            null
+        );
+    }
 
     performAction(documentWorkspace) {
         let index = documentWorkspace.getActiveLayerIndex();
@@ -17,4 +26,7 @@ class MoveActiveLayerDownAction extends DocumentWorkspaceAction {
         return null;
     }
 
+    isLayerActionExecutable(documentWorkspace, index, size) {
+        return index !== 0;
+    }
 }

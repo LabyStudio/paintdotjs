@@ -10,6 +10,7 @@ class AppWorkspace extends AppView {
     }
 
     initialize() {
+        ActionRegistry.initialize();
         PanelRegistry.initialize();
         FormRegistry.initialize();
 

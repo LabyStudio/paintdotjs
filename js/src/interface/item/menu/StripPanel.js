@@ -40,7 +40,17 @@ class StripPanel extends Panel {
         this.element.removeChild(item.getElement());
     }
 
+    updateItemsEnabledState() {
+        for (let item of this.itemsList) {
+            item.setEnabledFromActionExecutable();
+        }
+    }
+
     get(id) {
         return this.itemMap[id];
+    }
+
+    getItemList() {
+        return this.itemsList;
     }
 }

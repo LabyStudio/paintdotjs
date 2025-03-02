@@ -44,7 +44,7 @@ class LayerForm extends Form {
             let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
             if (activeDocumentWorkspace !== null) {
                 activeDocumentWorkspace.setActiveLayer(item.getLayer());
-                this.updateActionEnabledStates();
+                this.stripPanel.updateItemsEnabledState();
             }
         });
         this.layerListItem.setItemSwapper((item1, item2) => {
@@ -84,48 +84,18 @@ class LayerForm extends Form {
         // Footer strip panel
         this.stripPanel = new StripPanel("layerStripPanel", {
             items: [
-                this.create("add.new.layer", "addNewLayerButton", documentWorkspace => {
-                    documentWorkspace.executeFunction(new AddNewBlankLayerFunction());
-                }),
-                this.create("delete.layer", "deleteLayerButton", documentWorkspace => {
-                    let index = documentWorkspace.getActiveLayerIndex();
-                    documentWorkspace.executeFunction(new DeleteLayerFunction(index));
-                }),
-                this.create("duplicate.layer", "duplicateLayerButton", documentWorkspace => {
-                    let index = documentWorkspace.getActiveLayerIndex();
-                    documentWorkspace.executeFunction(new DuplicateLayerFunction(index));
-                }),
-                this.create("merge.layer.down", "mergeLayerDownButton", documentWorkspace => {
-                    documentWorkspace.performAction(new MergeLayerDownAction());
-                }),
-                this.create("move.layer.up", "moveLayerUpButton", documentWorkspace => {
-                    documentWorkspace.performAction(new MoveActiveLayerUpAction());
-                }),
-                this.create("move.layer.down", "moveLayerDownButton", documentWorkspace => {
-                    documentWorkspace.performAction(new MoveActiveLayerDownAction());
-                }),
-                this.create("layer.properties", "propertiesButton", documentWorkspace => {
-
-                }),
+                this.create("add.new.layer"),
+                this.create("delete.layer"),
+                this.create("duplicate.layer"),
+                this.create("merge.layer.down"),
+                this.create("move.layer.up"),
+                this.create("move.layer.down"),
+                this.create("layer.properties"),
             ]
         });
         this.stripPanel.appendTo(element, this);
 
-        this.updateActionEnabledStates();
-
         return element;
-    }
-
-    updateActionEnabledStates() {
-        let activeDocumentWorkspace = app.getActiveDocumentWorkspace();
-        if (activeDocumentWorkspace !== null) {
-            let index = activeDocumentWorkspace.getActiveLayerIndex();
-            let size = activeDocumentWorkspace.getDocument().getLayers().size();
-            this.stripPanel.get("menu.layers.move.layer.up").setEnabled(index !== size - 1);
-            this.stripPanel.get("menu.layers.move.layer.down").setEnabled(index !== 0);
-            this.stripPanel.get("menu.layers.merge.layer.down").setEnabled(index !== 0);
-            this.stripPanel.get("menu.layers.delete.layer").setEnabled(size > 1);
-        }
     }
 
     getItemByLayer(layer) {
@@ -140,14 +110,7 @@ class LayerForm extends Form {
         return null;
     }
 
-    create(id, toolTip, callback) {
-        let item = new IconItem("menu.layers." + id, () => {
-            let activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
-            if (activeDocumentWorkspace !== null && item.isEnabled()) {
-                callback(activeDocumentWorkspace);
-            }
-        });
-        item.withTranslationKey("layerForm." + toolTip + ".toolTipText");
-        return item;
+    create(id) {
+        return ActionRegistry.get("menu.layers." + id).createIconItem();
     }
 }

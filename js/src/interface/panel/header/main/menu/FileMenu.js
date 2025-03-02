@@ -1,7 +1,7 @@
 class FileMenu extends DropMenuItem {
     constructor() {
         super("menu.file", [
-            new DropEntry("menu.file.new", null),
+            FileMenu.create("new"),
             new DropEntry("menu.file.open", null),
             new DropEntry("menu.file.openRecent", null)
                 .withNoIcon(),
@@ -20,5 +20,11 @@ class FileMenu extends DropMenuItem {
                 window.close();
             }),
         ]);
+
+        // TODO this.updateEntriesOn("");
+    }
+
+    static create(id) {
+        return ActionRegistry.get("menu.file." + id).createDropEntry();
     }
 }

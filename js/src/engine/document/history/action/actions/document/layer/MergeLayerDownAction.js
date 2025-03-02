@@ -1,4 +1,13 @@
-class MergeLayerDownAction extends DocumentWorkspaceAction {
+class MergeLayerDownAction extends LayerAction {
+
+    constructor() {
+        super(
+            "merge.layer.down",
+            "mergeLayerDown",
+            "mergeLayerDownButton",
+            "Ctrl+M"
+        );
+    }
 
     performAction(documentWorkspace) {
         let document = documentWorkspace.getDocument();
@@ -13,6 +22,10 @@ class MergeLayerDownAction extends DocumentWorkspaceAction {
         }
 
         return null;
+    }
+
+    isLayerActionExecutable(documentWorkspace, index, size) {
+        return index !== 0;
     }
 
 }

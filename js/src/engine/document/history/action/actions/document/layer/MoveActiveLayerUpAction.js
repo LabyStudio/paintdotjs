@@ -1,4 +1,13 @@
-class MoveActiveLayerUpAction extends DocumentWorkspaceAction {
+class MoveActiveLayerUpAction extends LayerAction {
+
+    constructor() {
+        super(
+            "move.layer.up",
+            "moveLayerUp",
+            "moveLayerUpButton",
+            null
+        );
+    }
 
     performAction(documentWorkspace) {
         let document = documentWorkspace.getDocument();
@@ -22,6 +31,10 @@ class MoveActiveLayerUpAction extends DocumentWorkspaceAction {
         }
 
         return null;
+    }
+
+    isLayerActionExecutable(documentWorkspace, index, size) {
+        return index !== size - 1;
     }
 
 }

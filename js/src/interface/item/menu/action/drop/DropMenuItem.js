@@ -76,6 +76,18 @@ class DropMenuItem extends MenuItem {
         this.removeClass("open");
     }
 
+    updateEntriesOn(...eventIds) {
+        for (let eventId of eventIds) {
+            window.app.on(eventId, () => {
+                for (let entry of this.entries) {
+                    if (entry instanceof Item) {
+                        entry.setEnabledFromActionExecutable();
+                    }
+                }
+            });
+        }
+    }
+
     isDropUp() {
         return this.element !== null && this.isDropUpAt(this.element.getBoundingClientRect());
     }

@@ -1,6 +1,6 @@
 window.app = new AppWorkspace();
 app.initialize();
-app.performAction(new NewImageAction());
+app.performAction(new NewFileAction());
 
 let mainView = app.getActiveDocumentWorkspace();
 mainView.debugName = "Main";
@@ -17,7 +17,7 @@ img.onload = () => {
     document.invalidate();
 };
 
-app.performAction(new NewImageAction());
+app.performAction(new NewFileAction());
 
 let secondaryView = app.getActiveDocumentWorkspace();
 secondaryView.debugName = "Secondary";

@@ -19,4 +19,12 @@ class UIElement {
         throw new Error("Not implemented for " + this.constructor.name);
     }
 
+    getId() {
+        return this.id;
+    }
+
+    getAsAction() {
+        return ActionRegistry.get(this.id);
+    }
+
 }

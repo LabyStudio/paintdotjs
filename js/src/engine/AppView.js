@@ -68,8 +68,6 @@ class AppView {
             this.fire("document:mousedown", x, y, event.button);
 
             this.onMouseDown(x, y, event.button);
-
-            event.preventDefault();
         });
 
         // Mouse move listener
@@ -122,6 +120,30 @@ class AppView {
                 return;
             }
             documentWorkspace.setViewPosition(this.getViewX(), this.getViewY());
+        });
+
+        window.addEventListener('keydown', event => {
+            // Check if the active element is an input field, textarea, or a contenteditable element
+            const activeElement = document.activeElement;
+            const isInputField = activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.isContentEditable;
+
+            if (isInputField) {
+                return; // Allow default behavior for text inputs
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            // console.log(ShortcutKey.fromEvent(event).toString());
+
+            for (let entry of ActionRegistry.getActions()) {
+                let command = entry[1];
+                if (command.getShortcutKey().isEvent(event)) {
+                    command.runPerformAction();
+                }
+            }
         });
     }
 
