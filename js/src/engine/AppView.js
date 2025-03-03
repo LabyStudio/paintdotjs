@@ -11,6 +11,10 @@ class AppView {
         this.lastMouseX = 0;
         this.lastMouseY = 0;
 
+        this.controlKeyDown = false;
+        this.shiftKeyDown = false;
+        this.altKeyDown = false;
+
         this.panTool = null;
         this.listeners = {};
 
@@ -123,6 +127,16 @@ class AppView {
         });
 
         window.addEventListener('keydown', event => {
+            if (event.key === "Control") {
+                this.controlKeyDown = true;
+            }
+            if (event.key === "Shift") {
+                this.shiftKeyDown = true;
+            }
+            if (event.key === "Alt") {
+                this.altKeyDown = true;
+            }
+
             // Check if the active element is an input field, textarea, or a contenteditable element
             const activeElement = document.activeElement;
             const isInputField = activeElement.tagName === 'INPUT' ||
@@ -143,6 +157,18 @@ class AppView {
                 if (command.getShortcutKey().isEvent(event)) {
                     command.runPerformAction();
                 }
+            }
+        });
+
+        window.addEventListener('keyup', event => {
+            if (event.key === "Control") {
+                this.controlKeyDown = false;
+            }
+            if (event.key === "Shift") {
+                this.shiftKeyDown = false;
+            }
+            if (event.key === "Alt") {
+                this.altKeyDown = false;
             }
         });
     }
@@ -333,6 +359,18 @@ class AppView {
 
     isGridVisible() {
         return this.gridVisible;
+    }
+
+    isControlKeyDown() {
+        return this.controlKeyDown;
+    }
+
+    isShiftDown() {
+        return this.shiftKeyDown;
+    }
+
+    isAltKeyDown() {
+        return this.altKeyDown;
     }
 
     setGridVisible(visible) {

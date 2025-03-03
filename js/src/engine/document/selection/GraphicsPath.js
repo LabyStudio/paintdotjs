@@ -1,24 +1,31 @@
 class GraphicsPath {
-    constructor() {
-        // Initialize the path with an empty array to hold path data
-        this.pathData = [];
+
+    // Initialize the path with an empty array to hold path data
+    constructor(vertexLists = []) {
+        this.vertexLists = vertexLists;
     }
 
     isEmpty() {
-        return this.pathData.length === 0;
+        return this.vertexLists.length === 0;
     }
 
-    // Apply a transformation matrix to the path
+    getVertexLists() {
+        return this.vertexLists;
+    }
+
+    // Apply a transformation matrix to the paths
     transform(matrix) {
         if (!(matrix instanceof Matrix)) {
             throw new Error("Input must be an instance of Matrix");
         }
 
-        this.pathData = this.pathData.map(point => {
-            const transformedX = matrix.values[0][0] * point.x + matrix.values[0][1] * point.y + matrix.values[0][2];
-            const transformedY = matrix.values[1][0] * point.x + matrix.values[1][1] * point.y + matrix.values[1][2];
-            return new Point(transformedX, transformedY);
-        });
+        for (let vertexList of this.vertexLists) {
+            vertexList.vertices = vertexList.vertices.map(point => {
+                const transformedX = matrix.values[0][0] * point.x + matrix.values[0][1] * point.y + matrix.values[0][2];
+                const transformedY = matrix.values[1][0] * point.x + matrix.values[1][1] * point.y + matrix.values[1][2];
+                return new Point(transformedX, transformedY);
+            });
+        }
     }
 
     // Add a rectangle to the path
@@ -29,11 +36,9 @@ class GraphicsPath {
 
         const {x, y, width, height} = rectangle;
 
-        this.pathData.push(new Point(x, y)); // Top-left
-        this.pathData.push(new Point(x + width, y)); // Top-right
-        this.pathData.push(new Point(x + width, y + height)); // Bottom-right
-        this.pathData.push(new Point(x, y + height)); // Bottom-left
-        this.pathData.push(new Point(x, y)); // Close the rectangle (return to start)
+        let vertexList = new VertexList();
+        vertexList.addRectangle(x, y, width, height);
+        this.vertexLists.push(vertexList);
     }
 
     addLines(points) {
@@ -45,41 +50,41 @@ class GraphicsPath {
             throw new Error("Input must be an array of Point objects");
         }
 
-        this.pathData.push(...points);
+        let empty = this.isEmpty();
+        let vertices = empty ? new VertexList() : this.vertexLists[0];
+        vertices.push(...points);
+        if (empty) {
+            this.vertexLists.push(vertices);
+        }
     }
 
     // Reset the path to be empty
     reset() {
-        this.pathData = [];
+        this.vertexLists = [];
     }
 
     // Close all open figures in the path
     closeAllFigures() {
-        if (this.pathData.length > 1) {
-            const firstPoint = this.pathData[0];
-            const lastPoint = this.pathData[this.pathData.length - 1];
-
-            if (!firstPoint.equals(lastPoint)) {
-                this.pathData.push(firstPoint);
-            }
+        for (let vertexList of this.vertexLists) {
+            vertexList.close();
         }
     }
 
     // Dispose of the path (clean up resources)
     dispose() {
-        this.pathData = null;
+        this.vertexLists = null;
     }
 
     // Create a clone of the current path
     clone() {
         const clonedPath = new GraphicsPath();
-        clonedPath.pathData = this.pathData.map(point => point.clone());
+        clonedPath.vertexLists = this.vertexLists.map(point => point.clone());
         return clonedPath;
     }
 
     // Get the bounding rectangle of the path
     getBounds() {
-        if (this.pathData.length === 0) {
+        if (this.isEmpty()) {
             return new Rectangle(0, 0, 0, 0); // Empty path
         }
 
@@ -88,12 +93,14 @@ class GraphicsPath {
         let maxX = -Infinity;
         let maxY = -Infinity;
 
-        this.pathData.forEach(point => {
-            if (point.x < minX) minX = point.x;
-            if (point.y < minY) minY = point.y;
-            if (point.x > maxX) maxX = point.x;
-            if (point.y > maxY) maxY = point.y;
-        });
+        for (let vertexList of this.vertexLists) {
+            for (let point of vertexList.vertices) {
+                minX = Math.min(minX, point.x);
+                minY = Math.min(minY, point.y);
+                maxX = Math.max(maxX, point.x);
+                maxY = Math.max(maxY, point.y);
+            }
+        }
 
         return new Rectangle(minX, minY, maxX - minX, maxY - minY);
     }
@@ -139,8 +146,7 @@ class GraphicsPath {
                             throw new Error("Invalid enum argument");
                     }
                 } else {
-                    const resultPath = GraphicsPath.clipPath(subjectPath, combineMode, clipPath);
-                    return new GraphicsPath(resultPath);
+                    return GraphicsPath.clipPath(subjectPath, combineMode, clipPath);
                 }
 
             default:
@@ -149,6 +155,16 @@ class GraphicsPath {
     }
 
     static clipPath(subjectPath, combineMode, clipPath) {
-        throw new Error("clipPath is not implemented");
+        const basePoly = Polygon.fromGraphicsPath(subjectPath);
+        const clipClone = clipPath.clone();
+        clipClone.closeAllFigures();
+        const clipPoly = Polygon.fromGraphicsPath(clipClone);
+        clipClone.dispose();
+
+        const clippedPoly = Polygon.clip(combineMode, basePoly, clipPoly);
+
+        const returnPath = clippedPoly.toGraphicsPath();
+        returnPath.closeAllFigures();
+        return returnPath;
     }
 }

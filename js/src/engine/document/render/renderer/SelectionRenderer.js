@@ -25,7 +25,7 @@ class SelectionRenderer extends SurfaceBoxRenderer {
 
         // Draw tint fill
         this.renderPath(context, renderBounds, selectedPath, {
-            color: 'rgba(0, 119, 214, 0.22)',
+            color: 'rgba(34, 97, 196, 0.3)',
             fill: true
         });
 
@@ -63,24 +63,28 @@ class SelectionRenderer extends SurfaceBoxRenderer {
             context.setLineDash([]);
         }
 
-        context.beginPath();
-        for (let i = 0; i < selectedPath.pathData.length; i++) {
-            let point = selectedPath.pathData[i];
-            let x = point.x * scaleX + renderBounds.getX();
-            let y = point.y * scaleY + renderBounds.getY();
+        for (let vertexList of selectedPath.getVertexLists()) {
+            context.beginPath();
 
-            if (i === 0) {
-                context.moveTo(x, y);
-            } else {
-                context.lineTo(x, y);
+            let vertices = vertexList.getVertices();
+            for (let i = 0; i < vertices.length; i++) {
+                let point = vertices[i];
+                let x = point.x * scaleX + renderBounds.getX();
+                let y = point.y * scaleY + renderBounds.getY();
+
+                if (i === 0) {
+                    context.moveTo(x, y);
+                } else {
+                    context.lineTo(x, y);
+                }
             }
-        }
-        context.closePath();
+            context.closePath();
 
-        if (options.fill) {
-            context.fill();
-        } else {
-            context.stroke();
+            if (options.fill) {
+                context.fill();
+            } else {
+                context.stroke();
+            }
         }
     };
 

@@ -64,7 +64,17 @@ class SelectionTool extends Tool {
             let selection = this.getSelection();
             this.wasNotEmpty = !selection.isEmpty();
 
-            this.combineMode = CombineMode.REPLACE; // TODO handle control & alt
+            if (this.app.isControlKeyDown() && button === 0) { // Left mouse button
+                this.combineMode = CombineMode.UNION;
+            } else if (this.app.isAltKeyDown() && button === 0) { // Left mouse button
+                this.combineMode = CombineMode.EXCLUDE;
+            } else if (this.app.isControlKeyDown() && button === 2) { // Right mouse button
+                this.combineMode = CombineMode.XOR;
+            } else if (this.app.isAltKeyDown() && button === 2) { // Right mouse button
+                this.combineMode = CombineMode.INTERSECT;
+            } else {
+                this.combineMode = CombineMode.REPLACE;
+            }
 
             this.newSelection.reset();
             let basePath = selection.createPath();
@@ -198,7 +208,7 @@ class SelectionTool extends Tool {
     }
 
     render() {
-        if (this.tracePoints !== null && this.tracePoints.length > 2) {
+        if (this.tracePoints !== null && this.tracePoints.length > 1) {
             let polygon = this.createSelectionPolygon();
 
             if (polygon.length > 2) {
