@@ -17,4 +17,8 @@ class SurfaceBoxRenderer {
         this.visible = visible;
     }
 
+    dispose() {
+        // TODO dispose?
+    }
+
 }

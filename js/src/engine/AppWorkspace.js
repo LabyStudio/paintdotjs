@@ -84,34 +84,44 @@ class AppWorkspace extends AppView {
         }
     }
 
-    onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, position) {
+    onDocumentKeyPress(key, documentWorkspace) {
+        // Handle key press for active tool
+        if (this.activeTool !== null) {
+            if (this.activeTool.onKeyPress(key)) {
+                return true;
+            }
+        }
+        return super.onDocumentMouseDown(key, documentWorkspace);
+    }
+
+    onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace) {
         // Handle mouse down for active tool
         if (this.activeTool !== null) {
-            if (this.activeTool.onMouseDown(mouseX, mouseY, button, position)) {
+            if (this.activeTool.onMouseDown(mouseX, mouseY, button)) {
                 return true;
             }
         }
-        return super.onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, position);
+        return super.onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace);
     }
 
-    onDocumentMouseMove(mouseX, mouseY, documentWorkspace, position) {
+    onDocumentMouseMove(mouseX, mouseY, documentWorkspace) {
         // Handle mouse move for active tool
         if (this.activeTool !== null) {
-            if (this.activeTool.onMouseMove(mouseX, mouseY, position)) {
+            if (this.activeTool.onMouseMove(mouseX, mouseY)) {
                 return true;
             }
         }
-        return super.onDocumentMouseMove(mouseX, mouseY, documentWorkspace, position);
+        return super.onDocumentMouseMove(mouseX, mouseY, documentWorkspace);
     }
 
-    onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, position) {
+    onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace) {
         // Handle mouse up for active tool
         if (this.activeTool !== null) {
-            if (this.activeTool.onMouseUp(mouseX, mouseY, button, position)) {
+            if (this.activeTool.onMouseUp(mouseX, mouseY, button)) {
                 return true;
             }
         }
-        return super.onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, position);
+        return super.onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace);
     }
 
     setActiveTool(tool) {

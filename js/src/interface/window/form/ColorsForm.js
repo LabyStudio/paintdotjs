@@ -160,7 +160,7 @@ class ColorsForm extends Form {
                 colorElement.classList.add("color");
                 colorElement.style.backgroundImage = this.paletteColor(i);
                 colorElement.onmousedown = event => {
-                    let isLeftClick = event.button === 0;
+                    let isLeftClick = event.button === MouseButton.LEFT;
                     if (isLeftClick) {
                         this.setSelectedColor(this.palette[i], "palette");
                     } else {
@@ -182,7 +182,7 @@ class ColorsForm extends Form {
                 colorElement.classList.add("color");
                 colorElement.style.backgroundImage = this.paletteColor(i);
                 colorElement.onmousedown = event => {
-                    let isLeftClick = event.button === 0;
+                    let isLeftClick = event.button === MouseButton.LEFT;
                     if (isLeftClick) {
                         this.setSelectedColor(this.palette[i], "palette");
                     } else {

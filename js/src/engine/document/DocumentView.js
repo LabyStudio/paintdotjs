@@ -246,6 +246,16 @@ class DocumentView {
         return new Point(Math.floor(pixelX), Math.floor(pixelY));
     }
 
+    toScreenPosition(point) {
+        let renderBounds = this.getRenderBounds();
+        let zoom = this.getZoom();
+
+        let screenX = renderBounds.getX() + point.getX() * zoom;
+        let screenY = renderBounds.getY() + point.getY() * zoom;
+
+        return new Point(screenX, screenY);
+    }
+
     getRenderBounds() {
         let viewWidth = this.app.getViewWidth();
         let viewHeight = this.app.getViewHeight();

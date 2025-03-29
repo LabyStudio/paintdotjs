@@ -97,6 +97,13 @@ class Rectangle {
         this.height = height;
     }
 
+    contains(point) {
+        return point.x >= this.x
+            && point.x <= this.x + this.width
+            && point.y >= this.y
+            && point.y <= this.y + this.height;
+    }
+
     intersect(rect) {
         let x1 = Math.max(this.x, rect.x);
         let x2 = Math.min(this.x + this.width, rect.x + rect.width);
@@ -143,5 +150,9 @@ class Rectangle {
             Math.trunc(rectangle.width),
             Math.trunc(rectangle.height)
         );
+    }
+
+    static empty() {
+        return new Rectangle();
     }
 }

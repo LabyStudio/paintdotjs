@@ -8,7 +8,16 @@ class Selection {
         this.changed = new EventHandler();
     }
 
+    performChanging() {
+        // TODO notify?
+    }
+
+    performChanged() {
+        // TODO notify?
+    }
+
     push() {
+        // On changing
         if (this.depth === 0) {
             this.changing.fire(this);
         }
@@ -99,6 +108,7 @@ class Selection {
     }
 
     pop() {
+        // On changed
         if (this.depth === 0) {
             throw new Error("Cannot pop selection when depth is 0");
         }
@@ -138,6 +148,37 @@ class Selection {
 
     isEmpty() {
         return this.data.basePath.isEmpty() && this.data.continuation.isEmpty();
+    }
+
+    getInterimTransform() {
+        return this.data.interimTransform;
+    }
+
+    getInterimTransformCopy() {
+        if (this.data.interimTransform === null) {
+            let m = new Matrix();
+            m.reset();
+            return m;
+        } else {
+            return this.data.interimTransform.clone();
+        }
+    }
+
+    getCumulativeTransformCopy() {
+        if (this.data.cumulativeTransform === null) {
+            let m = new Matrix();
+            m.reset();
+            return m;
+        } else {
+            return this.data.cumulativeTransform.clone();
+        }
+    }
+
+    setInterimTransform(matrix) {
+        this.push();
+        this.data.interimTransform.dispose();
+        this.data.interimTransform = matrix.clone();
+        this.pop();
     }
 
 }

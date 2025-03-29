@@ -51,33 +51,30 @@ class SelectionTool extends Tool {
         this.newSelectionRenderer = null;
     }
 
-    onMouseDown(mouseX, mouseY, button, position) {
-        let x = position.getX();
-        let y = position.getY();
-
+    onMouseDown(mouseX, mouseY, button) {
         if (this.tracking) {
             this.moveOriginMode = true;
-            this.lastXY = new Point(x, y);
-        } else if (button === 0) {
+            this.lastXY = new Point(mouseX, mouseY);
+        } else if (button === MouseButton.LEFT) {
             this.tracking = true;
             this.hasMoved = false;
             this.startTime = Date.now();
 
             this.tracePoints = [];
-            this.tracePoints.push(new Point(x, y));
+            this.tracePoints.push(new Point(mouseX, mouseY));
 
             this.undoAction = new SelectionHistoryMemento("sentinel", this.type.getIconSrc(), this.getDocumentWorkspace());
 
             let selection = this.getSelection();
             this.wasNotEmpty = !selection.isEmpty();
 
-            if (this.app.isControlKeyDown() && button === 0) { // Left mouse button
+            if (this.app.isControlKeyDown() && button === MouseButton.LEFT) {
                 this.combineMode = CombineMode.UNION;
-            } else if (this.app.isAltKeyDown() && button === 0) { // Left mouse button
+            } else if (this.app.isAltKeyDown() && button === MouseButton.LEFT) {
                 this.combineMode = CombineMode.EXCLUDE;
-            } else if (this.app.isControlKeyDown() && button === 2) { // Right mouse button
+            } else if (this.app.isControlKeyDown() && button === MouseButton.RIGHT) {
                 this.combineMode = CombineMode.XOR;
-            } else if (this.app.isAltKeyDown() && button === 2) { // Right mouse button
+            } else if (this.app.isAltKeyDown() && button === MouseButton.RIGHT) {
                 this.combineMode = CombineMode.INTERSECT;
             } else {
                 this.combineMode = CombineMode.REPLACE;
@@ -116,15 +113,12 @@ class SelectionTool extends Tool {
             this.newSelectionRenderer.setVisible(true);
         }
 
-        return super.onMouseDown(mouseX, mouseY, button, position);
+        return super.onMouseDown(mouseX, mouseY, button);
     }
 
-    onMouseMove(mouseX, mouseY, position) {
-        let x = position.getX();
-        let y = position.getY();
-
+    onMouseMove(mouseX, mouseY) {
         if (this.moveOriginMode) {
-            let delta = new Size(x - this.lastXY.x, y - this.lastXY.y);
+            let delta = new Size(mouseX - this.lastXY.x, mouseY - this.lastXY.y);
 
             for (let i = 0; i < this.tracePoints.length; i++) {
                 let point = this.tracePoints[i];
@@ -134,10 +128,10 @@ class SelectionTool extends Tool {
                 this.tracePoints[i] = point;
             }
 
-            this.lastXY = new Point(x, y);
+            this.lastXY = new Point(mouseX, mouseY);
             this.render();
         } else if (this.tracking) {
-            let mouseXY = new Point(x, y);
+            let mouseXY = new Point(mouseX, mouseY);
 
             if (!mouseXY.equals(this.tracePoints[this.tracePoints.length - 1])) {
                 this.tracePoints.push(mouseXY);
@@ -147,10 +141,10 @@ class SelectionTool extends Tool {
             this.render();
         }
 
-        return super.onMouseMove(mouseX, mouseY, position);
+        return super.onMouseMove(mouseX, mouseY);
     }
 
-    onMouseUp(mouseX, mouseY, button, position) {
+    onMouseUp(mouseX, mouseY, button) {
         if (this.moveOriginMode) {
             this.moveOriginMode = false;
         } else {
@@ -159,7 +153,7 @@ class SelectionTool extends Tool {
 
         this.updateCursor();
 
-        return super.onMouseUp(mouseX, mouseY, button, position);
+        return super.onMouseUp(mouseX, mouseY, button);
     }
 
     done() {

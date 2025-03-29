@@ -12,6 +12,8 @@ class SelectionRenderer extends SurfaceBoxRenderer {
         this.selectionTinting = true;
         this.selectionOutline = true;
         this.outlineAnimation = true;
+
+        this.whiteOpacity = 255;
     }
 
     render(destination, renderBounds) {
@@ -116,5 +118,9 @@ class SelectionRenderer extends SurfaceBoxRenderer {
 
     setOutlineAnimation(outlineAnimation) {
         this.outlineAnimation = outlineAnimation;
+    }
+
+    resetOutlineWhiteOpacity() {
+        this.whiteOpacity = 0; // TODO use it
     }
 }

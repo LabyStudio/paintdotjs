@@ -150,6 +150,10 @@ class AppView {
             event.preventDefault();
             event.stopPropagation();
 
+            if (this.onKeyPress(event.key)) {
+                return;
+            }
+
             // console.log(ShortcutKey.fromEvent(event).toString());
 
             for (let entry of ActionRegistry.getActions()) {
@@ -237,17 +241,25 @@ class AppView {
         this.fire("app:resize", width, height);
     }
 
+    onKeyPress(key) {
+        let documentWorkspace = this.getActiveDocumentWorkspace();
+        if (documentWorkspace !== null) {
+            return this.onDocumentKeyPress(key, documentWorkspace);
+        }
+        return false;
+    }
+
     onMouseDown(mouseX, mouseY, button) {
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
             let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
-            if (this.onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, position)) {
+            if (this.onDocumentMouseDown(position.getX(), position.getY(), button, documentWorkspace)) {
                 return true;
             }
 
             // Handle mouse down for middle mouse click pan
-            if (button === 1) {
-                return this.panTool.onMouseDown(mouseX, mouseY, button, position);
+            if (button === MouseButton.MIDDLE) {
+                return this.panTool.onMouseDown(position.getX(), position.getY(), button);
             }
         }
         return false;
@@ -260,13 +272,13 @@ class AppView {
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
             let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
-            if (this.onDocumentMouseMove(mouseX, mouseY, documentWorkspace, position)) {
+            if (this.onDocumentMouseMove(position.getX(), position.getY(), documentWorkspace)) {
                 return true;
             }
 
             // Handle mouse move for middle mouse click pan
             if (this.panTool.isTracking()) {
-                return this.panTool.onMouseMove(mouseX, mouseY, position);
+                return this.panTool.onMouseMove(position.getX(), position.getY());
             }
         }
         return false;
@@ -276,27 +288,31 @@ class AppView {
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
             let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
-            if (this.onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, position)) {
+            if (this.onDocumentMouseUp(position.getX(), position.getY(), button, documentWorkspace)) {
                 return true;
             }
 
             // Handle mouse up for active tool
             if (this.panTool.isTracking()) {
-                return this.panTool.onMouseUp(mouseX, mouseY, button, position);
+                return this.panTool.onMouseUp(position.getX(), position.getY(), button);
             }
         }
         return false;
     }
 
-    onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, position) {
+    onDocumentKeyPress(key, documentWorkspace) {
         return false;
     }
 
-    onDocumentMouseMove(mouseX, mouseY, documentWorkspace, position) {
+    onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace) {
         return false;
     }
 
-    onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, position) {
+    onDocumentMouseMove(mouseX, mouseY, documentWorkspace) {
+        return false;
+    }
+
+    onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace) {
         return false;
     }
 

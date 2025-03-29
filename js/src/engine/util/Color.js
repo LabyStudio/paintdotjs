@@ -192,9 +192,9 @@ class Color {
         }
 
 
-        red = MathHelper.clamp(Math.round(red * 255), 0, 255);
-        green = MathHelper.clamp(Math.round(green * 255), 0, 255);
-        blue = MathHelper.clamp(Math.round(blue * 255), 0, 255);
+        red = Utility.clamp(Math.round(red * 255), 0, 255);
+        green = Utility.clamp(Math.round(green * 255), 0, 255);
+        blue = Utility.clamp(Math.round(blue * 255), 0, 255);
 
         return new Color(red, green, blue, alpha);
     }

@@ -113,6 +113,37 @@ class Utility {
         return rect;
     }
 
+    static getAngleOfTransform(matrix) {
+        let pts = [new Point(1.0, 0.0)];
+        matrix.transformVectors(pts);
+        let atan2 = Math.atan2(pts[0].y, pts[0].x);
+        return atan2 * (180.0 / Math.PI);
+    }
+
+    static isTransformFlipped(matrix) {
+        let ptX = new Point(1.0, 0.0);
+        let ptXT = Utility.transformOneVector(matrix, ptX);
+        let atan2X = Math.atan2(ptXT.y, ptXT.x);
+        let angleX = atan2X * (180.0 / Math.PI);
+
+        let ptY = new Point(0.0, 1.0);
+        let ptYT = Utility.transformOneVector(matrix, ptY);
+        let atan2Y = Math.atan2(ptYT.y, ptYT.x);
+        let angleY = (atan2Y * (180.0 / Math.PI)) - 90.0;
+
+        while (angleX < 0) {
+            angleX += 360;
+        }
+
+        while (angleY < 0) {
+            angleY += 360;
+        }
+
+        let angleDelta = Math.abs(angleX - angleY);
+
+        return angleDelta > 1.0 && angleDelta < 359.0;
+    }
+
     static pointsToRectangle(a, b) {
         let x = Math.min(a.x, b.x);
         let y = Math.min(a.y, b.y);
@@ -128,6 +159,18 @@ class Utility {
         return ret;
     }
 
+    static transformOnePoint(matrix, point) {
+        let ptFs = [point];
+        matrix.transformPoints(ptFs);
+        return ptFs[0];
+    }
+
+    static transformOneVector(matrix, vector) {
+        let vecs = [vector];
+        matrix.transformVectors(vecs);
+        return vecs[0];
+    }
+
     static roundRectangle(rect) {
         let left = Math.floor(rect.getLeft());
         let top = Math.floor(rect.getTop());
@@ -135,5 +178,61 @@ class Utility {
         let bottom = Math.ceil(rect.getBottom());
 
         return Rectangle.truncate(Rectangle.absolute(left, top, right, bottom));
+    }
+
+    static normalizeVector2(vec) {
+        let magnitude = Utility.magnitude(vec);
+
+        if (magnitude === 0) {
+            return new Point(0, 0);
+        } else {
+            return new Point(vec.x / magnitude, vec.y / magnitude);
+        }
+    }
+
+    static getProjection(pointY, pointU) {
+        if (pointU.x === 0 && pointU.y === 0) {
+            return {
+                yhat: new Point(0, 0),
+                yhatLen: 0,
+                z: new Point(0, 0)
+            };
+        } else {
+            let yDotU = Utility.dotProduct(pointY, pointU);
+            let uDotU = Utility.dotProduct(pointU, pointU);
+            let yhatLen = yDotU / uDotU;
+            let yhat = Utility.multiplyVector(pointU, yhatLen);
+            let z = Utility.subtractVectors(pointY, yhat);
+
+            return {
+                yhat: yhat,
+                yhatLen: yhatLen,
+                z: z
+            };
+        }
+    }
+
+    static dotProduct(point1, point2) {
+        return point1.x * point2.x + point1.y * point2.y;
+    }
+
+    static multiplyVector(point, scalar) {
+        return new Point(point.x * scalar, point.y * scalar);
+    }
+
+    static subtractVectors(point1, point2) {
+        return new Point(point1.x - point2.x, point1.y - point2.y);
+    }
+
+    static distance(point1, point2) {
+        return Utility.magnitude(new Point(point1.x - point2.x, point1.y - point2.y));
+    }
+
+    static magnitude(point) {
+        return Math.sqrt(Math.pow(point.x, 2) + Math.pow(point.y, 2));
+    }
+
+    static clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
     }
 }

@@ -21,8 +21,8 @@ class GraphicsPath {
 
         for (let vertexList of this.vertexLists) {
             vertexList.vertices = vertexList.vertices.map(point => {
-                const transformedX = matrix.values[0][0] * point.x + matrix.values[0][1] * point.y + matrix.values[0][2];
-                const transformedY = matrix.values[1][0] * point.x + matrix.values[1][1] * point.y + matrix.values[1][2];
+                const transformedX = matrix.elements[0][0] * point.x + matrix.elements[0][1] * point.y + matrix.elements[0][2];
+                const transformedY = matrix.elements[1][0] * point.x + matrix.elements[1][1] * point.y + matrix.elements[1][2];
                 return new Point(transformedX, transformedY);
             });
         }

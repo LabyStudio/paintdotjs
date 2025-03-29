@@ -33,6 +33,10 @@ class SurfaceBox {
         }
     }
 
+    getScaleFactorRatio() {
+        return 1; // TODO: Implement ScaleFactor
+    }
+
     getRendererList() {
         return this.rendererList;
     }

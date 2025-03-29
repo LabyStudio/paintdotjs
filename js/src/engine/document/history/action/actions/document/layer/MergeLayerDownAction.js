@@ -15,7 +15,7 @@ class MergeLayerDownAction extends LayerAction {
 
         if (index > 0) {
             let layers = document.getLayers();
-            let newLayerIndex = MathHelper.clamp(index - 1, 0, layers.size() - 1);
+            let newLayerIndex = Utility.clamp(index - 1, 0, layers.size() - 1);
 
             documentWorkspace.executeFunction(new MergeLayerDownFunction(index));
             documentWorkspace.setActiveLayerIndex(newLayerIndex);

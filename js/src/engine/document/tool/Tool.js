@@ -3,6 +3,8 @@ class Tool {
     constructor(type) {
         this.type = type;
         this.app = app;
+
+        this.selectionChangedListener = this.onSelectionChanged.bind(this);
     }
 
     getType() {
@@ -10,23 +12,47 @@ class Tool {
     }
 
     onActivate() {
-
+        this.getSelection().changed.add(this.selectionChangedListener);
     }
 
     onDeactivate() {
+        this.getSelection().changed.remove(this.selectionChangedListener);
+    }
+
+    onSelectionChanged() {
 
     }
 
-    onMouseDown(mouseX, mouseY, button, position) {
+    onPulse() {
+        // TODO panTracking & right click
+    }
+
+    onKeyPress(key) {
         return false;
     }
 
-    onMouseMove(mouseX, mouseY, position) {
+    onMouseDown(mouseX, mouseY, button) {
         return false;
     }
 
-    onMouseUp(mouseX, mouseY, button, position) {
+    onMouseMove(mouseX, mouseY) {
         return false;
+    }
+
+    onMouseUp(mouseX, mouseY, button) {
+        return false;
+    }
+
+    dispose() {
+
+    }
+
+    getName() {
+        return this.type.getName();
+    }
+
+    getImage() {
+        return this.type.getIconSrc();
     }
 
     getDocumentWorkspace() {
