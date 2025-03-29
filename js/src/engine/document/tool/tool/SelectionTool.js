@@ -29,15 +29,22 @@ class SelectionTool extends Tool {
 
         this.updateCursor();
 
+        this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(true);
+
         let surfaceBox = this.getSurfaceBox();
 
         this.newSelection = new Selection();
         this.newSelectionRenderer = new SelectionRenderer(surfaceBox, this.newSelection);
+        this.newSelectionRenderer.setSelectionTinting(false);
+        this.newSelectionRenderer.setOutlineAnimation(true);
+        this.newSelectionRenderer.setVisible(false);
         surfaceBox.addRenderer(this.newSelectionRenderer);
     }
 
     onDeactivate() {
         super.onDeactivate();
+
+        this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(false);
 
         this.getSurfaceBox().removeRenderer(this.newSelectionRenderer);
         this.newSelection = null;
@@ -76,6 +83,8 @@ class SelectionTool extends Tool {
                 this.combineMode = CombineMode.REPLACE;
             }
 
+            this.getDocumentWorkspace().getSelectionRenderer().setSelectionOutline(false);
+
             this.newSelection.reset();
             let basePath = selection.createPath();
             this.newSelection.setContinuationPath(basePath, CombineMode.REPLACE);
@@ -103,6 +112,8 @@ class SelectionTool extends Tool {
                     selection.resetContinuation();
                     break;
             }
+
+            this.newSelectionRenderer.setVisible(true);
         }
 
         return super.onMouseDown(mouseX, mouseY, button, position);
@@ -202,8 +213,11 @@ class SelectionTool extends Tool {
             }
 
             this.newSelection.reset();
+            this.newSelectionRenderer.setVisible(false);
 
             this.tracking = false;
+
+            this.getDocumentWorkspace().getSelectionRenderer().setSelectionOutline(true);
         }
     }
 

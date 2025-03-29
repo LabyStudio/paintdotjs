@@ -41,6 +41,44 @@ class GraphicsPath {
         this.vertexLists.push(vertexList);
     }
 
+    addEllipse(rectangle) {
+        if (!(rectangle instanceof Rectangle)) {
+            throw new Error("Input must be an instance of Rectangle");
+        }
+
+        const {x, y, width, height} = rectangle;
+
+        let vertexList = new VertexList();
+        vertexList.addEllipse(x, y, width, height);
+        this.vertexLists.push(vertexList);
+    }
+
+    flatten(matrix, flatness) {
+        if (!(matrix instanceof Matrix)) {
+            throw new Error("Input must be an instance of Matrix");
+        }
+
+        for (let vertexList of this.vertexLists) {
+            let flattenedVertices = [];
+            for (let i = 0; i < vertexList.vertices.length - 1; i++) {
+                const point1 = vertexList.vertices[i];
+                const point2 = vertexList.vertices[i + 1];
+                const distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
+
+                if (distance > flatness) {
+                    const segments = Math.ceil(distance / flatness);
+                    for (let j = 0; j <= segments; j++) {
+                        const t = j / segments;
+                        const x = point1.x + t * (point2.x - point1.x);
+                        const y = point1.y + t * (point2.y - point1.y);
+                        flattenedVertices.push(new Point(x, y));
+                    }
+                }
+            }
+            vertexList.vertices = flattenedVertices;
+        }
+    }
+
     addLines(points) {
         if (!Array.isArray(points) || points.length === 0) {
             throw new Error("Input must be a non-empty array of points");
@@ -56,6 +94,14 @@ class GraphicsPath {
         if (empty) {
             this.vertexLists.push(vertices);
         }
+    }
+
+    getPathPoints() {
+        let points = [];
+        for (let vertexList of this.vertexLists) {
+            points.push(...vertexList.vertices);
+        }
+        return points;
     }
 
     // Reset the path to be empty

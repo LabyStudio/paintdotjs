@@ -108,6 +108,13 @@ class Rectangle {
         this.height = Math.max(0, y2 - y1);
     }
 
+    inflate(x, y) {
+        this.x -= x;
+        this.y -= y;
+        this.width += 2 * x;
+        this.height += 2 * y;
+    }
+
     clone() {
         return new Rectangle(this.x, this.y, this.width, this.height);
     }
@@ -127,5 +134,14 @@ class Rectangle {
     static fromElement(element) {
         let rect = element.getBoundingClientRect();
         return new Rectangle(rect.left, rect.top, rect.width, rect.height);
+    }
+
+    static truncate(rectangle) {
+        return new Rectangle(
+            Math.trunc(rectangle.x),
+            Math.trunc(rectangle.y),
+            Math.trunc(rectangle.width),
+            Math.trunc(rectangle.height)
+        );
     }
 }

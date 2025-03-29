@@ -3,6 +3,7 @@ class ToolSelector extends SelectorMenuItem {
     constructor() {
         super("toolStripChooser.chooseToolButton");
 
+        // TODO use ToolType.values()
         let toolIds = [
             "rectangleSelectTool",
             "moveTool",
@@ -48,7 +49,7 @@ class ToolSelector extends SelectorMenuItem {
         }
 
         // this.setSelectedId("paintBrushTool")
-        this.setSelectedId("panTool")
+        this.setSelectedId("rectangleSelectTool")
     }
 
     setSelectedId(id) {

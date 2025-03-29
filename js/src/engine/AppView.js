@@ -365,7 +365,7 @@ class AppView {
         return this.controlKeyDown;
     }
 
-    isShiftDown() {
+    isShiftKeyDown() {
         return this.shiftKeyDown;
     }
 

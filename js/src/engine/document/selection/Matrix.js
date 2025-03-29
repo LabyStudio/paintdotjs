@@ -34,6 +34,17 @@ class Matrix {
         }
     }
 
+    translate(x, y, order) {
+        const translationMatrix = new Matrix();
+        translationMatrix.values = [
+            [1, 0, x],
+            [0, 1, y],
+            [0, 0, 1]
+        ];
+
+        this.multiply(translationMatrix, order);
+    }
+
     // Reset to identity matrix
     reset() {
         this.values = [

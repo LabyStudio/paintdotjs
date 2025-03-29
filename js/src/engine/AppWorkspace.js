@@ -60,6 +60,9 @@ class AppWorkspace extends AppView {
         this.updateTitle();
         this.updateCanvasBounds(false);
 
+        // Update active tool
+        this.setActiveTool(this.getActiveTool());
+
         this.fire("document:update_viewport", documentWorkspace);
         this.fire("app:update_active_document", documentWorkspace);
     }
@@ -116,7 +119,7 @@ class AppWorkspace extends AppView {
             this.activeTool.onDeactivate();
         }
         this.activeTool = tool;
-        if (tool !== null) {
+        if (tool !== null && this.activeDocumentWorkspace != null) {
             tool.onActivate();
         }
         this.fire("app:active_tool_updated", tool);

@@ -1,7 +1,7 @@
 class PanTool extends Tool {
 
-    constructor() {
-        super(ToolType.PAN);
+    constructor(type) {
+        super(type);
 
         this.tracking = false;
         this.mouseClickX = 0;

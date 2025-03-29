@@ -9,6 +9,9 @@ class DocumentWorkspace extends DocumentView {
         this.selection = new Selection();
 
         this.selectionRenderer = new SelectionRenderer(this.surfaceBox, this.selection);
+        this.selectionRenderer.setSelectionOutline(true);
+        this.selectionRenderer.setSelectionTinting(false);
+        this.selectionRenderer.setOutlineAnimation(true);
         this.surfaceBox.addRenderer(this.selectionRenderer);
 
         // Bind instance methods
@@ -128,5 +131,9 @@ class DocumentWorkspace extends DocumentView {
 
     getSelection() {
         return this.selection;
+    }
+
+    getSelectionRenderer() {
+        return this.selectionRenderer;
     }
 }

@@ -3,17 +3,29 @@ class ToolType {
     static PAN = new ToolType(
         "panTool",
         "pan_tool_icon",
-        () => new PanTool()
+        type => new PanTool(type)
     );
     static RECTANGLE_SELECT = new ToolType(
         "rectangleSelectTool",
         "rectangle_select_tool",
-        () => new RectangleSelectTool()
+        type => new RectangleSelectTool(type)
+    );
+    static LASSO_SELECT = new ToolType(
+        "lassoSelectTool",
+        "lasso_select_tool",
+        type => new LassoSelectTool(type)
+    );
+    static ELLIPSE_SELECT = new ToolType(
+        "ellipseSelectTool",
+        "ellipse_select_tool",
+        type => new EllipseSelectTool(type)
     );
 
     static VALUES = [
         ToolType.PAN,
-        ToolType.RECTANGLE_SELECT
+        ToolType.RECTANGLE_SELECT,
+        ToolType.LASSO_SELECT,
+        ToolType.ELLIPSE_SELECT
     ];
 
     constructor(id, iconName, factory) {
@@ -23,7 +35,7 @@ class ToolType {
     }
 
     create() {
-        return this.factory();
+        return this.factory(this);
     }
 
     getIconName() {

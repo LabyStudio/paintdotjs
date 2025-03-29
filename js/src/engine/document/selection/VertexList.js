@@ -19,6 +19,20 @@ class VertexList {
         )
     }
 
+    addEllipse(x, y, width, height) {
+        const centerX = x + width / 2;
+        const centerY = y + height / 2;
+        const radiusX = width / 2;
+        const radiusY = height / 2;
+        const segments = 32;
+
+        for (let i = 0; i <= segments; i++) {
+            let angle = i * 2 * Math.PI / segments;
+            let point = new Point(centerX + radiusX * Math.cos(angle), centerY + radiusY * Math.sin(angle));
+            this.push(point);
+        }
+    }
+
     push(...points) {
         for (let point of points) {
             if (!(point instanceof Point)) {

@@ -8,6 +8,10 @@ class SelectionRenderer extends SurfaceBoxRenderer {
 
         this.selectedPath = null;
         this.timeInitialized = Date.now();
+
+        this.selectionTinting = true;
+        this.selectionOutline = true;
+        this.outlineAnimation = true;
     }
 
     render(destination, renderBounds) {
@@ -24,25 +28,29 @@ class SelectionRenderer extends SurfaceBoxRenderer {
         context.save();
 
         // Draw tint fill
-        this.renderPath(context, renderBounds, selectedPath, {
-            color: 'rgba(34, 97, 196, 0.3)',
-            fill: true
-        });
+        if (this.selectionTinting) {
+            this.renderPath(context, renderBounds, selectedPath, {
+                color: 'rgba(34, 97, 196, 0.3)',
+                fill: true
+            });
+        }
 
         // Draw black outline
-        this.renderPath(context, renderBounds, selectedPath, {
-            color: "rgba(0, 0, 0, 0.6)",
-            lineWidth: 1
-        });
+        if (this.selectionOutline) {
+            this.renderPath(context, renderBounds, selectedPath, {
+                color: "rgba(0, 0, 0, 0.6)",
+                lineWidth: 1
+            });
 
-        // Draw marching ants (white dashed outline)
-        let antsOffset = -(Date.now() - this.timeInitialized) / 30 % 8;
-        this.renderPath(context, renderBounds, selectedPath, {
-            color: "white",
-            dashPattern: [4, 4],
-            antsOffset: antsOffset,
-            lineWidth: 1
-        });
+            // Draw marching ants (white dashed outline)
+            let antsOffset = -(Date.now() - this.timeInitialized) / 30 % 8;
+            this.renderPath(context, renderBounds, selectedPath, {
+                color: "white",
+                dashPattern: [4, 4],
+                antsOffset: this.outlineAnimation ? antsOffset : 0,
+                lineWidth: 1
+            });
+        }
 
         context.restore();
     }
@@ -98,4 +106,15 @@ class SelectionRenderer extends SurfaceBoxRenderer {
         this.selectedPath = path;
     }
 
+    setSelectionTinting(selectionTinting) {
+        this.selectionTinting = selectionTinting;
+    }
+
+    setSelectionOutline(selectionOutline) {
+        this.selectionOutline = selectionOutline;
+    }
+
+    setOutlineAnimation(outlineAnimation) {
+        this.outlineAnimation = outlineAnimation;
+    }
 }

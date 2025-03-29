@@ -1,7 +1,7 @@
 class RectangleSelectTool extends SelectionTool {
 
-    constructor() {
-        super(ToolType.RECTANGLE_SELECT);
+    constructor(type) {
+        super(type);
     }
 
     onActivate() {
@@ -26,7 +26,7 @@ class RectangleSelectTool extends SelectionTool {
         let a = shapePoints[0];
         let b = shapePoints[shapePoints.length - 1];
 
-        let isShiftKeyDown = false; // TODO shift key handling
+        let isShiftKeyDown = this.app.isShiftKeyDown();
 
         let rect;
         if (isShiftKeyDown) {

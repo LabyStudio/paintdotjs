@@ -5,6 +5,12 @@ class Utility {
     static TOP = 2;
     static BOTTOM = 3;
 
+    static identityMatrix = new Matrix();
+
+    static {
+        Utility.identityMatrix.reset();
+    }
+
     static sutherlandHodgman(bounds, v) {
         let p1 = Utility.sutherlandHodgmanOneAxis(bounds, Utility.LEFT, v);
         let p2 = Utility.sutherlandHodgmanOneAxis(bounds, Utility.RIGHT, p1);
@@ -116,4 +122,18 @@ class Utility {
         return new Rectangle(x, y, width, height);
     }
 
+    static rectangleFromCenter(center, halfSize) {
+        let ret = new Rectangle(center.x, center.y, 0, 0);
+        ret.inflate(halfSize, halfSize);
+        return ret;
+    }
+
+    static roundRectangle(rect) {
+        let left = Math.floor(rect.getLeft());
+        let top = Math.floor(rect.getTop());
+        let right = Math.ceil(rect.getRight());
+        let bottom = Math.ceil(rect.getBottom());
+
+        return Rectangle.truncate(Rectangle.absolute(left, top, right, bottom));
+    }
 }
