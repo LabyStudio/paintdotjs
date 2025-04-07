@@ -85,9 +85,10 @@ class Matrix {
     }
 
     rotateAt(angle, point, order) {
+        let radians = Utility.toRadians(angle);
         const rotationMatrix = new Matrix();
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
+        const cos = Math.cos(radians);
+        const sin = Math.sin(radians);
 
         let x = point.x;
         let y = point.y;

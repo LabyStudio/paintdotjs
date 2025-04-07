@@ -117,7 +117,7 @@ class Utility {
         let pts = [new Point(1.0, 0.0)];
         matrix.transformVectors(pts);
         let atan2 = Math.atan2(pts[0].y, pts[0].x);
-        return atan2 * (180.0 / Math.PI);
+        return Utility.toDegrees(atan2);
     }
 
     static isTransformFlipped(matrix) {
@@ -234,5 +234,13 @@ class Utility {
 
     static clamp(value, min, max) {
         return Math.min(Math.max(value, min), max);
+    }
+
+    static toRadians(degrees) {
+        return degrees * (Math.PI / 180);
+    }
+
+    static toDegrees(radians) {
+        return radians * (180 / Math.PI);
     }
 }
