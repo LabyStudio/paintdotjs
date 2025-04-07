@@ -203,10 +203,10 @@ class MoveToolBase extends Tool {
         }
     }
 
-    flipEdgeVertically() {
+    flipEdgeVertically(edge) {
         let flippedEdge;
 
-        switch (this.edge) {
+        switch (edge) {
             default:
                 throw new Error("Invalid enum value");
 

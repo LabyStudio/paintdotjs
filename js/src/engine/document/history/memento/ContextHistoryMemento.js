@@ -7,7 +7,7 @@ class ContextHistoryMemento extends ToolHistoryMemento {
     }
 
     onToolUndo() {
-        let moveSelectionTool = this.documentWorkspace.getActiveTool();
+        let moveSelectionTool = this.app.getActiveTool();
         if (!(moveSelectionTool instanceof MoveSelectionTool)) {
             throw new Error("Current Tool is not the MoveSelectionTool");
         }

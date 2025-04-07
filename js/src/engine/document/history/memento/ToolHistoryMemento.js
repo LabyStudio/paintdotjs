@@ -3,6 +3,7 @@ class ToolHistoryMemento extends HistoryMemento {
     constructor(documentWorkspace, name, image) {
         super(name, image);
 
+        this.documentWorkspace = documentWorkspace;
         this.app = documentWorkspace.getApp();
         this.toolType = this.app.getActiveTool().getType();
     }
