@@ -222,6 +222,9 @@ class AppView {
     }
 
     setCursor(cursor) {
+        if (this.editor.style.cursor === cursor) {
+            return;
+        }
         this.editor.style.cursor = cursor;
     }
 

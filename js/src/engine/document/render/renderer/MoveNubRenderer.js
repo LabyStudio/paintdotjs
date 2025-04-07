@@ -11,21 +11,55 @@ class MoveNubRenderer extends CanvasControl {
         this.size = new Size(5, 5);
     }
 
+    render(destination, renderBounds) {
+        super.render(destination, renderBounds);
+
+        let ourSize = Math.min(this.size.getWidth(), this.size.getHeight());
+
+        const context = destination.getContext();
+        let surface = this.surfaceBox.getSurface();
+
+        let scaleX = renderBounds.getWidth() / surface.getWidth();
+        let scaleY = renderBounds.getHeight() / surface.getHeight();
+
+        let point = Utility.transformOnePoint(this.transform, this.location.clone());
+        let x = renderBounds.getX() + point.getX() * scaleX;
+        let y = renderBounds.getY() + point.getY() * scaleY;
+
+
+        // Draw circle
+        if (this.shape === MoveNubShape.CIRCLE || this.shape === MoveNubShape.SQUARE) {
+            context.save();
+            this.drawCircle(context, x, y, ourSize - 1, "white");
+            this.drawCircle(context, x, y, ourSize - 2, "black");
+            this.drawCircle(context, x, y, ourSize - 3, "white");
+            context.restore();
+        }
+    }
+
+    drawCircle(context, x, y, radius, color) {
+        context.strokeStyle = color;
+        context.beginPath();
+        context.arc(
+            x,
+            y,
+            radius,
+            0,
+            Math.PI * 2
+        );
+        context.stroke();
+    }
+
     getOurRectangle() {
-        let ptFs = [this.location];
+        let ptFs = [this.location.clone()];
         this.transform.transformPoints(ptFs);
-        let ratio = Math.ceil(1.0 / this.surfaceBox.getScaleFactorRatio());
 
         let ourWidth = this.size.getWidth();
         let ourHeight = this.size.getHeight();
 
-        if (!isNaN(ratio)) {
-            let rect = new Rectangle(ptFs[0].getX(), ptFs[0].getY(), 0, 0);
-            rect.inflate(ratio * ourWidth, ratio * ourHeight);
-            return rect;
-        } else {
-            return Rectangle.empty();
-        }
+        let rect = new Rectangle(ptFs[0].getX(), ptFs[0].getY(), 0, 0);
+        rect.inflate(ourWidth, ourHeight);
+        return rect;
     }
 
     isPointTouching(point, pad) {
@@ -33,7 +67,7 @@ class MoveNubRenderer extends CanvasControl {
 
         if (pad) {
             let padding = 2.0 / this.surfaceBox.getScaleFactorRatio();
-            rect.inflate(padding + 1.0, padding + 1.0);
+            rect.scale(padding, padding);
         }
 
         return rect.contains(point);

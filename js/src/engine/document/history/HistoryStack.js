@@ -6,13 +6,16 @@ class HistoryStack {
 
         this.undoStack = [];
         this.redoStack = [];
+
+        this.executing = new EventHandler();
+        this.executed = new EventHandler();
     }
 
     pushNewMemento(memento) {
+        this.push();
         this.clearRedoStack();
         this.undoStack.push(memento);
-
-        this.app.fire("document:history_changed", this.documentWorkspace);
+        this.pop();
     }
 
     stepForward() {
@@ -24,6 +27,8 @@ class HistoryStack {
             app.setActiveToolFromType(topMemento.getToolType());
             this.stepForward();
         } else {
+            this.push();
+
             let redoMemento = this.redoStack[0];
 
             // Perform redo
@@ -35,7 +40,7 @@ class HistoryStack {
             // Insert at end of undo stack
             this.undoStack.push(undoMemento);
 
-            this.app.fire("document:history_changed", this.documentWorkspace);
+            this.pop();
         }
     }
 
@@ -48,6 +53,8 @@ class HistoryStack {
             app.setActiveToolFromType(topMemento.getToolType());
             this.stepBackward();
         } else {
+            this.push();
+
             let undoMemento = this.undoStack[this.undoStack.length - 1];
 
             // Perform undo
@@ -59,7 +66,7 @@ class HistoryStack {
             // Insert at beginning of redo stack
             this.redoStack.splice(0, 0, redoMemento);
 
-            this.app.fire("document:history_changed", this.documentWorkspace);
+            this.pop();
         }
     }
 
@@ -94,9 +101,18 @@ class HistoryStack {
     }
 
     clearAll() {
+        this.push();
         this.clearRedoStack();
         this.clearUndoStack();
+        this.pop();
+    }
 
+    push() {
+        this.executing.fire(this);
+    }
+
+    pop() {
+        this.executed.fire(this);
         this.app.fire("document:history_changed", this.documentWorkspace);
     }
 

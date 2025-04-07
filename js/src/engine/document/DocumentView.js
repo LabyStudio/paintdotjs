@@ -5,7 +5,7 @@ class DocumentView {
         this.document = null
         this.compositionSurface = null;
 
-        this.surfaceBox = new SurfaceBox();
+        this.surfaceBox = new SurfaceBox(app);
 
         this.gridRenderer = new SurfaceBoxGridRenderer(this.surfaceBox);
         this.gridRenderer.setVisible(false);

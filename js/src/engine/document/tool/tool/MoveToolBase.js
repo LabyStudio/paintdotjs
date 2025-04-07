@@ -3,7 +3,6 @@ class MoveToolBase extends Tool {
     constructor(type) {
         super(type);
 
-        this.moveToolCursor = null;
         this.dontDrop = false;
         this.angleDelta = 0;
         this.moveNubs = null;
@@ -79,9 +78,9 @@ class MoveToolBase extends Tool {
         return u;
     }
 
-    determineMoveMode(mouseX, mouseY, button, mode, edge) {
-        mode = Mode.TRANSLATE;
-        edge = Edge.NONE;
+    determineMoveMode(mouseX, mouseY, button) {
+        let mode = Mode.TRANSLATE;
+        let edge = Edge.NONE;
 
         if (button === MouseButton.RIGHT) {
             mode = Mode.ROTATE;
@@ -103,6 +102,11 @@ class MoveToolBase extends Tool {
                 }
             }
         }
+
+        return {
+            mode: mode,
+            edge: edge
+        };
     }
 
     onPulse() {
@@ -357,7 +361,10 @@ class MoveToolBase extends Tool {
         this.pushContextHistoryMemento();
 
         this.context.seriesGuid = UUID.randomUUID();
-        this.determineMoveMode(mouseX, mouseY, button, this.context.currentMode, this.context.startEdge);
+
+        let out = this.determineMoveMode(mouseX, mouseY, button);
+        this.context.currentMode = out.mode;
+        this.context.startEdge = out.edge;
 
         // lift!
         this.context.startBounds = this.context.liftedBounds;
@@ -376,7 +383,7 @@ class MoveToolBase extends Tool {
     onMouseDown(mouseX, mouseY, button) {
         let consumed = super.onMouseDown(mouseX, mouseY, button);
 
-        if (this.tracking) {
+        if (this.tracking || button === MouseButton.MIDDLE) {
             return;
         }
 
@@ -396,7 +403,7 @@ class MoveToolBase extends Tool {
             let selection = this.getDocumentWorkspace().getSelection();
             selection.performChanging();
             selection.reset();
-            selection.setContinuation(this.getDocument().getBounds(), CombineMode.REPLACE);
+            selection.setContinuation(this.getDocumentWorkspace().getDocument().getBounds(), CombineMode.REPLACE);
             selection.commitContinuation();
             selection.performChanged();
 
@@ -420,7 +427,9 @@ class MoveToolBase extends Tool {
         this.pushContextHistoryMemento();
 
         if (!determinedMoveMode) {
-            this.determineMoveMode(mouseX, mouseY, button, newMode, newEdge);
+            let out = this.determineMoveMode(mouseX, mouseY, button);
+            newMode = out.mode;
+            newEdge = out.edge;
             determinedMoveMode = true;
         }
 
@@ -478,20 +487,7 @@ class MoveToolBase extends Tool {
     onMouseMove(mouseX, mouseY) {
         let consumed = super.onMouseMove(mouseX, mouseY);
 
-        if (!this.tracking) {
-            let cursor = this.moveToolCursor;
-
-            for (let i = 0; i < this.moveNubs.length; ++i) {
-                let nub = this.moveNubs[i];
-
-                if (nub.isVisible() && nub.isPointTouching(new Point(mouseX, mouseY), true)) {
-                    cursor = "hand_open_cursor";
-                    break;
-                }
-            }
-
-            this.app.setCursor(cursor);
-        } else {
+        if (this.tracking) {
             if (this.context.currentMode !== Mode.TRANSLATE) {
                 this.app.setCursor("hand_closed_cursor");
             }
@@ -521,7 +517,6 @@ class MoveToolBase extends Tool {
                 case Mode.TRANSLATE:
                     translateMatrix.translate(newOffset.getX(), newOffset.getY(), MatrixOrder.APPEND);
                     break;
-
                 case Mode.ROTATE:
                     let rect = this.context.liftedBounds;
                     let center = new Point(
@@ -551,7 +546,7 @@ class MoveToolBase extends Tool {
                 case Mode.SCALE:
                     let xyAxes = this.getEdgeVector(this.context.startEdge);
                     let xAxis = new Point(xyAxes.getX(), 0);
-                    let yAxis = new Point(0, xyAxes.getY);
+                    let yAxis = new Point(0, xyAxes.getY());
                     let edgeX = Utility.transformOneVector(interim, xAxis);
                     let edgeY = Utility.transformOneVector(interim, yAxis);
                     let edgeXN = Utility.normalizeVector2(edgeX);
@@ -706,6 +701,18 @@ class MoveToolBase extends Tool {
             }
 
             return consumed;
+        } else {
+
+            for (let i = 0; i < this.moveNubs.length; ++i) {
+                let nub = this.moveNubs[i];
+
+                if (nub.isVisible() && nub.isPointTouching(new Point(mouseX, mouseY), true)) {
+                    this.app.setCursorImg("hand_open_cursor");
+                    return;
+                }
+            }
+
+            this.app.setCursor("move");
         }
     }
 

@@ -5,6 +5,11 @@ class Tool {
         this.app = app;
 
         this.selectionChangedListener = this.onSelectionChanged.bind(this);
+        this.historyChangedListener = this.onHistoryChanged.bind(this);
+
+        this.selection = null;
+        this.historyStack = null;
+        this.active = false;
     }
 
     getType() {
@@ -12,14 +17,27 @@ class Tool {
     }
 
     onActivate() {
-        this.getSelection().changed.add(this.selectionChangedListener);
+        this.selection = this.getSelection();
+        this.selection.changed.add(this.selectionChangedListener);
+
+        this.historyStack = this.getDocumentWorkspace().getHistory();
+        this.historyStack.executed.add(this.historyChangedListener);
+
+        this.active = true;
     }
 
     onDeactivate() {
-        this.getSelection().changed.remove(this.selectionChangedListener);
+        this.active = false;
+
+        this.selection.changed.remove(this.selectionChangedListener);
+        this.historyStack.executed.remove(this.historyChangedListener);
     }
 
     onSelectionChanged() {
+
+    }
+
+    onHistoryChanged() {
 
     }
 
@@ -45,6 +63,10 @@ class Tool {
 
     dispose() {
 
+    }
+
+    isActive() {
+        return this.active;
     }
 
     getName() {

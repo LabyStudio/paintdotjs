@@ -4,24 +4,10 @@ class MoveSelectionTool extends MoveToolBase {
         super(type);
 
         this.context = new Context();
-
-        // TODO set dontDrop to true on changing start
-
-        this.app.on("document:history_changed", () => {
-            if (this.context.lifted) {
-                this.render(this.context.offset, true);
-            } else {
-                this.destroyNubs();
-                this.positionNubs(this.context.currentMode);
-            }
-
-            this.dontDrop = false;
-        });
     }
 
     onActivate() {
         this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(true);
-        this.app.setCursorImg("move_selection_tool_cursor");
 
         this.context.offset = new Point(0, 0);
         this.context.liftedBounds = this.getSelection().getBounds();
@@ -35,11 +21,6 @@ class MoveSelectionTool extends MoveToolBase {
     onDeactivate() {
         this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(false);
 
-        if (this.moveToolCursor !== null) {
-            this.moveToolCursor.dispose();
-            this.moveToolCursor = null
-        }
-
         if (this.context.lifted) {
             this.drop();
         }
@@ -48,6 +29,19 @@ class MoveSelectionTool extends MoveToolBase {
         this.destroyNubs();
 
         super.onDeactivate();
+    }
+
+    onHistoryChanged() {
+        // TODO set dontDrop to true on changing start
+
+        if (this.context.lifted) {
+            this.render(this.context.offset, true);
+        } else {
+            this.destroyNubs();
+            this.positionNubs(this.context.currentMode);
+        }
+
+        this.dontDrop = false;
     }
 
     drop() {

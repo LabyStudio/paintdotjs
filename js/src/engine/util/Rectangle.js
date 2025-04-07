@@ -122,6 +122,17 @@ class Rectangle {
         this.height += 2 * y;
     }
 
+    scale(scaleX, scaleY) {
+        let centerX = this.x + this.width / 2;
+        let centerY = this.y + this.height / 2;
+
+        this.width *= scaleX;
+        this.height *= scaleY;
+
+        this.x = centerX - this.width / 2
+        this.y = centerY - this.height / 2;
+    }
+
     clone() {
         return new Rectangle(this.x, this.y, this.width, this.height);
     }

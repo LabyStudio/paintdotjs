@@ -1,6 +1,7 @@
 class SurfaceBox {
 
-    constructor() {
+    constructor(app) {
+        this.app = app;
         this.rendererList = [];
 
         this.surface = null;
@@ -34,7 +35,11 @@ class SurfaceBox {
     }
 
     getScaleFactorRatio() {
-        return 1; // TODO: Implement ScaleFactor
+        let documentWorkspace = this.app.getActiveDocumentWorkspace();
+        if (documentWorkspace === null) {
+            return 1;
+        }
+        return documentWorkspace.getZoom();
     }
 
     getRendererList() {
@@ -43,6 +48,10 @@ class SurfaceBox {
 
     getSurface() {
         return this.surface;
+    }
+
+    getApp() {
+        return this.app;
     }
 
 }
