@@ -23,12 +23,10 @@ class Matrix {
             throw new Error("Input must be an instance of Matrix");
         }
 
-        const result = this._multiplyMatrices(this.elements, matrix.elements);
-
         if (order === MatrixOrder.APPEND) {
-            this.elements = result;
-        } else if (order === MatrixOrder.PREPEND) {
             this.elements = this._multiplyMatrices(matrix.elements, this.elements);
+        } else if (order === MatrixOrder.PREPEND) {
+            this.elements = this._multiplyMatrices(this.elements, matrix.elements);
         } else {
             throw new Error("Invalid order. Use 'append' or 'prepend'.");
         }

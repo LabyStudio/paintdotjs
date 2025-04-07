@@ -160,13 +160,13 @@ class Utility {
     }
 
     static transformOnePoint(matrix, point) {
-        let ptFs = [point];
+        let ptFs = [point.clone()];
         matrix.transformPoints(ptFs);
         return ptFs[0];
     }
 
     static transformOneVector(matrix, vector) {
-        let vecs = [vector];
+        let vecs = [vector.clone()];
         matrix.transformVectors(vecs);
         return vecs[0];
     }

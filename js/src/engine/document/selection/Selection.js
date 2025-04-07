@@ -9,11 +9,11 @@ class Selection {
     }
 
     performChanging() {
-        // TODO notify?
+        this.push();
     }
 
     performChanged() {
-        // TODO notify?
+        this.pop();
     }
 
     push() {

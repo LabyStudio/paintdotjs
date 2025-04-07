@@ -22,7 +22,7 @@ class MoveNubRenderer extends CanvasControl {
         let scaleX = renderBounds.getWidth() / surface.getWidth();
         let scaleY = renderBounds.getHeight() / surface.getHeight();
 
-        let point = Utility.transformOnePoint(this.transform, this.location.clone());
+        let point = Utility.transformOnePoint(this.transform, this.location);
         let x = renderBounds.getX() + point.getX() * scaleX;
         let y = renderBounds.getY() + point.getY() * scaleY;
 
@@ -51,13 +51,12 @@ class MoveNubRenderer extends CanvasControl {
     }
 
     getOurRectangle() {
-        let ptFs = [this.location.clone()];
-        this.transform.transformPoints(ptFs);
+        let ptFs = Utility.transformOnePoint(this.transform, this.location);
 
         let ourWidth = this.size.getWidth();
         let ourHeight = this.size.getHeight();
 
-        let rect = new Rectangle(ptFs[0].getX(), ptFs[0].getY(), 0, 0);
+        let rect = new Rectangle(ptFs.getX(), ptFs.getY(), 0, 0);
         rect.inflate(ourWidth, ourHeight);
         return rect;
     }

@@ -489,7 +489,7 @@ class MoveToolBase extends Tool {
 
         if (this.tracking) {
             if (this.context.currentMode !== Mode.TRANSLATE) {
-                this.app.setCursor("hand_closed_cursor");
+                this.app.setCursorImg("hand_closed_cursor");
             }
 
             let newMouseXY = new Point(mouseX, mouseY);
@@ -528,7 +528,7 @@ class MoveToolBase extends Tool {
                         this.context.startMouseXY.getY() - center.getY(),
                         this.context.startMouseXY.getX() - center.getX()
                     );
-                    let theta2 = Math.atan2(mouseY - center.getY(), x - center.getX());
+                    let theta2 = Math.atan2(mouseY - center.getY(), mouseX - center.getX());
                     let thetaDelta = theta2 - theta1;
                     this.angleDelta = (thetaDelta * (180.0 / Math.PI));
                     let angle = this.context.startAngle + this.angleDelta;
@@ -644,8 +644,6 @@ class MoveToolBase extends Tool {
                             break;
                     }
 
-                    translateMatrix.translate(xTranslate, yTranslate, MatrixOrder.APPEND);
-
                     let newWidth = spBounds2.getWidth() + xulen;
                     let newHeight = spBounds2.getHeight() + yulen;
                     let xScale = newWidth / spBounds2.getWidth();
@@ -664,6 +662,7 @@ class MoveToolBase extends Tool {
                         yScale = out3.height;
                     }
 
+                    translateMatrix.translate(xTranslate, yTranslate, MatrixOrder.APPEND);
                     translateMatrix.scale(xScale, yScale, MatrixOrder.APPEND);
                     translateMatrix.translate(-xTranslate, -yTranslate, MatrixOrder.APPEND);
                     translateMatrix.rotateAt(+tAngle, sp2BoundsCenter, MatrixOrder.APPEND);
