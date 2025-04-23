@@ -488,10 +488,6 @@ class MoveToolBase extends Tool {
         let consumed = super.onMouseMove(mouseX, mouseY);
 
         if (this.tracking) {
-            if (this.context.currentMode !== Mode.TRANSLATE) {
-                this.app.setCursorImg("hand_closed_cursor");
-            }
-
             let newMouseXY = new Point(mouseX, mouseY);
             let newOffset = new Point(
                 newMouseXY.getX() - this.context.startMouseXY.getX(),
@@ -541,8 +537,26 @@ class MoveToolBase extends Tool {
                     translateMatrix.rotateAt(this.angleDelta, center, MatrixOrder.APPEND);
                     this.rotateNub.setLocation(center);
                     this.rotateNub.setAngle(this.context.startAngle + this.angleDelta);
-                    break;
 
+                    // TODO Set rotate cursor and rotate the image
+                    let direction = "";
+                    switch (Math.abs(Math.floor(-this.angleDelta / 45 - 45 / 2) + 1) % 4) {
+                        case 0:
+                            direction = "ew";
+                            break;
+                        case 1:
+                            direction = "nwse";
+                            break;
+                        case 2:
+                            direction = "ns";
+                            break;
+                        case 3:
+                            direction = "nesw";
+                            break;
+                    }
+                    this.app.setCursor(direction + "-resize");
+
+                    break;
                 case Mode.SCALE:
                     let xyAxes = this.getEdgeVector(this.context.startEdge);
                     let xAxis = new Point(xyAxes.getX(), 0);
@@ -666,6 +680,8 @@ class MoveToolBase extends Tool {
                     translateMatrix.scale(xScale, yScale, MatrixOrder.APPEND);
                     translateMatrix.translate(-xTranslate, -yTranslate, MatrixOrder.APPEND);
                     translateMatrix.rotateAt(+tAngle, sp2BoundsCenter, MatrixOrder.APPEND);
+
+                    this.app.setCursorImg("hand_closed_cursor");
 
                     break;
                 default:

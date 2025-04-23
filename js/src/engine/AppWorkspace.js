@@ -56,6 +56,11 @@ class AppWorkspace extends AppView {
     }
 
     setActiveDocumentWorkspace(documentWorkspace) {
+        // Deactivate previous active tool using the previous active document workspace
+        if (this.activeTool !== null && this.activeTool.isActive()) {
+            this.activeTool.onDeactivate();
+        }
+
         this.activeDocumentWorkspace = documentWorkspace;
         this.updateTitle();
         this.updateCanvasBounds(false);

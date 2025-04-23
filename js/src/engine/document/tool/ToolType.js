@@ -25,13 +25,19 @@ class ToolType {
         "move_selection_tool",
         type => new MoveSelectionTool(type)
     );
+    static MOVE = new ToolType(
+        "moveTool",
+        "move_tool",
+        type => new MoveTool(type)
+    );
 
     static VALUES = [
         ToolType.PAN,
         ToolType.RECTANGLE_SELECT,
         ToolType.LASSO_SELECT,
         ToolType.ELLIPSE_SELECT,
-        ToolType.MOVE_SELECTION
+        ToolType.MOVE_SELECTION,
+        ToolType.MOVE,
     ];
 
     constructor(id, iconName, factory) {

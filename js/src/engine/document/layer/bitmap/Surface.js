@@ -52,6 +52,17 @@ class Surface {
         this.context.fillRect(x, y, width, height);
     }
 
+    copySurface(source) {
+        let sourceWidth = source.getWidth();
+        let sourceHeight = source.getHeight();
+
+        this.context.drawImage(
+            source.getCanvas(),
+            0, 0, sourceWidth, sourceHeight,
+            0, 0, sourceWidth, sourceHeight
+        );
+    }
+
     getCanvas() {
         return this.canvas;
     }

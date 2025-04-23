@@ -7,6 +7,8 @@ class Utility {
 
     static identityMatrix = new Matrix();
 
+    static defaultSimplificationFactor = 50;
+
     static {
         Utility.identityMatrix.reset();
     }
@@ -49,6 +51,70 @@ class Utility {
         }
 
         return polygon;
+    }
+
+    static simplifyAndInflateRegion(
+        region,
+        complexity = Utility.defaultSimplificationFactor,
+        inflationAmount = 1
+    ) {
+        let simplified = Utility.simplifyRegion(region, complexity);
+
+        for (let i = 0; i < simplified.length; ++i) {
+            simplified[i].inflate(inflationAmount, inflationAmount);
+        }
+
+        return simplified;
+    }
+
+    static simplifyRegion(region, complexity) {
+        if (complexity === 0 || region.size() < complexity) {
+            return region.clone();
+        }
+
+        let boxes = new Array(complexity);
+
+        for (let i = 0; i < complexity; ++i) {
+            let startIndex = Math.floor((i * region.size()) / complexity);
+            let length = Math.min(region.size(), Math.floor(((i + 1) * region.size()) / complexity)) - startIndex;
+            boxes[i] = Utility.getRegionBounds(region, startIndex, length);
+        }
+
+        return boxes;
+    }
+
+    static getRegionBounds(region, startIndex, length) {
+        if (region.size() === 0) {
+            return new Rectangle();
+        }
+
+        let rects = region.getRectangles();
+        let left = rects[startIndex].getLeft();
+        let top = rects[startIndex].getTop();
+        let right = rects[startIndex].getRight();
+        let bottom = rects[startIndex].getBottom();
+
+        for (let i = startIndex + 1; i < startIndex + length; ++i) {
+            let rect = rects[i];
+
+            if (rect.getLeft() < left) {
+                left = rect.getLeft();
+            }
+
+            if (rect.getTop() < top) {
+                top = rect.getTop();
+            }
+
+            if (rect.getRight() > right) {
+                right = rect.getRight();
+            }
+
+            if (rect.getBottom() > bottom) {
+                bottom = rect.getBottom();
+            }
+        }
+
+        return new Rectangle(left, top, right - left, bottom - top);
     }
 
     static isInside(bounds, edge, p) {

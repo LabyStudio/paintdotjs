@@ -256,13 +256,14 @@ class AppView {
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
             let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
-            if (this.onDocumentMouseDown(position.getX(), position.getY(), button, documentWorkspace)) {
-                return true;
-            }
 
             // Handle mouse down for middle mouse click pan
             if (button === MouseButton.MIDDLE) {
                 return this.panTool.onMouseDown(position.getX(), position.getY(), button);
+            }
+
+            if (this.onDocumentMouseDown(position.getX(), position.getY(), button, documentWorkspace)) {
+                return true;
             }
         }
         return false;
@@ -275,13 +276,14 @@ class AppView {
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
             let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
-            if (this.onDocumentMouseMove(position.getX(), position.getY(), documentWorkspace)) {
-                return true;
-            }
 
             // Handle mouse move for middle mouse click pan
             if (this.panTool.isTracking()) {
                 return this.panTool.onMouseMove(position.getX(), position.getY());
+            }
+
+            if (this.onDocumentMouseMove(position.getX(), position.getY(), documentWorkspace)) {
+                return true;
             }
         }
         return false;
@@ -291,13 +293,14 @@ class AppView {
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
             let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
-            if (this.onDocumentMouseUp(position.getX(), position.getY(), button, documentWorkspace)) {
-                return true;
-            }
 
             // Handle mouse up for active tool
             if (this.panTool.isTracking()) {
                 return this.panTool.onMouseUp(position.getX(), position.getY(), button);
+            }
+
+            if (this.onDocumentMouseUp(position.getX(), position.getY(), button, documentWorkspace)) {
+                return true;
             }
         }
         return false;

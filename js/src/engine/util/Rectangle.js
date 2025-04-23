@@ -137,8 +137,16 @@ class Rectangle {
         return new Rectangle(this.x, this.y, this.width, this.height);
     }
 
+    isEmpty() {
+        return this.width <= 0 || this.height <= 0;
+    }
+
     toString() {
         return this.x + ", " + this.y + " (" + this.width + "x" + this.height + ")";
+    }
+
+    dispose() {
+        // Dispose logic if needed
     }
 
     static relative(x, y, width, height) {
@@ -161,6 +169,14 @@ class Rectangle {
             Math.trunc(rectangle.width),
             Math.trunc(rectangle.height)
         );
+    }
+
+    static union(rectangle1, rectangle2) {
+        let x1 = Math.min(rectangle1.x, rectangle2.x);
+        let y1 = Math.min(rectangle1.y, rectangle2.y);
+        let x2 = Math.max(rectangle1.x + rectangle1.width, rectangle2.x + rectangle2.width);
+        let y2 = Math.max(rectangle1.y + rectangle1.height, rectangle2.y + rectangle2.height);
+        return new Rectangle(x1, y1, x2 - x1, y2 - y1);
     }
 
     static empty() {

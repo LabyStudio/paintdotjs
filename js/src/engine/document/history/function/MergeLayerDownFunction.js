@@ -14,7 +14,7 @@ class MergeLayerDownFunction extends HistoryFunction {
 
         let bottomLayerIndex = this.layerIndex - 1;
         let bounds = document.getBounds();
-        let region = new Region([bounds]);
+        let region = Region.fromRectangle(bounds);
 
         let bitmapMemento = new BitmapHistoryMemento(
             i18n("mergeLayerDown.historyMementoName"),

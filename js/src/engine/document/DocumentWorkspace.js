@@ -14,6 +14,10 @@ class DocumentWorkspace extends DocumentView {
         this.selectionRenderer.setOutlineAnimation(true);
         this.surfaceBox.addRenderer(this.selectionRenderer);
 
+        this.scratchSurface = null;
+        this.isScratchSurfaceBorrowed = false;
+        this.borrowScratchSurfaceReason = null;
+
         // Bind instance methods
         this.onLayerRemoving = this.onLayerRemoving.bind(this);
         this.onLayerInserted = this.onLayerInserted.bind(this);
@@ -35,6 +39,22 @@ class DocumentWorkspace extends DocumentView {
         // Add event handlers to new document
         this.document.getLayers().removingAt.add(this.onLayerRemoving);
         this.document.getLayers().insertedAt.add(this.onLayerInserted);
+
+        if (this.scratchSurface !== null) {
+            if (this.isScratchSurfaceBorrowed) {
+                throw new Error("scratchSurface is currently borrowed: " + this.borrowScratchSurfaceReason);
+            }
+
+            if (this.document.getWidth() !== this.scratchSurface.getWidth()
+                || this.document.getHeight() !== this.scratchSurface.getHeight()) {
+                this.scratchSurface.dispose();
+                this.scratchSurface = null;
+            }
+        }
+
+        if (this.scratchSurface === null) {
+            this.scratchSurface = Surface.create(this.document.getWidth(), this.document.getHeight());
+        }
     }
 
     onLayerRemoving(index) {
@@ -85,6 +105,26 @@ class DocumentWorkspace extends DocumentView {
         if (memento !== null) {
             this.history.pushNewMemento(memento);
         }
+    }
+
+    borrowScratchSurface(reason) {
+        if (this.isScratchSurfaceBorrowed) {
+            throw new Error("scratchSurface is already borrowed: " + this.borrowScratchSurfaceReason);
+        }
+
+        this.isScratchSurfaceBorrowed = true;
+        this.borrowScratchSurfaceReason = reason;
+
+        return this.scratchSurface;
+    }
+
+    returnScratchSurface() {
+        if (!this.isScratchSurfaceBorrowed) {
+            throw new Error("scratchSurface is not borrowed");
+        }
+
+        this.isScratchSurfaceBorrowed = false;
+        this.borrowScratchSurfaceReason = null;
     }
 
     getFriendlyName() {

@@ -30,7 +30,7 @@ class Document {
     }
 
     update(renderArgs) {
-        let region = new Region(this.updateRegion);
+        let region = Region.fromRectangles(this.updateRegion);
         let updateScansContext = new UpdateScansContext(this, region);
         updateScansContext.update(renderArgs);
     }

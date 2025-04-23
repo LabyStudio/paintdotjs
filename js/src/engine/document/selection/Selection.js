@@ -3,6 +3,7 @@ class Selection {
     constructor() {
         this.data = new Data();
         this.depth = 0;
+        this.clipRectangle = new Rectangle(0, 0, 65535, 65535);
 
         this.changing = new EventHandler();
         this.changed = new EventHandler();
@@ -150,6 +151,21 @@ class Selection {
         return this.data.basePath.isEmpty() && this.data.continuation.isEmpty();
     }
 
+    createRegionRaw() {
+        let path = this.createPath();
+        return Region.fromPath(path);
+    }
+
+    createRegion() {
+        if (this.isEmpty()) {
+            return Region.fromRectangle(this.clipRectangle);
+        } else {
+            let region = this.createRegionRaw();
+            region.intersectRectangle(this.clipRectangle);
+            return region;
+        }
+    }
+
     getInterimTransform() {
         return this.data.interimTransform;
     }
@@ -180,5 +196,4 @@ class Selection {
         this.data.interimTransform = matrix.clone();
         this.pop();
     }
-
 }

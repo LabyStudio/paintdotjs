@@ -19,6 +19,26 @@ class VertexList {
         )
     }
 
+    getBounds() {
+        if (this.vertices.length === 0) {
+            return null;
+        }
+
+        let minX = this.vertices[0].x;
+        let minY = this.vertices[0].y;
+        let maxX = this.vertices[0].x;
+        let maxY = this.vertices[0].y;
+
+        for (let point of this.vertices) {
+            if (point.x < minX) minX = point.x;
+            if (point.y < minY) minY = point.y;
+            if (point.x > maxX) maxX = point.x;
+            if (point.y > maxY) maxY = point.y;
+        }
+
+        return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+    }
+
     addEllipse(x, y, width, height) {
         const centerX = x + width / 2;
         const centerY = y + height / 2;

@@ -30,6 +30,18 @@ class Layer {
         this.invalidate();
     }
 
+    getWidth() {
+        return this.width;
+    }
+
+    getHeight() {
+        return this.height;
+    }
+
+    getBounds() {
+        return new Rectangle(0, 0, this.width, this.height);
+    }
+
     getProperties() {
         return this.properties;
     }

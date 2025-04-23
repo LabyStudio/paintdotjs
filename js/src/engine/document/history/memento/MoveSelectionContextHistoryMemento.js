@@ -1,4 +1,4 @@
-class ContextHistoryMemento extends ToolHistoryMemento {
+class MoveSelectionContextHistoryMemento extends ToolHistoryMemento {
 
     constructor(documentWorkspace, context, name, image) {
         super(documentWorkspace, name, image);
@@ -12,7 +12,12 @@ class ContextHistoryMemento extends ToolHistoryMemento {
             throw new Error("Current Tool is not the MoveSelectionTool");
         }
 
-        let cha = new ContextHistoryMemento(this.documentWorkspace, moveSelectionTool.context, this.name, this.image);
+        let cha = new MoveSelectionContextHistoryMemento(
+            this.documentWorkspace,
+            moveSelectionTool.context,
+            this.name,
+            this.image
+        );
         let ohad = this.data;
         let newContext = ohad.context;
 

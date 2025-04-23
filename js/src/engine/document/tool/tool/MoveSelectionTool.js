@@ -31,9 +31,11 @@ class MoveSelectionTool extends MoveToolBase {
         super.onDeactivate();
     }
 
-    onHistoryChanged() {
-        // TODO set dontDrop to true on changing start
+    onExecutingHistoryMemento() {
+        this.dontDrop = true;
+    }
 
+    onExecutedHistoryMemento() {
         if (this.context.lifted) {
             this.render(this.context.offset, true);
         } else {
@@ -45,7 +47,7 @@ class MoveSelectionTool extends MoveToolBase {
     }
 
     drop() {
-        let cha = new ContextHistoryMemento(this.getDocumentWorkspace(), this.context, this.getName(), this.getImage());
+        let cha = new MoveSelectionContextHistoryMemento(this.getDocumentWorkspace(), this.context, this.getName(), this.getImage());
         this.currentHistoryMementos.push(cha);
 
         let sha = new SelectionHistoryMemento(this.getName(), this.getImage(), this.getDocumentWorkspace());
@@ -55,6 +57,20 @@ class MoveSelectionTool extends MoveToolBase {
         this.context = new Context();
 
         this.flushHistoryMementos(i18n("moveSelectionTool.historyMemento.dropSelection"));
+    }
+
+    onSelectionChanging() {
+        super.onSelectionChanging();
+
+        if (!this.dontDrop) {
+            if (this.context.lifted) {
+                this.drop();
+            }
+
+            if (this.tracking) {
+                this.tracking = false;
+            }
+        }
     }
 
     onSelectionChanged() {
@@ -71,7 +87,12 @@ class MoveSelectionTool extends MoveToolBase {
     }
 
     pushContextHistoryMemento() {
-        let cha = new ContextHistoryMemento(this.getDocumentWorkspace(), this.context, null, null);
+        let cha = new MoveSelectionContextHistoryMemento(
+            this.getDocumentWorkspace(),
+            this.context,
+            null,
+            null
+        );
         this.currentHistoryMementos.push(cha);
     }
 
