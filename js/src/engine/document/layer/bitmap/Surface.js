@@ -1,12 +1,19 @@
 class Surface {
 
     constructor(canvas) {
+        if (!(canvas instanceof HTMLCanvasElement)) {
+            throw new Error("Expected an HTMLCanvasElement");
+        }
+
         this.canvas = canvas;
         this.width = canvas.width;
         this.height = canvas.height;
 
-        this.context = canvas.getContext('2d');
-        this.context.imageSmoothingEnabled = false;
+        this.context = canvas.getContext('2d', {
+            alpha: true,
+            willReadFrequently: true,
+            imageSmoothingEnabled: false
+        });
 
         this.checkerboard = null;
     }
@@ -52,15 +59,97 @@ class Surface {
         this.context.fillRect(x, y, width, height);
     }
 
+    copySurfaceRectangle(source, sourceRoi) {
+        if (this.canvas === null || source.canvas === null) {
+            throw new Error("Cannot copy surface: one of the surfaces is disposed.");
+        }
+
+        sourceRoi.intersect(source.getBounds());
+        let copiedWidth = Math.min(this.width, sourceRoi.width);
+        let copiedHeight = Math.min(this.height, sourceRoi.height);
+
+        if (copiedWidth === 0 || copiedHeight === 0) {
+            return;
+        }
+
+        let src = source.createWindowFromRectangle(sourceRoi);
+        this.copySurface(src);
+    }
+
     copySurface(source) {
-        let sourceWidth = source.getWidth();
-        let sourceHeight = source.getHeight();
+        if (this.canvas === null || source.canvas === null) {
+            throw new Error("Cannot copy surface: one of the surfaces is disposed.");
+        }
 
         this.context.drawImage(
-            source.getCanvas(),
-            0, 0, sourceWidth, sourceHeight,
-            0, 0, sourceWidth, sourceHeight
+            source.canvas,
+            0, 0, source.width, source.height,
+            0, 0, this.width, this.height
         );
+    }
+
+    createWindowFromRectangle(rectangle) {
+        return this.createWindow(
+            rectangle.x, rectangle.y,
+            rectangle.width, rectangle.height
+        );
+    }
+
+    createWindow(x, y, windowWidth, windowHeight) {
+        if (this.canvas === null) {
+            throw new Error("Cannot create window: surface is disposed.");
+        }
+
+        if (windowHeight <= 0) {
+            throw new Error("windowHeight must be greater than zero");
+        }
+
+        let original = this.getBounds();
+        let sub = new Rectangle(x, y, windowWidth, windowHeight);
+        let clipped = Rectangle.intersect(original, sub);
+
+        if (clipped === null || clipped.width <= 0 || clipped.height <= 0) {
+            throw new Error(`bounds parameters must be a subset of this Surface's bounds: ${JSON.stringify(sub)}`);
+        }
+
+        let surface = Surface.create(windowWidth, windowHeight);
+        // "Copy memory block" equivalent in canvas context
+        surface.context.drawImage(
+            this.canvas,
+            clipped.x, clipped.y, clipped.width, clipped.height,
+            0, 0, windowWidth, windowHeight
+        );
+        return surface;
+    }
+
+    getColorAt(x, y) {
+        if (x < 0 || x >= this.width) {
+            throw new Error(`x=${x} is out of bounds of [0, ${this.width})`);
+        }
+
+        if (y < 0 || y >= this.height) {
+            throw new Error(`y=${y} is out of bounds of [0, ${this.height})`);
+        }
+
+        let imageData = this.context.getImageData(x, y, 1, 1);
+        return new Color(imageData.r, imageData.g, imageData.b, imageData.a);
+    }
+
+    setColorAt(x, y, color) {
+        if (x < 0 || x >= this.width) {
+            throw new Error(`x=${x} is out of bounds of [0, ${this.width})`);
+        }
+
+        if (y < 0 || y >= this.height) {
+            throw new Error(`y=${y} is out of bounds of [0, ${this.height})`);
+        }
+
+        let imageData = this.context.getImageData(x, y, 1, 1);
+        imageData.data[0] = color.r;
+        imageData.data[1] = color.g;
+        imageData.data[2] = color.b;
+        imageData.data[3] = color.a;
+        this.context.putImageData(imageData, x, y);
     }
 
     getCanvas() {
@@ -87,6 +176,10 @@ class Surface {
     setHeight(height) {
         this.height = height;
         this.canvas.height = height;
+    }
+
+    getBounds() {
+        return new Rectangle(0, 0, this.width, this.height);
     }
 
     dispose() {

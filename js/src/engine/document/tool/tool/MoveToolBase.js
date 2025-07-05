@@ -39,35 +39,35 @@ class MoveToolBase extends Tool {
     getEdgeVector(edge) {
         let u;
         switch (edge) {
-            case Edge.TOP_LEFT:
+            case MoveToolBaseEdge.TOP_LEFT:
                 u = new Point(-1, -1);
                 break;
 
-            case Edge.TOP:
+            case MoveToolBaseEdge.TOP:
                 u = new Point(0, -1);
                 break;
 
-            case Edge.TOP_RIGHT:
+            case MoveToolBaseEdge.TOP_RIGHT:
                 u = new Point(1, -1);
                 break;
 
-            case Edge.LEFT:
+            case MoveToolBaseEdge.LEFT:
                 u = new Point(-1, 0);
                 break;
 
-            case Edge.RIGHT:
+            case MoveToolBaseEdge.RIGHT:
                 u = new Point(1, 0);
                 break;
 
-            case Edge.BOTTOM_LEFT:
+            case MoveToolBaseEdge.BOTTOM_LEFT:
                 u = new Point(-1, 1);
                 break;
 
-            case Edge.BOTTOM_RIGHT:
+            case MoveToolBaseEdge.BOTTOM_RIGHT:
                 u = new Point(1, 1);
                 break;
 
-            case Edge.BOTTOM:
+            case MoveToolBaseEdge.BOTTOM:
                 u = new Point(0, 1);
                 break;
 
@@ -79,11 +79,11 @@ class MoveToolBase extends Tool {
     }
 
     determineMoveMode(mouseX, mouseY, button) {
-        let mode = Mode.TRANSLATE;
-        let edge = Edge.NONE;
+        let mode = MoveToolBaseMode.TRANSLATE;
+        let edge = MoveToolBaseEdge.NONE;
 
         if (button === MouseButton.RIGHT) {
-            mode = Mode.ROTATE;
+            mode = MoveToolBaseMode.ROTATE;
         } else {
             let minDistance = Number.MAX_VALUE;
             let mousePt = new Point(mouseX, mouseY);
@@ -96,7 +96,7 @@ class MoveToolBase extends Tool {
 
                     if (distance < minDistance) {
                         minDistance = distance;
-                        mode = Mode.SCALE;
+                        mode = MoveToolBaseMode.SCALE;
                         edge = i;
                     }
                 }
@@ -151,24 +151,24 @@ class MoveToolBase extends Tool {
 
             let bounds = this.getSelection().getBounds(false);
 
-            this.moveNubs[Edge.TOP_LEFT].setLocation(new Point(bounds.getLeft(), bounds.getTop()));
-            this.moveNubs[Edge.TOP_LEFT].setShape(MoveNubShape.CIRCLE);
+            this.moveNubs[MoveToolBaseEdge.TOP_LEFT].setLocation(new Point(bounds.getLeft(), bounds.getTop()));
+            this.moveNubs[MoveToolBaseEdge.TOP_LEFT].setShape(MoveNubShape.CIRCLE);
 
-            this.moveNubs[Edge.TOP].setLocation(new Point((bounds.getLeft() + bounds.getRight()) / 2.0, bounds.getTop()));
+            this.moveNubs[MoveToolBaseEdge.TOP].setLocation(new Point((bounds.getLeft() + bounds.getRight()) / 2.0, bounds.getTop()));
 
-            this.moveNubs[Edge.TOP_RIGHT].setLocation(new Point(bounds.getRight(), bounds.getTop()));
-            this.moveNubs[Edge.TOP_RIGHT].setShape(MoveNubShape.CIRCLE);
+            this.moveNubs[MoveToolBaseEdge.TOP_RIGHT].setLocation(new Point(bounds.getRight(), bounds.getTop()));
+            this.moveNubs[MoveToolBaseEdge.TOP_RIGHT].setShape(MoveNubShape.CIRCLE);
 
-            this.moveNubs[Edge.LEFT].setLocation(new Point(bounds.getLeft(), (bounds.getTop() + bounds.getBottom()) / 2.0));
-            this.moveNubs[Edge.RIGHT].setLocation(new Point(bounds.getRight(), (bounds.getTop() + bounds.getBottom()) / 2.0));
+            this.moveNubs[MoveToolBaseEdge.LEFT].setLocation(new Point(bounds.getLeft(), (bounds.getTop() + bounds.getBottom()) / 2.0));
+            this.moveNubs[MoveToolBaseEdge.RIGHT].setLocation(new Point(bounds.getRight(), (bounds.getTop() + bounds.getBottom()) / 2.0));
 
-            this.moveNubs[Edge.BOTTOM_LEFT].setLocation(new Point(bounds.getLeft(), bounds.getBottom()));
-            this.moveNubs[Edge.BOTTOM_LEFT].setShape(MoveNubShape.CIRCLE);
+            this.moveNubs[MoveToolBaseEdge.BOTTOM_LEFT].setLocation(new Point(bounds.getLeft(), bounds.getBottom()));
+            this.moveNubs[MoveToolBaseEdge.BOTTOM_LEFT].setShape(MoveNubShape.CIRCLE);
 
-            this.moveNubs[Edge.BOTTOM].setLocation(new Point((bounds.getLeft() + bounds.getRight()) / 2.0, bounds.getBottom()));
+            this.moveNubs[MoveToolBaseEdge.BOTTOM].setLocation(new Point((bounds.getLeft() + bounds.getRight()) / 2.0, bounds.getBottom()));
 
-            this.moveNubs[Edge.BOTTOM_RIGHT].setLocation(new Point(bounds.getRight(), bounds.getBottom()));
-            this.moveNubs[Edge.BOTTOM_RIGHT].setShape(MoveNubShape.CIRCLE);
+            this.moveNubs[MoveToolBaseEdge.BOTTOM_RIGHT].setLocation(new Point(bounds.getRight(), bounds.getBottom()));
+            this.moveNubs[MoveToolBaseEdge.BOTTOM_RIGHT].setShape(MoveNubShape.CIRCLE);
         }
 
         if (this.rotateNub === null) {
@@ -185,7 +185,7 @@ class MoveToolBase extends Tool {
             this.rotateNub.setVisible(false);
         } else {
             for (let nub of this.moveNubs) {
-                nub.setVisible(!this.tracking || currentMode === Mode.SCALE);
+                nub.setVisible(!this.tracking || currentMode === MoveToolBaseMode.SCALE);
                 nub.setTransform(this.getSelection().getInterimTransform());
             }
         }
@@ -210,40 +210,40 @@ class MoveToolBase extends Tool {
             default:
                 throw new Error("Invalid enum value");
 
-            case Edge.BOTTOM:
-                flippedEdge = Edge.TOP;
+            case MoveToolBaseEdge.BOTTOM:
+                flippedEdge = MoveToolBaseEdge.TOP;
                 break;
 
-            case Edge.BOTTOM_LEFT:
-                flippedEdge = Edge.TOP_LEFT;
+            case MoveToolBaseEdge.BOTTOM_LEFT:
+                flippedEdge = MoveToolBaseEdge.TOP_LEFT;
                 break;
 
-            case Edge.BOTTOM_RIGHT:
-                flippedEdge = Edge.TOP_RIGHT;
+            case MoveToolBaseEdge.BOTTOM_RIGHT:
+                flippedEdge = MoveToolBaseEdge.TOP_RIGHT;
                 break;
 
-            case Edge.LEFT:
-                flippedEdge = Edge.LEFT;
+            case MoveToolBaseEdge.LEFT:
+                flippedEdge = MoveToolBaseEdge.LEFT;
                 break;
 
-            case Edge.NONE:
-                flippedEdge = Edge.NONE;
+            case MoveToolBaseEdge.NONE:
+                flippedEdge = MoveToolBaseEdge.NONE;
                 break;
 
-            case Edge.RIGHT:
-                flippedEdge = Edge.RIGHT;
+            case MoveToolBaseEdge.RIGHT:
+                flippedEdge = MoveToolBaseEdge.RIGHT;
                 break;
 
-            case Edge.TOP:
-                flippedEdge = Edge.BOTTOM;
+            case MoveToolBaseEdge.TOP:
+                flippedEdge = MoveToolBaseEdge.BOTTOM;
                 break;
 
-            case Edge.TOP_LEFT:
-                flippedEdge = Edge.BOTTOM_LEFT;
+            case MoveToolBaseEdge.TOP_LEFT:
+                flippedEdge = MoveToolBaseEdge.BOTTOM_LEFT;
                 break;
 
-            case Edge.TOP_RIGHT:
-                flippedEdge = Edge.BOTTOM_RIGHT;
+            case MoveToolBaseEdge.TOP_RIGHT:
+                flippedEdge = MoveToolBaseEdge.BOTTOM_RIGHT;
                 break;
         }
 
@@ -388,8 +388,8 @@ class MoveToolBase extends Tool {
         }
 
         let determinedMoveMode = false;
-        let newMode = Mode.TRANSLATE;
-        let newEdge = Edge.NONE;
+        let newMode = MoveToolBaseMode.TRANSLATE;
+        let newEdge = MoveToolBaseEdge.NONE;
 
         if (this.getSelection().isEmpty()) {
             let shm = new SelectionHistoryMemento(
@@ -408,12 +408,12 @@ class MoveToolBase extends Tool {
             selection.performChanged();
 
             if (button === MouseButton.RIGHT) {
-                newMode = Mode.ROTATE;
+                newMode = MoveToolBaseMode.ROTATE;
             } else {
-                newMode = Mode.TRANSLATE;
+                newMode = MoveToolBaseMode.TRANSLATE;
             }
 
-            newEdge = Edge.NONE;
+            newEdge = MoveToolBaseEdge.NONE;
 
             determinedMoveMode = true;
         }
@@ -441,10 +441,10 @@ class MoveToolBase extends Tool {
         this.context.deltaTransform = new Matrix();
         this.context.deltaTransform.reset();
 
-        if (newMode === Mode.TRANSLATE
-            || newMode === Mode.SCALE
+        if (newMode === MoveToolBaseMode.TRANSLATE
+            || newMode === MoveToolBaseMode.SCALE
             || newMode !== this.context.currentMode
-            || newMode === Mode.ROTATE) {
+            || newMode === MoveToolBaseMode.ROTATE) {
             this.context.startBounds = this.getSelection().getBounds(false);
             this.context.startMouseXY = new Point(mouseX, mouseY);
             this.context.offset = new Point(0, 0);
@@ -462,7 +462,7 @@ class MoveToolBase extends Tool {
         this.positionNubs(this.context.currentMode);
 
         this.tracking = true;
-        this.rotateNub.setVisible(this.context.currentMode === Mode.ROTATE);
+        this.rotateNub.setVisible(this.context.currentMode === MoveToolBaseMode.ROTATE);
 
         if (this.context.startPath !== null) {
             this.context.startPath.dispose();
@@ -510,10 +510,10 @@ class MoveToolBase extends Tool {
             let interim = this.getSelection().getInterimTransformCopy();
 
             switch (this.context.currentMode) {
-                case Mode.TRANSLATE:
+                case MoveToolBaseMode.TRANSLATE:
                     translateMatrix.translate(newOffset.getX(), newOffset.getY(), MatrixOrder.APPEND);
                     break;
-                case Mode.ROTATE:
+                case MoveToolBaseMode.ROTATE:
                     let rect = this.context.liftedBounds;
                     let center = new Point(
                         rect.getLeft() + (rect.getWidth() / 2.0),
@@ -557,7 +557,7 @@ class MoveToolBase extends Tool {
                     this.app.setCursor(direction + "-resize");
 
                     break;
-                case Mode.SCALE:
+                case MoveToolBaseMode.SCALE:
                     let xyAxes = this.getEdgeVector(this.context.startEdge);
                     let xAxis = new Point(xyAxes.getX(), 0);
                     let yAxis = new Point(0, xyAxes.getY());
@@ -609,49 +609,49 @@ class MoveToolBase extends Tool {
                         default:
                             throw new Error("Invalid enum value");
 
-                        case Edge.TOP_LEFT:
+                        case MoveToolBaseEdge.TOP_LEFT:
                             allowConstrain = true;
                             xTranslate = -spBounds2.getLeft() - spBounds2.getWidth();
                             yTranslate = -spBounds2.getTop() - spBounds2.getHeight();
                             break;
 
-                        case Edge.TOP:
+                        case MoveToolBaseEdge.TOP:
                             allowConstrain = false;
                             xTranslate = 0;
                             yTranslate = -spBounds2.getTop() - spBounds2.getHeight();
                             break;
 
-                        case Edge.TOP_RIGHT:
+                        case MoveToolBaseEdge.TOP_RIGHT:
                             allowConstrain = true;
                             xTranslate = -spBounds2.getLeft();
                             yTranslate = -spBounds2.getTop() - spBounds2.getHeight();
                             break;
 
-                        case Edge.LEFT:
+                        case MoveToolBaseEdge.LEFT:
                             allowConstrain = false;
                             xTranslate = -spBounds2.getLeft() - spBounds2.getWidth();
                             yTranslate = 0;
                             break;
 
-                        case Edge.RIGHT:
+                        case MoveToolBaseEdge.RIGHT:
                             allowConstrain = false;
                             xTranslate = -spBounds2.getLeft();
                             yTranslate = 0;
                             break;
 
-                        case Edge.BOTTOM_LEFT:
+                        case MoveToolBaseEdge.BOTTOM_LEFT:
                             allowConstrain = true;
                             xTranslate = -spBounds2.getLeft() - spBounds2.getWidth();
                             yTranslate = -spBounds2.getTop();
                             break;
 
-                        case Edge.BOTTOM:
+                        case MoveToolBaseEdge.BOTTOM:
                             allowConstrain = false;
                             xTranslate = 0;
                             yTranslate = -spBounds2.getTop();
                             break;
 
-                        case Edge.BOTTOM_RIGHT:
+                        case MoveToolBaseEdge.BOTTOM_RIGHT:
                             allowConstrain = true;
                             xTranslate = -spBounds2.getLeft();
                             yTranslate = -spBounds2.getTop();
@@ -737,13 +737,13 @@ class MoveToolBase extends Tool {
     }
 }
 
-class Mode {
+class MoveToolBaseMode {
     static TRANSLATE = 0;
     static SCALE = 1;
     static ROTATE = 2;
 }
 
-class Edge {
+class MoveToolBaseEdge {
     static TOP_LEFT = 0;
     static TOP = 1;
     static TOP_RIGHT = 2;
@@ -755,7 +755,7 @@ class Edge {
     static NONE = 99;
 }
 
-class Context {
+class MoveToolBaseContext {
 
     constructor() {
         this.lifted = false;
@@ -782,7 +782,7 @@ class Context {
     }
 
     clone() {
-        let clone = new Context();
+        let clone = new MoveToolBaseContext();
         clone.lifted = this.lifted;
         clone.seriesGuid = this.seriesGuid;
         if (this.baseTransform !== null) {

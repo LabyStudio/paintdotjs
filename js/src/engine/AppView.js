@@ -31,10 +31,18 @@ class AppView {
         this.render();
 
         window.addEventListener('load', () => {
-            this.onResize(this.getViewWidth(), this.getViewHeight());
+            try {
+                this.onResize(this.getViewWidth(), this.getViewHeight());
+            } catch (e) {
+                this.handleError(e);
+            }
         });
         window.addEventListener('resize', () => {
-            this.onResize(this.getViewWidth(), this.getViewHeight());
+            try {
+                this.onResize(this.getViewWidth(), this.getViewHeight());
+            } catch (e) {
+                this.handleError(e);
+            }
         });
 
         // Cancel website zoom
@@ -67,31 +75,43 @@ class AppView {
 
         // Mouse down listener
         this.editor.addEventListener('mousedown', event => {
-            let x = event.clientX - this.editor.offsetLeft;
-            let y = event.clientY - this.editor.offsetTop - windowTop();
-            this.fire("document:mousedown", x, y, event.button);
+            try {
+                let x = event.clientX - this.editor.offsetLeft;
+                let y = event.clientY - this.editor.offsetTop - windowTop();
+                this.fire("document:mousedown", x, y, event.button);
 
-            this.onMouseDown(x, y, event.button);
+                this.onMouseDown(x, y, event.button);
+            } catch (e) {
+                this.handleError(e);
+            }
         });
 
         // Mouse move listener
         this.editor.addEventListener('mousemove', event => {
-            let x = event.clientX - this.editor.offsetLeft;
-            let y = event.clientY - this.editor.offsetTop - windowTop();
-            this.fire("document:mousemove", x, y);
+            try {
+                let x = event.clientX - this.editor.offsetLeft;
+                let y = event.clientY - this.editor.offsetTop - windowTop();
+                this.fire("document:mousemove", x, y);
 
-            this.onMouseMove(x, y);
+                this.onMouseMove(x, y);
+            } catch (e) {
+                this.handleError(e);
+            }
 
             event.preventDefault();
         });
 
         // Mouse up listener
         document.addEventListener('mouseup', event => {
-            let x = event.clientX - this.editor.offsetLeft;
-            let y = event.clientY - this.editor.offsetTop - windowTop();
-            this.fire("document:mouseup", x, y, event.button);
+            try {
+                let x = event.clientX - this.editor.offsetLeft;
+                let y = event.clientY - this.editor.offsetTop - windowTop();
+                this.fire("document:mouseup", x, y, event.button);
 
-            this.onMouseUp(x, y, event.button);
+                this.onMouseUp(x, y, event.button);
+            } catch (e) {
+                this.handleError(e);
+            }
 
             event.preventDefault();
         });
@@ -420,6 +440,16 @@ class AppView {
         for (let i = 0; i < this.listeners[event].length; i++) {
             this.listeners[event][i](...args);
         }
+    }
+
+    handleError(error) {
+        setTimeout(() => {
+            throw error;
+        }, 0);
+        setTimeout(() => {
+            alert("An unexpected error occurred: " + error.message);
+            location.reload();
+        }, 100);
     }
 
 }

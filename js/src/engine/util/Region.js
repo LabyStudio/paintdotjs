@@ -7,7 +7,35 @@ class Region {
         this.rectangles = rectangles;
     }
 
+    intersectRegion(region) {
+        if (!(region instanceof Region)) {
+            throw new Error("Input must be an instance of Region");
+        }
+
+        let newRectangles = [];
+
+        for (let rect of this.rectangles) {
+            for (let otherRect of region.getRectangles()) {
+                // Clone the rectangle to avoid modifying the original
+                let clone = rect.clone();
+                clone.intersect(otherRect);
+
+                // Only keep non-empty intersections
+                if (clone.width > 0 && clone.height > 0) {
+                    newRectangles.push(clone);
+                }
+            }
+        }
+
+        // Update the region with only the intersecting parts
+        this.rectangles = newRectangles;
+    }
+
     intersectRectangle(rectangle) {
+        if (!(rectangle instanceof Rectangle)) {
+            throw new Error("Input must be an instance of Rectangle");
+        }
+
         let newRectangles = [];
 
         for (let rect of this.rectangles) {

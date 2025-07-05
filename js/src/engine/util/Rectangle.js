@@ -182,4 +182,17 @@ class Rectangle {
     static empty() {
         return new Rectangle();
     }
+
+    static intersect(rectangle1, rectangle2) {
+        let x1 = Math.max(rectangle1.x, rectangle2.x);
+        let y1 = Math.max(rectangle1.y, rectangle2.y);
+        let x2 = Math.min(rectangle1.x + rectangle1.width, rectangle2.x + rectangle2.width);
+        let y2 = Math.min(rectangle1.y + rectangle1.height, rectangle2.y + rectangle2.height);
+
+        if (x1 < x2 && y1 < y2) {
+            return new Rectangle(x1, y1, x2 - x1, y2 - y1);
+        } else {
+            return Rectangle.empty();
+        }
+    }
 }

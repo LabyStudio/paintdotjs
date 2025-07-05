@@ -10,11 +10,15 @@ class AppWorkspace extends AppView {
     }
 
     initialize() {
-        ActionRegistry.initialize();
-        PanelRegistry.initialize();
-        FormRegistry.initialize();
+        try {
+            ActionRegistry.initialize();
+            PanelRegistry.initialize();
+            FormRegistry.initialize();
 
-        super.initialize();
+            super.initialize();
+        } catch (e) {
+            this.handleError(e);
+        }
     }
 
     createBlankDocumentInNewWorkspace(width, height) {

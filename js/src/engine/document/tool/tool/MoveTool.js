@@ -120,7 +120,7 @@ class MoveTool extends MoveToolBase {
     }
 
     onLift(mouseX, mouseY, button) {
-        let liftPath = this.getSelection().createRegion();
+        let liftPath = this.getSelection().createPath();
         let liftRegion = this.getSelection().createRegion();
 
         this.context.liftedPixels = new MaskedSurface(this.activeLayer.getSurface(), liftPath);
@@ -176,7 +176,8 @@ class MoveTool extends MoveToolBase {
 
         this.context.liftedPixels.render(
             this.renderArgs.getSurface(),
-            this.context.deltaTransform
+            this.context.deltaTransform,
+            ResamplingAlgorithm.NEAREST_NEIGHBOR
             // TODO fullQuality
         );
 
@@ -209,15 +210,15 @@ class MoveTool extends MoveToolBase {
             default:
                 throw new Error("Invalid enum argument");
 
-            case Mode.ROTATE:
+            case MoveToolBaseMode.ROTATE:
                 resourceName = "moveTool.historyMemento.rotate";
                 break;
 
-            case Mode.SCALE:
+            case MoveToolBaseMode.SCALE:
                 resourceName = "moveTool.historyMemento.scale";
                 break;
 
-            case Mode.TRANSLATE:
+            case MoveToolBaseMode.TRANSLATE:
                 resourceName = "moveTool.historyMemento.translate";
                 break;
         }
@@ -305,7 +306,7 @@ class MoveTool extends MoveToolBase {
     }
 }
 
-class MoveToolContext extends Context {
+class MoveToolContext extends MoveToolBaseContext {
 
     constructor() {
         super();

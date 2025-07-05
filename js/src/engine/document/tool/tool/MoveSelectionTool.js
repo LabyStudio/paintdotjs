@@ -3,7 +3,7 @@ class MoveSelectionTool extends MoveToolBase {
     constructor(type) {
         super(type);
 
-        this.context = new Context();
+        this.context = new MoveToolBaseContext();
     }
 
     onActivate() {
@@ -54,7 +54,7 @@ class MoveSelectionTool extends MoveToolBase {
         this.currentHistoryMementos.push(sha);
 
         this.context.dispose();
-        this.context = new Context();
+        this.context = new MoveToolBaseContext();
 
         this.flushHistoryMementos(i18n("moveSelectionTool.historyMemento.dropSelection"));
     }
@@ -122,15 +122,15 @@ class MoveSelectionTool extends MoveToolBase {
             default:
                 throw new Error("Invalid enum argument");
 
-            case Mode.ROTATE:
+            case MoveToolBaseMode.ROTATE:
                 resourceName = "moveSelectionTool.historyMemento.rotate";
                 break;
 
-            case Mode.SCALE:
+            case MoveToolBaseMode.SCALE:
                 resourceName = "moveSelectionTool.historyMemento.scale";
                 break;
 
-            case Mode.TRANSLATE:
+            case MoveToolBaseMode.TRANSLATE:
                 resourceName = "moveSelectionTool.historyMemento.translate";
                 break;
         }

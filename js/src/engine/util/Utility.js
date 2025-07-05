@@ -83,6 +83,171 @@ class Utility {
         return boxes;
     }
 
+    static splitRectangle(rect, rects) {
+        let height = rect.height;
+
+        for (let i = 0; i < rects.length; ++i) {
+            rects[i] = new Rectangle(
+                rect.getLeft(),
+                rect.getTop() + ((height * i) / rects.length),
+                rect.getRight() - rect.getLeft(),
+                (height * (i + 1)) / rects.length - (height * i) / rects.length
+            );
+        }
+    }
+
+    static getScans(vertices, startIndex = 0, length = vertices.length) {
+        if (length > vertices.length - startIndex) {
+            throw new Error("out of bounds: length > vertices.length - startIndex");
+        }
+
+        let ymax = 0;
+
+        // Build edge table
+        let edgeTable = new Array(length);
+        let edgeCount = 0;
+
+        for (let i = startIndex; i < startIndex + length; ++i) {
+            let top = vertices[i];
+            let bottom = vertices[((i + 1 - startIndex) % length) + startIndex];
+            let dy;
+
+            if (top.y > bottom.y) {
+                [top, bottom] = [bottom, top];
+            }
+
+            dy = bottom.y - top.y;
+
+            if (dy !== 0) {
+                edgeTable[edgeCount] = new UtilityEdge(top.y, bottom.y, top.x << 8, ((bottom.x - top.x) << 8) / dy);
+                ymax = Math.max(ymax, bottom.y);
+                ++edgeCount;
+            }
+        }
+
+        // Sort edge table by miny
+        for (let i = 0; i < edgeCount - 1; ++i) {
+            let min = i;
+
+            for (let j = i + 1; j < edgeCount; ++j) {
+                if (edgeTable[j].miny < edgeTable[min].miny) {
+                    min = j;
+                }
+            }
+
+            if (min !== i) {
+                [edgeTable[min], edgeTable[i]] = [edgeTable[i], edgeTable[min]];
+            }
+        }
+
+        // Compute how many scanlines we will be emitting
+        let scanCount = 0;
+        let activeLow = 0;
+        let activeHigh = 0;
+        let yscan1 = edgeTable[0].miny;
+
+        // we assume that edgeTable[0].miny == yscan
+        while (activeHigh < edgeCount - 1 && edgeTable[activeHigh + 1].miny === yscan1) {
+            ++activeHigh;
+        }
+
+        while (yscan1 <= ymax) {
+            // Find new edges where yscan == miny
+            while (activeHigh < edgeCount - 1 && edgeTable[activeHigh + 1].miny === yscan1) {
+                ++activeHigh;
+            }
+
+            let count = 0;
+            for (let i = activeLow; i <= activeHigh; ++i) {
+                if (edgeTable[i].maxy > yscan1) {
+                    ++count;
+                }
+            }
+
+            scanCount += Math.floor(count / 2);
+            ++yscan1;
+
+            // Remove edges where yscan == maxy
+            while (activeLow < edgeCount - 1 && edgeTable[activeLow].maxy <= yscan1) {
+                ++activeLow;
+            }
+
+            if (activeLow > activeHigh) {
+                activeHigh = activeLow;
+            }
+        }
+
+        // Allocate scanlines that we'll return
+        let scans = new Array(scanCount);
+
+        // Active Edge Table (AET): it is indices into the Edge Table (ET)
+        let active = new Array(edgeCount);
+        let activeCount = 0;
+        let yscan2 = edgeTable[0].miny;
+        let scansIndex = 0;
+
+        // Repeat until both the ET and AET are empty
+        while (yscan2 <= ymax) {
+            // Move any edges from the ET to the AET where yscan == miny
+            for (let i = 0; i < edgeCount; ++i) {
+                if (edgeTable[i].miny === yscan2) {
+                    active[activeCount] = i;
+                    ++activeCount;
+                }
+            }
+
+            // Sort the AET on x
+            for (let i = 0; i < activeCount - 1; ++i) {
+                let min = i;
+
+                for (let j = i + 1; j < activeCount; ++j) {
+                    if (edgeTable[active[j]].x < edgeTable[active[min]].x) {
+                        min = j;
+                    }
+                }
+
+                if (min !== i) {
+                    [active[min], active[i]] = [active[i], active[min]];
+                }
+            }
+
+            // For each pair of entries in the AET, fill in pixels between their info
+            for (let i = 0; i < activeCount; i += 2) {
+                let el = edgeTable[active[i]];
+                let er = edgeTable[active[i + 1]];
+                let startx = (el.x + 0xff) >> 8; // ceil(x)
+                let endx = er.x >> 8;      // floor(x)
+
+                scans[scansIndex] = new Scanline(startx, yscan2, endx - startx);
+                ++scansIndex;
+            }
+
+            ++yscan2;
+
+            // Remove from the AET any edge where yscan == maxy
+            let k = 0;
+            while (k < activeCount && activeCount > 0) {
+                if (edgeTable[active[k]].maxy === yscan2) {
+                    // remove by shifting everything down one
+                    for (let j = k + 1; j < activeCount; ++j) {
+                        active[j - 1] = active[j];
+                    }
+
+                    --activeCount;
+                } else {
+                    ++k;
+                }
+            }
+
+            // Update x for each entry in AET
+            for (let i = 0; i < activeCount; ++i) {
+                edgeTable[active[i]].x += edgeTable[active[i]].dxdy;
+            }
+        }
+
+        return scans;
+    }
+
     static getRegionBounds(region, startIndex, length) {
         if (region.size() === 0) {
             return new Rectangle();
@@ -308,5 +473,15 @@ class Utility {
 
     static toDegrees(radians) {
         return radians * (180 / Math.PI);
+    }
+}
+
+class UtilityEdge {
+
+    constructor(minY, maxY, x, dxdy) {
+        this.minY = minY;
+        this.maxY = maxY;
+        this.x = x;
+        this.dxdy = dxdy;
     }
 }

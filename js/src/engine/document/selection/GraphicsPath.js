@@ -116,6 +116,15 @@ class GraphicsPath {
         }
     }
 
+    closeFigure() {
+        if (this.vertexLists.length === 0) {
+            throw new Error("No figure to close");
+        }
+
+        let currentFigure = this.vertexLists[this.vertexLists.length - 1];
+        currentFigure.close();
+    }
+
     // Dispose of the path (clean up resources)
     dispose() {
         this.vertexLists = null;
@@ -212,5 +221,143 @@ class GraphicsPath {
         const returnPath = clippedPoly.toGraphicsPath();
         returnPath.closeAllFigures();
         return returnPath;
+    }
+
+    static fromRegion(region) {
+        if (!(region instanceof Region)) {
+            throw new Error("Input must be an instance of Region");
+        }
+
+        const scans = region.getRectangles(); // TODO GetRegionScansReadOnlyInt
+
+        if (scans.length === 1) {
+            const path = new GraphicsPath();
+            path.addRectangle(scans[0]);
+            return path;
+        } else {
+            const bounds = region.getBounds(); // TODO GetBoundsInt
+            const stencil = new BitVector2D(bounds.width, bounds.height);
+
+            for (const rect of scans) {
+                const adjustedRect = new Rectangle(
+                    rect.x - bounds.x,
+                    rect.y - bounds.y,
+                    rect.width,
+                    rect.height
+                );
+                stencil.setUnchecked(adjustedRect, true);
+            }
+
+            const path = GraphicsPath.pathFromStencil(stencil, new Rectangle(
+                0,
+                0,
+                stencil.width,
+                stencil.height
+            ));
+
+            let matrix = new Matrix();
+            matrix.reset();
+            matrix.translate(bounds.x, bounds.y);
+            path.transform(matrix);
+
+            return path;
+        }
+    }
+
+    static pathFromStencil(stencil, bounds) {
+        if (!(stencil instanceof BitVector2D)) {
+            throw new Error("Input must be an instance of BitVector2D");
+        }
+
+        if (stencil.isEmpty()) {
+            return new GraphicsPath();
+        }
+
+        const ret = new GraphicsPath();
+        let start = bounds.getLocation();
+        const pts = [];
+        let count = 0;
+
+        // Find all islands
+        while (true) {
+            let startFound = false;
+
+            while (true) {
+                if (stencil.get(start.x, start.y)) {
+                    startFound = true;
+                    break;
+                }
+
+                start.x++;
+
+                if (start.x >= bounds.right) {
+                    start.y++;
+                    start.x = bounds.left;
+
+                    if (start.y >= bounds.bottom) {
+                        break;
+                    }
+                }
+            }
+
+            if (!startFound) {
+                break;
+            }
+
+            pts.length = 0; // Clear points
+            let last = new Point(start.x, start.y + 1);
+            let curr = new Point(start.x, start.y);
+            let next = curr;
+            let left = Point.EMPTY;
+            let right = Point.EMPTY;
+
+            // Trace island outline
+            while (true) {
+                left.x = ((curr.x - last.x) + (curr.y - last.y) + 2) / 2 + curr.x - 1;
+                left.y = ((curr.y - last.y) - (curr.x - last.x) + 2) / 2 + curr.y - 1;
+
+                right.x = ((curr.x - last.x) - (curr.y - last.y) + 2) / 2 + curr.x - 1;
+                right.y = ((curr.y - last.y) + (curr.x - last.x) + 2) / 2 + curr.y - 1;
+
+                if (bounds.contains(left) && stencil.get(left.x, left.y)) {
+                    // Go left
+                    next.x += curr.y - last.y;
+                    next.y -= curr.x - last.x;
+                } else if (bounds.contains(right) && stencil.get(right.x, right.y)) {
+                    // Go straight
+                    next.x += curr.x - last.x;
+                    next.y += curr.y - last.y;
+                } else {
+                    // Turn right
+                    next.x -= curr.y - last.y;
+                    next.y += curr.x - last.x;
+                }
+
+                if (Math.sign(next.x - curr.x) !== Math.sign(curr.x - last.x) ||
+                    Math.sign(next.y - curr.y) !== Math.sign(curr.y - last.y)) {
+                    pts.push(curr);
+                    count++;
+                }
+
+                last = curr;
+                curr = next;
+
+                if (next.x === start.x && next.y === start.y) {
+                    break;
+                }
+            }
+
+            const points = pts.slice();
+            const scans = Utility.getScans(points);
+
+            for (const scan of scans) {
+                stencil.invertScanline(scan);
+            }
+
+            ret.addLines(points);
+            ret.closeFigure();
+        }
+
+        return ret;
     }
 }

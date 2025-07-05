@@ -127,6 +127,53 @@ class Matrix {
         return clonedMatrix;
     }
 
+    isInvertible() {
+        // A 3x3 matrix is invertible if its determinant is non-zero
+        const det = this.elements[0][0] * (this.elements[1][1] * this.elements[2][2] - this.elements[1][2] * this.elements[2][1]) -
+            this.elements[0][1] * (this.elements[1][0] * this.elements[2][2] - this.elements[1][2] * this.elements[2][0]) +
+            this.elements[0][2] * (this.elements[1][0] * this.elements[2][1] - this.elements[1][1] * this.elements[2][0]);
+        return det !== 0;
+    }
+
+    invert() {
+        const m = this.elements;
+
+        // Alias elements for readability
+        const a = m[0][0], b = m[0][1], c = m[0][2];
+        const d = m[1][0], e = m[1][1], f = m[1][2];
+        const g = m[2][0], h = m[2][1], i = m[2][2];
+
+        const det = a * (e * i - f * h) -
+            b * (d * i - f * g) +
+            c * (d * h - e * g);
+
+        if (det === 0) {
+            throw new Error("Matrix is not invertible");
+        }
+
+        const invDet = 1 / det;
+
+        const result = [
+            [
+                (e * i - f * h) * invDet,
+                (c * h - b * i) * invDet,
+                (b * f - c * e) * invDet
+            ],
+            [
+                (f * g - d * i) * invDet,
+                (a * i - c * g) * invDet,
+                (c * d - a * f) * invDet
+            ],
+            [
+                (d * h - e * g) * invDet,
+                (b * g - a * h) * invDet,
+                (a * e - b * d) * invDet
+            ]
+        ];
+
+        this.elements = result;
+    }
+
     // Private helper to multiply two matrices
     _multiplyMatrices(a, b) {
         const result = Array.from({length: 3}, () => Array(3).fill(0));
