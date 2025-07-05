@@ -27,6 +27,13 @@ class BitmapLayer extends Layer {
         return layer;
     }
 
+    dispose() {
+        if (this.surface !== null) {
+            this.surface.dispose();
+            this.surface = null;
+        }
+    }
+
     getSurface() {
         return this.surface;
     }

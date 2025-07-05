@@ -13,7 +13,8 @@ class MoveTool extends MoveToolBase {
     }
 
     onActivate() {
-        this.app.setCursorImg("move_tool_cursor");
+        // TODO find the texture for the move tool cursor
+        // this.app.setCursorImg("move_tool_cursor");
 
         this.context.lifted = false;
         this.context.liftedPixels = null;
@@ -78,7 +79,7 @@ class MoveTool extends MoveToolBase {
         this.currentHistoryMementos.push(bitmapAction2);
 
         this.activeLayer.invalidate(simplifiedRegion);
-        this.update();
+        // this.update();
 
         regionCopy.dispose();
         regionCopy = null;

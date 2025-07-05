@@ -89,6 +89,12 @@ class Surface {
         this.canvas.height = height;
     }
 
+    dispose() {
+        this.canvas = null;
+        this.context = null;
+        this.checkerboard = null;
+    }
+
     static fromCanvas(canvas) {
         let context = canvas.getContext('2d');
         return new Surface(canvas, context);

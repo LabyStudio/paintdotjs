@@ -7,4 +7,8 @@ class RenderArgs {
     getSurface() {
         return this.surface;
     }
+
+    dispose() {
+        // Note: We are not disposing the surface
+    }
 }
