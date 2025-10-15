@@ -48,18 +48,21 @@
 
     --image-transparency: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIBAMAAAA2IaO4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAGUExURb+/v////5nD/3QAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAASSURBVBjTY2BgEBREJzBEGBgAFWgBEZPDxfIAAAAASUVORK5CYII=');
 
-    --font-family: 'Microsoft Sans Serif', sans-serif;
+    /* Actually we need Microsoft Sans Serif but Segoe UI is the closest we can get */
+    --font-family: 'Segoe UI', sans-serif;
     --font-size: 8.25pt;
+    --font-weight: 500;
 
     font-family: var(--font-family), sans-serif;
     font-size: var(--font-size);
+    font-weight: var(--font-weight);
 
     color-scheme: dark;
     scroll-behavior: unset;
 }
 
-/* include ./assets/microsoft_sans_serif.ttf */
+/* Windows Font */
 @font-face {
-    font-family: "Microsoft Sans Serif";
-    src: url("../assets/font/microsoft_sans_serif.ttf") format('truetype');
+    font-family: "Segoe UI";
+    src: url("../assets/font/segoe_ui.ttf") format('truetype');
 }

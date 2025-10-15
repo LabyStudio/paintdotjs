@@ -11,7 +11,7 @@ class SettingsMenu extends StripPanel {
                 new ToggleFormItem("menu.window.layers", "layerForm"),
                 new ToggleFormItem("menu.window.history", "historyForm"),
                 new ToggleFormItem("menu.window.tools", "mainToolBarForm")
-                    .withIconPathKey("settings_tools16")
+                    .withIconPathKey("settings_tools_16")
             ]
         });
     }
