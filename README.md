@@ -1,6 +1,6 @@
 # paint.js
 
-**paint.js** is an open-source raster graphics editor written in **JavaScript**,
+**paint.js** is a proof-of-concept, cross-platform raster graphics editor written in **JavaScript**,
 ported from **Paint.NET** (v3.36.7) by Rick Brewster, the last version released under the original MIT-compatible license.
 
 ### Why?
@@ -20,7 +20,7 @@ The goal of this port is to bring that same experience to macOS, Linux, and the 
 
 ## Features
 
-The current version includes a fully functional UI and core editing capabilities:
+The current proof-of-concept includes:
 
 - Full document UI & layout
 - Zooming & panning
@@ -31,7 +31,7 @@ The current version includes a fully functional UI and core editing capabilities
 - Selection tools: lasso, rectangle select
 - Transform tools: move, rotate, resize (rectangle selections)
 
-> Note: Rotation of rectangle selections is currently unstable, and performance for large selections is a work in progress.
+> ⚠️ Note: Selections transformation is currently unstable, and performance for large selections is a work in progress.
 
 ---
 
@@ -78,7 +78,7 @@ Then open `index.html` in your browser. The web version runs as a website, allow
 
 ## Development & Contributing
 
-paint.js is reaching a complex stage where performance optimizations and new features are needed.
+paint.js is still a proof-of-concept and is reaching a complex stage where performance optimizations are needed.
 The current challenge includes:
 
 - Selection transformations: moving and resizing work; rotation is partially broken
