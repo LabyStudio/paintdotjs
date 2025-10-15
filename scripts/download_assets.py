@@ -7,15 +7,18 @@ import re
 import xml.etree.ElementTree as ET
 import json
 import shutil
+import html
 from PIL import Image
+
+# --- Base directories
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TMP_DIR = os.path.join(BASE_DIR, ".tmp", "paintdotnet")
+OUT_DIR = os.path.join(BASE_DIR, "assets")
+LANG_DIR = os.path.join(OUT_DIR, "lang")
 
 # --- Configuration ---
 PDN_VERSION = "5.1.9"
 PDN_URL = f"https://github.com/paintdotnet/release/releases/download/v{PDN_VERSION}/paint.net.{PDN_VERSION}.portable.x64.zip"
-
-TMP_DIR = "../.tmp/paintdotnet"
-OUT_DIR = "../assets"
-LANG_DIR = os.path.join(OUT_DIR, "lang")
 
 # Resource filenames inside the ZIP
 RESOURCES_DLL_NAME = "PaintDotNet.Resources.dll"
@@ -121,7 +124,10 @@ def extract_strings(resx_file):
         for data_node in root.findall("data"):
             key = data_node.attrib.get("name")
             value_node = data_node.find("value")
-            value = value_node.text if value_node is not None else ""
+            value = value_node.text if value_node is not None and value_node.text is not None else ""
+
+            value = html.unescape(value)
+            value = value.replace("&", "")
 
             parts = key.split(".")
             parts = [p[0].lower() + p[1:] if p else p for p in parts]
@@ -151,7 +157,6 @@ def extract_strings(resx_file):
     for key, val in flat_dict.items():
         set_nested(nested_dict, key.split("_"), val)
 
-    # Overwrite existing file
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(nested_dict, f, indent=4, ensure_ascii=False)
 

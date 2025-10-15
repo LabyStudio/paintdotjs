@@ -12,7 +12,7 @@ class ImageMenu extends DropMenuItem {
             new DropEntry("menu.image.rotate90CCW", null),
             new DropEntry("menu.image.rotate180", null),
             new VerticalSeparator(),
-            new DropEntry("menu.image.applyEmbeddedColorProfile", null),
+            new DropEntry("menu.image.colorProfile", null),
             new VerticalSeparator(),
             new DropEntry("menu.image.flatten", null),
         ]);

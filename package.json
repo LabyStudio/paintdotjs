@@ -4,13 +4,13 @@
   "description": "paint.js is an open source general-purpose raster graphics editor program, developed with javascript.",
   "main": "js/platform/desktop/main.js",
   "scripts": {
-    "bundle": "webpack --config webpack.config.js",
-    "bundle-watch": "webpack --config webpack.config.js --watch",
-    "dev": "electron .",
+    "web": "webpack --config webpack.config.js",
+    "web-watch": "webpack --config webpack.config.js --watch",
+    "app": "electron .",
     "dist": "electron-builder",
     "gen-imports": "node ./scripts/generate_imports.js",
     "pwa": "node ./scripts/generate_pwa.js",
-    "prepublish": "npm run bundle && npm run pwa"
+    "prepublish": "npm run web && npm run pwa"
   },
   "keywords": [
     "paint",
