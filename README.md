@@ -41,7 +41,7 @@ Follow these steps to get paint.js running locally.
 
 ### 1. Download and Extract Assets
 
-paint.js uses the latest assets from **Paint.NET 5.1.9**.  
+paint.js uses the latest assets from **Paint.NET 5.1.12**.  
 Due to licensing, these assets **cannot** be included in this repository, so you need to download them yourself:
 
 ```bash
