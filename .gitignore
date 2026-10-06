@@ -1,4 +1,5 @@
 /dist/
+/pages-dist/
 index.php
 electron-builder.env
 node_modules/
@@ -7,6 +8,7 @@ workbox-*.js
 service_worker.js
 .idea/
 *.iml
-run/
+/run/*
+!/run/test.png
 .tmp
 assets/

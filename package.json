@@ -5,6 +5,7 @@
   "main": "js/platform/desktop/main.js",
   "scripts": {
     "web": "webpack --config webpack.config.js && node ./scripts/generate_pwa.js",
+    "pages": "npm run web && node ./scripts/build_pages.js",
     "web-watch": "webpack --config webpack.config.js --watch",
     "app": "electron .",
     "dist": "electron-builder",
