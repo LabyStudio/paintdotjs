@@ -111,6 +111,7 @@ header {
     bottom: 4px;
     margin: 0;
     transform: translateX(-50%);
+    background-image: var(--image-transparency);
 }
 
 #documentStrip #documentsList .scroll-content .scroll-item .thumbnail.landscape {
