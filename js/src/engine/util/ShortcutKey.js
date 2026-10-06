@@ -9,19 +9,12 @@ class ShortcutKey {
     }
 
     isEvent(event) {
-        if (this.shift && !event.shiftKey) {
-            return false;
-        }
-        if (this.ctrl && !event.ctrlKey) {
-            return false;
-        }
-        if (this.alt && !event.altKey) {
-            return false;
-        }
-        if (this.meta && !event.metaKey) {
-            return false;
-        }
-        return this.key !== null && event.key.toUpperCase() === this.key.toUpperCase();
+        return this.key !== null
+            && this.shift === event.shiftKey
+            && this.ctrl === event.ctrlKey
+            && this.alt === event.altKey
+            && this.meta === event.metaKey
+            && ShortcutKey.normalizeKey(event.key) === this.key;
     }
 
     isShift() {
@@ -49,20 +42,33 @@ class ShortcutKey {
             return null;
         }
         let combo = "";
-        if (this.shift) {
-            combo += "Shift+";
-        }
         if (this.ctrl) {
             combo += "Ctrl+";
         }
         if (this.alt) {
             combo += "Alt+";
         }
+        if (this.shift) {
+            combo += "Shift+";
+        }
         if (this.meta) {
             combo += "Meta+";
         }
-        combo += this.key;
+        combo += ShortcutKey.displayKey(this.key);
         return combo;
+    }
+
+    equals(other) {
+        return other instanceof ShortcutKey
+            && this.key === other.key
+            && this.shift === other.shift
+            && this.ctrl === other.ctrl
+            && this.alt === other.alt
+            && this.meta === other.meta;
+    }
+
+    isEmpty() {
+        return this.key === null;
     }
 
     static fromCombo(combo) {
@@ -70,7 +76,13 @@ class ShortcutKey {
             return new ShortcutKey(null, false, false, false, false);
         }
 
-        let segments = combo.replace(/\s/g, "").split("+");
+        let normalizedCombo = String(combo).trim();
+        if (normalizedCombo.length === 0) {
+            return new ShortcutKey(null, false, false, false, false);
+        }
+        const plusKey = normalizedCombo.endsWith("+");
+        if (plusKey) normalizedCombo = normalizedCombo.slice(0, -1);
+        let segments = normalizedCombo.replace(/\s/g, "").split("+").filter(Boolean);
         let targetKey = null;
         let shift = false;
         let ctrl = false;
@@ -78,23 +90,58 @@ class ShortcutKey {
         let meta = false;
         for (let i = 0; i < segments.length; i++) {
             let key = segments[i];
-            if (key === "Shift") {
+            const modifier = key.toLowerCase();
+            if (modifier === "shift") {
                 shift = true;
-            } else if (key === "Ctrl") {
+            } else if (modifier === "ctrl" || modifier === "control") {
                 ctrl = true;
-            } else if (key === "Alt") {
+            } else if (modifier === "alt") {
                 alt = true;
-            } else if (key === "Meta") {
+            } else if (modifier === "meta" || modifier === "cmd" || modifier === "command") {
                 meta = true;
             } else {
-                targetKey = key;
+                targetKey = ShortcutKey.normalizeKey(key);
             }
         }
+        if (plusKey) targetKey = "+";
         return new ShortcutKey(targetKey, shift, ctrl, alt, meta);
     }
 
     static fromEvent(event) {
-        return new ShortcutKey(event.key, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey);
+        const key = ShortcutKey.normalizeKey(event.key);
+        if (["Control", "Shift", "Alt", "Meta"].includes(key)) {
+            return new ShortcutKey(null, false, false, false, false);
+        }
+        return new ShortcutKey(key, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey);
+    }
+
+    static normalizeKey(key) {
+        if (key === null || key === undefined) return null;
+        const aliases = {
+            " ": "Space",
+            Spacebar: "Space",
+            Esc: "Escape",
+            Del: "Delete",
+            Left: "ArrowLeft",
+            Right: "ArrowRight",
+            Up: "ArrowUp",
+            Down: "ArrowDown"
+        };
+        const normalized = aliases[key] || String(key);
+        return normalized.length === 1 ? normalized.toUpperCase() : normalized;
+    }
+
+    static displayKey(key) {
+        const displayNames = {
+            ArrowLeft: "Left",
+            ArrowRight: "Right",
+            ArrowUp: "Up",
+            ArrowDown: "Down",
+            Escape: "Esc",
+            Delete: "Del",
+            " ": "Space"
+        };
+        return displayNames[key] || key;
     }
 
 }

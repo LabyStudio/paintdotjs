@@ -45,10 +45,6 @@ class Selection {
     }
 
     setContinuationPath(path, combineMode) {
-        if (!this.data.basePath.isEmpty()) {
-            throw new Error("base path must be empty to use this overload of SetContinuation");
-        }
-
         this.push();
         this.commitInterimTransform();
         this.resetCumulativeTransform();

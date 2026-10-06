@@ -15,14 +15,18 @@ class EditMenu extends DropMenuItem {
             new DropEntry("menu.edit.pasteSelection", null)
                 .withNoIcon(),
             new VerticalSeparator(),
-            new DropEntry("menu.edit.eraseSelection", null),
-            new DropEntry("menu.edit.fillSelection", null),
-            new DropEntry("menu.edit.invertSelection", null),
-            new DropEntry("menu.edit.selectAll", null),
-            new DropEntry("menu.edit.deselect", null),
+            EditMenu.create("eraseSelection"),
+            EditMenu.create("fillSelection"),
+            EditMenu.create("invertSelection"),
+            EditMenu.create("selectAll"),
+            EditMenu.create("deselect"),
         ]);
 
-        this.updateEntriesOn("document:history_changed");
+        this.updateEntriesOn(
+            "document:history_changed",
+            "document:selection_changed",
+            "app:update_active_document"
+        );
     }
 
     static create(id) {

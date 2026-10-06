@@ -7,18 +7,24 @@ class LayerForm extends Form {
         this.stripPanel = null;
 
         this.scrollSession = new ScrollSession();
+        this.thumbnailUpdates = new Debounced();
 
         this.app.on("app:update_active_document", () => {
             this.reinitialize();
         });
-        this.app.on("document:invalidated", () => {
+        this.app.on("document:layers_changed", () => {
+            this.reinitialize();
+        });
+        this.app.on("document:layer_properties_changed", () => {
             this.reinitialize();
         });
         this.app.on("document:render_layer_region", (layer, region) => {
-            let item = this.getItemByLayer(layer);
-            if (item !== null) {
-                item.renderThumbnail();
-            }
+            this.thumbnailUpdates.debounceTimeout(layer, 80, () => {
+                let item = this.getItemByLayer(layer);
+                if (item !== null) {
+                    item.renderThumbnail();
+                }
+            });
         });
     }
 

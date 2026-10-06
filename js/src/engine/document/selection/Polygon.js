@@ -16,6 +16,8 @@ class Polygon {
                 list.push(point);
             }
 
+            if (list.length === 0) continue;
+
             let vertexList = new VertexList(
                 list,
                 entry.isHole
@@ -28,23 +30,13 @@ class Polygon {
 
     static clip(combineMode, basePoly, clipPoly) {
         let result = Polygon.getClipFunctionForMode(combineMode)(basePoly.gpcPolygon, clipPoly.gpcPolygon);
-        let entries = result.pointList ? [result] : result.polyList;
-
-        let bounds = [];
-        let holes = [];
-
-        for (let entry of entries) {
-            let target = entry.isHole ? holes : bounds;
-
-            let list = [];
-            for (let pointEntry of entry.pointList) {
-                let point = new Point(pointEntry.x, pointEntry.y);
-                list.push(point);
-            }
-            target.push(list);
-        }
-
-        return new Polygon(bounds, holes);
+        // Keep the clipping library's result directly. Reconstructing it via
+        // fromVertices is both lossy and invalid for an empty result (such as
+        // inverting Select All), because GPC cannot build a polygon from zero
+        // contours.
+        let polygon = Object.create(Polygon.prototype);
+        polygon.gpcPolygon = result;
+        return polygon;
     }
 
     static getClipFunctionForMode(mode) {

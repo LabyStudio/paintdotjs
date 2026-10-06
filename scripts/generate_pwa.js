@@ -2,6 +2,15 @@ const workbox = require('workbox-build');
 
 workbox.generateSW({
 	cacheId: 'paintdotjs',
+	// Activate a newly-built worker immediately. Otherwise an already-open
+	// PaintDotJS tab can keep serving an old tool implementation until every
+	// tab using the previous worker has been closed.
+	skipWaiting: true,
+	clientsClaim: true,
+	cleanupOutdatedCaches: true,
+	// v is used by index.html to force an old worker to fetch the current
+	// bootstrap. The current worker may ignore it so deployed PWAs stay offline.
+	ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
 	globDirectory: './',
 	globPatterns: [
 		'./index.html',

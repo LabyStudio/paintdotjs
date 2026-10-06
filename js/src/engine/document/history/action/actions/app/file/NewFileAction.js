@@ -5,7 +5,7 @@ class NewFileAction extends FileAction {
             "new",
             "new",
             null,
-            null
+            "Ctrl+N"
         );
     }
 

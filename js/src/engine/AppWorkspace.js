@@ -6,6 +6,7 @@ class AppWorkspace extends AppView {
         this.documentWorkspaces = [];
         this.activeDocumentWorkspace = null;
         this.activeTool = null;
+        this.previousToolType = null;
         this.measurementUnit = "pixel";
     }
 
@@ -103,37 +104,41 @@ class AppWorkspace extends AppView {
         return super.onDocumentMouseDown(key, documentWorkspace);
     }
 
-    onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace) {
+    onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, input = null) {
         // Handle mouse down for active tool
         if (this.activeTool !== null) {
-            if (this.activeTool.onMouseDown(mouseX, mouseY, button)) {
+            if (this.activeTool.onMouseDown(mouseX, mouseY, button, input)) {
                 return true;
             }
         }
-        return super.onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace);
+        return super.onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, input);
     }
 
-    onDocumentMouseMove(mouseX, mouseY, documentWorkspace) {
+    onDocumentMouseMove(mouseX, mouseY, documentWorkspace, input = null) {
         // Handle mouse move for active tool
         if (this.activeTool !== null) {
-            if (this.activeTool.onMouseMove(mouseX, mouseY)) {
+            if (this.activeTool.onMouseMove(mouseX, mouseY, input)) {
                 return true;
             }
         }
-        return super.onDocumentMouseMove(mouseX, mouseY, documentWorkspace);
+        return super.onDocumentMouseMove(mouseX, mouseY, documentWorkspace, input);
     }
 
-    onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace) {
+    onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, input = null) {
         // Handle mouse up for active tool
         if (this.activeTool !== null) {
-            if (this.activeTool.onMouseUp(mouseX, mouseY, button)) {
+            if (this.activeTool.onMouseUp(mouseX, mouseY, button, input)) {
                 return true;
             }
         }
-        return super.onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace);
+        return super.onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, input);
     }
 
     setActiveTool(tool) {
+        if (this.activeTool !== null && tool !== null
+            && this.activeTool.getType() !== tool.getType()) {
+            this.previousToolType = this.activeTool.getType();
+        }
         if (this.activeTool !== null && this.activeTool.isActive()) {
             this.activeTool.onDeactivate();
         }
@@ -151,6 +156,10 @@ class AppWorkspace extends AppView {
 
     getActiveTool() {
         return this.activeTool;
+    }
+
+    getPreviousToolType() {
+        return this.previousToolType;
     }
 
     getActiveDocumentWorkspace() {

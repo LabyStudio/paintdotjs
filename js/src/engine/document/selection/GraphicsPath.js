@@ -88,12 +88,11 @@ class GraphicsPath {
             throw new Error("Input must be an array of Point objects");
         }
 
-        let empty = this.isEmpty();
-        let vertices = empty ? new VertexList() : this.vertexLists[0];
+        // AddLines starts a new figure. This matters for stencil outlines:
+        // disconnected islands must not be joined by an artificial edge.
+        let vertices = new VertexList();
         vertices.push(...points);
-        if (empty) {
-            this.vertexLists.push(vertices);
-        }
+        this.vertexLists.push(vertices);
     }
 
     getPathPoints() {
@@ -269,14 +268,19 @@ class GraphicsPath {
             throw new Error("Input must be an instance of BitVector2D");
         }
 
-        if (stencil.isEmpty()) {
+        if (!stencil.bitArray.some(value => value !== 0)) {
             return new GraphicsPath();
         }
 
         const ret = new GraphicsPath();
-        let start = bounds.getLocation();
+        const boundsLeft = bounds.getLeft();
+        const boundsTop = bounds.getTop();
+        const boundsRight = bounds.getRight();
+        const boundsBottom = bounds.getBottom();
+        const inBounds = point => point.x >= boundsLeft && point.x < boundsRight &&
+            point.y >= boundsTop && point.y < boundsBottom;
+        let start = new Point(boundsLeft, boundsTop);
         const pts = [];
-        let count = 0;
 
         // Find all islands
         while (true) {
@@ -290,11 +294,11 @@ class GraphicsPath {
 
                 start.x++;
 
-                if (start.x >= bounds.right) {
+                if (start.x >= boundsRight) {
                     start.y++;
-                    start.x = bounds.left;
+                    start.x = boundsLeft;
 
-                    if (start.y >= bounds.bottom) {
+                    if (start.y >= boundsBottom) {
                         break;
                     }
                 }
@@ -307,23 +311,27 @@ class GraphicsPath {
             pts.length = 0; // Clear points
             let last = new Point(start.x, start.y + 1);
             let curr = new Point(start.x, start.y);
-            let next = curr;
-            let left = Point.EMPTY;
-            let right = Point.EMPTY;
+            let next;
+            let left = new Point(0, 0);
+            let right = new Point(0, 0);
 
             // Trace island outline
             while (true) {
-                left.x = ((curr.x - last.x) + (curr.y - last.y) + 2) / 2 + curr.x - 1;
-                left.y = ((curr.y - last.y) - (curr.x - last.x) + 2) / 2 + curr.y - 1;
+                next = curr.clone();
+                // The source algorithm uses integer division. Leaving these as
+                // JavaScript floating-point halves makes the tracer walk at
+                // half-pixel coordinates and it can never return to its start.
+                left.x = Math.trunc(((curr.x - last.x) + (curr.y - last.y) + 2) / 2) + curr.x - 1;
+                left.y = Math.trunc(((curr.y - last.y) - (curr.x - last.x) + 2) / 2) + curr.y - 1;
 
-                right.x = ((curr.x - last.x) - (curr.y - last.y) + 2) / 2 + curr.x - 1;
-                right.y = ((curr.y - last.y) + (curr.x - last.x) + 2) / 2 + curr.y - 1;
+                right.x = Math.trunc(((curr.x - last.x) - (curr.y - last.y) + 2) / 2) + curr.x - 1;
+                right.y = Math.trunc(((curr.y - last.y) + (curr.x - last.x) + 2) / 2) + curr.y - 1;
 
-                if (bounds.contains(left) && stencil.get(left.x, left.y)) {
+                if (inBounds(left) && stencil.get(left.x, left.y)) {
                     // Go left
                     next.x += curr.y - last.y;
                     next.y -= curr.x - last.x;
-                } else if (bounds.contains(right) && stencil.get(right.x, right.y)) {
+                } else if (inBounds(right) && stencil.get(right.x, right.y)) {
                     // Go straight
                     next.x += curr.x - last.x;
                     next.y += curr.y - last.y;
@@ -336,7 +344,6 @@ class GraphicsPath {
                 if (Math.sign(next.x - curr.x) !== Math.sign(curr.x - last.x) ||
                     Math.sign(next.y - curr.y) !== Math.sign(curr.y - last.y)) {
                     pts.push(curr);
-                    count++;
                 }
 
                 last = curr;

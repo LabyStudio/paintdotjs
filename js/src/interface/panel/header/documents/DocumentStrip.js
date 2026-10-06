@@ -4,14 +4,12 @@ class DocumentStrip extends Panel {
         super("documentStrip");
 
         this.scrollSession = new ScrollSession();
+        this.thumbnailUpdates = new Debounced();
 
         this.app.on("app:create_document", (documentWorkspace) => {
             this.documentsListItem.add(new DocumentItem(documentWorkspace));
             this.documentsListItem.reinitialize();
             this.updateActiveDocument();
-        });
-        this.app.on("document:invalidated", () => {
-            this.documentsListItem.reinitialize();
         });
         this.app.on("app:update_active_document", () => {
             this.documentsListItem.reinitialize();
@@ -21,10 +19,13 @@ class DocumentStrip extends Panel {
             if (!(layer instanceof BitmapLayer)) {
                 return;
             }
-            let item = this.getItemByDocumentWorkspace(layer.getDocumentWorkspace());
-            if (item !== null) {
-                item.renderThumbnail();
-            }
+            const documentWorkspace = layer.getDocumentWorkspace();
+            this.thumbnailUpdates.debounceTimeout(documentWorkspace, 80, () => {
+                let item = this.getItemByDocumentWorkspace(documentWorkspace);
+                if (item !== null) {
+                    item.renderThumbnail();
+                }
+            });
         });
     }
 

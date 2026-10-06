@@ -30,9 +30,10 @@ class DocumentView {
             // TODO Surface box pre-paint? (bad performance on scroll)
             // this.updateComposition();
         });
-        this.app.on("document:invalidated", () => {
-            // TODO Surface box pre-paint
-            this.updateComposition();
+        this.app.on("document:invalidated", document => {
+            if (document === this.document) {
+                this.updateComposition();
+            }
         });
     }
 
@@ -63,6 +64,12 @@ class DocumentView {
         this.document.invalidated.add(this.onDocumentInvalidated);
 
         // Create surface for composition (Canvas that combines all layers)
+        if (this.compositionSurface !== null &&
+            (this.compositionSurface.width !== document.getWidth() ||
+                this.compositionSurface.height !== document.getHeight())) {
+            this.compositionSurface.dispose();
+            this.compositionSurface = null;
+        }
         if (this.compositionSurface === null) {
             this.compositionSurface = Surface.create(document.getWidth(), document.getHeight());
         }
@@ -81,37 +88,11 @@ class DocumentView {
         let viewWidth = this.app.getViewWidth() - margin * 2;
         let viewHeight = this.app.getViewHeight() - margin * 2;
 
-        let environmentCenterX = this.getEnvironmentWidth() / 2;
-        let environmentCenterY = this.getEnvironmentHeight() / 2;
-
         let documentWidth = this.getWidth();
         let documentHeight = this.getHeight();
-
-        let x = environmentCenterX - viewWidth / 2;
-        let y = environmentCenterY - viewHeight / 2;
-
-        if (documentWidth > viewWidth || documentHeight > viewHeight) {
-            let documentAspectRatio = documentWidth / documentHeight;
-            let screenAspectRatio = viewWidth / viewHeight;
-
-            if (documentAspectRatio > screenAspectRatio) {
-                // Fit to width
-                let height = viewWidth / documentAspectRatio;
-
-                this.zoom = viewWidth / documentWidth;
-                this.viewportX = x;
-            } else {
-                // Fit to height
-                let width = viewHeight * documentAspectRatio;
-
-                this.zoom = viewHeight / documentHeight;
-                this.viewportY = y;
-            }
-        }
-
+        this.zoom = Math.min(1, viewWidth / documentWidth, viewHeight / documentHeight);
+        this.app.updateCanvasBounds(false);
         this.centerView();
-
-        this.app.fire("document:update_viewport", this);
     }
 
     updateComposition() {
@@ -163,41 +144,18 @@ class DocumentView {
         pivotX = this.app.getViewWidth() / 2,
         pivotY = this.app.getViewHeight() / 2
     ) {
-        let renderBounds = this.getRenderBounds();
-
-        let prevWidth = renderBounds.getWidth();
-        let prevHeight = renderBounds.getHeight();
-
-        let newWidth = this.getWidth() * factor;
-        let newHeight = this.getHeight() * factor;
-
-        let deltaX = (prevWidth - newWidth) / 2;
-        let deltaY = (prevHeight - newHeight) / 2;
-
-        // Previous coordinates for the image to render
-        let prevRenderX = renderBounds.getX();
-        let prevRenderY = renderBounds.getY();
-
-        // The width and height of the image to scale depending on the pivot point
-        let wrappingWidth = (pivotX - prevRenderX) * 2;
-        let wrappingHeight = (pivotY - prevRenderY) * 2;
-
-        // Convert to new scale
-        wrappingWidth = wrappingWidth / prevWidth * newWidth;
-        wrappingHeight = wrappingHeight / prevHeight * newHeight;
-
-        // New coordinates for the image to render
-        let newRenderX = pivotX - wrappingWidth / 2;
-        let newRenderY = pivotY - wrappingHeight / 2;
-
-        deltaX += prevRenderX - newRenderX;
-        deltaY += prevRenderY - newRenderY;
-
-        this.shiftViewPosition(deltaX, deltaY)
-
+        factor = Utility.clamp(factor, 0.01, 100);
+        const oldBounds = this.getRenderBounds();
+        const documentX = (pivotX - oldBounds.x) / this.zoom;
+        const documentY = (pivotY - oldBounds.y) / this.zoom;
         this.zoom = factor;
-
-        this.app.updateCanvasBounds();
+        const newWidth = this.getRenderWidth();
+        const newHeight = this.getRenderHeight();
+        const baseX = this.app.getViewWidth() - Math.min(newWidth, this.app.getViewWidth()) / 2;
+        const baseY = this.app.getViewHeight() - Math.min(newHeight, this.app.getViewHeight()) / 2;
+        this.viewportX = baseX - (pivotX - documentX * factor);
+        this.viewportY = baseY - (pivotY - documentY * factor);
+        this.app.updateCanvasBounds(false);
         this.app.fire("document:update_viewport", this);
     }
 
@@ -216,12 +174,32 @@ class DocumentView {
     }
 
     setZoomToWindow(zoomToWindow) {
+        if (this.zoomToWindow === zoomToWindow) return;
         this.zoomToWindow = zoomToWindow;
 
         this.app.updateCanvasBounds();
         this.app.fire("document:update_viewport", this);
 
-        this.fitViewport();
+        if (zoomToWindow) this.fitViewport();
+    }
+
+    zoomToRectangle(rectangle) {
+        if (rectangle === null || rectangle.isEmpty()) return;
+        const center = new Point(
+            rectangle.getLeft() + rectangle.getWidth() / 2,
+            rectangle.getTop() + rectangle.getHeight() / 2
+        );
+        const oldScreenCenter = this.toScreenPosition(center);
+        const factor = Math.min(
+            this.app.getViewWidth() / Math.max(1, rectangle.getWidth()),
+            this.app.getViewHeight() / Math.max(1, rectangle.getHeight())
+        );
+        this.setZoomToWindow(false);
+        this.setZoom(factor, oldScreenCenter.x, oldScreenCenter.y);
+        this.shiftViewPosition(
+            oldScreenCenter.x - this.app.getViewWidth() / 2,
+            oldScreenCenter.y - this.app.getViewHeight() / 2
+        );
     }
 
     isZoomToWindow() {
@@ -236,14 +214,19 @@ class DocumentView {
         return this.viewportY;
     }
 
-    toDocumentPosition(point) {
+    toDocumentPosition(point, continuous = false) {
         let renderBounds = this.getRenderBounds();
         let zoom = this.getZoom();
 
         let pixelX = (point.getX() - renderBounds.getX()) / zoom;
         let pixelY = (point.getY() - renderBounds.getY()) / zoom;
 
-        return new Point(Math.floor(pixelX), Math.floor(pixelY));
+        // Drawing tools address the pixel containing the pointer. Transform
+        // tools need the fractional position so they can snap the *distance*
+        // moved at the half-pixel boundary, as Paint.NET does.
+        return continuous
+            ? new Point(pixelX, pixelY)
+            : new Point(Math.floor(pixelX), Math.floor(pixelY));
     }
 
     toScreenPosition(point) {

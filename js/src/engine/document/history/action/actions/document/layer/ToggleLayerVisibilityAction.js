@@ -5,7 +5,7 @@ class ToggleLayerVisibilityAction extends LayerAction {
             "toggle.layer.visibility",
             "toggleLayerVisibility",
             null,
-            null
+            "Ctrl+,"
         );
     }
 

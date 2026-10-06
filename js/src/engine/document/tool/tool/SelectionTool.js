@@ -55,7 +55,7 @@ class SelectionTool extends Tool {
         if (this.tracking) {
             this.moveOriginMode = true;
             this.lastXY = new Point(mouseX, mouseY);
-        } else if (button === MouseButton.LEFT) {
+        } else if (button === MouseButton.LEFT || button === MouseButton.RIGHT) {
             this.tracking = true;
             this.hasMoved = false;
             this.startTime = Date.now();
@@ -77,7 +77,7 @@ class SelectionTool extends Tool {
             } else if (this.app.isAltKeyDown() && button === MouseButton.RIGHT) {
                 this.combineMode = CombineMode.INTERSECT;
             } else {
-                this.combineMode = CombineMode.REPLACE;
+                this.combineMode = this.getConfiguredCombineMode();
             }
 
             this.getDocumentWorkspace().getSelectionRenderer().setSelectionOutline(false);
@@ -114,6 +114,20 @@ class SelectionTool extends Tool {
         }
 
         return super.onMouseDown(mouseX, mouseY, button);
+    }
+
+    getConfiguredCombineMode() {
+        switch (this.getSetting("combineMode", "replace")) {
+            case "union": return CombineMode.UNION;
+            case "exclude": return CombineMode.EXCLUDE;
+            case "intersect": return CombineMode.INTERSECT;
+            case "xor": return CombineMode.XOR;
+            default: return CombineMode.REPLACE;
+        }
+    }
+
+    mustMoveForEmit() {
+        return true;
     }
 
     onMouseMove(mouseX, mouseY) {
@@ -176,7 +190,8 @@ class SelectionTool extends Tool {
                     whatToDo = SelectionTool.EMIT;
                 }
             } else {
-                if (this.hasMoved && !tooQuick && !clipped && !noEffect) {
+                if ((this.hasMoved || !this.mustMoveForEmit())
+                    && (!tooQuick || !this.mustMoveForEmit()) && !clipped && !noEffect) {
                     whatToDo = SelectionTool.EMIT;
                 } else {
                     whatToDo = SelectionTool.CLEAR;

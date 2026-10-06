@@ -4,7 +4,7 @@ class MoveContextHistoryMemento extends ToolHistoryMemento {
         super(documentWorkspace, name, image);
 
         this.data = new OurHistoryMementoData(context);
-        this.layerIndex = 0;
+        this.layerIndex = documentWorkspace.getActiveLayerIndex();
         this.liftedPixelsRef = null;
     }
 

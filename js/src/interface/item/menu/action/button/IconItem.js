@@ -12,7 +12,9 @@ class IconItem extends ActionItem {
             let icon = document.createElement("img");
             icon.className = "icon";
             if (this.isImplemented()) {
-                icon.setAttribute("title", this.getText());
+                const action = this.getAsAction();
+                const tooltip = action === null ? null : action.getTooltipText();
+                icon.setAttribute("title", tooltip || this.getText());
             }
             if (this.hasIcon()) {
                 icon.src = "assets/icons/" + this.getIconPath();

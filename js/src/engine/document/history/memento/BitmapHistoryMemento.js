@@ -12,29 +12,47 @@ class BitmapHistoryMemento extends HistoryMemento {
 
         this.documentWorkspace = documentWorkspace;
         this.layerIndex = layerIndex;
-
-        if (changedRegion !== null) {
-            let region = changedRegion.clone();
-            // this.tempFile = FileSystem.getPlatform().getTempFile();
-
-            // TODO write the changed region to the temp file
-
-            this.data = new BitmapHistoryMementoData(null, region);
+        const source = copyFromThisSurface;
+        const requestedRectangles = changedRegion === null
+            ? [source.getBounds()]
+            : changedRegion.getRectangles();
+        this.chunks = [];
+        for (const requested of requestedRectangles) {
+            let bounds = Rectangle.absolute(
+                Math.floor(requested.getLeft()), Math.floor(requested.getTop()),
+                Math.ceil(requested.getRight()), Math.ceil(requested.getBottom())
+            );
+            bounds = Rectangle.intersect(bounds, source.getBounds());
+            if (bounds.width <= 0 || bounds.height <= 0) continue;
+            this.chunks.push({
+                bounds,
+                imageData: source.context.getImageData(bounds.x, bounds.y, bounds.width, bounds.height)
+            });
         }
+        this.bounds = this.chunks.length === 0 ? Rectangle.empty() : this.chunks
+            .map(chunk => chunk.bounds)
+            .reduce((left, right) => Rectangle.union(left, right));
     }
 
     onUndo() {
-        // TODO read the changed region from the temp file
-
+        let layer = this.documentWorkspace.getDocument().getLayers().getAt(this.layerIndex);
+        let surface = layer.getSurface();
+        let changedRegion = Region.fromRectangles(this.chunks.map(chunk => chunk.bounds.clone()));
         let redo = new BitmapHistoryMemento(
             this.name,
             this.image,
             this.documentWorkspace,
-            this.layerIndex
-        )
+            this.layerIndex,
+            changedRegion,
+            surface
+        );
+        changedRegion.dispose();
         redo.setId(this.getId());
 
-        // TODO invalidate simplified region
+        for (const chunk of this.chunks) {
+            surface.context.putImageData(chunk.imageData, chunk.bounds.x, chunk.bounds.y);
+        }
+        if (!this.bounds.isEmpty()) layer.invalidate(this.bounds);
 
         return redo;
     }

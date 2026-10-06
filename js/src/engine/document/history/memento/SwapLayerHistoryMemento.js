@@ -43,6 +43,7 @@ class SwapLayerHistoryMemento extends HistoryMemento {
         } else {
             layers.setLayerAt(this.layerIndex1, layer2);
             layers.setLayerAt(this.layerIndex2, layer1);
+            this.documentWorkspace.getApp().fire("document:layers_changed", this.documentWorkspace);
         }
 
         layer1.invalidate();

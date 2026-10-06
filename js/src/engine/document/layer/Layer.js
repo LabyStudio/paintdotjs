@@ -11,8 +11,8 @@ class Layer {
         throw new Error("Not implemented");
     }
 
-    invalidate() {
-        this.invalidated.fire();
+    invalidate(area = this.getBounds()) {
+        this.invalidated.fire(this, area);
     }
 
     renderRegion(renderArgs, region) {

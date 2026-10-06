@@ -35,13 +35,23 @@ class Document {
         updateScansContext.update(renderArgs);
     }
 
-    invalidate(rectangle = Rectangle.relative(0, 0, this.width, this.height)) {
-        // Invalidate whole document
-        this.updateRegion = [];
-        this.updateRegion.push(rectangle);
+    invalidate(area = Rectangle.relative(0, 0, this.width, this.height)) {
+        let rectangles;
+        if (area instanceof Region) {
+            rectangles = area.getRectangles();
+        } else if (Array.isArray(area)) {
+            rectangles = area;
+        } else {
+            rectangles = [area];
+        }
+
+        const documentBounds = this.getBounds();
+        this.updateRegion = rectangles
+            .map(rectangle => Rectangle.intersect(rectangle, documentBounds))
+            .filter(rectangle => !rectangle.isEmpty());
 
         // Fire event
-        this.invalidated.fire(this, rectangle);
+        this.invalidated.fire(this, area);
     }
 
     onLayerInvalidated(layer, rectangle) {

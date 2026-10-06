@@ -7,6 +7,9 @@ class DocumentWorkspace extends DocumentView {
         this.activeLayer = null;
         this.history = new HistoryStack(app, this);
         this.selection = new Selection();
+        this.selection.changed.add(() => {
+            this.app.fire("document:selection_changed", this);
+        });
 
         this.selectionRenderer = new SelectionRenderer(this.surfaceBox, this.selection);
         this.selectionRenderer.setSelectionOutline(true);
@@ -21,6 +24,7 @@ class DocumentWorkspace extends DocumentView {
         // Bind instance methods
         this.onLayerRemoving = this.onLayerRemoving.bind(this);
         this.onLayerInserted = this.onLayerInserted.bind(this);
+        this.onLayersChanged = this.onLayersChanged.bind(this);
     }
 
     onDocumentChanging() {
@@ -30,6 +34,7 @@ class DocumentWorkspace extends DocumentView {
         if (this.document !== null) {
             this.document.getLayers().removingAt.remove(this.onLayerRemoving);
             this.document.getLayers().insertedAt.remove(this.onLayerInserted);
+            this.document.getLayers().changed.remove(this.onLayersChanged);
         }
     }
 
@@ -39,6 +44,7 @@ class DocumentWorkspace extends DocumentView {
         // Add event handlers to new document
         this.document.getLayers().removingAt.add(this.onLayerRemoving);
         this.document.getLayers().insertedAt.add(this.onLayerInserted);
+        this.document.getLayers().changed.add(this.onLayersChanged);
 
         if (this.scratchSurface !== null) {
             if (this.isScratchSurfaceBorrowed) {
@@ -79,6 +85,10 @@ class DocumentWorkspace extends DocumentView {
             throw new Error("Inserted layer at index " + index + " does not exist");
         }
         this.activeLayer = layer;
+    }
+
+    onLayersChanged() {
+        this.app.fire("document:layers_changed", this);
     }
 
     executeFunction(historyFunction) {

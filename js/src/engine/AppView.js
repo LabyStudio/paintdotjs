@@ -73,27 +73,49 @@ class AppView {
         // Cancel right click
         document.addEventListener('contextmenu', event => event.preventDefault());
 
-        // Mouse down listener
-        this.editor.addEventListener('mousedown', event => {
-            try {
-                let x = event.clientX - this.editor.offsetLeft;
-                let y = event.clientY - this.editor.offsetTop - windowTop();
-                this.fire("document:mousedown", x, y, event.button);
+        const getPointerPosition = event => ({
+            x: event.clientX - this.editor.offsetLeft,
+            y: event.clientY - this.editor.offsetTop - windowTop(),
+            pressure: event.pointerType === "mouse" ? 1 : Utility.clamp(event.pressure || 0.5, 0, 1),
+            pointerType: event.pointerType || "mouse",
+            timeStamp: event.timeStamp
+        });
+        const getPointerInput = event => {
+            const events = typeof event.getCoalescedEvents === "function"
+                ? event.getCoalescedEvents()
+                : [event];
+            return {
+                pressure: event.pointerType === "mouse" ? 1 : Utility.clamp(event.pressure || 0.5, 0, 1),
+                pointerType: event.pointerType || "mouse",
+                samples: events.map(getPointerPosition)
+            };
+        };
 
-                this.onMouseDown(x, y, event.button);
+        // Pointer events retain pen pressure and the browser's coalesced input
+        // samples. Paint.NET 5's brush pipeline consumes the same information
+        // instead of reducing every device to a stream of mouse coordinates.
+        this.editor.addEventListener('pointerdown', event => {
+            try {
+                const point = getPointerPosition(event);
+                let x = point.x;
+                let y = point.y;
+                this.fire("document:mousedown", x, y, event.button);
+                if (typeof this.editor.setPointerCapture === "function") {
+                    this.editor.setPointerCapture(event.pointerId);
+                }
+                this.onMouseDown(x, y, event.button, getPointerInput(event));
             } catch (e) {
                 this.handleError(e);
             }
         });
 
-        // Mouse move listener
-        this.editor.addEventListener('mousemove', event => {
+        this.editor.addEventListener('pointermove', event => {
             try {
-                let x = event.clientX - this.editor.offsetLeft;
-                let y = event.clientY - this.editor.offsetTop - windowTop();
+                const point = getPointerPosition(event);
+                let x = point.x;
+                let y = point.y;
                 this.fire("document:mousemove", x, y);
-
-                this.onMouseMove(x, y);
+                this.onMouseMove(x, y, getPointerInput(event));
             } catch (e) {
                 this.handleError(e);
             }
@@ -101,14 +123,13 @@ class AppView {
             event.preventDefault();
         });
 
-        // Mouse up listener
-        document.addEventListener('mouseup', event => {
+        this.editor.addEventListener('pointerup', event => {
             try {
-                let x = event.clientX - this.editor.offsetLeft;
-                let y = event.clientY - this.editor.offsetTop - windowTop();
+                const point = getPointerPosition(event);
+                let x = point.x;
+                let y = point.y;
                 this.fire("document:mouseup", x, y, event.button);
-
-                this.onMouseUp(x, y, event.button);
+                this.onMouseUp(x, y, event.button, getPointerInput(event));
             } catch (e) {
                 this.handleError(e);
             }
@@ -174,14 +195,7 @@ class AppView {
                 return;
             }
 
-            // console.log(ShortcutKey.fromEvent(event).toString());
-
-            for (let entry of ActionRegistry.getActions()) {
-                let command = entry[1];
-                if (command.getShortcutKey().isEvent(event)) {
-                    command.runPerformAction();
-                }
-            }
+            ActionRegistry.dispatch(event);
         });
 
         window.addEventListener('keyup', event => {
@@ -272,73 +286,94 @@ class AppView {
         return false;
     }
 
-    onMouseDown(mouseX, mouseY, button) {
+    onMouseDown(mouseX, mouseY, button, input = null) {
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
-            let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
+            let position = this.toToolDocumentPosition(documentWorkspace, mouseX, mouseY);
 
             // Handle mouse down for middle mouse click pan
             if (button === MouseButton.MIDDLE) {
                 return this.panTool.onMouseDown(position.getX(), position.getY(), button);
             }
 
-            if (this.onDocumentMouseDown(position.getX(), position.getY(), button, documentWorkspace)) {
+            if (this.onDocumentMouseDown(position.getX(), position.getY(), button, documentWorkspace,
+                this.toDocumentPointerInput(documentWorkspace, input))) {
                 return true;
             }
         }
         return false;
     }
 
-    onMouseMove(mouseX, mouseY) {
+    onMouseMove(mouseX, mouseY, input = null) {
         this.lastMouseX = mouseX;
         this.lastMouseY = mouseY;
 
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
-            let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
+            let position = this.toToolDocumentPosition(documentWorkspace, mouseX, mouseY);
 
             // Handle mouse move for middle mouse click pan
             if (this.panTool.isTracking()) {
                 return this.panTool.onMouseMove(position.getX(), position.getY());
             }
 
-            if (this.onDocumentMouseMove(position.getX(), position.getY(), documentWorkspace)) {
+            if (this.onDocumentMouseMove(position.getX(), position.getY(), documentWorkspace,
+                this.toDocumentPointerInput(documentWorkspace, input))) {
                 return true;
             }
         }
         return false;
     }
 
-    onMouseUp(mouseX, mouseY, button) {
+    onMouseUp(mouseX, mouseY, button, input = null) {
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
-            let position = documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY));
+            let position = this.toToolDocumentPosition(documentWorkspace, mouseX, mouseY);
 
             // Handle mouse up for active tool
             if (this.panTool.isTracking()) {
                 return this.panTool.onMouseUp(position.getX(), position.getY(), button);
             }
 
-            if (this.onDocumentMouseUp(position.getX(), position.getY(), button, documentWorkspace)) {
+            if (this.onDocumentMouseUp(position.getX(), position.getY(), button, documentWorkspace,
+                this.toDocumentPointerInput(documentWorkspace, input))) {
                 return true;
             }
         }
         return false;
     }
 
+    toToolDocumentPosition(documentWorkspace, mouseX, mouseY) {
+        const tool = typeof this.getActiveTool === "function" ? this.getActiveTool() : null;
+        const continuous = tool !== null
+            && typeof tool.usesContinuousPointerCoordinates === "function"
+            && tool.usesContinuousPointerCoordinates();
+        return documentWorkspace.toDocumentPosition(new Point(mouseX, mouseY), continuous);
+    }
+
+    toDocumentPointerInput(documentWorkspace, input) {
+        if (input === null || input === undefined) return null;
+        return Object.assign({}, input, {
+            samples: (input.samples || []).map(sample => {
+                const point = documentWorkspace.toDocumentPosition(new Point(sample.x, sample.y));
+                return Object.assign({}, sample, {x: point.x, y: point.y});
+            })
+        });
+    }
+
     onDocumentKeyPress(key, documentWorkspace) {
         return false;
     }
 
-    onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace) {
+    onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, input = null) {
         return false;
     }
 
-    onDocumentMouseMove(mouseX, mouseY, documentWorkspace) {
+    onDocumentMouseMove(mouseX, mouseY, documentWorkspace, input = null) {
         return false;
     }
 
-    onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace) {
+    onDocumentMouseUp(mouseX, mouseY, button, documentWorkspace, input = null) {
         return false;
     }
 

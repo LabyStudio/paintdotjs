@@ -58,6 +58,190 @@
 
 /* ----------------- Forms ----------------- */
 
+.shortcut-settings-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.55);
+    pointer-events: all;
+}
+
+.shortcut-settings-dialog {
+    width: min(760px, calc(100vw - 48px));
+    height: min(650px, calc(100vh - 48px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--color-menu-item-text);
+    background: var(--color-window-background);
+    border: 1px solid var(--color-title-bar-border);
+    box-shadow: 0 16px 54px rgba(0, 0, 0, 0.65);
+}
+
+.shortcut-settings-title {
+    height: 34px;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 12px;
+    background: var(--color-title-bar);
+    border-bottom: 1px solid var(--color-window-border);
+}
+
+.shortcut-settings-close {
+    width: 42px;
+    height: 34px;
+    color: white;
+    background: transparent;
+    border: 0;
+    font-size: 20px;
+}
+
+.shortcut-settings-close:hover {
+    background: var(--color-close-button-hover);
+}
+
+.shortcut-settings-content {
+    min-height: 0;
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: 145px 1fr;
+}
+
+.shortcut-settings-content nav {
+    padding: 12px 8px;
+    background: #202020;
+    border-right: 1px solid var(--color-window-border);
+}
+
+.shortcut-settings-content nav button {
+    width: 100%;
+    padding: 8px 10px;
+    color: white;
+    text-align: left;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.shortcut-settings-content nav button.active {
+    background: var(--color-menu-item-selected);
+    border-color: var(--color-menu-item-selected-border);
+}
+
+.shortcut-settings-content main {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+}
+
+.shortcut-settings-content h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+}
+
+.shortcut-settings-content p {
+    margin: 0 0 12px;
+    color: #c8c8c8;
+}
+
+.shortcut-settings-search {
+    box-sizing: border-box;
+    width: 100%;
+    height: 30px;
+    margin-bottom: 10px;
+    padding: 4px 8px;
+    color: white;
+    background: var(--color-number-input-background);
+    border: 1px solid #666;
+}
+
+.shortcut-settings-list {
+    min-height: 0;
+    overflow-y: auto;
+    border: 1px solid var(--color-window-border);
+}
+
+.shortcut-settings-list h3 {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0;
+    padding: 5px 8px;
+    color: #d8d8d8;
+    background: #1b1b1b;
+    border-bottom: 1px solid var(--color-window-border);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.shortcut-settings-row {
+    display: grid;
+    grid-template-columns: minmax(170px, 1fr) 180px 58px;
+    gap: 8px;
+    align-items: center;
+    min-height: 31px;
+    padding: 3px 7px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.shortcut-settings-row label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.shortcut-settings-row input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 24px;
+    padding: 2px 6px;
+    color: white;
+    background: #171717;
+    border: 1px solid #666;
+}
+
+.shortcut-settings-row input:focus {
+    border-color: var(--color-menu-item-selected-border);
+    outline: 1px solid var(--color-menu-item-selected-border);
+}
+
+.shortcut-settings-row button,
+.shortcut-settings-footer button {
+    min-height: 24px;
+    padding: 3px 10px;
+}
+
+.shortcut-settings-footer {
+    min-height: 42px;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 12px;
+    background: #202020;
+    border-top: 1px solid var(--color-window-border);
+}
+
+.shortcut-settings-footer > span {
+    overflow: hidden;
+    color: #c8c8c8;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.shortcut-settings-footer > div {
+    display: flex;
+    gap: 8px;
+}
+
 /* ----------------- Tools ----------------- */
 #toolForm {
     display: flex;

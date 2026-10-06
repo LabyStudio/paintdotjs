@@ -4,7 +4,7 @@ class SettingsMenu extends StripPanel {
         super("settingsMenu", {
             items: [
                 new IconItem("menu.help", null),
-                new IconItem("menu.settings", null)
+                new IconItem("menu.settings", () => ShortcutSettingsDialog.open())
                     .withIconPathKey("menu_utilities_settings_icon"),
                 new HorizontalSeparator(),
                 new ToggleFormItem("menu.window.colors", "colorsForm"),

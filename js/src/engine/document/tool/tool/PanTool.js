@@ -51,6 +51,7 @@ class PanTool extends Tool {
     }
 
     onActivate() {
+        super.onActivate();
         this.app.setCursorImg("hand_open_cursor");
     }
 

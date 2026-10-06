@@ -8,6 +8,10 @@ class RectangleSelectTool extends SelectionTool {
         super.onActivate();
     }
 
+    mustMoveForEmit() {
+        return this.getSetting("selectionMode", "normal") !== "fixedSize";
+    }
+
     trimShapePath(trimTheseTracePoints) {
         let array = [];
 
@@ -26,10 +30,28 @@ class RectangleSelectTool extends SelectionTool {
         let a = shapePoints[0];
         let b = shapePoints[shapePoints.length - 1];
 
+        const mode = this.getSetting("selectionMode", "normal");
         let isShiftKeyDown = this.app.isShiftKeyDown();
 
         let rect;
-        if (isShiftKeyDown) {
+        if (mode === "fixedSize") {
+            const width = Number(this.getSetting("selectionWidth", 1));
+            const height = Number(this.getSetting("selectionHeight", 1));
+            const documentBounds = this.getDocumentWorkspace().getDocument().getBounds();
+            rect = new Rectangle(
+                Utility.clamp(b.x, documentBounds.getLeft(), Math.max(documentBounds.getLeft(), documentBounds.getRight() - width)),
+                Utility.clamp(b.y, documentBounds.getTop(), Math.max(documentBounds.getTop(), documentBounds.getBottom() - height)),
+                width, height
+            );
+        } else if (mode === "fixedRatio") {
+            const ratioWidth = Math.max(1, Number(this.getSetting("selectionWidth", 1)));
+            const ratioHeight = Math.max(1, Number(this.getSetting("selectionHeight", 1)));
+            const dx = b.x - a.x, dy = b.y - a.y;
+            let width = Math.abs(dx), height = Math.abs(dy);
+            if (width / ratioWidth < height / ratioHeight) height = width * ratioHeight / ratioWidth;
+            else width = height * ratioWidth / ratioHeight;
+            rect = Rectangle.absolute(a.x, a.y, a.x + Math.sign(dx || 1) * width, a.y + Math.sign(dy || 1) * height);
+        } else if (isShiftKeyDown) {
             rect = Utility.pointsToConstrainedRectangle(a, b);
         } else {
             rect = Utility.pointsToRectangle(a, b);

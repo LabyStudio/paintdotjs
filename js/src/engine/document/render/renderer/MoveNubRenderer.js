@@ -22,7 +22,7 @@ class MoveNubRenderer extends CanvasControl {
         let scaleX = renderBounds.getWidth() / surface.getWidth();
         let scaleY = renderBounds.getHeight() / surface.getHeight();
 
-        let point = Utility.transformOnePoint(this.transform, this.location);
+        let point = this.getTransformedLocation();
         let x = renderBounds.getX() + point.getX() * scaleX;
         let y = renderBounds.getY() + point.getY() * scaleY;
 
@@ -50,26 +50,30 @@ class MoveNubRenderer extends CanvasControl {
         context.stroke();
     }
 
-    getOurRectangle() {
-        let ptFs = Utility.transformOnePoint(this.transform, this.location);
+    getTransformedLocation() {
+        return Utility.transformOnePoint(this.transform, this.location);
+    }
 
-        let ourWidth = this.size.getWidth();
-        let ourHeight = this.size.getHeight();
-
-        let rect = new Rectangle(ptFs.getX(), ptFs.getY(), 0, 0);
-        rect.inflate(ourWidth, ourHeight);
+    getOurRectangle(pad = false) {
+        const center = this.getTransformedLocation();
+        const zoom = Math.max(0.0001, this.surfaceBox.getScaleFactorRatio());
+        const paintedRadius = Math.min(this.size.getWidth(), this.size.getHeight()) - 1;
+        const radius = (paintedRadius + (pad ? 8 : 0)) / zoom;
+        const rect = new Rectangle(center.getX(), center.getY(), 0, 0);
+        rect.inflate(radius, radius);
         return rect;
     }
 
     isPointTouching(point, pad) {
-        let rect = this.getOurRectangle();
-
-        if (pad) {
-            let padding = 2.0 / this.surfaceBox.getScaleFactorRatio();
-            rect.scale(padding, padding);
-        }
-
-        return rect.contains(point);
+        const center = this.getTransformedLocation();
+        const zoom = Math.max(0.0001, this.surfaceBox.getScaleFactorRatio());
+        const paintedRadius = Math.min(this.size.getWidth(), this.size.getHeight()) - 1;
+        // Paint.NET 5's TransformControl uses 8 device-independent pixels of
+        // hit-test padding around each painted handle.
+        const radius = (paintedRadius + (pad ? 8 : 0)) / zoom;
+        const dx = point.getX() - center.getX();
+        const dy = point.getY() - center.getY();
+        return dx * dx + dy * dy <= radius * radius;
     }
 
     getShape() {

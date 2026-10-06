@@ -26,12 +26,13 @@ The current proof-of-concept includes:
 - Zooming & panning
 - Complete edit history with undo/redo
 - Document layering system
-- Color picker
+- Paintbrush, pencil, eraser, paint bucket, color picker, gradient, clone stamp, recolor, and text tools
+- Line and rectangle shape tools
 - Tools window with multiple document support
-- Selection tools: lasso, rectangle select
-- Transform tools: move, rotate, resize (rectangle selections)
+- Selection tools: lasso, rectangle, ellipse, and magic wand
+- GPU-accelerated selection transforms: move, rotate, and resize
 
-> ⚠️ Note: Selections transformation is currently unstable, and performance for large selections is a work in progress.
+> ⚠️ Note: This remains a proof of concept. Advanced per-tool configuration and compatibility outside Chromium are still in progress.
 
 ---
 
@@ -81,9 +82,9 @@ Then open `index.html` in your browser. The web version runs as a website, allow
 paint.js is still a proof-of-concept and is reaching a complex stage where performance optimizations are needed.
 The current challenge includes:
 
-- Selection transformations: moving and resizing work; rotation is partially broken
-- Performance improvements for large selections
-- Implementation of additional tools
+- Advanced tool configuration (brush sizes, tolerance, fonts, and shape presets)
+- Further performance work for very large documents and complex selections
+- Compatibility testing outside Chromium
 
 If you are interested in **contributing**, your help is highly welcome!
 

@@ -9,11 +9,12 @@ class Surface {
         this.width = canvas.width;
         this.height = canvas.height;
 
-        this.context = canvas.getContext('2d', {
-            alpha: true,
-            willReadFrequently: true,
-            imageSmoothingEnabled: false
-        });
+        // Editing is dominated by drawImage, compositing, and transforms. The
+        // willReadFrequently hint may force a software-backed canvas in Chrome,
+        // which makes interactive movement dramatically slower. Pixel-reading
+        // tools still work without opting every surface into that slow path.
+        this.context = canvas.getContext('2d', {alpha: true});
+        this.context.imageSmoothingEnabled = false;
 
         this.checkerboard = null;
     }
@@ -34,14 +35,20 @@ class Surface {
     render(renderArgs, rectangle) {
         // Render surface to renderArgs.surface
         let targetSurface = renderArgs.getSurface();
-        targetSurface.context.drawImage(
-            this.canvas,
-            rectangle.x,
-            rectangle.y,
-            rectangle.width, rectangle.height,
-            rectangle.x, rectangle.y,
-            rectangle.width, rectangle.height
-        );
+        const targetContext = targetSurface.context;
+        targetContext.save();
+        targetContext.beginPath();
+        targetContext.rect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+        targetContext.clip();
+        targetContext.globalAlpha = 1;
+        targetContext.globalCompositeOperation = "source-over";
+        targetContext.imageSmoothingEnabled = false;
+        // Cropping both the source and destination makes the browser sample
+        // the transparent pixels just outside every dirty rectangle. At high
+        // zoom that becomes the checkerboard box around every brush update.
+        // Clip only the destination and sample the full layer instead.
+        targetContext.drawImage(this.canvas, 0, 0);
+        targetContext.restore();
     }
 
     clone() {
@@ -81,11 +88,60 @@ class Surface {
             throw new Error("Cannot copy surface: one of the surfaces is disposed.");
         }
 
+        this.context.save();
+        this.context.globalCompositeOperation = "copy";
         this.context.drawImage(
             source.canvas,
             0, 0, source.width, source.height,
             0, 0, this.width, this.height
         );
+        this.context.restore();
+    }
+
+    copyRegionFrom(source, rectangle) {
+        if (this.canvas === null || source.canvas === null) {
+            throw new Error("Cannot copy surface: one of the surfaces is disposed.");
+        }
+
+        // Canvas bitmap copies must use integer pixel bounds. Fractional ROIs
+        // make drawImage sample across transparent neighbours, which leaves
+        // translucent seams when a transformed preview is repeatedly restored.
+        let clipped = Rectangle.intersect(Utility.roundRectangle(rectangle), this.getBounds());
+        clipped.intersect(source.getBounds());
+        if (clipped.width <= 0 || clipped.height <= 0) {
+            return;
+        }
+
+        // `copy` compositing is unsafe for partial updates: browsers may clear
+        // destination pixels outside the source shape. Clear only this ROI so
+        // transparent source pixels are copied correctly, then redraw it using
+        // normal source-over compositing.
+        this.context.clearRect(clipped.x, clipped.y, clipped.width, clipped.height);
+        this.context.save();
+        this.context.imageSmoothingEnabled = false;
+        this.context.drawImage(
+            source.canvas,
+            clipped.x, clipped.y, clipped.width, clipped.height,
+            clipped.x, clipped.y, clipped.width, clipped.height
+        );
+        this.context.restore();
+    }
+
+    copyRegionFromExact(source, rectangle) {
+        if (this.canvas === null || source.canvas === null) {
+            throw new Error("Cannot copy surface: one of the surfaces is disposed.");
+        }
+
+        let clipped = Rectangle.intersect(Utility.roundRectangle(rectangle), this.getBounds());
+        clipped.intersect(source.getBounds());
+        if (clipped.width <= 0 || clipped.height <= 0) return;
+
+        // putImageData is an exact pixel transfer. Unlike cropped drawImage,
+        // it cannot interpolate a transparent neighbour into the ROI border.
+        const pixels = source.context.getImageData(
+            clipped.x, clipped.y, clipped.width, clipped.height
+        );
+        this.context.putImageData(pixels, clipped.x, clipped.y);
     }
 
     createWindowFromRectangle(rectangle) {
@@ -131,8 +187,8 @@ class Surface {
             throw new Error(`y=${y} is out of bounds of [0, ${this.height})`);
         }
 
-        let imageData = this.context.getImageData(x, y, 1, 1);
-        return new Color(imageData.r, imageData.g, imageData.b, imageData.a);
+        let data = this.context.getImageData(x, y, 1, 1).data;
+        return new Color(data[0], data[1], data[2], data[3]);
     }
 
     setColorAt(x, y, color) {
@@ -171,11 +227,13 @@ class Surface {
     setWidth(width) {
         this.width = width;
         this.canvas.width = width;
+        this.context.imageSmoothingEnabled = false;
     }
 
     setHeight(height) {
         this.height = height;
         this.canvas.height = height;
+        this.context.imageSmoothingEnabled = false;
     }
 
     getBounds() {

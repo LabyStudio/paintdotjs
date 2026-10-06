@@ -6,6 +6,9 @@ class ToolForm extends Form {
         this.app.on("app:active_tool_updated", tool => {
             this.reinitialize();
         });
+        this.app.on("app:shortcut_changed", () => {
+            this.reinitialize();
+        });
     }
 
     initialize(window) {
@@ -29,6 +32,8 @@ class ToolForm extends Form {
 
             let button = document.createElement("div");
             button.className = "menu-item clickable";
+            const toolType = ToolType.getById(entry.id);
+            if (toolType !== null) button.title = toolType.getTooltipText();
             button.onclick = () => {
                 if (implemented) {
                     toolStripChooser.setSelectedId(entry.id);
@@ -44,7 +49,9 @@ class ToolForm extends Form {
                 let isLargeIcon = entry.id === "shapesTool";
                 let icon = document.createElement("img");
                 icon.className = isLargeIcon ? " large-icon" : "icon";
-                icon.src = entry.getIconSrc();
+                icon.src = isLargeIcon
+                    ? "assets/icons/shapes_tool_icon.png"
+                    : entry.getIconSrc();
                 button.appendChild(icon);
             }
             grid.appendChild(button);

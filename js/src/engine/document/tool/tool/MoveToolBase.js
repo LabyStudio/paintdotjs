@@ -7,6 +7,7 @@ class MoveToolBase extends Tool {
         this.angleDelta = 0;
         this.moveNubs = null;
         this.rotateNub = null;
+        this.rotateIndicator = null;
         this.tracking = false;
         this.context = null;
         this.hostShouldShowAngle = false;
@@ -14,6 +15,10 @@ class MoveToolBase extends Tool {
         this.currentHistoryMementos = [];
         this.deactivateOnLayerChange = true;
         this.enableOutline = true;
+    }
+
+    usesContinuousPointerCoordinates() {
+        return true;
     }
 
     destroyNubs() {
@@ -33,6 +38,12 @@ class MoveToolBase extends Tool {
             surfaceBox.removeRenderer(this.rotateNub);
             this.rotateNub.dispose();
             this.rotateNub = null;
+        }
+
+        if (this.rotateIndicator !== null) {
+            surfaceBox.removeRenderer(this.rotateIndicator);
+            this.rotateIndicator.dispose();
+            this.rotateIndicator = null;
         }
     }
 
@@ -92,7 +103,7 @@ class MoveToolBase extends Tool {
                 let nub = this.moveNubs[i];
 
                 if (nub.isPointTouching(mousePt, true)) {
-                    let distance = Utility.distance(mousePt, nub.getLocation());
+                    let distance = Utility.distance(mousePt, nub.getTransformedLocation());
 
                     if (distance < minDistance) {
                         minDistance = distance;
@@ -100,6 +111,14 @@ class MoveToolBase extends Tool {
                         edge = i;
                     }
                 }
+            }
+
+            // Paint.NET 5 has a padded rotate box around the scale handles.
+            // The pointer-follow arrows advertise it, and pressing anywhere
+            // in that same region must begin rotation with the left button.
+            if (mode === MoveToolBaseMode.TRANSLATE
+                && MoveToolBase.prototype.updateRotationIndicator.call(this, mousePt)) {
+                mode = MoveToolBaseMode.ROTATE;
             }
         }
 
@@ -140,6 +159,18 @@ class MoveToolBase extends Tool {
         super.onPulse();
     }
 
+    getNubBounds() {
+        return this.getSelection().getBounds(false);
+    }
+
+    getNubTransform() {
+        return this.getSelection().getInterimTransform();
+    }
+
+    hasNubTarget() {
+        return !this.getSelection().isEmpty();
+    }
+
     positionNubs(currentMode) {
         if (this.moveNubs === null) {
             this.moveNubs = [];
@@ -149,27 +180,21 @@ class MoveToolBase extends Tool {
                 this.getSurfaceBox().addRenderer(this.moveNubs[i]);
             }
 
-            let bounds = this.getSelection().getBounds(false);
-
-            this.moveNubs[MoveToolBaseEdge.TOP_LEFT].setLocation(new Point(bounds.getLeft(), bounds.getTop()));
-            this.moveNubs[MoveToolBaseEdge.TOP_LEFT].setShape(MoveNubShape.CIRCLE);
-
-            this.moveNubs[MoveToolBaseEdge.TOP].setLocation(new Point((bounds.getLeft() + bounds.getRight()) / 2.0, bounds.getTop()));
-
-            this.moveNubs[MoveToolBaseEdge.TOP_RIGHT].setLocation(new Point(bounds.getRight(), bounds.getTop()));
-            this.moveNubs[MoveToolBaseEdge.TOP_RIGHT].setShape(MoveNubShape.CIRCLE);
-
-            this.moveNubs[MoveToolBaseEdge.LEFT].setLocation(new Point(bounds.getLeft(), (bounds.getTop() + bounds.getBottom()) / 2.0));
-            this.moveNubs[MoveToolBaseEdge.RIGHT].setLocation(new Point(bounds.getRight(), (bounds.getTop() + bounds.getBottom()) / 2.0));
-
-            this.moveNubs[MoveToolBaseEdge.BOTTOM_LEFT].setLocation(new Point(bounds.getLeft(), bounds.getBottom()));
-            this.moveNubs[MoveToolBaseEdge.BOTTOM_LEFT].setShape(MoveNubShape.CIRCLE);
-
-            this.moveNubs[MoveToolBaseEdge.BOTTOM].setLocation(new Point((bounds.getLeft() + bounds.getRight()) / 2.0, bounds.getBottom()));
-
-            this.moveNubs[MoveToolBaseEdge.BOTTOM_RIGHT].setLocation(new Point(bounds.getRight(), bounds.getBottom()));
-            this.moveNubs[MoveToolBaseEdge.BOTTOM_RIGHT].setShape(MoveNubShape.CIRCLE);
         }
+
+        let bounds = this.getNubBounds();
+        this.moveNubs[MoveToolBaseEdge.TOP_LEFT].setLocation(new Point(bounds.getLeft(), bounds.getTop()));
+        this.moveNubs[MoveToolBaseEdge.TOP_LEFT].setShape(MoveNubShape.CIRCLE);
+        this.moveNubs[MoveToolBaseEdge.TOP].setLocation(new Point((bounds.getLeft() + bounds.getRight()) / 2.0, bounds.getTop()));
+        this.moveNubs[MoveToolBaseEdge.TOP_RIGHT].setLocation(new Point(bounds.getRight(), bounds.getTop()));
+        this.moveNubs[MoveToolBaseEdge.TOP_RIGHT].setShape(MoveNubShape.CIRCLE);
+        this.moveNubs[MoveToolBaseEdge.LEFT].setLocation(new Point(bounds.getLeft(), (bounds.getTop() + bounds.getBottom()) / 2.0));
+        this.moveNubs[MoveToolBaseEdge.RIGHT].setLocation(new Point(bounds.getRight(), (bounds.getTop() + bounds.getBottom()) / 2.0));
+        this.moveNubs[MoveToolBaseEdge.BOTTOM_LEFT].setLocation(new Point(bounds.getLeft(), bounds.getBottom()));
+        this.moveNubs[MoveToolBaseEdge.BOTTOM_LEFT].setShape(MoveNubShape.CIRCLE);
+        this.moveNubs[MoveToolBaseEdge.BOTTOM].setLocation(new Point((bounds.getLeft() + bounds.getRight()) / 2.0, bounds.getBottom()));
+        this.moveNubs[MoveToolBaseEdge.BOTTOM_RIGHT].setLocation(new Point(bounds.getRight(), bounds.getBottom()));
+        this.moveNubs[MoveToolBaseEdge.BOTTOM_RIGHT].setShape(MoveNubShape.CIRCLE);
 
         if (this.rotateNub === null) {
             this.rotateNub = new RotateNubRenderer(this.getSurfaceBox());
@@ -177,16 +202,22 @@ class MoveToolBase extends Tool {
             this.getSurfaceBox().addRenderer(this.rotateNub, false);
         }
 
-        if (this.getSelection().isEmpty()) {
+        if (this.rotateIndicator === null) {
+            this.rotateIndicator = new RotateCursorRenderer(this.getSurfaceBox());
+            this.getSurfaceBox().addRenderer(this.rotateIndicator, false);
+        }
+
+        if (!this.hasNubTarget()) {
             for (let nub of this.moveNubs) {
                 nub.setVisible(false);
             }
 
             this.rotateNub.setVisible(false);
+            this.rotateIndicator.setVisible(false);
         } else {
             for (let nub of this.moveNubs) {
                 nub.setVisible(!this.tracking || currentMode === MoveToolBaseMode.SCALE);
-                nub.setTransform(this.getSelection().getInterimTransform());
+                nub.setTransform(this.getNubTransform());
             }
         }
     }
@@ -201,6 +232,78 @@ class MoveToolBase extends Tool {
         if (this.rotateNub !== null) {
             this.rotateNub.setVisible(false);
         }
+
+
+        if (this.rotateIndicator !== null) {
+            this.rotateIndicator.setVisible(false);
+        }
+    }
+
+    distanceToSegment(point, start, end) {
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const lengthSquared = dx * dx + dy * dy;
+        if (lengthSquared === 0) return Utility.distance(point, start);
+        const t = Utility.clamp(((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared, 0, 1);
+        return Math.hypot(point.x - (start.x + t * dx), point.y - (start.y + t * dy));
+    }
+
+    isPointInsideTransform(point, corners) {
+        let sign = 0;
+        for (let i = 0; i < corners.length; ++i) {
+            const start = corners[i];
+            const end = corners[(i + 1) % corners.length];
+            const cross = (end.x - start.x) * (point.y - start.y)
+                - (end.y - start.y) * (point.x - start.x);
+            if (Math.abs(cross) < 1e-7) continue;
+            const nextSign = Math.sign(cross);
+            if (sign !== 0 && nextSign !== sign) return false;
+            sign = nextSign;
+        }
+        return true;
+    }
+
+    updateRotationIndicator(point) {
+        if (this.rotateIndicator === null || this.tracking || !this.hasNubTarget()) {
+            if (this.rotateIndicator !== null) this.rotateIndicator.setVisible(false);
+            return false;
+        }
+
+        const bounds = this.getNubBounds();
+        const corners = [
+            new Point(bounds.getLeft(), bounds.getTop()),
+            new Point(bounds.getRight(), bounds.getTop()),
+            new Point(bounds.getRight(), bounds.getBottom()),
+            new Point(bounds.getLeft(), bounds.getBottom())
+        ];
+        this.getNubTransform().transformPoints(corners);
+
+        const inside = MoveToolBase.prototype.isPointInsideTransform.call(this, point, corners);
+        let edgeDistance = Number.MAX_VALUE;
+        for (let i = 0; i < corners.length; ++i) {
+            edgeDistance = Math.min(edgeDistance,
+                MoveToolBase.prototype.distanceToSegment.call(
+                    this,
+                    point,
+                    corners[i],
+                    corners[(i + 1) % corners.length]
+                ));
+        }
+
+        // v5 exposes a padded RotateBox outside the transformed bounds. Keep
+        // this distance in screen pixels so it feels identical at every zoom.
+        const zoom = Math.max(0.0001, this.getSurfaceBox().getScaleFactorRatio());
+        const visible = !inside && edgeDistance <= 32 / zoom;
+        this.rotateIndicator.setVisible(visible);
+        if (!visible) return false;
+
+        const center = new Point(
+            (corners[0].x + corners[2].x) / 2,
+            (corners[0].y + corners[2].y) / 2
+        );
+        this.rotateIndicator.setIndicator(point,
+            Math.atan2(center.y - point.y, center.x - point.x));
+        return true;
     }
 
     flipEdgeVertically(edge) {
@@ -317,16 +420,22 @@ class MoveToolBase extends Tool {
             }
 
             if (dx !== 0 || dy !== 0) {
-                // TODO solve it without a workaround?
-                // let docPos = new Point(-70000, -70000);
-                // let newDocPos = new Point(docPos.getX() + dx, docPos.getY() + dy);
-                // this.onMouseDown(new MouseEventArgs(MouseButtons.LEFT, 0, docPos.getX(), docPos.getY(), 0));
-                // this.onMouseMove(new MouseEventArgs(MouseButtons.LEFT, 0, newDocPos.getX(), newDocPos.getY(), 0));
-                // this.onMouseUp(new MouseEventArgs(MouseButtons.LEFT, 0, newDocPos.getX(), newDocPos.getY(), 0));
+                const bounds = this.getSelection().isEmpty()
+                    ? this.getDocumentWorkspace().getDocument().getBounds()
+                    : this.getSelection().getBounds(false);
+                const start = new Point(
+                    bounds.getLeft() + bounds.getWidth() / 2,
+                    bounds.getTop() + bounds.getHeight() / 2
+                );
+                this.onMouseDown(start.x, start.y, MouseButton.LEFT);
+                this.onMouseMove(start.x + dx, start.y + dy);
+                this.onMouseUp(start.x + dx, start.y + dy, MouseButton.LEFT);
+                return true;
             }
         } else {
-            super.onKeyPress(key);
+            return super.onKeyPress(key);
         }
+        return false;
     }
 
     onActivate() {
@@ -488,6 +597,7 @@ class MoveToolBase extends Tool {
         let consumed = super.onMouseMove(mouseX, mouseY);
 
         if (this.tracking) {
+            if (this.rotateIndicator !== null) this.rotateIndicator.setVisible(false);
             let newMouseXY = new Point(mouseX, mouseY);
             let newOffset = new Point(
                 newMouseXY.getX() - this.context.startMouseXY.getX(),
@@ -511,6 +621,14 @@ class MoveToolBase extends Tool {
 
             switch (this.context.currentMode) {
                 case MoveToolBaseMode.TRANSLATE:
+                    // Snap the movement delta, not each pointer position. This
+                    // advances to the adjacent grid pixel as soon as the drag
+                    // crosses half a pixel and is independent of where inside
+                    // the source pixel the drag started.
+                    newOffset = new Point(
+                        Math.round(newOffset.getX()),
+                        Math.round(newOffset.getY())
+                    );
                     translateMatrix.translate(newOffset.getX(), newOffset.getY(), MatrixOrder.APPEND);
                     break;
                 case MoveToolBaseMode.ROTATE:
@@ -566,8 +684,8 @@ class MoveToolBase extends Tool {
                     let edgeXN = Utility.normalizeVector2(edgeX);
                     let edgeYN = Utility.normalizeVector2(edgeY);
 
-                    let xulen = Utility.getProjection(newOffset, edgeXN).yhatLen;
-                    let yulen = Utility.getProjection(newOffset, edgeYN).yhatLen;
+                    let xulen = Math.round(Utility.getProjection(newOffset, edgeXN).yhatLen);
+                    let yulen = Math.round(Utility.getProjection(newOffset, edgeYN).yhatLen);
 
                     let startPath2 = this.context.startPath.clone();
                     let sp2Bounds = startPath2.getBounds();
@@ -722,9 +840,18 @@ class MoveToolBase extends Tool {
                 let nub = this.moveNubs[i];
 
                 if (nub.isVisible() && nub.isPointTouching(new Point(mouseX, mouseY), true)) {
+                    if (this.rotateIndicator !== null) this.rotateIndicator.setVisible(false);
                     this.app.setCursorImg("hand_open_cursor");
                     return;
                 }
+            }
+
+            if (MoveToolBase.prototype.updateRotationIndicator.call(
+                this,
+                new Point(mouseX, mouseY)
+            )) {
+                this.app.setCursorImg("hand_open_cursor");
+                return;
             }
 
             this.app.setCursor("move");

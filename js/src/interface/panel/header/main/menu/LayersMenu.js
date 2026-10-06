@@ -28,7 +28,7 @@ class LayersMenu extends DropMenuItem {
             new DropEntry("menu.layers.layerProperties", null),
         ]);
 
-        this.updateEntriesOn("document:invalidated");
+        this.updateEntriesOn("document:layers_changed", "app:update_active_document");
     }
 
     static create(id) {

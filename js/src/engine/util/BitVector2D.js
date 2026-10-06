@@ -3,18 +3,24 @@ class BitVector2D {
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.bitArray = new Array(width * height).fill(false);
+        // A byte stencil is considerably smaller and faster to scan than a
+        // sparse JavaScript array of booleans, especially for full-size images.
+        this.bitArray = new Uint8Array(width * height);
     }
 
     clear(value) {
-        this.bitArray.fill(value);
+        this.bitArray.fill(value ? 1 : 0);
+    }
+
+    isEmpty() {
+        return !this.bitArray.some(value => value !== 0);
     }
 
     set(x, y, value) {
         if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
             throw new Error("Coordinates out of bounds");
         }
-        this.bitArray[y * this.width + x] = value;
+        this.bitArray[y * this.width + x] = value ? 1 : 0;
     }
 
     get(x, y) {

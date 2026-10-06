@@ -9,11 +9,16 @@ class Action {
         this.actionId = actionId;
         this.nameTranslationId = nameTranslationId;
         this.descriptionTranslationId = descriptionTranslationId;
+        this.defaultShortcutKey = ShortcutKey.fromCombo(shortcutKeyCombo);
         this.shortcutKey = ShortcutKey.fromCombo(shortcutKeyCombo);
     }
 
     runPerformAction() {
         throw new Error("No action implementation provided for " + this.getActionId());
+    }
+
+    runIsActionExecutable() {
+        return true;
     }
 
     createIconItem() {
@@ -48,4 +53,67 @@ class Action {
         return this.shortcutKey;
     }
 
+    matchesShortcutEvent(event) {
+        return this.shortcutKey.isEvent(event);
+    }
+
+    getTooltipText() {
+        return null;
+    }
+
+    getDefaultShortcutKey() {
+        return this.defaultShortcutKey;
+    }
+
+    setShortcutKey(shortcutKey) {
+        this.shortcutKey = shortcutKey instanceof ShortcutKey
+            ? shortcutKey
+            : ShortcutKey.fromCombo(shortcutKey);
+    }
+
+    resetShortcutKey() {
+        this.shortcutKey = ShortcutKey.fromCombo(this.defaultShortcutKey.toString());
+    }
+
+    getDisplayName() {
+        if (this.nameTranslationId === null) return this.actionId;
+        return i18n(this.nameTranslationId);
+    }
+
+    getCategory() {
+        const categories = ["file", "edit", "view", "image", "layers", "adjustments", "effects", "window"];
+        for (const category of categories) {
+            if (this.actionId.startsWith("menu." + category + ".")) {
+                return category[0].toUpperCase() + category.slice(1);
+            }
+        }
+        if (this.actionId.endsWith("Tool")) return "Tools";
+        if (this.actionId.startsWith("measurementUnit.")) return "View";
+        return "General";
+    }
+
+}
+
+class CallbackAction extends Action {
+
+    constructor(actionId, callback, displayName, executable = null, shortcutKeyCombo = null) {
+        super(actionId, null, null, shortcutKeyCombo);
+        this.callback = callback;
+        this.displayName = displayName;
+        this.executable = executable;
+    }
+
+    runPerformAction() {
+        if (this.runIsActionExecutable()) this.callback();
+    }
+
+    runIsActionExecutable() {
+        return this.executable === null || this.executable();
+    }
+
+    getDisplayName() {
+        return typeof this.displayName === "function"
+            ? this.displayName()
+            : (this.displayName || this.actionId);
+    }
 }

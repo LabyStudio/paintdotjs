@@ -26,7 +26,10 @@ body {
 /* ------------ Editor ------------ */
 
 header {
-    height: 82px;
+    /* The tool strip is DPI-scaled. Let the header contain its actual visual
+       height instead of allowing it to paint over the editor below. */
+    height: auto;
+    flex: 0 0 auto;
     background-color: var(--color-menu-background);
     border: 0 solid var(--color-title-bar-border);
     border-bottom-width: 1px;
@@ -36,6 +39,26 @@ header {
     flex: 1;
     overflow: hidden;
     position: relative;
+    touch-action: none;
+}
+
+.text-tool-editor {
+    position: absolute;
+    z-index: 20;
+    min-width: 12px;
+    min-height: 1.3em;
+    width: 320px;
+    height: 160px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    resize: none;
+    border: 0;
+    outline: 1px dotted rgba(255, 255, 255, 0.65);
+    background: transparent;
+    color: transparent;
+    caret-color: #fff;
+    white-space: pre;
 }
 
 #view {

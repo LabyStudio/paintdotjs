@@ -28,6 +28,7 @@ class SwapLayerFunction extends HistoryFunction {
 
         layers.setLayerAt(this.index1, layer2);
         layers.setLayerAt(this.index2, layer1);
+        documentWorkspace.getApp().fire("document:layers_changed", documentWorkspace);
 
         layer1.invalidate();
         layer2.invalidate();
