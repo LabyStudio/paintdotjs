@@ -15,6 +15,9 @@ class LayerForm extends Form {
         this.app.on("document:layers_changed", () => {
             this.reinitialize();
         });
+        this.app.on("document:active_layer_changed", () => {
+            this.reinitialize();
+        });
         this.app.on("document:layer_properties_changed", () => {
             this.reinitialize();
         });
@@ -29,7 +32,7 @@ class LayerForm extends Form {
     }
 
     initializeDefault(window) {
-        window.setSize(180, 256);
+        window.setSize(200, 276);
         window.setAnchor(1, 1);
     }
 
@@ -64,8 +67,6 @@ class LayerForm extends Form {
 
                 let swapLayerFunction = new SwapLayerFunction(index1, index2);
                 documentWorkspace.executeFunction(swapLayerFunction);
-
-                this.layerListItem.scrollToItem(item2);
             }
         });
         {

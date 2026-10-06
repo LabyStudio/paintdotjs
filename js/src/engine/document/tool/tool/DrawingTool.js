@@ -15,6 +15,7 @@ class DrawingTool extends Tool {
         this.hasStrokeSample = false;
         this.distanceSinceLastSample = 0;
         this.presentationFrame = null;
+        this.pendingStrokeBounds = null;
     }
 
     getWidth() {
@@ -47,6 +48,7 @@ class DrawingTool extends Tool {
             this.strokeSurface = Surface.create(surface.width, surface.height);
             this.hasStrokeSample = false;
             this.distanceSinceLastSample = 0;
+            this.pendingStrokeBounds = null;
         }
         this.drawSegment(this.lastPoint, this.lastPoint, this.lastPressure, this.lastPressure);
         if (this.strokeSurface !== null) this.requestStrokePresentation();
@@ -110,17 +112,16 @@ class DrawingTool extends Tool {
             cancelAnimationFrame(this.presentationFrame);
             this.presentationFrame = null;
         }
+        this.presentStroke();
         const changedBounds = this.getClippedChangedBounds();
         this.markBitmapTransactionDirty(changedBounds);
         this.commitBitmapTransaction();
         if (this.strokeSurface !== null) this.strokeSurface.dispose();
         this.strokeSurface = null;
-        // Consolidate all incremental presentation tiles once the stroke is
-        // complete. A complete composition refresh is intentional here: at
-        // non-integral zoom levels, retaining the outside of a partial canvas
-        // update leaves a one-screen-pixel seam around its dirty rectangle.
-        // Paint.NET similarly replaces the transacted presentation when the
-        // stroke is committed; the layer bitmap itself is not recopied.
+        this.pendingStrokeBounds = null;
+        // Rebuild the complete composition once at the end. Incremental updates
+        // stay fast while drawing, while this final pass removes any scaled-view
+        // seam at the dirty-region boundary.
         if (!changedBounds.isEmpty()) this.getActiveLayer().invalidate();
     }
 
@@ -128,8 +129,42 @@ class DrawingTool extends Tool {
         if (this.presentationFrame !== null) return;
         this.presentationFrame = requestAnimationFrame(() => {
             this.presentationFrame = null;
-            if (this.strokeSurface !== null) this.getActiveLayer().invalidate();
+            const dirtyBounds = this.presentStroke();
+            if (dirtyBounds !== null && !dirtyBounds.isEmpty()) {
+                this.getActiveLayer().invalidate(dirtyBounds);
+            }
         });
+    }
+
+    presentStroke() {
+        if (this.strokeSurface === null || this.pendingStrokeBounds === null) return null;
+
+        const surface = this.getActiveLayer().getSurface();
+        const dirtyBounds = Rectangle.intersect(
+            Utility.roundRectangle(this.pendingStrokeBounds),
+            surface.getBounds()
+        );
+        this.pendingStrokeBounds = null;
+        if (dirtyBounds.isEmpty()) return dirtyBounds;
+
+        // Paint.NET renders brush changes through a 256px tile cache. Canvas
+        // does not expose that cache directly, but the same principle applies:
+        // restore and re-composite only the pixels touched since the last frame.
+        // This avoids full-image copies for every pointer sample on large files.
+        surface.copyRegionFromExact(this.scratchSurface, dirtyBounds);
+        const destination = surface.context;
+        destination.save();
+        destination.beginPath();
+        destination.rect(dirtyBounds.x, dirtyBounds.y, dirtyBounds.width, dirtyBounds.height);
+        destination.clip();
+        this.clipToSelection(destination);
+        destination.globalCompositeOperation = this.erase
+            ? "destination-out"
+            : this.getCompositeOperation();
+        destination.globalAlpha = this.getColor(this.button).alpha / 255;
+        destination.drawImage(this.strokeSurface.canvas, 0, 0);
+        destination.restore();
+        return dirtyBounds;
     }
 
     drawSegment(from, to, fromPressure = 1, toPressure = fromPressure) {
@@ -166,7 +201,7 @@ class DrawingTool extends Tool {
         const spacing = Math.max(0.5, width * Number(this.getSetting("spacing", 15)) / 100);
         const variablePressure = Math.abs(fromPressure - toPressure) > 0.01;
         if (hardness >= 0.999 && spacing <= Math.max(1, width * 0.25)
-            && !variablePressure && this.getSetting("brushType", "circle") === "circle") {
+            && !variablePressure) {
             context.beginPath();
             context.moveTo(from.x + 0.5, from.y + 0.5);
             context.lineTo(to.x + 0.5, to.y + 0.5);
@@ -220,45 +255,21 @@ class DrawingTool extends Tool {
                     context.fillStyle = this.createFillStyle(context, color,
                         coverageBackground);
                 }
-                if (this.getSetting("brushType", "circle") === "square") {
-                    context.fillRect(px - radius, py - radius, stampWidth, stampWidth);
-                } else {
-                    context.beginPath();
-                    context.arc(px, py, radius, 0, Math.PI * 2);
-                    context.fill();
-                }
+                context.beginPath();
+                context.arc(px, py, radius, 0, Math.PI * 2);
+                context.fill();
             }
         }
         context.restore();
 
-        if (this.strokeSurface !== null) {
-            // Paint.NET 5 renders the sampled stroke into a content/mask
-            // surface, then blends that result against the unchanged layer.
-            // Restore every base tile touched so far, then composite the whole
-            // accumulated stroke. Cropping the source surface to the latest
-            // segment makes Chromium clamp its edge pixels; those clamped edge
-            // columns are the thin vertical spikes seen between pointer
-            // samples. The complete source has transparent pixels outside the
-            // stroke, so drawing it unscaled cannot introduce crop-edge seams.
-            for (const rectangle of this.bitmapTransaction.savedRectangles) {
-                surface.copyRegionFromExact(this.scratchSurface, rectangle);
-            }
-            const destination = surface.context;
-            destination.save();
-            this.clipToSelection(destination);
-            destination.globalCompositeOperation = this.erase
-                ? "destination-out"
-                : this.getCompositeOperation();
-            // Apply the selected color's alpha once to the accumulated stroke
-            // coverage, matching Paint.NET's content/mask brush pipeline.
-            destination.globalAlpha = strokeColor.alpha / 255;
-            destination.drawImage(this.strokeSurface.canvas, 0, 0);
-            destination.restore();
-        }
-
         this.changedBounds = Rectangle.union(this.changedBounds, segmentBounds);
         this.markBitmapTransactionDirty(this.changedBounds);
-        if (this.strokeSurface === null) {
+        if (this.strokeSurface !== null) {
+            const clippedSegmentBounds = Rectangle.intersect(segmentBounds, surface.getBounds());
+            this.pendingStrokeBounds = this.pendingStrokeBounds === null
+                ? clippedSegmentBounds
+                : Rectangle.union(this.pendingStrokeBounds, clippedSegmentBounds);
+        } else {
             this.getActiveLayer().invalidate(Rectangle.intersect(segmentBounds, surface.getBounds()));
         }
     }

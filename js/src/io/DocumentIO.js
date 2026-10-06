@@ -39,15 +39,37 @@ class DocumentIO {
         const width = active === null ? 800 : active.getDocument().getWidth();
         const height = active === null ? 600 : active.getDocument().getHeight();
         const result = await NewFileDialog.open(width, height);
-        if (result !== null) this.app.createBlankDocumentInNewWorkspace(result.width, result.height);
+        if (result !== null) this.app.createBlankDocumentInNewWorkspace(
+            result.width, result.height, result.resolution);
     }
 
     static openFilePicker() {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = "image/png,image/jpeg,image/webp,image/gif,image/bmp,.pdn,application/json";
+        input.accept = "image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif,image/heic,image/tiff," +
+            ".jxl,.heif,.dds,.tif,.tiff,.tga,.jxr,.wdp,.wmp,.pdn,application/json";
         input.multiple = true;
         input.onchange = () => this.openFiles(Array.from(input.files || []));
+        input.click();
+    }
+
+    static openLayerFilePicker() {
+        if (this.app.getActiveDocumentWorkspace() === null) return;
+
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif,image/heic,image/tiff," +
+            ".jxl,.heif,.dds,.tif,.tiff,.tga,.jxr,.wdp,.wmp,.pdn,application/json";
+        input.multiple = true;
+        input.onchange = async () => {
+            for (const file of Array.from(input.files || [])) {
+                try {
+                    await this.addFileAsLayer(file);
+                } catch (error) {
+                    alert("Could not add \"" + file.name + "\" as a layer: " + error.message);
+                }
+            }
+        };
         input.click();
     }
 
@@ -80,7 +102,13 @@ class DocumentIO {
         });
         if (choice === "open") await this.openFiles(files);
         if (choice === "layer") {
-            for (const file of files) await this.addFileAsLayer(file);
+            for (const file of files) {
+                try {
+                    await this.addFileAsLayer(file);
+                } catch (error) {
+                    alert("Could not add \"" + file.name + "\" as a layer: " + error.message);
+                }
+            }
         }
     }
 
@@ -96,7 +124,38 @@ class DocumentIO {
     }
 
     static async loadImage(blob) {
-        if (typeof createImageBitmap === "function") return createImageBitmap(blob);
+        let nativeError = null;
+        if (typeof createImageBitmap === "function") {
+            try {
+                return await createImageBitmap(blob);
+            } catch (error) {
+                nativeError = error;
+            }
+        } else {
+            try {
+                return await this.loadImageElement(blob);
+            } catch (error) {
+                nativeError = error;
+            }
+        }
+
+        if (window.portableImageCodec?.decode !== undefined) {
+            const format = this.getImageFormat(blob);
+            if (format !== null) {
+                const bytes = new Uint8Array(await blob.arrayBuffer());
+                const decoded = await window.portableImageCodec.decode(bytes, format);
+                const canvas = document.createElement("canvas");
+                canvas.width = decoded.width;
+                canvas.height = decoded.height;
+                canvas.getContext("2d").putImageData(
+                    new ImageData(decoded.rgba, decoded.width, decoded.height), 0, 0);
+                return canvas;
+            }
+        }
+        throw nativeError || new Error("Unsupported image format");
+    }
+
+    static loadImageElement(blob) {
         return new Promise((resolve, reject) => {
             const image = new Image();
             const url = URL.createObjectURL(blob);
@@ -112,6 +171,19 @@ class DocumentIO {
         });
     }
 
+    static getImageFormat(blob) {
+        const name = String(blob?.name || "").toLowerCase();
+        const extension = name.match(/\.([^.]+)$/)?.[1];
+        if (extension !== undefined) return extension;
+        return {
+            "image/png": "png", "image/jpeg": "jpeg", "image/webp": "webp",
+            "image/gif": "gif", "image/bmp": "bmp", "image/avif": "avif",
+            "image/heic": "heic", "image/heif": "heif", "image/jxl": "jxl",
+            "image/vnd-ms.dds": "dds", "image/tiff": "tiff", "image/x-tga": "tga",
+            "image/vnd.ms-photo": "jxr"
+        }[String(blob?.type || "").toLowerCase()] || null;
+    }
+
     static async openImage(file) {
         const image = await this.loadImage(file);
         const workspace = this.app.createBlankDocumentInNewWorkspace(image.width, image.height);
@@ -119,7 +191,7 @@ class DocumentIO {
         layer.getSurface().clear();
         layer.getSurface().context.drawImage(image, 0, 0);
         layer.properties.name = file.name.replace(/\.[^.]+$/, "") || i18n("layer.backgroundLayer.defaultName");
-        workspace.setFileInfo(file.name);
+        workspace.setFileInfo(file.name, null, this.getLocalFilePath(file));
         workspace.setDirty(false);
         workspace.getDocument().invalidate();
         workspace.fitViewport();
@@ -129,14 +201,36 @@ class DocumentIO {
 
     static async addFileAsLayer(file) {
         if (file.name.toLowerCase().endsWith(".pdn")) {
-            alert("A layered .pdn document must be opened as a document.");
+            const data = await this.readPdn(file);
+            let workspace = this.app.getActiveDocumentWorkspace();
+            if (workspace === null) {
+                await this.createWorkspaceFromPdnData(data, file.name, this.getLocalFilePath(file));
+                return;
+            }
+            this.finishActiveTool();
+            const documentModel = workspace.getDocument();
+            let index = documentModel.getLayers().getLayerCount();
+            for (const saved of data.layers) {
+                const layer = this.createLayerFromPdnData(workspace, saved,
+                    documentModel.getWidth(), documentModel.getHeight());
+                documentModel.getLayers().insertLayerAt(index++, layer);
+                workspace.setActiveLayer(layer);
+            }
+            workspace.setDirty(true);
+            documentModel.invalidate();
             return;
         }
         const image = await this.loadImage(file);
         let workspace = this.app.getActiveDocumentWorkspace();
         if (workspace === null) workspace = this.app.createBlankDocumentInNewWorkspace(image.width, image.height);
         this.finishActiveTool();
-        const documentModel = workspace.getDocument();
+        let documentModel = workspace.getDocument();
+        const expandedWidth = Math.max(documentModel.getWidth(), image.width);
+        const expandedHeight = Math.max(documentModel.getHeight(), image.height);
+        if (expandedWidth !== documentModel.getWidth() || expandedHeight !== documentModel.getHeight()) {
+            this.resizeCanvas(workspace, expandedWidth, expandedHeight);
+            documentModel = workspace.getDocument();
+        }
         const layer = Layer.createLayer(workspace, documentModel.getWidth(), documentModel.getHeight(), file.name);
         layer.getSurface().context.drawImage(image, 0, 0);
         const index = workspace.getActiveLayer() === null
@@ -154,114 +248,273 @@ class DocumentIO {
         if (workspace === null) return false;
         this.finishActiveTool();
         const layered = workspace.getDocument().getLayers().getLayerCount() > 1;
-        const extension = layered ? ".pdn" : ".png";
-        const baseName = (workspace.getFriendlyName() === i18n("untitled.friendlyName")
-            ? "Untitled" : workspace.getFriendlyName().replace(/\.[^.]+$/, "")) + extension;
+        let format = workspace.fileFormat === null
+            ? SaveImageDialog.fromFileName(workspace.fileName, layered ? "pdn" : "png")
+            : SaveImageDialog.find(workspace.fileFormat);
+        if (layered && format.id !== "pdn" && !saveAs) format = SaveImageDialog.find("pdn");
 
-        let handle = !saveAs ? workspace.fileHandle : null;
-        if (handle !== null) {
-            const handleName = String(handle.name || "").toLowerCase();
-            if ((layered && !handleName.endsWith(".pdn")) || (!layered && !handleName.endsWith(".png"))) {
-                handle = null;
-            }
+        let options = {...(workspace.saveOptions || {})};
+        let configuredBlob = null;
+        if (saveAs || format.id === "jpeg") {
+            workspace.updateComposition();
+            const selection = await SaveImageDialog.open({
+                canvas: workspace.getCompositionSurface().getCanvas(),
+                initialFormat: format.id,
+                initialOptions: options,
+                encode: (formatId, encodeOptions) => formatId === "pdn"
+                    ? this.serializePdn(workspace)
+                    : ImageEncoder.encode(workspace.getCompositionSurface().getCanvas(), formatId, encodeOptions)
+            });
+            if (selection === null) return false;
+            format = SaveImageDialog.find(selection.format);
+            options = selection.options;
+            configuredBlob = selection.blob;
+        } else if (format.quality !== undefined && options.quality === undefined) {
+            options.quality = format.quality;
         }
+
+        const friendlyName = workspace.getFriendlyName() === i18n("untitled.friendlyName")
+            ? "Untitled" : workspace.getFriendlyName().replace(/\.[^.]+$/, "");
+        const baseName = friendlyName + format.extension;
+        const extensions = format.extensions || [format.extension];
+        let handle = !saveAs ? workspace.fileHandle : null;
+        if (handle !== null && !extensions.some(extension =>
+            String(handle.name || "").toLowerCase().endsWith(extension))) handle = null;
         if (handle === null && typeof window.showSaveFilePicker === "function") {
             try {
-                handle = await window.showSaveFilePicker({
-                    suggestedName: baseName,
-                    types: layered ? [{
-                        description: "paint.js layered document",
-                        accept: {"application/x-paintdotjs": [".pdn"]}
-                    }] : [{
-                        description: "PNG image",
-                        accept: {"image/png": [".png"]}
-                    }]
-                });
+                try {
+                    handle = await window.showSaveFilePicker({
+                        suggestedName: baseName,
+                        types: [{description: format.name, accept: {[format.mime]: extensions}}]
+                    });
+                } catch (error) {
+                    // Some Chromium versions reject uncommon but valid MIME types.
+                    if (!(error instanceof TypeError)) throw error;
+                    handle = await window.showSaveFilePicker({suggestedName: baseName});
+                }
             } catch (error) {
                 if (error.name === "AbortError") return false;
                 throw error;
             }
         }
 
-        const blob = layered ? await this.serializePdn(workspace) : await this.canvasToBlob(
-            workspace.getCompositionSurface().getCanvas(), "image/png"
-        );
+        let flattenAfterSave = false;
+        if (layered && format.id !== "pdn") {
+            const choice = await TaskDialog.show({
+                title: "Flatten Image",
+                icon: "assets/icons/menu_image_flatten_icon.png",
+                message: format.name + " cannot preserve layers. Flatten the image after saving?",
+                cancelValue: "cancel",
+                choices: [{
+                    value: "flatten",
+                    title: "Flatten and save",
+                    description: "Saves the composed image. You can undo the flatten operation afterward.",
+                    icon: "assets/icons/menu_image_flatten_icon.png"
+                }, {
+                    value: "cancel",
+                    title: "Cancel",
+                    description: "Returns to the image without saving.",
+                    icon: "assets/icons/menu_edit_undo_icon.png"
+                }]
+            });
+            if (choice !== "flatten") return false;
+            flattenAfterSave = true;
+        }
+
+        let blob;
+        if (format.id === "pdn") {
+            blob = configuredBlob || await this.serializePdn(workspace);
+        } else {
+            workspace.updateComposition();
+            blob = configuredBlob || await ImageEncoder.encode(
+                workspace.getCompositionSurface().getCanvas(), format.id, options);
+        }
         if (handle !== null) {
             const writable = await handle.createWritable();
             await writable.write(blob);
             await writable.close();
-            workspace.setFileInfo(handle.name, handle);
+            let filePath = null;
+            try {
+                filePath = this.getLocalFilePath(await handle.getFile());
+            } catch (_) {
+                // Browsers deliberately hide the local path.
+            }
+            workspace.setFileInfo(handle.name, handle, filePath, format.id, options);
         } else {
             this.downloadBlob(blob, baseName);
-            workspace.setFileInfo(baseName);
+            workspace.setFileInfo(baseName, null, null, format.id, options);
         }
+        if (flattenAfterSave) this.flattenDocument();
         workspace.setDirty(false);
         return true;
     }
 
-    static async serializePdn(workspace) {
-        const documentModel = workspace.getDocument();
-        const data = {
-            format: "paint.js.pdn/1",
-            width: documentModel.getWidth(),
-            height: documentModel.getHeight(),
-            activeLayer: workspace.getActiveLayerIndex(),
-            layers: documentModel.getLayers().list().map(layer => ({
-                name: layer.properties.name,
-                visible: layer.properties.visible,
-                isBackground: layer.properties.isBackground,
-                opacity: layer.properties.opacity,
-                png: layer.getSurface().getCanvas().toDataURL("image/png")
-            }))
+    static async saveAll(includeClean = false) {
+        const originalWorkspace = this.app.getActiveDocumentWorkspace();
+        const workspaces = this.app.getDocumentWorkspaces()
+            .filter(workspace => includeClean || workspace.isDirty());
+
+        try {
+            for (const workspace of workspaces) {
+                this.app.setActiveDocumentWorkspace(workspace);
+                if (!await this.saveActive(false)) return false;
+            }
+            return true;
+        } finally {
+            if (originalWorkspace !== null && this.app.getDocumentWorkspaces().includes(originalWorkspace)) {
+                this.app.setActiveDocumentWorkspace(originalWorkspace);
+            }
+        }
+    }
+
+    static async printActive() {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null) return false;
+
+        this.finishActiveTool();
+        workspace.updateComposition();
+        const blob = await this.canvasToBlob(workspace.getCompositionSurface().getCanvas(), "image/png");
+        const url = URL.createObjectURL(blob);
+        const printWindow = window.open("", "_blank");
+        if (printWindow === null) {
+            URL.revokeObjectURL(url);
+            alert("The print window was blocked by the browser.");
+            return false;
+        }
+
+        printWindow.document.open();
+        printWindow.document.write(
+            "<!doctype html><title>Print</title>" +
+            "<style>html,body{margin:0;text-align:center}img{max-width:100%;height:auto}</style>" +
+            "<img id=printImage alt=\"\">"
+        );
+        printWindow.document.close();
+        const image = printWindow.document.getElementById("printImage");
+        image.onload = () => {
+            printWindow.focus();
+            printWindow.print();
+            URL.revokeObjectURL(url);
         };
-        return new Blob([JSON.stringify(data)], {type: "application/x-paintdotjs"});
+        image.src = url;
+        return true;
+    }
+
+    static async serializePdn(workspace) {
+        return PdnDocumentCodec.encode(workspace.getDocument());
     }
 
     static async openPdn(file) {
+        const data = await this.readPdn(file);
+        return this.createWorkspaceFromPdnData(data, file.name, this.getLocalFilePath(file));
+    }
+
+    static async readPdn(file) {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (PdnDocumentCodec.isNativePdn(bytes)) {
+            return PdnDocumentCodec.decode(bytes);
+        }
         let data;
         try {
-            data = JSON.parse(await file.text());
+            data = JSON.parse(new TextDecoder().decode(bytes));
         } catch (_) {
-            throw new Error("This build currently opens layered .pdn files saved by paint.js. Native Paint.NET binary .pdn files are not supported yet.");
+            throw new Error("Unsupported .pdn document format");
         }
         if (data.format !== "paint.js.pdn/1" || !Array.isArray(data.layers)) {
             throw new Error("Unsupported .pdn document format");
         }
-        const workspace = this.app.createBlankDocumentInNewWorkspace(data.width, data.height);
-        const documentModel = workspace.getDocument();
-        documentModel.getLayers().removeLayerAt(0);
+        const layers = [];
         for (const saved of data.layers) {
             const response = await fetch(saved.png);
             const image = await this.loadImage(await response.blob());
-            const layer = Layer.createLayer(workspace, data.width, data.height, saved.name || "Layer");
-            layer.properties.visible = saved.visible !== false;
-            layer.properties.isBackground = !!saved.isBackground;
-            layer.properties.opacity = saved.opacity === undefined ? 255 : saved.opacity;
-            layer.getSurface().context.drawImage(image, 0, 0);
-            documentModel.addLayer(layer);
+            const canvas = document.createElement("canvas");
+            canvas.width = data.width;
+            canvas.height = data.height;
+            canvas.getContext("2d").drawImage(image, 0, 0);
             if (typeof image.close === "function") image.close();
+            layers.push({...saved, canvas});
         }
-        if (documentModel.getLayers().getLayerCount() === 0) {
-            documentModel.addLayer(Layer.createBackgroundLayer(workspace, data.width, data.height));
-        }
-        workspace.setActiveLayerIndex(Math.max(0, Math.min(
-            Number(data.activeLayer) || 0,
-            documentModel.getLayers().getLayerCount() - 1
-        )));
-        workspace.setFileInfo(file.name);
-        workspace.getHistory().clearAll();
-        workspace.setDirty(false);
-        documentModel.invalidate();
-        workspace.fitViewport();
-        return workspace;
+        return {
+            width: data.width,
+            height: data.height,
+            resolution: Math.max(0.01, Number(data.resolution) || 96),
+            activeLayer: data.activeLayer,
+            layers
+        };
     }
 
-    static async copySelection() {
+    static async createWorkspaceFromPdnData(data, fileName, filePath = null) {
+        const width = Math.max(1, Math.min(32768, Math.round(Number(data.width) || 0)));
+        const height = Math.max(1, Math.min(32768, Math.round(Number(data.height) || 0)));
+        if (width !== Number(data.width) || height !== Number(data.height)) {
+            throw new Error("Invalid .pdn canvas size");
+        }
+        const resolution = Math.max(0.01, Number(data.resolution) || 96);
+        const workspace = this.app.createBlankDocumentInNewWorkspace(width, height, resolution);
+        const activeToolType = this.finishActiveTool(false);
+        const documentModel = new Document(width, height, resolution);
+        try {
+            for (const saved of data.layers) {
+                documentModel.addLayer(this.createLayerFromPdnData(workspace, saved, width, height));
+            }
+            if (documentModel.getLayers().getLayerCount() === 0) {
+                documentModel.addLayer(Layer.createBackgroundLayer(workspace, width, height));
+            }
+            const activeLayerIndex = Math.max(0, Math.min(
+                Number(data.activeLayer) || 0,
+                documentModel.getLayers().getLayerCount() - 1
+            ));
+            const activeLayer = documentModel.getLayers().getAt(activeLayerIndex);
+
+            // Swap both references as one observable state change. Assigning the
+            // layer before or after the document lets UI listeners briefly see a
+            // layer that belongs to the other document.
+            workspace.setDocumentAndActiveLayer(documentModel, activeLayer);
+            this.app.fire("document:layers_changed", workspace);
+            workspace.setFileInfo(fileName, null, filePath);
+            workspace.getHistory().clearAll();
+            workspace.setDirty(false);
+            documentModel.invalidate();
+            workspace.fitViewport();
+            return workspace;
+        } finally {
+            if (activeToolType !== null && this.app.getActiveTool() === null) {
+                this.app.setActiveToolFromType(activeToolType);
+            }
+        }
+    }
+
+    static getLocalFilePath(file) {
+        if (file === null || file === undefined) return null;
+        if (window.desktopFileActions !== undefined) {
+            try {
+                return window.desktopFileActions.getPathForFile(file) || null;
+            } catch (_) {
+                // Synthetic browser files do not have a local filesystem path.
+            }
+        }
+        if (typeof file.path === "string" && file.path.length > 0) return file.path;
+        return null;
+    }
+
+    static createLayerFromPdnData(workspace, saved, width, height) {
+        const layer = Layer.createLayer(workspace, width, height, saved.name || "Layer");
+        layer.properties.visible = saved.visible !== false;
+        layer.properties.isBackground = !!saved.isBackground;
+        layer.properties.opacity = saved.opacity === undefined ? 255 : saved.opacity;
+        layer.properties.blendMode = LayerProperties.getBlendMode(saved.blendMode).value;
+        layer.getSurface().context.drawImage(saved.canvas, 0, 0);
+        return layer;
+    }
+
+    static async copySelection(copyMerged = false) {
         let workspace = this.app.getActiveDocumentWorkspace();
         if (workspace === null || workspace.getActiveLayer() === null) return false;
         this.finishActiveTool();
         workspace = this.app.getActiveDocumentWorkspace();
-        const layerSurface = workspace.getActiveLayer().getSurface();
+        if (copyMerged) workspace.updateComposition();
+        const layerSurface = copyMerged
+            ? workspace.getCompositionSurface()
+            : workspace.getActiveLayer().getSurface();
         let canvas;
         if (workspace.getSelection().isEmpty()) {
             canvas = document.createElement("canvas");
@@ -294,7 +547,27 @@ class DocumentIO {
         return true;
     }
 
+    static async cutSelection() {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null || workspace.getSelection().isEmpty()
+            || !(workspace.getActiveLayer() instanceof BitmapLayer)) {
+            return false;
+        }
+        if (!await this.copySelection(false)) return false;
+        workspace.executeFunction(new EraseSelectionFunction());
+        return true;
+    }
+
     static async pasteFromClipboard() {
+        const blob = await this.readClipboardImage();
+        if (blob === null) {
+            alert("The clipboard does not contain an image.");
+            return false;
+        }
+        return this.pasteBlob(blob);
+    }
+
+    static async readClipboardImage() {
         let blob = null;
         if (navigator.clipboard && typeof navigator.clipboard.read === "function") {
             try {
@@ -311,11 +584,113 @@ class DocumentIO {
             }
         }
         if (blob === null) blob = this.internalClipboard;
+        return blob;
+    }
+
+    static async pasteIntoNewImage() {
+        const blob = await this.readClipboardImage();
         if (blob === null) {
             alert("The clipboard does not contain an image.");
             return false;
         }
-        return this.pasteBlob(blob);
+
+        const image = await this.loadImage(blob);
+        const workspace = this.app.createBlankDocumentInNewWorkspace(image.width, image.height);
+        const layer = workspace.getActiveLayer();
+        layer.getSurface().clear();
+        layer.getSurface().context.drawImage(image, 0, 0);
+        layer.invalidate();
+        workspace.setDirty(true);
+        if (typeof image.close === "function") image.close();
+        return true;
+    }
+
+    static async pasteIntoNewLayer() {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null) return this.pasteIntoNewImage();
+
+        const blob = await this.readClipboardImage();
+        if (blob === null) {
+            alert("The clipboard does not contain an image.");
+            return false;
+        }
+
+        const image = await this.loadImage(blob);
+        this.finishActiveTool(false);
+        const documentModel = workspace.getDocument();
+        const layerIndex = workspace.getActiveLayerIndex() + 1;
+        const layer = Layer.createLayer(
+            workspace,
+            documentModel.getWidth(),
+            documentModel.getHeight(),
+            i18n("addNewBlankLayer.layerName.format", documentModel.getLayers().size() + 1)
+        );
+        layer.getSurface().context.drawImage(image, 0, 0);
+
+        const layerMemento = new NewLayerHistoryMemento(
+            i18n("menu.edit.pasteInToNewLayer.text"),
+            "assets/icons/menu_edit_paste_in_to_new_layer_icon.png",
+            workspace,
+            layerIndex
+        );
+        const selectionMemento = new SelectionHistoryMemento(
+            i18n("menu.edit.pasteInToNewLayer.text"),
+            "assets/icons/menu_edit_paste_in_to_new_layer_icon.png",
+            workspace
+        );
+        documentModel.getLayers().insertLayerAt(layerIndex, layer);
+        workspace.setActiveLayer(layer);
+
+        const selection = workspace.getSelection();
+        selection.push();
+        selection.reset();
+        selection.setContinuation(new Rectangle(
+            0, 0,
+            Math.min(image.width, documentModel.getWidth()),
+            Math.min(image.height, documentModel.getHeight())
+        ), CombineMode.REPLACE);
+        selection.commitContinuation();
+        selection.pop();
+
+        workspace.getHistory().pushNewMemento(new CompoundHistoryMemento(
+            i18n("menu.edit.pasteInToNewLayer.text"),
+            "assets/icons/menu_edit_paste_in_to_new_layer_icon.png",
+            [layerMemento, selectionMemento]
+        ));
+        documentModel.invalidate();
+        workspace.setDirty(true);
+        this.app.setActiveToolFromType(ToolType.MOVE);
+        if (typeof image.close === "function") image.close();
+        return true;
+    }
+
+    static copySelectionOutline() {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null || workspace.getSelection().isEmpty()) return false;
+
+        if (this.internalSelectionPath !== null) this.internalSelectionPath.dispose();
+        this.internalSelectionPath = workspace.getSelection().createPath();
+        this.app.fire("app:selection_clipboard_changed");
+        return true;
+    }
+
+    static pasteSelectionOutline(combineMode = CombineMode.REPLACE) {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null || this.internalSelectionPath === null) return false;
+
+        const history = new SelectionHistoryMemento(
+            i18n("menu.edit.pasteSelection.text"),
+            "assets/icons/menu_edit_paste_selection_replace_icon.png",
+            workspace
+        );
+        const selection = workspace.getSelection();
+        selection.push();
+        if (combineMode === CombineMode.REPLACE) selection.reset();
+        selection.setContinuationPath(this.internalSelectionPath.clone(), combineMode);
+        selection.commitContinuation();
+        selection.pop();
+        workspace.getHistory().pushNewMemento(history);
+        return true;
     }
 
     static async pasteBlob(blob) {
@@ -404,13 +779,176 @@ class DocumentIO {
         return type;
     }
 
+    static async resizeImage() {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null) return false;
+        const oldDocument = workspace.getDocument();
+        const result = await ImageSizeDialog.open("resize", {
+            width: oldDocument.getWidth(),
+            height: oldDocument.getHeight(),
+            resolution: this.getDocumentResolution(oldDocument),
+            layerCount: oldDocument.getLayers().getLayerCount()
+        });
+        if (result === null
+            || (result.width === oldDocument.getWidth()
+                && result.height === oldDocument.getHeight()
+                && result.resolution === this.getDocumentResolution(oldDocument))) {
+            return false;
+        }
+
+        const activeToolType = this.finishActiveTool(false);
+        const replacement = new Document(result.width, result.height, result.resolution);
+        replacement.resolution = result.resolution;
+        for (const oldLayer of oldDocument.getLayers().list()) {
+            const layer = Layer.createLayer(workspace, result.width, result.height, oldLayer.properties.name);
+            layer.properties = oldLayer.properties.clone();
+            this.drawResizedImage(
+                layer.getSurface().context,
+                oldLayer.getSurface().getCanvas(),
+                result.width,
+                result.height,
+                result.resampling,
+                result.gammaCorrect
+            );
+            replacement.addLayer(layer);
+        }
+
+        return this.replaceDocument(
+            workspace,
+            replacement,
+            workspace.getActiveLayerIndex(),
+            i18n("menu.image.resize.text"),
+            "assets/icons/menu_image_resize_icon.png",
+            activeToolType
+        );
+    }
+
+    static drawResizedImage(context, source, width, height, resampling, gammaCorrect) {
+        const nearest = resampling === "nearestNeighbor";
+        context.imageSmoothingEnabled = !nearest;
+        context.imageSmoothingQuality = ["linearLowQuality"].includes(resampling)
+            ? "low"
+            : ["linear", "cubicSmooth"].includes(resampling) ? "medium" : "high";
+
+        if (!gammaCorrect || nearest) {
+            context.drawImage(source, 0, 0, source.width, source.height, 0, 0, width, height);
+            return;
+        }
+
+        const linearCanvas = document.createElement("canvas");
+        linearCanvas.width = source.width;
+        linearCanvas.height = source.height;
+        const linearContext = linearCanvas.getContext("2d", {willReadFrequently: true});
+        linearContext.drawImage(source, 0, 0);
+        const sourcePixels = linearContext.getImageData(0, 0, source.width, source.height);
+        const toLinear = new Uint8Array(256);
+        const toSrgb = new Uint8Array(256);
+        for (let value = 0; value < 256; ++value) {
+            const normalized = value / 255;
+            toLinear[value] = Math.round(255 * (normalized <= 0.04045
+                ? normalized / 12.92
+                : Math.pow((normalized + 0.055) / 1.055, 2.4)));
+            toSrgb[value] = Math.round(255 * (normalized <= 0.0031308
+                ? normalized * 12.92
+                : 1.055 * Math.pow(normalized, 1 / 2.4) - 0.055));
+        }
+        for (let offset = 0; offset < sourcePixels.data.length; offset += 4) {
+            sourcePixels.data[offset] = toLinear[sourcePixels.data[offset]];
+            sourcePixels.data[offset + 1] = toLinear[sourcePixels.data[offset + 1]];
+            sourcePixels.data[offset + 2] = toLinear[sourcePixels.data[offset + 2]];
+        }
+        linearContext.putImageData(sourcePixels, 0, 0);
+        context.drawImage(linearCanvas, 0, 0, source.width, source.height, 0, 0, width, height);
+
+        const resized = context.getImageData(0, 0, width, height);
+        for (let offset = 0; offset < resized.data.length; offset += 4) {
+            resized.data[offset] = toSrgb[resized.data[offset]];
+            resized.data[offset + 1] = toSrgb[resized.data[offset + 1]];
+            resized.data[offset + 2] = toSrgb[resized.data[offset + 2]];
+        }
+        context.putImageData(resized, 0, 0);
+    }
+
+    static async changeCanvasSize() {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null) return false;
+        const oldDocument = workspace.getDocument();
+        const result = await ImageSizeDialog.open("canvas", {
+            width: oldDocument.getWidth(),
+            height: oldDocument.getHeight(),
+            resolution: this.getDocumentResolution(oldDocument),
+            layerCount: oldDocument.getLayers().getLayerCount()
+        });
+        if (result === null
+            || (result.width === oldDocument.getWidth()
+                && result.height === oldDocument.getHeight()
+                && result.resolution === this.getDocumentResolution(oldDocument))) {
+            return false;
+        }
+
+        const activeToolType = this.finishActiveTool(false);
+        const replacement = new Document(result.width, result.height, result.resolution);
+        replacement.resolution = result.resolution;
+        const offset = this.getCanvasResizeOffset(
+            oldDocument.getWidth(), oldDocument.getHeight(),
+            result.width, result.height, result.anchor
+        );
+        const fillStyle = this.getCanvasFillStyle(result.fill);
+        for (const oldLayer of oldDocument.getLayers().list()) {
+            const layer = Layer.createLayer(workspace, result.width, result.height, oldLayer.properties.name);
+            layer.properties = oldLayer.properties.clone();
+            const context = layer.getSurface().context;
+            if (fillStyle !== null) {
+                context.fillStyle = fillStyle;
+                context.fillRect(0, 0, result.width, result.height);
+            }
+            context.drawImage(oldLayer.getSurface().getCanvas(), offset.x, offset.y);
+            replacement.addLayer(layer);
+        }
+
+        return this.replaceDocument(
+            workspace,
+            replacement,
+            workspace.getActiveLayerIndex(),
+            i18n("menu.image.canvasSize.text"),
+            "assets/icons/menu_image_canvas_size_icon.png",
+            activeToolType
+        );
+    }
+
+    static getCanvasResizeOffset(oldWidth, oldHeight, newWidth, newHeight, anchor) {
+        const deltaX = newWidth - oldWidth;
+        const deltaY = newHeight - oldHeight;
+        const horizontal = anchor.endsWith("Right") || anchor === "right"
+            ? deltaX
+            : anchor.endsWith("Left") || anchor === "left" ? 0 : Math.trunc(deltaX / 2);
+        const vertical = anchor.startsWith("bottom")
+            ? deltaY
+            : anchor.startsWith("top") ? 0 : Math.trunc(deltaY / 2);
+        return {x: horizontal, y: vertical};
+    }
+
+    static getCanvasFillStyle(fill) {
+        if (fill === "transparent") return null;
+        if (fill === "white") return "#ffffffff";
+        if (fill === "black") return "#000000ff";
+        const colors = FormRegistry.get("colorsForm");
+        if (fill === "primary") return colors?.mainColor?.toHex?.() || "#ff0000ff";
+        if (fill === "secondary") return colors?.secondaryColor?.toHex?.() || "#ffffffff";
+        return null;
+    }
+
+    static getDocumentResolution(documentModel) {
+        return Math.max(0.01, Number(documentModel.getResolution?.() ?? documentModel.resolution) || 96);
+    }
+
     static resizeCanvas(workspace, width, height) {
         const oldDocument = workspace.getDocument();
         const activeIndex = workspace.getActiveLayerIndex();
         const activeTool = this.app.getActiveTool();
         const activeToolType = activeTool === null ? null : activeTool.getType();
         this.app.setActiveTool(null);
-        const replacement = new Document(width, height);
+        const replacement = new Document(width, height, this.getDocumentResolution(oldDocument));
         workspace.setDocument(replacement);
         for (const oldLayer of oldDocument.getLayers().list()) {
             const layer = Layer.createLayer(workspace, width, height, oldLayer.properties.name);
@@ -427,11 +965,227 @@ class DocumentIO {
         if (activeToolType !== null) this.app.setActiveToolFromType(activeToolType);
     }
 
-    static canvasToBlob(canvas, type) {
-        return new Promise((resolve, reject) => canvas.toBlob(blob => {
-            if (blob === null) reject(new Error("Could not encode the image"));
-            else resolve(blob);
-        }, type));
+    static cropToSelection() {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null || workspace.getSelection().isEmpty()) return false;
+
+        const activeToolType = this.finishActiveTool(false);
+        const oldDocument = workspace.getDocument();
+        const selectionPath = workspace.getSelection().createPath();
+        const pathBounds = selectionPath.getBounds();
+        const cropBounds = Rectangle.intersect(Rectangle.absolute(
+            Math.floor(pathBounds.getLeft()),
+            Math.floor(pathBounds.getTop()),
+            Math.ceil(pathBounds.getRight()),
+            Math.ceil(pathBounds.getBottom())
+        ), oldDocument.getBounds());
+        if (cropBounds.isEmpty()) {
+            selectionPath.dispose();
+            return false;
+        }
+
+        const replacement = new Document(
+            cropBounds.width,
+            cropBounds.height,
+            this.getDocumentResolution(oldDocument)
+        );
+        for (const oldLayer of oldDocument.getLayers().list()) {
+            const layer = Layer.createLayer(
+                workspace,
+                cropBounds.width,
+                cropBounds.height,
+                oldLayer.properties.name
+            );
+            layer.properties = oldLayer.properties.clone();
+
+            const context = layer.getSurface().context;
+            context.save();
+            context.translate(-cropBounds.x, -cropBounds.y);
+            context.beginPath();
+            for (const vertexList of selectionPath.getVertexLists()) {
+                const vertices = vertexList.getVertices();
+                if (vertices.length === 0) continue;
+                context.moveTo(vertices[0].x, vertices[0].y);
+                for (let index = 1; index < vertices.length; ++index) {
+                    context.lineTo(vertices[index].x, vertices[index].y);
+                }
+                context.closePath();
+            }
+            context.clip("evenodd");
+            context.drawImage(oldLayer.getSurface().getCanvas(), 0, 0);
+            context.restore();
+            replacement.addLayer(layer);
+        }
+        selectionPath.dispose();
+
+        return this.replaceDocument(
+            workspace,
+            replacement,
+            workspace.getActiveLayerIndex(),
+            i18n("menu.image.crop.text"),
+            "assets/icons/menu_image_crop_icon.png",
+            activeToolType
+        );
+    }
+
+    static transformDocument(transformType) {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null) return false;
+
+        const activeToolType = this.finishActiveTool(false);
+        const oldDocument = workspace.getDocument();
+        const rotatesDimensions = transformType === "rotate90CW" || transformType === "rotate90CCW";
+        const width = rotatesDimensions ? oldDocument.getHeight() : oldDocument.getWidth();
+        const height = rotatesDimensions ? oldDocument.getWidth() : oldDocument.getHeight();
+        const replacement = new Document(width, height, this.getDocumentResolution(oldDocument));
+
+        for (const oldLayer of oldDocument.getLayers().list()) {
+            const layer = Layer.createLayer(workspace, width, height, oldLayer.properties.name);
+            layer.properties = oldLayer.properties.clone();
+            this.drawTransformed(
+                layer.getSurface().context,
+                oldLayer.getSurface().getCanvas(),
+                oldDocument.getWidth(),
+                oldDocument.getHeight(),
+                transformType
+            );
+            replacement.addLayer(layer);
+        }
+
+        const actionId = "menu.image." + transformType;
+        return this.replaceDocument(
+            workspace,
+            replacement,
+            workspace.getActiveLayerIndex(),
+            i18n(actionId + ".text"),
+            "assets/icons/" + actionId.replaceAll(".", "_")
+                .replace(/([A-Z])/g, "_$1").toLowerCase() + "_icon.png",
+            activeToolType
+        );
+    }
+
+    static transformActiveLayer(transformType) {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        const layer = workspace === null ? null : workspace.getActiveLayer();
+        if (!(layer instanceof BitmapLayer)) return false;
+
+        const activeToolType = this.finishActiveTool(false);
+        const surface = layer.getSurface();
+        const snapshot = surface.clone();
+        const history = new BitmapHistoryMemento(
+            i18n("menu.layers." + transformType + ".text"),
+            "assets/icons/menu_layers_" + transformType
+                .replace(/([A-Z])/g, "_$1").toLowerCase() + "_icon.png",
+            workspace,
+            workspace.getActiveLayerIndex()
+        );
+        surface.clear();
+        this.drawTransformed(
+            surface.context,
+            snapshot.getCanvas(),
+            surface.getWidth(),
+            surface.getHeight(),
+            transformType
+        );
+        snapshot.dispose();
+        layer.invalidate();
+        workspace.getHistory().pushNewMemento(history);
+        workspace.setDirty(true);
+        if (activeToolType !== null && this.app.getActiveTool() === null) {
+            this.app.setActiveToolFromType(activeToolType);
+        }
+        return true;
+    }
+
+    static drawTransformed(context, source, width, height, transformType) {
+        context.save();
+        switch (transformType) {
+            case "flipHorizontal":
+                context.translate(width, 0);
+                context.scale(-1, 1);
+                break;
+            case "flipVertical":
+                context.translate(0, height);
+                context.scale(1, -1);
+                break;
+            case "rotate90CW":
+                context.translate(height, 0);
+                context.rotate(Math.PI / 2);
+                break;
+            case "rotate90CCW":
+                context.translate(0, width);
+                context.rotate(-Math.PI / 2);
+                break;
+            case "rotate180":
+                context.translate(width, height);
+                context.rotate(Math.PI);
+                break;
+            default:
+                context.restore();
+                throw new Error("Unknown transform: " + transformType);
+        }
+        context.drawImage(source, 0, 0);
+        context.restore();
+    }
+
+    static flattenDocument() {
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null || workspace.getDocument().getLayers().getLayerCount() < 2) return false;
+
+        const activeToolType = this.finishActiveTool(false);
+        workspace.updateComposition();
+        const oldDocument = workspace.getDocument();
+        const replacement = new Document(
+            oldDocument.getWidth(),
+            oldDocument.getHeight(),
+            this.getDocumentResolution(oldDocument)
+        );
+        const layer = Layer.createBackgroundLayer(workspace, oldDocument.getWidth(), oldDocument.getHeight());
+        layer.getSurface().clear();
+        layer.getSurface().context.drawImage(workspace.getCompositionSurface().getCanvas(), 0, 0);
+        replacement.addLayer(layer);
+
+        return this.replaceDocument(
+            workspace,
+            replacement,
+            0,
+            i18n("menu.image.flatten.text"),
+            "assets/icons/menu_image_flatten_icon.png",
+            activeToolType
+        );
+    }
+
+    static replaceDocument(
+        workspace,
+        replacement,
+        activeLayerIndex,
+        historyName,
+        historyIcon,
+        activeToolType = null
+    ) {
+        const memento = new DocumentStateHistoryMemento(historyName, historyIcon, workspace);
+        workspace.setDocument(replacement);
+        workspace.setActiveLayerIndex(Math.max(0, Math.min(
+            activeLayerIndex,
+            replacement.getLayers().getLayerCount() - 1
+        )));
+        workspace.getSelection().reset();
+        replacement.invalidate();
+        workspace.getHistory().pushNewMemento(memento);
+        workspace.setDirty(true);
+
+        this.app.updateCanvasBounds(false);
+        this.app.fire("document:layers_changed", workspace);
+        this.app.fire("document:update_size", replacement.getWidth(), replacement.getHeight());
+        workspace.fitViewport();
+        if (activeToolType !== null && this.app.getActiveTool() === null) {
+            this.app.setActiveToolFromType(activeToolType);
+        }
+        return true;
+    }
+
+    static canvasToBlob(canvas, type, quality) {
+        return ImageEncoder.canvasToBlob(canvas, type, quality);
     }
 
     static downloadBlob(blob, name) {
@@ -447,3 +1201,4 @@ class DocumentIO {
 DocumentIO.initialized = false;
 DocumentIO.app = null;
 DocumentIO.internalClipboard = null;
+DocumentIO.internalSelectionPath = null;

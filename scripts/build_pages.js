@@ -31,6 +31,8 @@ for (const relativePath of requiredPaths) {
 for (const filename of fs.readdirSync(root)) {
     if (/^workbox-[a-f0-9]+\.js$/.test(filename)) {
         fs.copyFileSync(path.join(root, filename), path.join(output, filename));
+    } else if (/^\d+\.bundle\.js$/.test(filename)) {
+        fs.copyFileSync(path.join(root, filename), path.join(output, filename));
     }
 }
 

@@ -4,6 +4,7 @@ index.php
 electron-builder.env
 node_modules/
 bundle.js
+*.bundle.js
 workbox-*.js
 service_worker.js
 .idea/
@@ -11,4 +12,8 @@ service_worker.js
 /run/*
 !/run/test.png
 .tmp
-assets/
+assets/*
+!assets/pdn/
+assets/pdn/*
+!assets/pdn/templates/
+!assets/pdn/templates/**

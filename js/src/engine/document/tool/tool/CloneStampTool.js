@@ -74,12 +74,8 @@ class CloneStampTool extends DrawingTool {
             const dy = from.y + (to.y - from.y) * t;
             const stampWidth = width * (fromPressure + (toPressure - fromPressure) * t);
             const radius = stampWidth / 2;
-            if (this.getSetting("brushType", "circle") === "square") {
-                context.rect(dx - radius, dy - radius, stampWidth, stampWidth);
-            } else {
-                context.moveTo(dx + radius, dy);
-                context.arc(dx, dy, radius, 0, Math.PI * 2);
-            }
+            context.moveTo(dx + radius, dy);
+            context.arc(dx, dy, radius, 0, Math.PI * 2);
         }
         context.clip();
         const anchor = this.getAnchor();

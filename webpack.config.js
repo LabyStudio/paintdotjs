@@ -1,13 +1,19 @@
-const {DefinePlugin} = require('webpack')
+const {DefinePlugin, ProvidePlugin} = require('webpack')
 
 module.exports = {
     mode: 'production',
-    target: 'node',
+    target: 'web',
     entry: './src/index.js',
     devtool: 'eval-source-map',
     output: {
         filename: 'bundle.js',
         path: __dirname
+    },
+    resolve: {
+        fallback: {
+            fs: false,
+            path: false
+        }
     },
     module: {
         rules: [
@@ -16,10 +22,20 @@ module.exports = {
                 use: {
                     loader: 'url-loader'
                 }
+            },
+            {
+                test: /magick\.wasm$/,
+                type: 'asset/resource',
+                generator: {
+                    filename: 'assets/codecs/[name][ext]'
+                }
             }
         ]
     },
     plugins: [
+        new ProvidePlugin({
+            Buffer: ['buffer', 'Buffer']
+        }),
         new DefinePlugin({
             PDJVERSION: `"${require('./package.json').version}"`
         })

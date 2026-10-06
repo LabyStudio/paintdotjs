@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, Menu, ipcMain} = require('electron')
+const {app, BrowserWindow, Menu, ipcMain, dialog} = require('electron')
 const {setupTitlebar} = require("custom-electron-titlebar/main");
 const path = require('path')
 
@@ -39,6 +39,23 @@ function createWindow() {
                 ? mainWindow.webContents.closeDevTools()
                 : mainWindow.webContents.openDevTools({mode: 'undocked'});
         }
+    });
+
+    // Chromium's beforeunload prompt protects dirty documents in a browser,
+    // but Electron suppresses that prompt and emits will-prevent-unload. Show
+    // an explicit desktop confirmation and allow the close only when chosen.
+    mainWindow.webContents.on('will-prevent-unload', event => {
+        const choice = dialog.showMessageBoxSync(mainWindow, {
+            type: 'warning',
+            buttons: ['Close without saving', 'Cancel'],
+            defaultId: 1,
+            cancelId: 1,
+            noLink: true,
+            title: 'Unsaved Changes',
+            message: 'There are unsaved changes.',
+            detail: 'Do you want to close paint.js and discard them?'
+        });
+        if (choice === 0) event.preventDefault();
     });
 
     ipcMain.on('resize-window', (event, { width, height }) => {

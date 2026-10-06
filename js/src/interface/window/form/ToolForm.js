@@ -13,7 +13,7 @@ class ToolForm extends Form {
 
     initialize(window) {
         super.initialize(window);
-        window.setSize(50, 284);
+        window.setSize(64, 331);
     }
 
     initializeDefault(window) {

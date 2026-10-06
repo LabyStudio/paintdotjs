@@ -32,7 +32,10 @@ class ToolSelector extends SelectorMenuItem {
             this.add(entry);
         }
 
-        this.setSelectedId("paintBrushTool")
+        const defaultToolId = typeof AppSettingsStore === "undefined"
+            ? "paintBrushTool"
+            : AppSettingsStore.get("tools.defaultTool", "paintBrushTool");
+        this.setSelectedId(ToolType.getById(defaultToolId) === null ? "paintBrushTool" : defaultToolId);
 
         this.app.on("app:shortcut_changed", () => this.reinitialize());
     }

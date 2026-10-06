@@ -1,8 +1,9 @@
 class Document {
 
-    constructor(width, height) {
+    constructor(width, height, resolution = 96) {
         this.width = width;
         this.height = height;
+        this.resolution = Math.max(0.01, Number(resolution) || 96);
 
         // Bind event handlers
         this.onLayerInvalidated = this.onLayerInvalidated.bind(this);
@@ -84,6 +85,14 @@ class Document {
 
     getHeight() {
         return this.height;
+    }
+
+    getResolution() {
+        return this.resolution;
+    }
+
+    setResolution(resolution) {
+        this.resolution = Math.max(0.01, Number(resolution) || 96);
     }
 
     getLayers() {

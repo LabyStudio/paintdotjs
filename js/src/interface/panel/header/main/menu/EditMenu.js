@@ -4,15 +4,15 @@ class EditMenu extends DropMenuItem {
             EditMenu.create("undo"),
             EditMenu.create("redo"),
             new VerticalSeparator(),
-            new DropEntry("menu.edit.cut", null),
+            EditMenu.create("cut"),
             EditMenu.create("copy"),
-            new DropEntry("menu.edit.copyMerged", null),
+            EditMenu.create("copyMerged"),
             EditMenu.create("paste"),
-            new DropEntry("menu.edit.pasteInToNewLayer", null),
-            new DropEntry("menu.edit.pasteInToNewImage", null),
+            EditMenu.create("pasteInToNewLayer"),
+            EditMenu.create("pasteInToNewImage"),
             new VerticalSeparator(),
-            new DropEntry("menu.edit.copySelection", null),
-            new DropEntry("menu.edit.pasteSelection", null)
+            EditMenu.create("copySelection"),
+            EditMenu.create("pasteSelection")
                 .withNoIcon(),
             new VerticalSeparator(),
             EditMenu.create("eraseSelection"),
@@ -25,7 +25,8 @@ class EditMenu extends DropMenuItem {
         this.updateEntriesOn(
             "document:history_changed",
             "document:selection_changed",
-            "app:update_active_document"
+            "app:update_active_document",
+            "app:selection_clipboard_changed"
         );
     }
 

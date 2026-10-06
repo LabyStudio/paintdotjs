@@ -8,6 +8,7 @@ class DocumentItem extends MenuItem {
 
         this.thumbnail = null;
         this.dirtyIndicator = null;
+        this.contextMenuCallback = null;
     }
 
     buildElement() {
@@ -39,11 +40,17 @@ class DocumentItem extends MenuItem {
 
             // Thumbnail
             this.thumbnail = document.createElement("canvas");
-            this.thumbnail.className = "thumbnail";
+            this.thumbnail.className = "thumbnail landscape";
             this.renderThumbnail();
             element.appendChild(this.thumbnail);
         }
         this.updateDirtyIndicator();
+        element.addEventListener("contextmenu", event => {
+            if (this.contextMenuCallback === null) return;
+            event.preventDefault();
+            event.stopPropagation();
+            this.contextMenuCallback(event, this);
+        });
         return element;
     }
 
@@ -59,9 +66,25 @@ class DocumentItem extends MenuItem {
         }
 
         let layerCanvas = this.documentWorkspace.getCompositionSurface().getCanvas();
+        const maxThumbnailSize = 96;
+        const scale = Math.min(maxThumbnailSize / layerCanvas.width, maxThumbnailSize / layerCanvas.height);
+        const thumbnailWidth = Math.max(1, Math.round(layerCanvas.width * scale));
+        const thumbnailHeight = Math.max(1, Math.round(layerCanvas.height * scale));
 
-        // Render thumbnail
+        this.thumbnail.classList.toggle("landscape", layerCanvas.width >= layerCanvas.height);
+        this.thumbnail.classList.toggle("portrait", layerCanvas.width < layerCanvas.height);
+
+        // Canvas defaults to 300x150, which forced every document preview into
+        // a 2:1 ratio. Size the backing canvas to the document's actual ratio.
+        if (this.thumbnail.width !== thumbnailWidth || this.thumbnail.height !== thumbnailHeight) {
+            this.thumbnail.width = thumbnailWidth;
+            this.thumbnail.height = thumbnailHeight;
+        }
+
+        // Replace the old thumbnail instead of alpha-compositing over it. This
+        // matters for documents whose composition contains transparent pixels.
         let context = this.thumbnail.getContext("2d");
+        context.clearRect(0, 0, this.thumbnail.width, this.thumbnail.height);
         ImageUtil.drawImage(
             context,
             layerCanvas,
@@ -82,6 +105,10 @@ class DocumentItem extends MenuItem {
 
     getDocumentWorkspace() {
         return this.documentWorkspace;
+    }
+
+    setContextMenuCallback(callback) {
+        this.contextMenuCallback = callback;
     }
 
     getKey() {

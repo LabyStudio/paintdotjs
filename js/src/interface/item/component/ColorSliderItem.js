@@ -19,11 +19,8 @@ class ColorSliderItem extends Item {
             // Canvas
             this.canvas = document.createElement("canvas");
             this.canvas.classList.add("canvas");
-            this.canvas.width = 65;
+            this.canvas.width = 85;
             this.canvas.height = 10;
-            this.registerMouseEventsCombined(this.canvas, (mouseX, mouseY, button) => {
-                this.onMouseEvent(mouseX);
-            });
             this.renderSpectrum(this.canvas);
             slider.appendChild(this.canvas);
 
@@ -31,10 +28,13 @@ class ColorSliderItem extends Item {
             this.cursor = document.createElement("div");
             this.cursor.classList.add("cursor");
             this.cursor.style.left = "0px";
-            this.registerMouseEventsCombined(this.cursor, (mouseX, mouseY, button) => {
+            slider.appendChild(this.cursor);
+
+            // The whole row is draggable, not just the 10px painted strip or
+            // the tiny cursor marker.
+            this.registerMouseEventsCombined(slider, (mouseX, mouseY, button) => {
                 this.onMouseEvent(mouseX);
             });
-            slider.appendChild(this.cursor);
         }
         return slider;
     }

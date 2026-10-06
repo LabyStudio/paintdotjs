@@ -66,7 +66,7 @@ class PaintBrushTool extends DrawingTool {
         this.brushPreview.setPreview(
             point,
             this.getWidth() * pressure,
-            this.getSetting("brushType", "circle"),
+            "circle",
             pressed ? 0.5 : 1
         );
     }

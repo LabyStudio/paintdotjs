@@ -1,20 +1,30 @@
 class ImageMenu extends DropMenuItem {
     constructor() {
         super("menu.image", [
-            new DropEntry("menu.image.crop", null),
-            new DropEntry("menu.image.resize", null),
-            new DropEntry("menu.image.canvasSize", null),
+            ImageMenu.create("crop"),
+            ImageMenu.create("resize"),
+            ImageMenu.create("canvasSize"),
             new VerticalSeparator(),
-            new DropEntry("menu.image.flipHorizontal", null),
-            new DropEntry("menu.image.flipVertical", null),
+            ImageMenu.create("flipHorizontal"),
+            ImageMenu.create("flipVertical"),
             new VerticalSeparator(),
-            new DropEntry("menu.image.rotate90CW", null),
-            new DropEntry("menu.image.rotate90CCW", null),
-            new DropEntry("menu.image.rotate180", null),
+            ImageMenu.create("rotate90CW"),
+            ImageMenu.create("rotate90CCW"),
+            ImageMenu.create("rotate180"),
             new VerticalSeparator(),
             new DropEntry("menu.image.colorProfile", null),
             new VerticalSeparator(),
-            new DropEntry("menu.image.flatten", null),
+            ImageMenu.create("flatten"),
         ]);
+
+        this.updateEntriesOn(
+            "app:update_active_document",
+            "document:selection_changed",
+            "document:layers_changed"
+        );
+    }
+
+    static create(id) {
+        return ActionRegistry.get("menu.image." + id).createDropEntry();
     }
 }

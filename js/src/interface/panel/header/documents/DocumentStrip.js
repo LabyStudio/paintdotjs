@@ -7,7 +7,7 @@ class DocumentStrip extends Panel {
         this.thumbnailUpdates = new Debounced();
 
         this.app.on("app:create_document", (documentWorkspace) => {
-            this.documentsListItem.add(new DocumentItem(documentWorkspace));
+            this.documentsListItem.add(this.createDocumentItem(documentWorkspace));
             this.documentsListItem.reinitialize();
             this.updateActiveDocument();
         });
@@ -59,7 +59,7 @@ class DocumentStrip extends Panel {
         {
             let documentWorkspaces = this.app.getDocumentWorkspaces();
             for (let documentWorkspace of documentWorkspaces) {
-                let item = new DocumentItem(documentWorkspace);
+                let item = this.createDocumentItem(documentWorkspace);
                 this.documentsListItem.add(item);
 
                 if (documentWorkspaces === this.app.getActiveDocumentWorkspace()) {
@@ -68,6 +68,18 @@ class DocumentStrip extends Panel {
             }
         }
         this.documentsListItem.appendTo(this.element, this);
+    }
+
+    createDocumentItem(documentWorkspace) {
+        const item = new DocumentItem(documentWorkspace);
+        item.setContextMenuCallback(event => {
+            const previousWorkspace = this.app.getActiveDocumentWorkspace();
+            if (previousWorkspace !== documentWorkspace) {
+                this.app.setActiveDocumentWorkspace(documentWorkspace);
+            }
+            DocumentContextMenu.show(event.clientX, event.clientY, documentWorkspace, previousWorkspace);
+        });
+        return item;
     }
 
     updateActiveDocument() {

@@ -1,52 +1,78 @@
 import en from '../assets/lang/en.json';
+import manifest from '../assets/lang/languages.json';
 
-const data = {
-    en: en,
+const codes = manifest.locales.filter(code => typeof code === 'string');
+
+const findSupportedCode = requested => {
+    if (!requested) return null;
+    const normalized = requested.replace('_', '-');
+    return codes.find(code => code.toLowerCase() === normalized.toLowerCase())
+        || codes.find(code => code.split('-')[0].toLowerCase() === normalized.split('-')[0].toLowerCase())
+        || null;
+};
+
+let preference = 'auto';
+try {
+    preference = JSON.parse(localStorage.getItem('paintdotjs.settings.v1') || '{}').ui?.language || 'auto';
+} catch (_) {
+    // Use the browser language when local storage is unavailable.
+}
+
+const requestedCode = preference === 'auto' ? navigator.language : preference;
+const selectedCode = findSupportedCode(requestedCode) || 'en';
+
+const loadLanguage = code => {
+    if (code === 'en') return en;
+    try {
+        // Loading one small local dictionary synchronously keeps i18n available
+        // to the classic source scripts that execute immediately after bundle.js.
+        const request = new XMLHttpRequest();
+        const url = new URL(`assets/lang/${encodeURIComponent(code)}.json`, document.baseURI);
+        request.open('GET', url.href, false);
+        request.send();
+        if ((request.status >= 200 && request.status < 300)
+            || (request.status === 0 && request.responseText)) {
+            return JSON.parse(request.responseText);
+        }
+    } catch (error) {
+        console.warn(`Could not load the ${code} language; using English.`, error);
+    }
+    return en;
+};
+
+const selectedData = loadLanguage(selectedCode);
+const resolve = (object, path) => {
+    let current = object;
+    for (const segment of path.split('.')) {
+        if (current === null || typeof current !== 'object' || current[segment] === undefined) return undefined;
+        current = current[segment];
+    }
+    return current;
 };
 
 window.i18n = function (path, variables) {
-    let segments = path.split('.');
-
-    function resolve(object, segments) {
-        if (segments.length === 0) {
-            return object;
-        }
-
-        let current = segments.shift();
-        if (object[current] === undefined) {
-            return path;
-        }
-
-        return resolve(object[current], segments);
-    }
-
-    let translation = resolve(Language.data, segments);
+    let translation = resolve(Language.data, path) ?? resolve(en, path) ?? path;
     if (variables) {
-        if (!Array.isArray(variables)) {
-            variables = [variables];
-        }
-
+        if (!Array.isArray(variables)) variables = [variables];
         for (let i = 0; i < variables.length; i++) {
-            translation = translation.replace('{' + i + '}', variables[i]);
+            translation = translation.split('{' + i + '}').join(variables[i]);
         }
     }
     return translation;
-}
+};
+
+const displayNames = typeof Intl.DisplayNames === 'function'
+    ? new Intl.DisplayNames([navigator.language || 'en'], {type: 'language'})
+    : null;
 
 window.Language = {
-    data: {},
-    code: 'en',
-    options: {
-        en: 'English',
-    },
+    data: selectedData,
+    fallbackData: en,
+    code: selectedData === en && selectedCode !== 'en' ? 'en' : selectedCode,
+    preference,
+    options: Object.fromEntries(codes.map(code => [code, displayNames?.of(code) || code])),
     toString: () => Language.code
-}
+};
 
-
-// Get language code
-let code = navigator.language.replace(/-\w+/, '');
-if (code && Language.options[code]) {
-    Language.code = code
-}
-
-Language.data = data[Language.code];
+document.documentElement.lang = Language.code;
+document.documentElement.dir = ['ar', 'fa', 'he', 'ur'].includes(Language.code.split('-')[0]) ? 'rtl' : 'ltr';

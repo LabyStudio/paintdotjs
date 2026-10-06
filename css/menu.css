@@ -141,19 +141,156 @@
 
 /* ------------ Drop Menu ------------ */
 .drop-menu {
+    --drop-menu-icon-size: 16px;
+    --drop-menu-icon-gutter: 22px;
+    --drop-menu-icon-divider: 26px;
+    --drop-menu-text-gap: 8px;
+    --drop-menu-entry-height: 16px;
+    --drop-menu-entry-padding-y: 3px;
+    --drop-menu-entry-padding-right: 4px;
     position: absolute;
     width: fit-content;
     background-color: var(--color-menu-background);
     border: 1px solid var(--color-title-bar-border);
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.55);
     z-index: 3000;
-    animation: fadeIn 0.15s ease-in-out;
+    animation: fadeIn 0.1s ease-out;
 }
 
-.drop-menu .drop-entry {
-    height: 16px;
-    display: block;
+.icon-drop-menu .drop-entry {
+    box-sizing: content-box;
+    display: grid;
+    grid-template-columns: var(--drop-menu-icon-gutter) minmax(0, 1fr) max-content;
+    align-items: center;
+    column-gap: 0;
+    height: var(--drop-menu-entry-height);
     margin: 1px;
-    padding: 3px 4px 3px 4px;
+    padding: var(--drop-menu-entry-padding-y) var(--drop-menu-entry-padding-right)
+        var(--drop-menu-entry-padding-y) 0;
+}
+
+.icon-drop-menu .drop-entry .icon {
+    justify-self: center;
+    width: var(--drop-menu-icon-size);
+    height: var(--drop-menu-icon-size);
+    object-fit: contain;
+}
+
+/* Checked commands use the same compact blue selection cell as Paint.NET.
+   Keeping it on the shared drop-entry class makes the treatment reusable by
+   other radio-style menu groups without changing their spacing. */
+.icon-drop-menu .drop-entry.checked-drop-entry::after {
+    content: "";
+    position: absolute;
+    left: calc((var(--drop-menu-icon-gutter) - 26px) / 2);
+    top: 50%;
+    width: 26px;
+    height: 26px;
+    box-sizing: border-box;
+    transform: translateY(-50%);
+    background-color: color-mix(in srgb, var(--color-checkbox-checked) 55%, transparent);
+    border: 1px solid var(--color-menu-item-selected-border);
+    pointer-events: none;
+}
+
+.icon-drop-menu .drop-entry.checked-drop-entry .icon {
+    position: relative;
+    z-index: 1;
+}
+
+.icon-drop-menu .drop-entry .text,
+.icon-drop-menu .drop-entry .shortcut {
+    position: static;
+    top: auto;
+    margin: 0;
+    padding: 0;
+    line-height: var(--drop-menu-entry-height);
+}
+
+.icon-drop-menu .drop-entry .text {
+    padding-left: var(--drop-menu-text-gap);
+}
+
+/* Standard command menus use one shared metric set. Context menus may only
+   override the minimum width, never entry padding, icons, or text alignment. */
+.command-drop-menu {
+    --command-menu-entry-min-width: 208px;
+    --drop-menu-icon-size: 20px;
+    --drop-menu-icon-gutter: 30px;
+    --drop-menu-icon-divider: 34px;
+    --drop-menu-text-gap: 10px;
+    --drop-menu-entry-height: 20px;
+    --drop-menu-entry-padding-y: 4px;
+    --drop-menu-entry-padding-right: 5px;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.command-drop-menu::before {
+    left: var(--drop-menu-icon-divider);
+}
+
+.command-drop-menu .drop-entry {
+    min-width: var(--command-menu-entry-min-width);
+    white-space: nowrap;
+}
+
+.command-drop-menu .drop-entry .shortcut {
+    min-width: 72px;
+    justify-self: end;
+    margin-left: 16px;
+    text-align: right;
+}
+
+.command-drop-menu .vertical-separator {
+    margin-left: var(--drop-menu-icon-divider);
+}
+
+.document-context-menu {
+    --command-menu-entry-min-width: 234px;
+    min-width: 246px;
+}
+
+.document-context-menu .document-context-title {
+    box-sizing: border-box;
+    min-width: 246px;
+    height: 29px;
+    padding: 5px 10px;
+    line-height: 19px;
+    color: var(--color-menu-item-text);
+    white-space: nowrap;
+}
+
+/* Paint.NET's palette menu uses the same Windows 10 dark flyout metrics as
+   its main menus, with a slightly wider label column. */
+.drop-menu[data-owner-id="swatch"] {
+    --drop-menu-icon-size: 20px;
+    --drop-menu-icon-gutter: 30px;
+    --drop-menu-icon-divider: 34px;
+    --drop-menu-text-gap: 10px;
+    --drop-menu-entry-height: 20px;
+    --drop-menu-entry-padding-y: 4px;
+    --drop-menu-entry-padding-right: 5px;
+    min-width: 258px;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.drop-menu[data-owner-id="swatch"]::before {
+    left: var(--drop-menu-icon-divider);
+}
+
+.drop-menu[data-owner-id="swatch"] .drop-entry {
+    min-width: 246px;
+    white-space: nowrap;
+}
+
+.drop-menu[data-owner-id="swatch"] .drop-entry .shortcut {
+    display: none;
+}
+
+.drop-menu[data-owner-id="swatch"] .vertical-separator {
+    margin-left: var(--drop-menu-icon-divider);
 }
 
 .drop-menu:before {
@@ -161,7 +298,7 @@
     content: "";
     position: absolute;
     top: 0;
-    left: 26px;
+    left: var(--drop-menu-icon-divider);
     width: 1px;
     bottom: 0;
     pointer-events: none;
@@ -196,6 +333,56 @@
     float: right;
     top: 2px;
     margin-left: 28px;
+}
+
+.drop-menu .submenu-entry {
+    grid-template-columns: var(--drop-menu-icon-gutter) minmax(0, 1fr) 12px !important;
+}
+
+.drop-menu[data-owner-id="menu.effects"] .submenu-entry {
+    min-width: 182px;
+}
+
+.submenu-entry > .shortcut {
+    display: none !important;
+}
+
+.submenu-entry .submenu-arrow {
+    justify-self: end;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 5px solid currentColor;
+    color: var(--color-menu-item-text);
+}
+
+.effect-submenu {
+    --drop-menu-icon-size: 20px;
+    --drop-menu-icon-gutter: 30px;
+    --drop-menu-icon-divider: 34px;
+    --drop-menu-text-gap: 10px;
+    --drop-menu-entry-height: 20px;
+    --drop-menu-entry-padding-y: 4px;
+    --drop-menu-entry-padding-right: 5px;
+    max-height: calc(100vh - 4px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.effect-submenu::before {
+    left: var(--drop-menu-icon-divider);
+}
+
+.effect-submenu .drop-entry {
+    min-width: 190px;
+    white-space: nowrap;
+}
+
+.effect-submenu .drop-entry .shortcut:empty {
+    display: none;
 }
 
 @keyframes fadeIn {

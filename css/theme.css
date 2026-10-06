@@ -40,6 +40,39 @@
     --color-checkbox-checked: #005FB8;
     --color-number-input-background: #1E1E1E;
 
+    /* Tool options and their body-level popup menus share this palette. */
+    --pdn-toolbar-background: var(--color-menu-background);
+    --pdn-control-background: var(--color-number-input-background);
+    --pdn-menu-background: #1c1c1c;
+    --pdn-menu-gutter: var(--color-menu-background);
+    --pdn-control-border: #8d8d8d;
+    --pdn-menu-border: #646464;
+    --pdn-separator: #46464a;
+    --pdn-text: var(--color-menu-item-text);
+    --pdn-arrow-background: var(--color-button);
+    --pdn-arrow-foreground: var(--color-button-text);
+    --pdn-scrollbar-track: #101010;
+    --pdn-scrollbar-thumb: #777777;
+    --pdn-slider-background: #cfcfcf;
+    --pdn-slider-text: #111111;
+    --pdn-slider-filled-text: #ffffff;
+
+    /* Shared dialog surfaces. Data visualizations may still use their own
+       semantic colors, but form chrome must always come from these tokens. */
+    --color-dialog-surface: #181818;
+    --color-dialog-surface-alt: #1b1b1b;
+    --color-dialog-border: #606060;
+    --color-muted-text: #c8c8c8;
+    --color-subtle-text: #aaaaaa;
+    --color-link: #62b5ff;
+    --color-link-hover: #91cdff;
+    --color-preview-background: #303030;
+    --color-curve-background: #171717;
+    --color-curve-grid: #8b8b8b;
+    --color-curve-line: #f2f2f2;
+    --color-curve-point: #ffffff;
+    --color-curve-point-border: #111111;
+
     /* Misc */
     --color-item-redo-background: #5D5D5D;
     --color-item-redo-text: #000000;
@@ -59,6 +92,84 @@
 
     color-scheme: dark;
     scroll-behavior: unset;
+}
+
+:root[data-color-scheme="blue"] {
+    --color-title-bar: #07172b;
+    --color-menu-background: #182534;
+    --color-window-background: #24303c;
+    --color-number-input-background: #15202c;
+    --pdn-menu-background: #14202b;
+    --pdn-control-border: #71869a;
+    --pdn-menu-border: #52677b;
+    --pdn-separator: #40566b;
+    --pdn-scrollbar-track: #101923;
+    --pdn-scrollbar-thumb: #60758a;
+    --color-dialog-surface: #111b25;
+    --color-dialog-surface-alt: #14202b;
+    --color-dialog-border: #52677b;
+    --color-muted-text: #bcc8d4;
+    --color-subtle-text: #9eafbf;
+    --color-preview-background: #1d2b38;
+    --color-curve-background: #101923;
+    --color-curve-grid: #71869a;
+}
+
+:root[data-color-scheme="light"] {
+    --color-background: #d7d7d7;
+    --color-title-bar: #e9e9e9;
+    --color-title-bar-border: #a0a0a0;
+    --color-menu-background: #f1f1f1;
+    --color-menu-item-text: #111;
+    --color-menu-item-hover: #cce8ff;
+    --color-menu-item-border: #99d1ff;
+    --color-menu-item-selected: rgba(0, 120, 215, 0.22);
+    --color-menu-item-disabled-hover: #e7e7e7;
+    --color-menu-item-disabled-hover-border: #c8c8c8;
+    --color-scrollbar-background: #e6e6e6;
+    --color-scrollbar-thumb: #8a8a8a;
+    --color-window-background: #f0f0f0;
+    --color-window-border: rgba(0, 0, 0, .28);
+    --color-number-input-background: #fff;
+    --pdn-menu-background: #ffffff;
+    --pdn-control-border: #767676;
+    --pdn-menu-border: #a0a0a0;
+    --pdn-separator: #c2c2c2;
+    --pdn-scrollbar-track: #e6e6e6;
+    --pdn-scrollbar-thumb: #8a8a8a;
+    --pdn-slider-background: #e5e5e5;
+    --pdn-slider-text: #111111;
+    --pdn-slider-filled-text: #ffffff;
+    --color-dialog-surface: #ffffff;
+    --color-dialog-surface-alt: #f7f7f7;
+    --color-dialog-border: #a0a0a0;
+    --color-muted-text: #555555;
+    --color-subtle-text: #707070;
+    --color-link: #0067b8;
+    --color-link-hover: #004f8f;
+    --color-preview-background: #d0d0d0;
+    --color-curve-background: #ffffff;
+    --color-curve-grid: #888888;
+    --color-curve-line: #202020;
+    color-scheme: light;
+}
+
+:root.settings-animations-disabled *,
+:root.settings-animations-disabled *::before,
+:root.settings-animations-disabled *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+}
+
+:root.settings-translucent-windows .window {
+    opacity: 1;
+    transition: opacity 180ms ease-out;
+}
+
+:root.settings-translucent-windows .window.window-over-image:not(:focus-within):not(.window-focused) {
+    opacity: .88;
 }
 
 /* Windows Font */

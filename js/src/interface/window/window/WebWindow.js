@@ -25,12 +25,20 @@ class WebWindow extends AbstractWindow {
         this.anchorX = 0;
         this.anchorY = 0;
 
+        this.updateImageOverlap = this.updateImageOverlap.bind(this);
+
         window.addEventListener("resize", () => {
             this.applyAnchor();
         });
+
+        for (const event of ["app:update_active_document", "document:update_viewport", "app:resize"]) {
+            this.app.on(event, this.updateImageOverlap);
+        }
     }
 
     create() {
+        WebWindow.ensureFocusTracking();
+
         // Window frame
         this.windowElement = document.createElement("div");
         this.windowElement.className = "window";
@@ -67,6 +75,8 @@ class WebWindow extends AbstractWindow {
             this.windowElement.appendChild(this.contentElement);
         }
         this.overlay.appendChild(this.windowElement);
+        WebWindow.focus(this.windowElement);
+        this.updateImageOverlap();
 
         // Window movement handling
         this.titleBarElement.addEventListener("mousedown", (event) => {
@@ -95,6 +105,26 @@ class WebWindow extends AbstractWindow {
         super.create();
     }
 
+    static ensureFocusTracking() {
+        if (WebWindow.focusTrackingInstalled) return;
+        WebWindow.focusTrackingInstalled = true;
+
+        const updateFocusedWindow = target => {
+            const focusedWindow = target instanceof Element ? target.closest(".window") : null;
+            WebWindow.focus(focusedWindow);
+        };
+
+        // Capture the event before title-bar dragging stops propagation.
+        document.addEventListener("mousedown", event => updateFocusedWindow(event.target), true);
+        document.addEventListener("focusin", event => updateFocusedWindow(event.target), true);
+    }
+
+    static focus(focusedWindow) {
+        for (const windowElement of document.querySelectorAll(".window")) {
+            windowElement.classList.toggle("window-focused", windowElement === focusedWindow);
+        }
+    }
+
     setTitle(title) {
         this.title = title;
 
@@ -119,6 +149,7 @@ class WebWindow extends AbstractWindow {
         if (this.windowElement !== null) {
             this.windowElement.style.width = width + "px";
             this.windowElement.style.height = height + "px";
+            this.updateImageOverlap();
         }
     }
 
@@ -137,7 +168,30 @@ class WebWindow extends AbstractWindow {
         if (this.windowElement !== null) {
             this.windowElement.style.left = x + "px";
             this.windowElement.style.top = y + "px";
+            this.updateImageOverlap();
         }
+    }
+
+    updateImageOverlap() {
+        if (this.windowElement === null) return;
+        const workspace = this.app.getActiveDocumentWorkspace();
+        if (workspace === null) {
+            this.windowElement.classList.remove("window-over-image");
+            return;
+        }
+
+        const renderBounds = workspace.getRenderBounds();
+        const editorBounds = document.getElementById("editor").getBoundingClientRect();
+        const overlayBounds = this.overlay.getBoundingClientRect();
+        const imageLeft = editorBounds.left - overlayBounds.left + renderBounds.getX();
+        const imageTop = editorBounds.top - overlayBounds.top + renderBounds.getY();
+        const imageRight = imageLeft + renderBounds.getWidth();
+        const imageBottom = imageTop + renderBounds.getHeight();
+        const windowRight = this.x + this.width;
+        const windowBottom = this.y + this.height;
+        const overlaps = this.x < imageRight && windowRight > imageLeft
+            && this.y < imageBottom && windowBottom > imageTop;
+        this.windowElement.classList.toggle("window-over-image", overlaps);
     }
 
     setPositionAligned(x, y) {
@@ -219,10 +273,11 @@ class WebWindow extends AbstractWindow {
 
     getViewBounds() {
         let viewBounds = this.view.getBoundingClientRect();
+        let overlayBounds = this.overlay.getBoundingClientRect();
         let margin = 10;
         return Rectangle.relative(
-            viewBounds.x + margin,
-            viewBounds.y + margin - windowTop(),
+            viewBounds.x - overlayBounds.x + margin,
+            viewBounds.y - overlayBounds.y + margin,
             this.view.clientWidth - margin * 2,
             this.view.clientHeight - margin * 2
         );
@@ -232,3 +287,5 @@ class WebWindow extends AbstractWindow {
         return Rectangle.relative(this.x, this.y, this.width, this.height);
     }
 }
+
+WebWindow.focusTrackingInstalled = false;

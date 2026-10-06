@@ -48,6 +48,7 @@
 
 <!-- Environment -->
 <script src="./js/platform/environment.js"></script>
+<script src="./js/platform/asset_guard.js"></script>
 <script src="./bundle.js"></script>
 
 <script src="./lib/gpc.bundle.js"></script>
@@ -81,7 +82,9 @@
 <script src="./js/src/interface/item/menu/action/button/ToggleFormItem.js"></script>
 <script src="./js/src/interface/item/menu/LabelMenuItem.js"></script>
 <script src="./js/src/interface/item/menu/action/drop/DropEntry.js"></script>
+<script src="./js/src/interface/item/menu/action/drop/SubmenuDropEntry.js"></script>
 <script src="./js/src/interface/item/menu/action/drop/DropMenuItem.js"></script>
+<script src="./js/src/interface/item/menu/action/drop/DropMenuPopup.js"></script>
 <script src="./js/src/interface/item/menu/action/drop/SelectorMenuItem.js"></script>
 <script src="./js/src/interface/item/layout/ScrollList.js"></script>
 <script src="./js/src/interface/item/layout/data/ScrollOrientation.js"></script>
@@ -94,15 +97,22 @@
 <script src="./js/src/interface/item/component/ColorPreviewItem.js"></script>
 <script src="./js/src/interface/item/component/ColorCircleItem.js"></script>
 <script src="./js/src/interface/panel/header/common/CommonMenu.js"></script>
+<script src="./js/src/interface/panel/header/documents/DocumentContextMenu.js"></script>
 <script src="./js/src/interface/panel/header/documents/DocumentItem.js"></script>
 <script src="./js/src/interface/panel/header/documents/DocumentStrip.js"></script>
 <script src="./js/src/interface/window/DialogMover.js"></script>
+<script src="./js/src/interface/window/ModalDialogController.js"></script>
 <script src="./js/src/interface/window/TaskDialog.js"></script>
 <script src="./js/src/interface/window/NewFileDialog.js"></script>
+<script src="./js/src/interface/window/ImageSizeDialog.js"></script>
+<script src="./js/src/interface/window/SaveImageDialog.js"></script>
+<script src="./js/src/interface/window/LayerPropertiesDialog.js"></script>
+<script src="./js/src/interface/window/EffectConfigDialog.js"></script>
 <script src="./js/src/interface/window/WelcomeDialog.js"></script>
-<script src="./js/src/interface/window/ShortcutSettingsDialog.js"></script>
+<script src="./js/src/interface/window/SettingsDialog.js"></script>
 <script src="./js/src/interface/panel/header/settings/HelpMenu.js"></script>
 <script src="./js/src/interface/panel/header/settings/SettingsMenu.js"></script>
+<script src="./js/src/engine/document/tool/shape/ShapeCatalog.js"></script>
 <script src="./js/src/interface/panel/header/tool/ToolOptionDropdown.js"></script>
 <script src="./js/src/interface/panel/header/tool/ToolMenu.js"></script>
 <script src="./js/src/interface/panel/header/tool/ToolSelector.js"></script>
@@ -138,6 +148,7 @@
 <script src="./js/src/interface/window/form/colors/ColorAddItem.js"></script>
 <script src="./js/src/interface/window/form/LayerForm.js"></script>
 <script src="./js/src/interface/window/form/layer/LayerItem.js"></script>
+<script src="./js/src/interface/window/form/ErrorForm.js"></script>
 <script src="./js/src/interface/window/window/AbstractWindow.js"></script>
 <script src="./js/src/interface/window/window/WebWindow.js"></script>
 <script src="./js/src/io/File.js"></script>
@@ -146,6 +157,8 @@
 <script src="./js/src/io/file/WebFile.js"></script>
 <script src="./js/src/io/system/AppFileSystem.js"></script>
 <script src="./js/src/io/system/WebFileSystem.js"></script>
+<script src="./js/src/io/ImageEncoder.js"></script>
+<script src="./js/src/io/PdnDocumentCodec.js"></script>
 <script src="./js/src/io/DocumentIO.js"></script>
 <script src="./js/src/engine/AppView.js"></script>
 <script src="./js/src/engine/AppWorkspace.js"></script>
@@ -183,7 +196,7 @@
 <script src="./js/src/engine/document/selection/Selection.js"></script>
 <script src="./js/src/engine/document/selection/VertexList.js"></script>
 <script src="./js/src/engine/document/DocumentView.js"></script>
-<script src="./js/src/engine/document/Document.js"></script>
+<script src="./js/src/engine/document/Document.js?v=2"></script>
 <script src="./js/src/engine/document/DocumentWorkspace.js"></script>
 <script src="./js/src/engine/document/layer/Layer.js"></script>
 <script src="./js/src/engine/document/layer/bitmap/BitmapLayer.js"></script>
@@ -191,6 +204,7 @@
 <script src="./js/src/engine/document/layer/bitmap/Surface.js"></script>
 <script src="./js/src/engine/document/layer/LayerList.js"></script>
 <script src="./js/src/engine/document/layer/LayerProperties.js"></script>
+<script src="./js/src/engine/document/effect/BitmapEffectEngine.js"></script>
 <script src="./js/src/engine/document/history/HistoryFunction.js"></script>
 <script src="./js/src/engine/document/history/HistoryFunctionResult.js"></script>
 <script src="./js/src/engine/document/history/HistoryMemento.js"></script>
@@ -201,6 +215,7 @@
 <script src="./js/src/engine/document/history/action/actions/ToolAction.js"></script>
 <script src="./js/src/engine/document/history/action/actions/AppWorkspaceAction.js"></script>
 <script src="./js/src/engine/document/history/action/actions/DocumentWorkspaceAction.js"></script>
+<script src="./js/src/engine/document/history/action/actions/document/effect/BitmapEffectAction.js"></script>
 <script src="./js/src/engine/document/history/action/actions/app/file/FileAction.js"></script>
 <script src="./js/src/engine/document/history/action/actions/app/file/NewFileAction.js"></script>
 <script src="./js/src/engine/document/history/action/actions/document/edit/EditAction.js"></script>
@@ -246,6 +261,8 @@
 <script src="./js/src/engine/document/history/memento/CompoundToolHistoryMemento.js"></script>
 <script src="./js/src/engine/document/history/memento/SwapLayerHistoryMemento.js"></script>
 <script src="./js/src/engine/document/history/memento/BitmapHistoryMemento.js"></script>
+<script src="./js/src/engine/document/history/memento/DocumentStateHistoryMemento.js"></script>
+<script src="./js/src/engine/document/history/memento/LayerPropertiesHistoryMemento.js"></script>
 <script src="./js/src/engine/document/render/RenderArgs.js"></script>
 <script src="./js/src/engine/document/render/SurfaceBox.js"></script>
 <script src="./js/src/engine/document/render/SurfaceBoxRenderer.js"></script>

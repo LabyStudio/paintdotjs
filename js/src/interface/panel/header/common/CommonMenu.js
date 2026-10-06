@@ -22,6 +22,35 @@ class CommonMenu extends StripPanel {
                 CommonMenu.ref("menu.view", "rulers"),
             ]
         });
+
+        const update = () => {
+            this.updateItemsEnabledState();
+            this.updateToggleStates();
+        };
+        for (const event of [
+            "app:update_active_document",
+            "document:dirty_changed",
+            "document:history_changed",
+            "document:selection_changed",
+            "document:layers_changed",
+            "document:active_layer_changed",
+            "app:grid_visibility_changed",
+            "app:rulers_visibility_changed"
+        ]) {
+            this.app.on(event, update);
+        }
+    }
+
+    initialize(parent) {
+        super.initialize(parent);
+        this.updateToggleStates();
+    }
+
+    updateToggleStates() {
+        const grid = this.get("menu.view.grid");
+        const rulers = this.get("menu.view.rulers");
+        if (grid !== undefined) grid.setActive(this.app.isGridVisible());
+        if (rulers !== undefined) rulers.setActive(this.app.isRulersVisible());
     }
 
     static ref(menu, item, callback = null) {

@@ -42,7 +42,9 @@ class StripPanel extends Panel {
 
     updateItemsEnabledState() {
         for (let item of this.itemsList) {
-            item.setEnabledFromActionExecutable();
+            if (typeof item.setEnabledFromActionExecutable === "function") {
+                item.setEnabledFromActionExecutable();
+            }
         }
     }
 

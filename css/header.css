@@ -1,11 +1,17 @@
 /* ------------ Title Bar ------------ */
+header {
+    --pdn-ui-scale: 1.25;
+}
+
 #titleBar {
     background-color: var(--color-title-bar);
     width: 100%;
-    height: 28px;
+    height: 37px;
     border: 0 solid var(--color-title-bar-border);
     border-top: 1px solid var(--color-title-bar);
-    border-bottom-width: 1px;
+    /* Keep the border in the box model so the toolbar geometry stays stable.
+       Match the following toolbar row so no title-bar seam is visible. */
+    border-bottom: 1px solid var(--color-menu-background);
 }
 
 /* ------------ Header ------------ */
@@ -18,25 +24,32 @@
 /* ------------ Main Menu ------------ */
 #mainMenu {
     width: fit-content;
-    height: 24px;
+    height: 36px;
+    box-sizing: border-box;
     background-color: var(--color-menu-background);
     border: 1px solid var(--color-title-bar-border);
     border-bottom-width: 0;
     margin-left: 3px;
-    padding-bottom: 1px;
-    padding-top: 2px;
+    padding: 2px 1px 1px;
     margin-top: 1px;
+}
+
+#mainMenu > .menu-item {
+    margin: 0 1px;
+    padding: 6px 7px;
+    font-size: 14px;
+    line-height: 17px;
 }
 
 /* ------------ Documents Panel ------------ */
 
 #documentStrip {
-    --document-item-size: 58px;
+    --document-item-size: 72px;
 
     position: absolute;
     top: calc(2px - var(--window-top));
-    left: 340px;
-    right: 160px;
+    left: 425px;
+    right: 200px;
     height: calc(var(--document-item-size) + var(--window-top));
     z-index: 200;
     -webkit-app-region: drag;
@@ -94,27 +107,56 @@
 
 #documentStrip #documentsList .scroll-content .scroll-item .thumbnail {
     position: absolute;
-    width: calc(100% - 4px);
+    left: 50%;
+    bottom: 4px;
+    margin: 0;
+    transform: translateX(-50%);
+}
+
+#documentStrip #documentsList .scroll-content .scroll-item .thumbnail.landscape {
+    width: calc(100% - 10px);
     height: auto;
-    bottom: 0;
-    margin: 2px;
-    object-fit: contain;
+    max-height: calc(100% - 10px);
+}
+
+#documentStrip #documentsList .scroll-content .scroll-item .thumbnail.portrait {
+    width: auto;
+    height: calc(100% - 10px);
+    max-width: calc(100% - 10px);
 }
 
 /* ------------ Settings Menu ------------ */
 
 #settingsMenu {
     position: absolute;
-    top: 0;
+    top: 7px;
     right: 0;
-    margin: 2px;
+    margin: 0 2px;
     flex-direction: row-reverse;
     padding: 1px;
     gap: 1px;
 }
 
+#settingsMenu .icon-item {
+    width: 20px;
+    height: 20px;
+    padding: 2.5px;
+}
+
+#settingsMenu .icon-item .icon {
+    width: 20px;
+    height: 20px;
+}
+
+#settingsMenu .horizontal-separator {
+    height: 16px;
+    margin-right: 6px;
+    margin-left: 6px;
+}
+
 /* ------------ Common Menu ------------ */
 #commonMenu {
+    zoom: var(--pdn-ui-scale);
     width: fit-content;
     height: 26px;
     border-bottom-width: 0;
@@ -125,18 +167,6 @@
 /* ------------ Tool Menu ------------ */
 
 #toolMenu {
-    --pdn-ui-scale: 1.25;
-    --pdn-toolbar-background: #202020;
-    --pdn-control-background: #1e1e1e;
-    --pdn-menu-background: #1c1c1c;
-    --pdn-menu-gutter: #202020;
-    --pdn-control-border: #8d8d8d;
-    --pdn-menu-border: #646464;
-    --pdn-separator: #46464a;
-    --pdn-text: #fff;
-    --pdn-arrow-background: #fafafa;
-    --pdn-arrow-foreground: #202020;
-
     /* 24px controls are rendered at 125% (30px). Leave enough real,
        unscaled height for centering plus the two toolbar borders. */
     height: 35px;
@@ -144,7 +174,7 @@
     box-sizing: border-box;
     background: var(--pdn-toolbar-background);
     border-top: 1px solid var(--pdn-toolbar-background);
-    border-bottom: 1px solid #58585b;
+    border-bottom: 1px solid var(--pdn-menu-border);
     margin-left: 2px;
     overflow: hidden;
     font-family: "Segoe UI", sans-serif;
@@ -166,12 +196,39 @@
 
 #toolMenu .menu-item {
     padding: 2px;
-    height: 17px;
+    height: 23px;
 }
 
 #toolMenu #toolStripChooser\.chooseToolButton {
     width: 68px;
     box-sizing: border-box;
+}
+
+/* This menu is created under <body>, outside the scaled toolbar. Reproduce
+   the toolbar's 125% density with layout dimensions instead of CSS zoom;
+   zoom would also scale the menu's absolute screen coordinates. */
+.drop-menu[data-owner-id="toolStripChooser.chooseToolButton"] {
+    --drop-menu-icon-size: 20px;
+    --drop-menu-icon-gutter: 30px;
+    --drop-menu-icon-divider: 34px;
+    --drop-menu-text-gap: 10px;
+    --drop-menu-entry-height: 20px;
+    --drop-menu-entry-padding-y: 3.75px;
+    --drop-menu-entry-padding-right: 5px;
+    font-size: 14.5px;
+    width: 233px;
+}
+
+.drop-menu[data-owner-id="toolStripChooser.chooseToolButton"]::before {
+    left: var(--drop-menu-icon-divider);
+}
+
+.drop-menu[data-owner-id="toolStripChooser.chooseToolButton"] .drop-entry {
+    margin: 1.25px;
+}
+
+.drop-menu[data-owner-id="toolStripChooser.chooseToolButton"] .drop-entry .shortcut {
+    display: none;
 }
 
 #toolMenu > .horizontal-separator {
@@ -303,7 +360,7 @@
 }
 
 #toolMenu .tool-dropdown-split .tool-dropdown-arrow:hover {
-    background: rgba(255, 255, 255, 0.09);
+    background: var(--color-menu-item-hover);
 }
 
 #toolMenu .tool-dropdown-toolbar .tool-dropdown-arrow:after {
@@ -311,7 +368,7 @@
     top: 8px;
     border-left-width: 3px;
     border-right-width: 3px;
-    border-top-color: #fff;
+    border-top-color: var(--pdn-text);
 }
 
 #toolMenu .tool-option input[type="number"] {
@@ -334,6 +391,85 @@
     gap: 1px;
 }
 
+#toolMenu .tool-size-combo {
+    display: inline-flex;
+    width: 55px;
+    height: 24px;
+    box-sizing: border-box;
+    background: var(--pdn-control-background);
+    border: 1px solid var(--pdn-control-border);
+}
+
+#toolMenu .tool-size-combo .tool-size-input {
+    min-width: 0;
+    width: 36px;
+    height: 22px;
+    padding: 1px 3px;
+    color: var(--pdn-text);
+    background: transparent;
+    border: 0;
+    outline: 0;
+    box-sizing: border-box;
+    font: 12px "Segoe UI", sans-serif;
+}
+
+#toolMenu .tool-size-arrow {
+    position: relative;
+    flex: 0 0 17px;
+    width: 17px;
+    height: 22px;
+    padding: 0;
+    background: var(--pdn-arrow-background);
+    border: 0;
+}
+
+#toolMenu .tool-size-arrow:after {
+    position: absolute;
+    content: "";
+    left: 5px;
+    top: 9px;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid var(--pdn-arrow-foreground);
+}
+
+.tool-size-dropdown-menu {
+    max-height: min(450px, calc(100vh - 40px));
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--pdn-menu-background);
+    scrollbar-color: var(--pdn-scrollbar-thumb) var(--pdn-scrollbar-track);
+    scrollbar-width: auto;
+}
+
+.tool-dropdown-menu.tool-size-dropdown-menu button {
+    justify-content: flex-start;
+    height: 18px;
+    min-height: 18px;
+    padding: 0 3px;
+    line-height: 17px;
+    font-size: 12px;
+}
+
+.tool-dropdown-menu.tool-size-dropdown-menu button[active] {
+    background: var(--color-menu-item-selected);
+    border-color: var(--color-menu-item-selected-border);
+}
+
+.tool-size-dropdown-menu::-webkit-scrollbar {
+    width: 16px;
+}
+
+.tool-size-dropdown-menu::-webkit-scrollbar-track {
+    background: var(--pdn-scrollbar-track);
+}
+
+.tool-size-dropdown-menu::-webkit-scrollbar-thumb {
+    min-height: 24px;
+    background: var(--pdn-scrollbar-thumb);
+    border: 2px solid var(--pdn-scrollbar-track);
+}
+
 #toolMenu .tool-slider-control {
     display: inline-flex;
     align-items: center;
@@ -350,32 +486,40 @@
     height: 23px;
     box-sizing: border-box;
     overflow: hidden;
-    color: #fff;
-    background: #cfcfcf;
-    border: 1px solid #707070;
+    color: var(--pdn-slider-text);
+    background: var(--pdn-slider-background);
+    border: 1px solid var(--pdn-control-border);
 }
 
 #toolMenu .tool-slider-fill {
     position: absolute;
     inset: 0 auto 0 0;
+    overflow: hidden;
     background: #0078d7;
     pointer-events: none;
 }
 
-#toolMenu .tool-slider-value {
+#toolMenu .tool-slider-value,
+#toolMenu .tool-slider-fill-value {
     position: absolute;
     z-index: 1;
     left: 4px;
     top: 2px;
     line-height: 17px;
     font-size: 12px;
+    white-space: nowrap;
     pointer-events: none;
+}
+
+#toolMenu .tool-slider-fill-value {
+    z-index: 2;
+    color: var(--pdn-slider-filled-text);
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
 }
 
 #toolMenu .tool-slider-meter input[type="range"] {
     position: absolute;
-    z-index: 2;
+    z-index: 3;
     inset: 0;
     width: 100%;
     height: 100%;
@@ -428,8 +572,8 @@
 }
 
 #toolMenu .tool-dropdown-icon[aria-expanded="true"] {
-    background: #104c7c;
-    border-color: #0078d7;
+    background: var(--color-menu-item-selected);
+    border-color: var(--color-menu-item-selected-border);
     box-shadow: inset 0 0 0 1px rgba(195, 228, 255, 0.18);
 }
 
@@ -469,8 +613,8 @@
 }
 
 #toolMenu .tool-icon-group .tool-image-button[active] img {
-    background: #104c7c;
-    outline: 1px solid #0078d7;
+    background: var(--color-menu-item-selected);
+    outline: 1px solid var(--color-menu-item-selected-border);
     box-shadow: inset 0 0 0 1px rgba(195, 228, 255, 0.18);
 }
 
@@ -521,9 +665,9 @@
     position: fixed;
     z-index: 4000;
     padding: 0;
-    color: #fff;
-    background: #1c1c1c;
-    border: 1px solid #646464;
+    color: var(--pdn-text);
+    background: var(--pdn-menu-background);
+    border: 1px solid var(--pdn-menu-border);
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
     font-family: "Segoe UI", sans-serif;
     font-size: 15px;
@@ -532,12 +676,16 @@
 
 .tool-dropdown-menu-icons {
     min-width: 174px;
-    background: linear-gradient(to right, #202020 0, #202020 34px, #1c1c1c 34px, #1c1c1c 100%);
+    background: linear-gradient(to right, var(--pdn-menu-gutter) 0,
+        var(--pdn-menu-gutter) 34px, var(--pdn-menu-background) 34px,
+        var(--pdn-menu-background) 100%);
 }
 
 .tool-dropdown-menu-checkmarks {
     min-width: 174px;
-    background: linear-gradient(to right, #202020 0, #202020 30px, #1c1c1c 30px, #1c1c1c 100%);
+    background: linear-gradient(to right, var(--pdn-menu-gutter) 0,
+        var(--pdn-menu-gutter) 30px, var(--pdn-menu-background) 30px,
+        var(--pdn-menu-background) 100%);
 }
 
 .tool-dropdown-menu-checkmarks:before {
@@ -547,7 +695,7 @@
     bottom: 0;
     left: 30px;
     width: 1px;
-    background: #46464a;
+    background: var(--pdn-separator);
     pointer-events: none;
 }
 
@@ -558,7 +706,7 @@
     bottom: 0;
     left: 34px;
     width: 1px;
-    background: #46464a;
+    background: var(--pdn-separator);
     pointer-events: none;
 }
 
@@ -566,7 +714,7 @@
     display: flex;
     align-items: center;
     width: 100%;
-    color: #fff;
+    color: var(--pdn-text);
     background: transparent;
     border: 1px solid transparent;
     text-align: left;
@@ -593,7 +741,7 @@
     width: 26px;
     height: 27px;
     box-sizing: border-box;
-    color: #fff;
+    color: var(--pdn-text);
     font-size: 18px;
 }
 
@@ -613,17 +761,17 @@
 }
 
 .tool-dropdown-menu button:hover {
-    background: linear-gradient(to right, rgba(0, 120, 215, 0.42) 0, rgba(0, 120, 215, 0.42) 34px, #18324b 34px, #18324b 100%);
-    border-color: #075da8;
+    background: var(--color-menu-item-hover);
+    border-color: var(--color-menu-item-border);
 }
 
 .tool-dropdown-menu-checkmarks button:hover {
-    background: linear-gradient(to right, rgba(0, 120, 215, 0.42) 0, rgba(0, 120, 215, 0.42) 30px, #18324b 30px, #18324b 100%);
+    background: var(--color-menu-item-hover);
 }
 
 .tool-dropdown-menu-text button:hover,
 .tool-dropdown-menu-text button[active] {
-    background: #104c7c;
+    background: var(--color-menu-item-selected);
 }
 
 .tool-dropdown-menu-icons button[active] {
@@ -644,6 +792,64 @@
     background: linear-gradient(#246ca5, #1d5c90);
     border: 1px solid #0b73bd;
     box-shadow: inset 0 0 0 1px rgba(104, 183, 235, 0.22);
+}
+
+/* Paint.NET-style categorized Shapes picker. */
+.tool-shape-grid-menu {
+    box-sizing: border-box;
+    width: 338px;
+    max-height: calc(100vh - 76px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--pdn-menu-background);
+}
+
+.tool-shape-grid-heading {
+    box-sizing: border-box;
+    height: 26px;
+    padding: 3px 5px;
+    display: flex;
+    align-items: center;
+    color: var(--pdn-text);
+    background: var(--pdn-menu-gutter);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.tool-shape-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 38px);
+    gap: 2px;
+    padding: 4px 7px;
+}
+
+.tool-dropdown-menu.tool-shape-grid-menu .tool-shape-grid button {
+    box-sizing: border-box;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    padding: 3px;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.tool-dropdown-menu.tool-shape-grid-menu .tool-shape-grid button:hover,
+.tool-dropdown-menu.tool-shape-grid-menu .tool-shape-grid button[active] {
+    background: var(--color-menu-item-selected);
+    border-color: var(--color-menu-item-selected-border);
+    box-shadow: inset 0 0 0 1px rgba(195, 228, 255, 0.28);
+}
+
+.tool-dropdown-menu.tool-shape-grid-menu .tool-shape-grid button img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+
+#toolMenu .tool-option[data-option-key="shape"] .tool-dropdown-value-icon {
+    width: 20px;
+    height: 20px;
 }
 
 #toolMenu .tool-option-toggle {

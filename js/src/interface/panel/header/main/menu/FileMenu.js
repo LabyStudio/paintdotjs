@@ -10,9 +10,9 @@ class FileMenu extends DropMenuItem {
             new VerticalSeparator(),
             FileMenu.create("save"),
             FileMenu.create("saveAs"),
-            new DropEntry("menu.file.saveAll", null),
+            FileMenu.create("saveAll"),
             new VerticalSeparator(),
-            new DropEntry("menu.file.print", null),
+            FileMenu.create("print"),
             new VerticalSeparator(),
             FileMenu.create("close"),
             new VerticalSeparator(),
@@ -21,7 +21,7 @@ class FileMenu extends DropMenuItem {
             }),
         ]);
 
-        // TODO this.updateEntriesOn("");
+        this.updateEntriesOn("document:dirty_changed", "app:update_active_document");
     }
 
     static create(id) {

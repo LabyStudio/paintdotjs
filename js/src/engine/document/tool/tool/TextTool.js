@@ -5,6 +5,7 @@ class TextTool extends DrawingTool {
         this.textOrigin = null;
         this.button = MouseButton.LEFT;
         this.editor = null;
+        this.caretElement = null;
         this.previewBounds = null;
         this.originNub = null;
         this.tracking = false;
@@ -125,10 +126,14 @@ class TextTool extends DrawingTool {
             outline: "none",
             background: "transparent",
             color: "transparent",
-            caretColor: this.getColor(this.button).toHex(),
+            caretColor: "transparent",
             whiteSpace: "pre"
         });
         editor.oninput = () => this.renderPreview();
+        editor.onselect = () => this.updateCaret();
+        editor.onkeyup = () => this.updateCaret();
+        editor.onfocus = () => this.updateCaret();
+        editor.onblur = () => this.updateCaret();
         editor.onkeydown = event => {
             if (event.key === "Escape") {
                 event.preventDefault();
@@ -153,6 +158,9 @@ class TextTool extends DrawingTool {
                 if (typeof editor.setPointerCapture === "function") {
                     editor.setPointerCapture(event.pointerId);
                 }
+            } else if (event.button === MouseButton.LEFT) {
+                event.preventDefault();
+                this.placeCaretAt(this.eventToDocumentPoint(event));
             }
         });
         editor.addEventListener("pointermove", event => {
@@ -172,6 +180,10 @@ class TextTool extends DrawingTool {
         editor.addEventListener("contextmenu", event => event.preventDefault());
         this.app.getEditorElement().appendChild(editor);
         this.editor = editor;
+        const caret = document.createElement("div");
+        caret.className = "text-tool-caret";
+        this.app.getEditorElement().appendChild(caret);
+        this.caretElement = caret;
         this.updateEditorStyle();
     }
 
@@ -180,12 +192,17 @@ class TextTool extends DrawingTool {
             this.editor.parentNode.removeChild(this.editor);
         }
         this.editor = null;
+        if (this.caretElement !== null) this.caretElement.remove();
+        this.caretElement = null;
     }
 
     getFontSize() {
         const configured = Number(this.getSetting("fontSize", 12));
+        const documentModel = this.getDocumentWorkspace().getDocument();
+        const resolution = Math.max(0.01,
+            Number(documentModel.getResolution?.() ?? documentModel.resolution) || 96);
         return this.getSetting("fontUnit", "points") === "points"
-            ? configured * 96 / 72 : configured;
+            ? configured * resolution / 72 : configured;
     }
 
     getFontString() {
@@ -204,13 +221,16 @@ class TextTool extends DrawingTool {
         this.editor.style.fontSize = (this.getFontSize() * zoom) + "px";
         this.editor.style.lineHeight = "1.2";
         this.editor.style.textAlign = this.getSetting("align", "left");
-        this.editor.style.caretColor = this.getColor(this.button).toHex();
         this.positionEditor();
+        this.updateCaret();
     }
 
     positionEditor() {
         if (this.editor === null || this.textOrigin === null) return;
-        const screen = this.getDocumentWorkspace().toScreenPosition(this.textOrigin);
+        const screen = this.getDocumentWorkspace().toScreenPosition(new Point(
+            this.textOrigin.x,
+            this.getTextTop()
+        ));
         const align = this.getSetting("align", "left");
         this.editor.style.left = screen.x + "px";
         this.editor.style.top = screen.y + "px";
@@ -225,7 +245,8 @@ class TextTool extends DrawingTool {
         const text = this.editor.value;
         const lines = text.split("\n");
         const fontSize = this.getFontSize();
-        const lineHeight = fontSize * 1.2;
+        const lineHeight = this.getLineHeight();
+        const textTop = this.getTextTop();
         context.save();
         context.font = this.getFontString();
         let width = 1;
@@ -239,7 +260,7 @@ class TextTool extends DrawingTool {
         const left = align === "center" ? this.textOrigin.x - width / 2
             : align === "right" ? this.textOrigin.x - width : this.textOrigin.x;
         const nextBounds = Rectangle.intersect(new Rectangle(
-            Math.floor(left) - 3, Math.floor(this.textOrigin.y) - 3,
+            Math.floor(left) - 3, Math.floor(textTop) - 3,
             Math.ceil(width) + 6, Math.ceil(lines.length * lineHeight) + 6
         ), surface.getBounds());
         let dirtyBounds = this.previewBounds === null
@@ -257,7 +278,7 @@ class TextTool extends DrawingTool {
             context.fillStyle = this.getColor(this.button).toHex();
             const decorationThickness = Math.max(1, Math.round(fontSize / 14));
             for (let i = 0; i < lines.length; ++i) {
-                const y = this.textOrigin.y + i * lineHeight;
+                const y = textTop + i * lineHeight;
                 const line = lines[i];
                 context.fillText(line, this.textOrigin.x, y);
                 const lineWidth = context.measureText(line).width;
@@ -275,8 +296,54 @@ class TextTool extends DrawingTool {
         this.previewBounds = nextBounds;
         this.bitmapTransaction.dirtyBounds = nextBounds;
         this.positionNub();
+        this.updateCaret();
         this.getActiveLayer().invalidate(dirtyBounds);
         return true;
+    }
+
+    getLineHeight() {
+        return this.getFontSize() * 1.2;
+    }
+
+    getTextTop() {
+        return this.textOrigin === null ? 0 : Math.floor(this.textOrigin.y - this.getLineHeight() / 2);
+    }
+
+    updateCaret() {
+        if (this.editor === null || this.caretElement === null || this.textOrigin === null) return;
+        if (document.activeElement !== this.editor || !this.pending) {
+            this.caretElement.hidden = true;
+            return;
+        }
+
+        const text = this.editor.value;
+        const position = this.editor.selectionStart === null ? text.length : this.editor.selectionStart;
+        const beforeCaret = text.substring(0, position);
+        const lineIndex = (beforeCaret.match(/\n/g) || []).length;
+        const lineStart = beforeCaret.lastIndexOf("\n") + 1;
+        const prefix = beforeCaret.substring(lineStart);
+        const line = text.split("\n")[lineIndex] || "";
+        const context = this.getActiveLayer().getSurface().context;
+        context.save();
+        context.font = this.getFontString();
+        const prefixWidth = context.measureText(prefix).width;
+        const lineWidth = context.measureText(line).width;
+        context.restore();
+
+        const align = this.getSetting("align", "left");
+        const lineLeft = align === "center" ? this.textOrigin.x - lineWidth / 2
+            : align === "right" ? this.textOrigin.x - lineWidth : this.textOrigin.x;
+        const documentPoint = new Point(
+            lineLeft + prefixWidth,
+            this.getTextTop() + lineIndex * this.getLineHeight()
+        );
+        const screen = this.getDocumentWorkspace().toScreenPosition(documentPoint);
+        const zoom = this.getDocumentWorkspace().getZoom();
+        this.caretElement.style.left = screen.x + "px";
+        this.caretElement.style.top = screen.y + "px";
+        this.caretElement.style.width = Math.max(1, 2 * zoom) + "px";
+        this.caretElement.style.height = Math.max(1, this.getLineHeight() * zoom) + "px";
+        this.caretElement.hidden = false;
     }
 
     eventToDocumentPoint(event) {
@@ -294,16 +361,16 @@ class TextTool extends DrawingTool {
             if (this.editor !== editor) return;
             editor.focus({preventScroll: true});
             if (position !== null) editor.setSelectionRange(position, position);
+            this.updateCaret();
         });
     }
 
     placeCaretAt(point) {
         if (this.editor === null) return;
         const lines = this.editor.value.split("\n");
-        const fontSize = this.getFontSize();
-        const lineHeight = fontSize * 1.2;
+        const lineHeight = this.getLineHeight();
         const lineIndex = Utility.clamp(
-            Math.floor((point.y - this.textOrigin.y) / lineHeight), 0, lines.length - 1
+            Math.floor((point.y - this.getTextTop()) / lineHeight), 0, lines.length - 1
         );
         const context = this.getActiveLayer().getSurface().context;
         context.save();

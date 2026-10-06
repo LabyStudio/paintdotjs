@@ -12,8 +12,13 @@ class BitmapLayer extends Layer {
     }
 
     render(renderArgs, rectangle) {
-        // TODO render rows individually
-        this.surface.render(renderArgs, rectangle);
+        // Apply layer properties while compositing, without changing the
+        // layer's source pixels. This mirrors Paint.NET's non-destructive
+        // opacity behavior and keeps editing operations at full fidelity.
+        const opacityValue = this.properties.opacity === undefined ? 255 : this.properties.opacity;
+        const opacity = Math.max(0, Math.min(255, opacityValue)) / 255;
+        const blendMode = LayerProperties.getBlendMode(this.properties.blendMode);
+        this.surface.render(renderArgs, rectangle, opacity, blendMode);
 
         // Fire event
         let app = this.documentWorkspace.getApp();

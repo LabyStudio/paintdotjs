@@ -1,5 +1,11 @@
 const {CustomTitlebar, TitlebarColor} = require('custom-electron-titlebar')
-const { ipcRenderer } = require('electron');
+const {ipcRenderer, clipboard, shell, webUtils} = require('electron');
+
+window.desktopFileActions = {
+    copyText: text => clipboard.writeText(text),
+    getPathForFile: file => webUtils.getPathForFile(file),
+    showItemInFolder: filePath => shell.showItemInFolder(filePath)
+};
 
 new CustomTitlebar({
     backgroundColor: TitlebarColor.fromHex('#0D0D0D'),

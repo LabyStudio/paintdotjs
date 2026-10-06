@@ -65,10 +65,20 @@ input[type="checkbox"]:checked {
 
 /* ------------ Slider ------------ */
 
+input[type="range"] {
+    box-sizing: border-box;
+    min-height: 28px;
+    margin-top: 0;
+    margin-bottom: 0;
+    cursor: pointer;
+    touch-action: none;
+}
+
 .slider-wrapper {
     display: flex;
     position: relative;
-    height: 16px;
+    height: 28px;
+    align-items: center;
 }
 
 .slider-tick {
@@ -136,11 +146,16 @@ input[type="range"]::-moz-range-thumb {
 /* ------------ Color Slider ------------ */
 .color-slider {
     /* Note: Also adjust canvas size in js */
-    width: 65px;
-    height: 10px;
+    position: relative;
+    width: 85px;
+    height: 22px;
+    cursor: pointer;
 }
 
 .color-slider .canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
     background-image: var(--image-transparency);
 }
 
@@ -155,9 +170,11 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .color-slider .cursor {
-    position: relative;
+    position: absolute;
     left: 0;
-    top: 0;
+    /* Match the original inline layout: the arrow sits below the color strip
+       and points back up at the selected value. */
+    top: 14px;
     width: 4px;
     height: 5px;
     transform: translate(-50%, -80%);
@@ -171,12 +188,12 @@ input[type="range"]::-moz-range-thumb {
 
 #colorsForm .color-circle {
     position: absolute;
-    left: 60px;
-    top: 36px;
+    left: 72px;
+    top: 48px;
 
     /* Note: Also adjust canvas size in js */
-    width: 141px;
-    height: 141px;
+    width: 180px;
+    height: 180px;
 }
 
 #colorsForm .color-circle .cursor {
@@ -301,6 +318,11 @@ hr {
 .scroll-list .scroll-content .dragging-item {
     background-color: var(--color-menu-item-hover);
     border: 1px solid var(--color-menu-item-border);
+    box-shadow: 0 4px 10px rgb(0 0 0 / 45%);
+    cursor: grabbing;
+    opacity: 0.92;
+    pointer-events: none;
+    user-select: none;
 }
 
 .scroll-list .scroll-content .selected-item:before {
@@ -313,4 +335,53 @@ hr {
     right: 0;
     bottom: 0;
     pointer-events: none;
+}
+
+/* ------------ Missing asset setup ------------ */
+.missing-assets-page {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    padding: 24px;
+    color: var(--color-menu-item-text);
+    background: var(--color-background);
+}
+
+.missing-assets-dialog {
+    width: min(560px, 100%);
+    box-sizing: border-box;
+    padding: 24px;
+    background: var(--color-window-background);
+    border: 1px solid var(--color-window-border);
+    box-shadow: 0 10px 32px rgb(0 0 0 / 55%);
+}
+
+.missing-assets-dialog h1 {
+    margin: 0 0 18px;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.missing-assets-dialog p {
+    margin: 10px 0;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.missing-assets-dialog code {
+    display: block;
+    margin: 16px 0;
+    padding: 12px;
+    color: #ffffff;
+    background: #151515;
+    border: 1px solid var(--color-title-bar-border);
+    font: 13px/1.4 Consolas, monospace;
+    user-select: all;
+}
+
+.missing-assets-dialog .missing-assets-note {
+    margin-bottom: 0;
+    color: #c7c7c7;
 }

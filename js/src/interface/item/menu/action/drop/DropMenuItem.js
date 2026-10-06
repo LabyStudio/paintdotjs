@@ -8,9 +8,19 @@ class DropMenuItem extends MenuItem {
         });
 
         this.openMenu = false;
+        this.dropMenuElement = null;
+        this.dropMenuPopup = null;
         this.entries = entries;
 
-        this.closeListener = () => {
+        this.closeListener = event => {
+            // Clicking another top-level menu is handled by MainMenu. Do not
+            // let the previous menu's outside-click listener close the menu
+            // which has just replaced it during the same click event.
+            if (this.parent !== null
+                && typeof this.parent.onDropMenuHovered === "function"
+                && this.parent.getElement().contains(event.target)) {
+                return;
+            }
             this.close();
         };
     }
@@ -23,6 +33,12 @@ class DropMenuItem extends MenuItem {
         for (let entry of this.entries) {
             entry.initialize(this);
         }
+
+        this.element.addEventListener("mouseenter", () => {
+            if (this.parent !== null && typeof this.parent.onDropMenuHovered === "function") {
+                this.parent.onDropMenuHovered(this);
+            }
+        });
     }
 
     add(entry) {
@@ -37,23 +53,25 @@ class DropMenuItem extends MenuItem {
     }
 
     open() {
-        let dropMenu = document.createElement("div");
-        dropMenu.className = "drop-menu";
-        for (let entry of this.entries) {
-            entry.initialize(this);
-            dropMenu.appendChild(entry.getElement());
+        if (this.isOpen()) return;
+        if (this.parent !== null && typeof this.parent.onDropMenuOpening === "function") {
+            this.parent.onDropMenuOpening(this);
         }
-        document.body.appendChild(dropMenu);
+
+        this.dropMenuPopup = new DropMenuPopup(this.id, {
+            commandMenu: this.id.startsWith("menu."),
+            closeOwner: () => this.close()
+        });
+        const dropMenu = this.dropMenuPopup.open(this.entries, this);
+        this.dropMenuElement = dropMenu;
         this.openMenu = true;
 
         // Set drop position
-        let elementBounds = this.element.getBoundingClientRect();
-        dropMenu.style.left = elementBounds.left
-            + (elementBounds.right > window.innerWidth / 2 ? -dropMenu.offsetWidth + elementBounds.width : 0)
-            + "px";
-        dropMenu.style.top = elementBounds.top
-            + (this.isDropUp() ? -dropMenu.offsetHeight : this.element.offsetHeight)
-            + "px";
+        const elementBounds = this.element.getBoundingClientRect();
+        this.dropMenuPopup.positionAtAnchor(elementBounds, {
+            alignEnd: elementBounds.right > window.innerWidth / 2,
+            dropUp: this.isDropUp()
+        });
 
         this.addClassName("open");
 
@@ -67,13 +85,19 @@ class DropMenuItem extends MenuItem {
     close() {
         document.removeEventListener("click", this.closeListener);
 
-        let dropMenu = document.querySelector(".drop-menu");
-        if (dropMenu) {
-            dropMenu.remove();
+        for (const entry of this.entries) {
+            if (entry instanceof SubmenuDropEntry) entry.close();
         }
+
+        this.dropMenuPopup?.close();
+        this.dropMenuPopup = null;
+        this.dropMenuElement = null;
         this.openMenu = false;
 
         this.removeClass("open");
+        if (this.parent !== null && typeof this.parent.onDropMenuClosed === "function") {
+            this.parent.onDropMenuClosed(this);
+        }
     }
 
     updateEntriesOn(...eventIds) {

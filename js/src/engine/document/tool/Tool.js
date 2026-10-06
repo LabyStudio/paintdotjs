@@ -1,6 +1,8 @@
 class Tool {
 
-    static saveTileGranularity = 32;
+    // Paint.NET's brush render cache uses 2^8 (256px) tiles. Matching that
+    // granularity cuts bookkeeping and canvas-copy calls for continuous strokes.
+    static saveTileGranularity = 256;
 
     constructor(type) {
         this.type = type;

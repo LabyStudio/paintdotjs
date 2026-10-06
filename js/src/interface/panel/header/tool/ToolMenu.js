@@ -9,6 +9,15 @@ class ToolMenu extends StripPanel {
         });
 
         this.optionsElement = null;
+        this.sizeMenu = null;
+        this.sizeMenuOwner = null;
+        this.sizeMenuOutsideListener = event => {
+            if (this.sizeMenu !== null
+                && !this.sizeMenu.contains(event.target)
+                && !this.sizeMenuOwner.contains(event.target)) {
+                this.closeSizeMenu();
+            }
+        };
         this.app.on("app:active_tool_updated", tool => this.renderOptions(tool));
     }
 
@@ -27,11 +36,28 @@ class ToolMenu extends StripPanel {
         const number = (label, key, min, max, step = 1, suffix = "") => (
             {kind: "number", label, key, min, max, step, suffix}
         );
-        const size = (label, key, min, max, step = 1) => ({kind: "size", label, key, min, max, step});
+        const size = (label, key, min, max, step = 1, presets = null) => (
+            {kind: "size", label, key, min, max, step, presets}
+        );
+        const brushSizes = [
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+            11, 12, 13, 14, 15, 20, 25, 30, 35, 40,
+            45, 50, 55, 60, 65, 70, 75, 80, 85, 90,
+            95, 100, 125, 150, 175, 200, 225, 250, 275, 300,
+            325, 350, 375, 400, 425, 450, 475, 500, 550, 600,
+            650, 700, 750, 800, 850, 900, 950, 1000, 1100, 1200,
+            1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000
+        ];
+        const brushSize = (sectionLabel = "Brush size:") => (
+            size(sectionLabel, "width", 1, 2000, 1, brushSizes)
+        );
         const slider = (label, key, min, max, step = 1) => ({kind: "slider", label, key, min, max, step});
         const iconChoice = (label, key, values, width = 35, showText = false) => (
             {kind: "iconChoice", label, key, values, width, showText}
         );
+        const shapeChoice = (values, groups) => ({
+            kind: "shapeChoice", label: "", key: "shape", values, groups, width: 126
+        });
         const iconGroup = (label, key, values) => ({kind: "iconGroup", label, key, values});
         const toggle = (label, key) => ({kind: "toggle", label, key});
         const section = definition => Object.assign(definition, {section: true});
@@ -110,14 +136,13 @@ class ToolMenu extends StripPanel {
         ];
         const brushControls = (fill = false, blending = false) => {
             const result = [
-                choices("Brush:", "brushType", [["circle", "Circle"], ["square", "Square"]], 86, true),
-                size("Brush size:", "width", 1, 500, 1),
+                brushSize(),
                 iconChoice("", "pressure", [
                     [false, "Pressure sensitivity disabled", "tool_config_strip_brush_enable_pressure_sensitivity_false.png"],
                     [true, "Pressure sensitivity enabled", "tool_config_strip_brush_enable_pressure_sensitivity_true.png"]
                 ]),
                 slider("Hardness:", "hardness", 0, 100, 1),
-                slider("Spacing:", "spacing", 1, 200, 1)
+                slider("Spacing:", "spacing", 1, 500, 1)
             ];
             if (fill) result.push(section(choices("Fill:", "fillStyle", fillStyles, 150)));
             result.push(section(smoothing), antialias);
@@ -233,9 +258,9 @@ class ToolMenu extends StripPanel {
                 ];
             case "recolorTool":
                 return [
-                    size("Brush size:", "width", 1, 500),
+                    brushSize(),
                     slider("Hardness:", "hardness", 0, 100, 1),
-                    slider("Spacing:", "spacing", 1, 200, 1),
+                    slider("Spacing:", "spacing", 1, 500, 1),
                     section(slider("Tolerance:", "tolerance", 0, 100, 1)),
                     alphaMode,
                     section(iconGroup("", "recolorSampling", [
@@ -251,7 +276,7 @@ class ToolMenu extends StripPanel {
                         ["spline", "Spline", "enum_curve_type_spline.png"],
                         ["bezier", "Bézier", "enum_curve_type_bezier.png"]
                     ]),
-                    section(size("Brush size:", "width", 1, 500)),
+                    section(brushSize()),
                     iconChoice("Style:", "startCap", [
                         ["flat", "Flat", "enum_line_curve_cap_flat_start.png"],
                         ["arrow", "Arrow", "enum_line_curve_cap_arrow_start.png"],
@@ -276,7 +301,7 @@ class ToolMenu extends StripPanel {
                 ];
             case "shapesTool": {
                 const shapeOptions = [
-                    choices("", "shape", [
+                    shapeChoice([
                         ["rectangle", "Rectangle"], ["roundedRectangle", "Rounded rectangle"],
                         ["ellipse", "Ellipse"], ["triangle", "Triangle"],
                         ["rightTriangle", "Right triangle"], ["diamond", "Diamond"],
@@ -291,14 +316,34 @@ class ToolMenu extends StripPanel {
                         ["heart", "Heart"], ["lightningBolt", "Lightning bolt"],
                         ["gear", "Gear"], ["rectangularCallout", "Rectangular callout"],
                         ["roundedCallout", "Rounded rectangular callout"],
-                        ["ellipticalCallout", "Elliptical callout"], ["cloudCallout", "Cloud callout"]
-                    ], 126, true),
-                    iconChoice("", "drawType", [
-                        ["outline", "Draw Shape Outline", "enum_shape_draw_type_outline.png"],
-                        ["fill", "Draw Filled Shape", "enum_shape_draw_type_interior.png"],
-                        ["both", "Draw Filled Shape with Outline", "enum_shape_draw_type_both.png"]
+                        ["ellipticalCallout", "Elliptical callout"], ["cloudCallout", "Cloud callout"],
+                        ...ShapeCatalog.getEntries()
+                    ], [
+                        {label: "Basic", values: [
+                            "rectangle", "roundedRectangle", "ellipse", "diamond", "trapezoid",
+                            "parallelogram", "triangle", "rightTriangle"
+                        ]},
+                        {label: "Polygons and Stars", values: [
+                            "pentagon", "hexagon", "heptagon", "octagon",
+                            "star3", "star4", "star5", "star6"
+                        ]},
+                        {label: "Arrows", values: [
+                            "blockArrow", "notchedArrow", "pentagonArrow", "chevronArrow"
+                        ]},
+                        {label: "Callouts", values: [
+                            "rectangularCallout", "roundedCallout", "ellipticalCallout", "cloudCallout"
+                        ]},
+                        {label: "Symbols", values: [
+                            "lightningBolt", "checkMark", "multiply", "gear", "heart"
+                        ]},
+                        ShapeCatalog.CUSTOM_GROUP
                     ]),
-                    section(size("Brush size:", "width", 1, 500)),
+                    iconChoice("", "drawType", [
+                        ["outline", "Draw Shape Outline", "enum_shape_draw_type_outline_dark.png"],
+                        ["fill", "Draw Filled Shape", "enum_shape_draw_type_interior.png"],
+                        ["both", "Draw Filled Shape with Outline", "enum_shape_draw_type_both_dark.png"]
+                    ]),
+                    section(brushSize()),
                     iconChoice("Style:", "dash", [
                         ["solid", "Solid", "enum_dash_style_solid.png"],
                         ["dash", "Dash", "enum_dash_style_dash.png"],
@@ -341,12 +386,17 @@ class ToolMenu extends StripPanel {
     renderOptions(tool) {
         if (this.optionsElement === null) return;
         ToolOptionDropdown.closeActive();
+        this.closeSizeMenu();
         this.optionsElement.innerHTML = "";
         if (tool === null) return;
 
         const type = tool.getType();
         for (const definition of this.getOptionDefinitions(type)) {
-            const group = document.createElement("label");
+            // This contains several independent interactive controls. Using a
+            // <label> here makes the browser associate the whole group with
+            // its first button (usually the minus button), causing hover/click
+            // state to leak across the brush-size combo.
+            const group = document.createElement("div");
             group.className = "tool-option";
             if (definition.section) {
                 group.classList.add("tool-option-section");
@@ -375,10 +425,9 @@ class ToolMenu extends StripPanel {
                 control.className = "tool-size-control";
 
                 const input = document.createElement("input");
-                input.type = "number";
-                input.min = definition.min;
-                input.max = definition.max;
-                input.step = definition.step;
+                input.type = definition.presets === null ? "number" : "text";
+                input.inputMode = "decimal";
+                input.className = "tool-size-input";
                 input.value = type.getSetting(definition.key);
 
                 const change = value => {
@@ -395,7 +444,40 @@ class ToolMenu extends StripPanel {
                 input.onchange = () => change(input.value || definition.min);
                 control.appendChild(this.createImageButton("minus_button_icon.png", "Decrease " + definition.label,
                     () => change(Number(type.getSetting(definition.key)) - definition.step)));
-                control.appendChild(input);
+                if (definition.presets === null) {
+                    input.min = definition.min;
+                    input.max = definition.max;
+                    input.step = definition.step;
+                    control.appendChild(input);
+                } else {
+                    const combo = document.createElement("div");
+                    combo.className = "tool-size-combo";
+                    combo.appendChild(input);
+                    const arrow = document.createElement("button");
+                    arrow.type = "button";
+                    arrow.className = "tool-size-arrow";
+                    arrow.title = "Choose " + definition.label.toLowerCase();
+                    arrow.setAttribute("aria-label", arrow.title);
+                    arrow.setAttribute("aria-expanded", "false");
+                    arrow.onclick = event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.toggleSizeMenu(combo, arrow, input, definition, type, change);
+                    };
+                    input.onkeydown = event => {
+                        if (event.key === "ArrowDown" && event.altKey) {
+                            event.preventDefault();
+                            this.toggleSizeMenu(combo, arrow, input, definition, type, change);
+                        } else if (event.key === "Escape") {
+                            this.closeSizeMenu();
+                        } else if (event.key === "Enter") {
+                            change(input.value || definition.min);
+                            input.select();
+                        }
+                    };
+                    combo.appendChild(arrow);
+                    control.appendChild(combo);
+                }
                 control.appendChild(this.createImageButton("plus_button_icon.png", "Increase " + definition.label,
                     () => change(Number(type.getSetting(definition.key)) + definition.step)));
             } else if (definition.kind === "slider") {
@@ -405,6 +487,9 @@ class ToolMenu extends StripPanel {
                 meter.className = "tool-slider-meter";
                 const fill = document.createElement("div");
                 fill.className = "tool-slider-fill";
+                const fillValueLabel = document.createElement("span");
+                fillValueLabel.className = "tool-slider-fill-value";
+                fill.appendChild(fillValueLabel);
                 const valueLabel = document.createElement("span");
                 valueLabel.className = "tool-slider-value";
                 const input = document.createElement("input");
@@ -417,7 +502,9 @@ class ToolMenu extends StripPanel {
                 const updateMeter = value => {
                     const progress = (value - definition.min) / (definition.max - definition.min) * 100;
                     fill.style.width = Utility.clamp(progress, 0, 100) + "%";
-                    valueLabel.textContent = value + "%";
+                    const text = value + "%";
+                    valueLabel.textContent = text;
+                    fillValueLabel.textContent = text;
                 };
                 const change = value => {
                     value = Utility.clamp(Number(value), definition.min, definition.max);
@@ -453,15 +540,17 @@ class ToolMenu extends StripPanel {
                     control.appendChild(button);
                 }
                 update();
-            } else if (definition.kind === "iconChoice") {
+            } else if (definition.kind === "iconChoice" || definition.kind === "shapeChoice") {
                 control = new ToolOptionDropdown({
                     values: definition.values,
                     value: type.getSetting(definition.key),
                     width: definition.width,
                     toolbar: true,
-                    iconOnly: !definition.showText,
+                    iconOnly: definition.kind === "iconChoice" && !definition.showText,
                     menuIcons: true,
-                    menuWidth: 174,
+                    menuWidth: definition.kind === "shapeChoice" ? 338 : 174,
+                    shapeGrid: definition.kind === "shapeChoice",
+                    shapeGroups: definition.groups,
                     cycleOnMainClick: definition.split,
                     menuCheckmarks: definition.split,
                     onChange: value => this.updateSetting(type, definition.key, value)
@@ -544,6 +633,68 @@ class ToolMenu extends StripPanel {
             activeTool.onSettingChanged(key, value);
         }
         if (key === "selectionMode" || key === "shape") this.renderOptions(activeTool);
+    }
+
+    toggleSizeMenu(combo, arrow, input, definition, type, change) {
+        if (this.sizeMenuOwner === combo) {
+            this.closeSizeMenu();
+            return;
+        }
+        this.closeSizeMenu();
+        ToolOptionDropdown.closeActive();
+
+        const menu = document.createElement("div");
+        menu.className = "tool-dropdown-menu tool-dropdown-menu-text tool-size-dropdown-menu";
+        const selectedValue = Number(type.getSetting(definition.key));
+        let selectedButton = null;
+        const values = definition.presets.includes(selectedValue)
+            ? definition.presets
+            : [selectedValue, ...definition.presets];
+        for (const value of values) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = value;
+            button.toggleAttribute("active", value === selectedValue);
+            if (value === selectedValue) selectedButton = button;
+            button.onclick = event => {
+                event.preventDefault();
+                event.stopPropagation();
+                change(value);
+                input.focus();
+                input.select();
+                this.closeSizeMenu();
+            };
+            menu.appendChild(button);
+        }
+
+        document.body.appendChild(menu);
+        const bounds = combo.getBoundingClientRect();
+        const menuWidth = Math.round(bounds.width * 1.5);
+        menu.style.minWidth = menuWidth + "px";
+        menu.style.left = Math.round(bounds.left) + "px";
+        const availableBelow = window.innerHeight - bounds.bottom - 2;
+        if (availableBelow >= Math.min(menu.scrollHeight, 220)) {
+            menu.style.top = Math.round(bounds.bottom + 1) + "px";
+        } else {
+            menu.style.bottom = Math.round(window.innerHeight - bounds.top + 1) + "px";
+        }
+        this.sizeMenu = menu;
+        this.sizeMenuOwner = combo;
+        this.sizeMenuArrow = arrow;
+        arrow.setAttribute("aria-expanded", "true");
+        document.addEventListener("pointerdown", this.sizeMenuOutsideListener, true);
+        if (selectedButton !== null) selectedButton.scrollIntoView({block: "nearest"});
+    }
+
+    closeSizeMenu() {
+        document.removeEventListener("pointerdown", this.sizeMenuOutsideListener, true);
+        if (this.sizeMenuArrow !== undefined && this.sizeMenuArrow !== null) {
+            this.sizeMenuArrow.setAttribute("aria-expanded", "false");
+        }
+        if (this.sizeMenu !== null) this.sizeMenu.remove();
+        this.sizeMenu = null;
+        this.sizeMenuOwner = null;
+        this.sizeMenuArrow = null;
     }
 
     createImageButton(iconName, title, callback) {

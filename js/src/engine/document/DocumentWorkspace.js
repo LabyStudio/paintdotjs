@@ -3,11 +3,16 @@ class DocumentWorkspace extends DocumentView {
     constructor(app) {
         super(app);
 
+        this.fileName = null;
         this.filePath = null;
         this.fileHandle = null;
+        this.fileFormat = null;
+        this.saveOptions = null;
         this.dirty = false;
         this.activeLayer = null;
         this.history = new HistoryStack(app, this);
+        this.gridVisible = false;
+        this.rulersVisible = false;
         this.history.executed.add(() => this.setDirty(true));
         this.selection = new Selection();
         this.selection.changed.add(() => {
@@ -141,9 +146,13 @@ class DocumentWorkspace extends DocumentView {
     }
 
     getFriendlyName() {
-        return this.filePath === null
+        return this.fileName === null
             ? i18n("untitled.friendlyName")
-            : this.filePath; // TODO: get file name from path
+            : this.fileName;
+    }
+
+    getFilePath() {
+        return this.filePath;
     }
 
     isDirty() {
@@ -157,9 +166,12 @@ class DocumentWorkspace extends DocumentView {
         this.app.updateTitle();
     }
 
-    setFileInfo(fileName, fileHandle = null) {
-        this.filePath = fileName;
+    setFileInfo(fileName, fileHandle = null, filePath = null, fileFormat = null, saveOptions = null) {
+        this.fileName = fileName;
+        this.filePath = filePath;
         this.fileHandle = fileHandle;
+        this.fileFormat = fileFormat;
+        this.saveOptions = saveOptions;
         this.app.fire("document:file_changed", this);
         this.app.updateTitle();
     }
@@ -193,11 +205,32 @@ class DocumentWorkspace extends DocumentView {
     }
 
     setActiveLayer(layer) {
+        if (this.activeLayer === layer) return;
         this.activeLayer = layer;
+        this.app.fire("document:active_layer_changed", this, layer);
+    }
+
+    setDocumentAndActiveLayer(document, activeLayer) {
+        if (document.getLayers().indexOf(activeLayer) === -1) {
+            throw new Error("The active layer must belong to the new document");
+        }
+
+        const activeLayerChanged = this.activeLayer !== activeLayer;
+
+        // DocumentView emits document:changed from setDocument(). Assign the
+        // matching active layer immediately after the document reference is
+        // replaced, before any observer can inspect the new workspace state.
+        super.setDocument(document, () => {
+            this.activeLayer = activeLayer;
+        });
+
+        if (activeLayerChanged) {
+            this.app.fire("document:active_layer_changed", this, activeLayer);
+        }
     }
 
     setActiveLayerIndex(index) {
-        this.activeLayer = this.document.getLayers().getAt(index);
+        this.setActiveLayer(this.document.getLayers().getAt(index));
     }
 
     getSelection() {
@@ -206,5 +239,22 @@ class DocumentWorkspace extends DocumentView {
 
     getSelectionRenderer() {
         return this.selectionRenderer;
+    }
+
+    isGridVisible() {
+        return this.gridVisible;
+    }
+
+    setGridVisible(visible) {
+        this.gridVisible = !!visible;
+        this.gridRenderer.setVisible(this.gridVisible);
+    }
+
+    isRulersVisible() {
+        return this.rulersVisible;
+    }
+
+    setRulersVisible(visible) {
+        this.rulersVisible = !!visible;
     }
 }

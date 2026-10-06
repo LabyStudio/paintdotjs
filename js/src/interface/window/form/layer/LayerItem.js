@@ -40,6 +40,25 @@ class LayerItem extends MenuItem {
             visibleCheckbox.checked = this.layer.properties.visible;
             visibleCheckbox.setChangeCallback((checked) => {
                 this.layer.setVisible(checked);
+
+                if (!checked && typeof AppSettingsStore !== "undefined"
+                    && AppSettingsStore.get("ui.autoSelectVisibleLayer", false)) {
+                    const workspace = this.app.getActiveDocumentWorkspace();
+                    if (workspace !== null && workspace.getActiveLayer() === this.layer) {
+                        const layers = workspace.getDocument().getLayers();
+                        const currentIndex = layers.indexOf(this.layer);
+                        for (let distance = 1; distance < layers.getLayerCount(); distance++) {
+                            const below = layers.getAt(currentIndex - distance);
+                            const above = layers.getAt(currentIndex + distance);
+                            const nearest = below?.isVisible() ? below : (above?.isVisible() ? above : null);
+                            if (nearest !== null) {
+                                workspace.setActiveLayer(nearest);
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 this.app.fire("document:layer_properties_changed");
             });
             visibleCheckbox.appendTo(element, this);
@@ -54,8 +73,10 @@ class LayerItem extends MenuItem {
 
         let layerCanvas = this.layer.getSurface().canvas;
 
-        // Render thumbnail
+        // A layer may become transparent when pixels are moved or erased.
+        // Clear the previous frame so transparent pixels replace old preview data.
         let context = this.thumbnail.getContext("2d");
+        context.clearRect(0, 0, this.thumbnail.width, this.thumbnail.height);
         ImageUtil.drawImage(
             context,
             layerCanvas,

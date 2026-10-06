@@ -79,121 +79,99 @@ class ScrollList extends Item {
     }
 
     initializeDragAndDrop() {
-        let timeContinuedDragging = 0;
-        let dragging = false;
+        this.scrollSession.setDragOwner(this);
+        this.scrollSession.dragSwapPending = false;
+        const draggingItem = this.getCurrentDraggingItem();
+        if (draggingItem !== null) this.updateDraggingVisual(draggingItem, this.scrollSession.getLastClientY());
 
-        let startDraggingItem = (item) => {
-            // Start dragging the item if the item swapper is available
-            if (this.itemSwapper === null) {
-                return;
-            }
-
-            let element = item.getElement();
-
-            // Reset the transform before calculating the new position
-            element.style.transform = "translate(0, 0)";
-            element.style.zIndex = "1";
-
-            timeContinuedDragging = Date.now();
-            dragging = true;
-            item.setClassName("dragging-item", true);
-            this.scrollSession.setDraggingItem(item);
-        }
-
-        let dragItem = (item, event) => {
-            let element = item.getElement();
-
-            // Important: Reset the transform before calculating the new position
-            element.style.transform = "translate(0, 0)";
-
-            // Calculate the new position of the item
-            let offsetY = event.clientY - element.getBoundingClientRect().top - element.clientHeight / 2;
-            if (Math.abs(offsetY) < 10) {
-                return; // Threshold before starting to drag the item
-            }
-
-            element.style.transform = "translate(0, " + offsetY + "px)";
-            this.scrollSession.setLastClientY(event.clientY);
-
-            this.setSelected(item);
-            this.scrollToSelected();
-
-            // Cooldown time before swapping the items
-            let timePassed = Date.now() - timeContinuedDragging;
-            if (timePassed < 200) {
-                return
-            }
-
-            // Swap the items if the dragged item is moved to another item
-            for (let otherItem of this.items) {
-                if (otherItem === item) {
-                    continue;
-                }
-
-                // Figure out if the mouse is over the other item and then swap it
-                let otherElement = otherItem.getElement();
-                let otherElementTop = otherElement.getBoundingClientRect().top;
-                let otherElementHeight = otherElement.getBoundingClientRect().height;
-                if (event.clientY > otherElementTop && event.clientY < otherElementTop + otherElementHeight) {
-                    this.itemSwapper(item, otherItem);
-                    break; // Only swap with one item at a time
-                }
-            }
-        }
-
-        let stopDraggingItem = (item) => {
-            let element = item.getElement();
-            element.style.transform = "translate(0, 0)";
-            element.style.zIndex = "0";
-
-            item.setClassName("dragging-item", false);
-
-            this.scrollSession.setDraggingItem(null);
-            dragging = false;
-        }
-
-        // Continue dragging the item from the previous instance
-        let draggingItem = this.scrollSession.getDraggingItem();
-        if (draggingItem !== null && !dragging) {
-            let itemByKey = this.items.find(i => i.getKey() === draggingItem.getKey());
-            startDraggingItem(itemByKey);
-
-            // We don't have the mouse position yet, so we use the last stored clientY position to place the item at the correct position
-            let element = itemByKey.getElement();
-            let clientY = this.scrollSession.getLastClientY();
-            let offsetY = clientY - element.getBoundingClientRect().top - element.clientHeight / 2;
-            element.style.transform = "translate(0, " + offsetY + "px)";
-        }
-
-        // Start dragging the item
         for (let item of this.items) {
-            let element = item.getElement();
-            element.addEventListener("mousedown", event => {
-                startDraggingItem(item);
+            const element = item.getElement();
+            element.addEventListener("pointerdown", event => {
+                if (event.button !== 0 || event.target.closest("input, button") !== null) return;
+                this.startPointerDrag(item, event);
             });
         }
+    }
 
-        // Dragging the item
-        this.element.addEventListener("mousemove", event => {
-            let draggingItem = this.scrollSession.getDraggingItem();
-            if (draggingItem !== null) {
-                if (event.buttons === 1) {
-                    dragItem(draggingItem, event);
-                } else {
-                    // Make sure it resets when we missed the mouse up event
-                    stopDraggingItem(draggingItem);
-                }
-            }
-        });
+    getCurrentDraggingItem() {
+        const draggingItem = this.scrollSession.getDraggingItem();
+        if (draggingItem === null) return null;
+        return this.items.find(item => item.getKey() === draggingItem.getKey()) || null;
+    }
 
-        // Stop dragging the item
-        // TODO Take the mouse up event from the app instead of the scroll list?
-        this.element.addEventListener("mouseup", event => {
-            let draggingItem = this.scrollSession.getDraggingItem();
-            if (draggingItem !== null) {
-                stopDraggingItem(draggingItem);
-            }
-        });
+    startPointerDrag(item, event) {
+        if (this.itemSwapper === null) return;
+        const bounds = item.getElement().getBoundingClientRect();
+        this.scrollSession.setDraggingItem(item);
+        this.scrollSession.beginPointerDrag(this, event.pointerId, event.clientY - bounds.top, event.clientY);
+        this.updateDraggingVisual(item, event.clientY);
+        if (this.selectedItem !== item) this.setSelected(item);
+        event.preventDefault();
+    }
+
+    continuePointerDrag(event) {
+        const item = this.getCurrentDraggingItem();
+        if (item === null) return this.stopPointerDrag();
+        if ((event.buttons & 1) === 0) return this.stopPointerDrag();
+
+        const previousY = this.scrollSession.getLastClientY();
+        this.scrollSession.setLastClientY(event.clientY);
+        this.updateDraggingVisual(item, event.clientY);
+        this.autoScrollDuringDrag(event.clientY);
+        if (Math.abs(event.clientY - this.scrollSession.dragStartClientY) < 4) return;
+        if (this.scrollSession.dragSwapPending) return;
+
+        const index = this.items.indexOf(item);
+        let target = null;
+        if (event.clientY < previousY && index > 0) {
+            const previous = this.items[index - 1];
+            const bounds = previous.getElement().getBoundingClientRect();
+            if (event.clientY < bounds.top + bounds.height / 2) target = previous;
+        } else if (event.clientY > previousY && index < this.items.length - 1) {
+            const next = this.items[index + 1];
+            const bounds = next.getElement().getBoundingClientRect();
+            if (event.clientY > bounds.top + bounds.height / 2) target = next;
+        }
+        if (target !== null) {
+            this.scrollSession.dragSwapPending = true;
+            this.itemSwapper(item, target);
+        }
+        event.preventDefault();
+    }
+
+    updateDraggingVisual(item, clientY) {
+        const element = item.getElement();
+        item.setClassName("dragging-item", true);
+        element.style.zIndex = "3";
+        element.style.transition = "none";
+        element.style.transform = "";
+        const top = element.getBoundingClientRect().top;
+        element.style.transform = "translateY(" +
+            (clientY - top - this.scrollSession.dragGrabOffset) + "px)";
+    }
+
+    autoScrollDuringDrag(clientY) {
+        const bounds = this.element.getBoundingClientRect();
+        const edge = Math.min(32, bounds.height / 4);
+        let amount = 0;
+        if (clientY < bounds.top + edge) amount = -Math.min(14, (bounds.top + edge - clientY) * 0.45);
+        if (clientY > bounds.bottom - edge) amount = Math.min(14, (clientY - bounds.bottom + edge) * 0.45);
+        if (amount === 0) return;
+        this.element.scrollTop += amount;
+        this.scrollSession.setScrollPosition(this.element.scrollTop);
+    }
+
+    stopPointerDrag() {
+        const item = this.getCurrentDraggingItem();
+        if (item !== null) {
+            const element = item.getElement();
+            element.style.transform = "";
+            element.style.transition = "";
+            element.style.zIndex = "";
+            item.setClassName("dragging-item", false);
+        }
+        this.scrollSession.setDraggingItem(null);
+        this.scrollSession.endPointerDrag();
     }
 
     postInitialize() {
@@ -229,10 +207,9 @@ class ScrollList extends Item {
                         {top: -diff + "px"},
                         {top: 0}
                     ], {
-                        duration: 200,
-                        easing: "ease-out"
+                        duration: 140,
+                        easing: "cubic-bezier(.2,.8,.2,1)"
                     });
-                    this.scrollToSelected();
                 }
             }
             this.scrollSession.cacheItemPosition(key, currentItemPosition);

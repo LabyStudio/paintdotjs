@@ -9,12 +9,20 @@ class ShortcutKey {
     }
 
     isEvent(event) {
+        const normalizedKey = ShortcutKey.normalizeKey(event.key);
+        // On most keyboard layouts "+" requires Shift. Paint.NET displays the
+        // binding as Ctrl++ rather than Ctrl+Shift++, so accept that implicit
+        // Shift modifier without weakening modifier matching for other keys.
+        const shiftMatches = this.key === "+" && normalizedKey === "+" && !this.shift
+            ? true
+            : this.shift === event.shiftKey;
+
         return this.key !== null
-            && this.shift === event.shiftKey
+            && shiftMatches
             && this.ctrl === event.ctrlKey
             && this.alt === event.altKey
             && this.meta === event.metaKey
-            && ShortcutKey.normalizeKey(event.key) === this.key;
+            && normalizedKey === this.key;
     }
 
     isShift() {

@@ -6,37 +6,44 @@ class ColorsForm extends Form {
         this.mainColor = Color.BLACK;
         this.secondaryColor = Color.WHITE;
         this.selectedIsPrimary = true;
+        this.changed = new EventHandler();
 
         this.expanded = true; // TODO false
 
-        this.palette = [];
-
-        // Generate palette
-        for (let loop = 0; loop < 3; loop++) {
-            for (let row = 0; row < 2; row++) {
-                for (let column = 0; column < 16; column++) {
-                    let hue = (column - 2) / 14;
-                    let saturation = column < 2 ? 0 : 1;
-                    let lightness = column < 2
-                        ? (row % 2 === 0 ? (column === 0 ? 0 : 0.25) : (column === 0 ? 1 : 0.5))
-                        : row % 2 === 0 ? 0.5 : 0.25;
-                    if (loop === 1) {
-                        if (column < 2) {
-                            lightness = (row % 2 === 0 ? (column === 0 ? 0.6 : 0.2) : (column === 0 ? 0.75 : 0.4));
-                        } else {
-                            saturation = row % 2 === 0 ? 1 : 0.25;
-                            lightness = row % 2 === 0 ? 0.75 : 0.25;
-                        }
-                    }
-                    let alpha = loop === 2 ? 127 : 255;
-                    let color = Color.fromHSL(hue, saturation, lightness, alpha);
-                    this.palette.push(color);
-                }
-            }
-        }
+        // Paint.NET 5's exact 96-color default palette (packed AARRGGBB).
+        this.palette = [
+            4278190080, 4282400832, 4294901760, 4294928896, 4294957056, 4290182912,
+            4283236096, 4278255393, 4278255504, 4278255615, 4278228223, 4278200063,
+            4282908927, 4289855743, 4294901980, 4294901870, 4294967295, 4286611584,
+            4286513152, 4286526208, 4286540288, 4284186368, 4280712960, 4278222606,
+            4278222662, 4278222719, 4278209151, 4278195071, 4280352895, 4283891839,
+            4286513262, 4286513207, 4288716960, 4281348144, 4294934399, 4294947455,
+            4294961535, 4292542335, 4289068927, 4286578574, 4286578629, 4286578687,
+            4286564863, 4286550783, 4288774143, 4292247551, 4294934509, 4294934454,
+            4290822336, 4284506208, 4286529343, 4286535999, 4286542911, 4285366079,
+            4283596607, 4282351431, 4282351458, 4282351487, 4282344575, 4282337663,
+            4283449215, 4285218687, 4286529398, 4286529371, 2147483648, 2151694400,
+            2164195328, 2164222464, 2164250624, 2159476480, 2152529664, 2147548961,
+            2147549072, 2147549183, 2147521791, 2147493631, 2152202495, 2159149311,
+            2164195548, 2164195438, 2164260863, 2155905152, 2155806720, 2155819776,
+            2155833856, 2153479936, 2150006528, 2147516174, 2147516230, 2147516287,
+            2147502719, 2147488639, 2149646463, 2153185407, 2155806830, 2155806775
+        ].map(value => Color.fromRGBA(
+            (value >>> 16) & 0xff,
+            (value >>> 8) & 0xff,
+            value & 0xff,
+            (value >>> 24) & 0xff
+        ));
+        this.defaultPalette = this.palette.map(color => color.copy());
+        this.currentPaletteName = null;
+        this.palette = this.loadCurrentPalette();
+        this.paletteElements = [];
+        this.paletteContainers = [];
+        this.colorAddMode = false;
 
         this.mainColorItem = null;
         this.secondaryColorItem = null;
+        this.swatchElement = null;
         this.moreLessButtonElement = null;
         this.sliderPanel = null;
 
@@ -144,9 +151,9 @@ class ColorsForm extends Form {
             colorSettingsStrip.appendChild(this.colorAddElement.getElement());
 
             // Swatch
-            let swatch = new SwatchItem();
-            swatch.initialize(this);
-            colorSettingsStrip.appendChild(swatch.getElement());
+            this.swatchElement = new SwatchItem();
+            this.swatchElement.initialize(this);
+            colorSettingsStrip.appendChild(this.swatchElement.getElement());
         }
         grid.appendChild(colorSettingsStrip);
 
@@ -154,19 +161,17 @@ class ColorsForm extends Form {
         let colorPalette = document.createElement("div");
         colorPalette.id = "basicColorPalette";
         colorPalette.classList.add("color-palette");
+        this.paletteContainers.push(colorPalette);
         {
             for (let i = 0; i < 32; i++) {
                 let colorElement = document.createElement("div");
                 colorElement.classList.add("color");
-                colorElement.style.backgroundImage = this.paletteColor(i);
                 colorElement.onmousedown = event => {
-                    let isLeftClick = event.button === MouseButton.LEFT;
-                    if (isLeftClick) {
-                        this.setSelectedColor(this.palette[i], "palette");
-                    } else {
-                        this.setNotSelectedColor(this.palette[i], "palette");
-                    }
-                }
+                    event.preventDefault();
+                    this.onPaletteColorClick(i, event.button);
+                };
+                colorElement.oncontextmenu = event => event.preventDefault();
+                this.paletteElements.push(colorElement);
                 colorPalette.appendChild(colorElement);
             }
         }
@@ -176,19 +181,17 @@ class ColorsForm extends Form {
         this.extendedPalette = document.createElement("div");
         this.extendedPalette.id = "extendedColorPalette";
         this.extendedPalette.classList.add("color-palette");
+        this.paletteContainers.push(this.extendedPalette);
         {
             for (let i = 32; i < 32 * 3; i++) {
                 let colorElement = document.createElement("div");
                 colorElement.classList.add("color");
-                colorElement.style.backgroundImage = this.paletteColor(i);
                 colorElement.onmousedown = event => {
-                    let isLeftClick = event.button === MouseButton.LEFT;
-                    if (isLeftClick) {
-                        this.setSelectedColor(this.palette[i], "palette");
-                    } else {
-                        this.setNotSelectedColor(this.palette[i], "palette");
-                    }
-                }
+                    event.preventDefault();
+                    this.onPaletteColorClick(i, event.button);
+                };
+                colorElement.oncontextmenu = event => event.preventDefault();
+                this.paletteElements.push(colorElement);
                 this.extendedPalette.appendChild(colorElement);
             }
         }
@@ -399,6 +402,7 @@ class ColorsForm extends Form {
         }
         grid.appendChild(this.sliderPanel);
 
+        this.updatePaletteElements();
         this.updateElements("init");
 
         return grid;
@@ -454,6 +458,284 @@ class ColorsForm extends Form {
         })
     }
 
+    loadCurrentPalette() {
+        try {
+            const saved = window.localStorage.getItem("paintdotjs.colors.currentPalette");
+            if (saved !== null) {
+                const palette = this.parsePalette(saved);
+                if (palette.length > 0) return palette;
+            }
+        } catch (_) {
+            // Palette persistence is optional in private browsing modes.
+        }
+        return this.defaultPalette.map(color => color.copy());
+    }
+
+    parsePalette(text) {
+        const colors = [];
+        for (const sourceLine of String(text).split(/\r?\n/)) {
+            let line = sourceLine.split(";", 1)[0].trim();
+            if (line.startsWith("#")) line = line.substring(1);
+            if (!/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(line)) continue;
+            let alpha = 255;
+            let red;
+            let green;
+            let blue;
+            if (line.length === 8) {
+                // Paint.NET palette files use AARRGGBB.
+                alpha = parseInt(line.substring(0, 2), 16);
+                red = parseInt(line.substring(2, 4), 16);
+                green = parseInt(line.substring(4, 6), 16);
+                blue = parseInt(line.substring(6, 8), 16);
+            } else {
+                red = parseInt(line.substring(0, 2), 16);
+                green = parseInt(line.substring(2, 4), 16);
+                blue = parseInt(line.substring(4, 6), 16);
+            }
+            colors.push(Color.fromRGBA(red, green, blue, alpha));
+            if (colors.length === 96) break;
+        }
+        if (colors.length === 0) return colors;
+        while (colors.length < 96) colors.push(Color.WHITE.copy());
+        return colors;
+    }
+
+    serializePalette(palette = this.palette) {
+        const hex = value => Utility.clamp(Math.round(value), 0, 255)
+            .toString(16).padStart(2, "0").toUpperCase();
+        return "; paint.net Palette File\n; Colors are written as AARRGGBB.\n"
+            + palette.map(color => hex(color.getAlpha()) + hex(color.getRed())
+                + hex(color.getGreen()) + hex(color.getBlue())).join("\n") + "\n";
+    }
+
+    persistCurrentPalette() {
+        try {
+            window.localStorage.setItem("paintdotjs.colors.currentPalette", this.serializePalette());
+        } catch (_) {
+            // Continue with the in-memory palette when storage is unavailable.
+        }
+    }
+
+    getUserPalettes() {
+        try {
+            const palettes = JSON.parse(window.localStorage.getItem("paintdotjs.colors.userPalettes") || "{}");
+            return palettes !== null && typeof palettes === "object" ? palettes : {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    saveUserPalettes(palettes) {
+        try {
+            window.localStorage.setItem("paintdotjs.colors.userPalettes", JSON.stringify(palettes));
+        } catch (_) {
+            // Saving palettes is best-effort in restricted browsing modes.
+        }
+    }
+
+    setPalette(palette, name = null) {
+        if (!Array.isArray(palette) || palette.length === 0) return false;
+        this.palette = palette.slice(0, 96).map(color => color.copy());
+        while (this.palette.length < 96) this.palette.push(Color.WHITE.copy());
+        this.currentPaletteName = name;
+        this.persistCurrentPalette();
+        this.updatePaletteElements();
+        return true;
+    }
+
+    updatePaletteElements() {
+        for (let i = 0; i < this.paletteElements.length; ++i) {
+            const element = this.paletteElements[i];
+            element.hidden = i >= this.palette.length;
+            if (!element.hidden) element.style.backgroundImage = this.paletteColor(i);
+        }
+    }
+
+    toggleColorAddMode(force = null) {
+        this.colorAddMode = force === null ? !this.colorAddMode : !!force;
+        this.colorAddElement.setChecked(this.colorAddMode);
+        for (const palette of this.paletteContainers) {
+            palette.classList.toggle("color-add-mode", this.colorAddMode);
+        }
+    }
+
+    onPaletteColorClick(index, button) {
+        if (index < 0 || index >= this.palette.length) return;
+        if (this.colorAddMode) {
+            this.palette[index] = this.getSelectedColor().copy();
+            this.currentPaletteName = null;
+            this.persistCurrentPalette();
+            this.updatePaletteElements();
+            this.toggleColorAddMode(false);
+            return;
+        }
+        if (button === MouseButton.RIGHT) {
+            this.setNotSelectedColor(this.palette[index].copy(), "palette");
+        } else {
+            this.setSelectedColor(this.palette[index].copy(), "palette");
+        }
+    }
+
+    paletteEquals(left, right) {
+        return left.length === right.length
+            && left.every((color, index) => color.toPacked() === right[index].toPacked());
+    }
+
+    createPaletteMenuEntry(id, text, icon, callback, checked = false) {
+        const entry = new DropEntry(id, callback);
+        entry.getText = () => text;
+        entry.getShortcut = () => null;
+        if (checked) entry.withIconPathKey("tool_strip_checked", true);
+        else if (icon === null) entry.withNoIcon();
+        else entry.withIconPathKey(icon, true);
+        return entry;
+    }
+
+    createRainbowPalette() {
+        const palette = [];
+        const lightness = [0.2, 0.32, 0.44, 0.56, 0.68, 0.8];
+        for (const level of lightness) {
+            for (let column = 0; column < 16; ++column) {
+                palette.push(Color.fromHSL(column / 16, 1, level));
+            }
+        }
+        return palette;
+    }
+
+    createSmallPalette() {
+        const palette = this.defaultPalette.slice(0, 32).map(color => color.copy());
+        while (palette.length < 96) palette.push(Color.WHITE.copy());
+        return palette;
+    }
+
+    createPaletteMenuEntries() {
+        const entries = [];
+        const userPalettes = this.getUserPalettes();
+        for (const name of Object.keys(userPalettes).sort((a, b) => a.localeCompare(b))) {
+            const palette = this.parsePalette(userPalettes[name]);
+            entries.push(this.createPaletteMenuEntry(
+                "colors.palette.user." + encodeURIComponent(name),
+                name,
+                "swatch_icon",
+                () => this.setPalette(palette, name),
+                this.paletteEquals(this.palette, palette)
+            ));
+        }
+        if (entries.length > 0) entries.push(new VerticalSeparator());
+        entries.push(this.createPaletteMenuEntry(
+            "colors.palette.saveAs", "Save Current Palette As...", "menu_file_save_as_icon",
+            () => this.saveCurrentPaletteAs()
+        ));
+        entries.push(this.createPaletteMenuEntry(
+            "colors.palette.openFolder", "Open Palettes Folder", "menu_file_open_icon",
+            () => this.openPalettesFolder()
+        ));
+        entries.push(new VerticalSeparator());
+        entries.push(this.createPaletteMenuEntry(
+            "colors.palette.reset", "Reset to Default Palette", "reset_icon",
+            () => this.setPalette(this.defaultPalette, null),
+            this.paletteEquals(this.palette, this.defaultPalette)
+        ));
+        entries.push(new VerticalSeparator());
+        const rainbowPalette = this.createRainbowPalette();
+        entries.push(this.createPaletteMenuEntry(
+            "colors.palette.rainbow", "Rainbow", "swatch_icon",
+            () => this.setPalette(rainbowPalette, "Rainbow"),
+            this.paletteEquals(this.palette, rainbowPalette)
+        ));
+        const smallPalette = this.createSmallPalette();
+        entries.push(this.createPaletteMenuEntry(
+            "colors.palette.small", "Small", "swatch_icon",
+            () => this.setPalette(smallPalette, "Small"),
+            this.paletteEquals(this.palette, smallPalette)
+        ));
+        return entries;
+    }
+
+    async saveCurrentPaletteAs() {
+        const preview = document.createElement("div");
+        const label = document.createElement("label");
+        label.textContent = "Palette name:";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = this.currentPaletteName || "My Palette";
+        input.style.width = "260px";
+        input.style.marginLeft = "10px";
+        label.appendChild(input);
+        preview.appendChild(label);
+        const pending = TaskDialog.show({
+            title: "Save Current Palette As",
+            icon: "assets/icons/swatch_icon.png",
+            preview,
+            choices: [
+                {title: "Save", value: "save"},
+                {title: "Cancel", value: null}
+            ]
+        });
+        setTimeout(() => {
+            input.focus();
+            input.select();
+        });
+        if (await pending !== "save") return;
+        const name = input.value.trim().replace(/\.txt$/i, "");
+        if (name.length === 0) return;
+        const palettes = this.getUserPalettes();
+        palettes[name] = this.serializePalette();
+        this.saveUserPalettes(palettes);
+        this.currentPaletteName = name;
+    }
+
+    async importPaletteFiles(files) {
+        const palettes = this.getUserPalettes();
+        let imported = 0;
+        for (const file of files) {
+            if (!file.name.toLowerCase().endsWith(".txt")) continue;
+            const palette = this.parsePalette(await file.text());
+            if (palette.length === 0) continue;
+            const name = file.name.replace(/\.txt$/i, "") || "Imported Palette";
+            palettes[name] = this.serializePalette(palette);
+            ++imported;
+        }
+        if (imported > 0) this.saveUserPalettes(palettes);
+        return imported;
+    }
+
+    async openPalettesFolder() {
+        if (typeof window.showDirectoryPicker === "function") {
+            try {
+                const directory = await window.showDirectoryPicker({mode: "read"});
+                const files = [];
+                for await (const handle of directory.values()) {
+                    if (handle.kind === "file" && handle.name.toLowerCase().endsWith(".txt")) {
+                        files.push(await handle.getFile());
+                    }
+                }
+                await this.importPaletteFiles(files);
+            } catch (error) {
+                if (error.name !== "AbortError") throw error;
+            }
+            return;
+        }
+
+        const picker = document.createElement("input");
+        picker.type = "file";
+        picker.accept = ".txt,text/plain";
+        picker.multiple = true;
+        picker.webkitdirectory = true;
+        picker.onchange = async () => {
+            const imported = await this.importPaletteFiles(picker.files || []);
+            if (imported === 0 && picker.files !== null && picker.files.length > 0) {
+                await TaskDialog.show({
+                    title: "Open Palettes Folder",
+                    icon: "assets/icons/swatch_icon.png",
+                    message: "The selected folder does not contain any valid palette files.",
+                    choices: [{title: "OK", value: true}]
+                });
+            }
+        };
+        picker.click();
+    }
+
     setMainColor(color, initiator = null) {
         if (!(color instanceof Color)) {
             throw new Error("Not a color class");
@@ -464,6 +746,7 @@ class ColorsForm extends Form {
 
         this.mainColor = color;
         this.updateElements(initiator);
+        this.changed.fire(this, "primary", color.copy());
     }
 
     setSecondaryColor(color, initiator = null) {
@@ -476,6 +759,7 @@ class ColorsForm extends Form {
 
         this.secondaryColor = color;
         this.updateElements(initiator);
+        this.changed.fire(this, "secondary", color.copy());
     }
 
     getSelectedColor() {
@@ -512,10 +796,15 @@ class ColorsForm extends Form {
 
     updateWindowSize() {
         if (this.expanded) {
-            this.window.setSize(386, 266 + 30);
+            this.window.setSize(492, 371);
         } else {
-            this.window.setSize(209, 248);
+            this.window.setSize(270, 315);
         }
+
+        // The Colors window is bottom-anchored. Reapplying its anchor after
+        // changing height makes the compact form move down and retain the same
+        // bottom edge, matching the desktop application.
+        if (typeof this.window.applyAnchor === "function") this.window.applyAnchor();
     }
 
     updateElements(initiator = null) {
@@ -542,7 +831,7 @@ class ColorsForm extends Form {
         this.secondaryColorItem.setSelected(!isPrimary);
 
         this.moreLessButtonElement.textContent = this.expanded
-            ? i18n("colorsForm.moreLessButton.text.less") + " <<"
+            ? "<< " + i18n("colorsForm.moreLessButton.text.less")
             : i18n("colorsForm.moreLessButton.text.more") + " >>";
         this.sliderPanel.style.display = this.expanded ? "block" : "none";
         this.extendedPalette.style.display = this.expanded ? "flex" : "none";

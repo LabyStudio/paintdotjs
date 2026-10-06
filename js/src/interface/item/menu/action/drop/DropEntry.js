@@ -4,6 +4,23 @@ class DropEntry extends ActionItem {
         super(id, callback);
     }
 
+    onPress(event) {
+        if (!this.isEnabled() || this.pressable === null) return;
+
+        // Close before running the command. Dialog actions synchronously add a
+        // modal backdrop, which can otherwise intercept the document-level
+        // outside-click handler and leave this flyout visible behind it.
+        let ancestor = this.parent;
+        while (ancestor !== null) {
+            if (ancestor instanceof DropMenuItem || ancestor instanceof DropMenuPopup) {
+                ancestor.close();
+                break;
+            }
+            ancestor = ancestor.parent;
+        }
+        super.onPress(event);
+    }
+
     buildElement() {
         let element = super.buildElement();
         element.className += " drop-entry";

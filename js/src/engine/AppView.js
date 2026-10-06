@@ -1,6 +1,7 @@
 class AppView {
 
     static PAN_SCALE_FACTOR = 2;
+    static RULER_SIZE = 17;
 
     constructor() {
         this.canvas = Surface.fromCanvas(document.getElementById('canvas'));
@@ -17,8 +18,20 @@ class AppView {
 
         this.panTool = null;
         this.listeners = {};
+        this.cursorImages = new Map();
+        this.cursorRequest = 0;
 
         this.gridVisible = false;
+        this.rulersVisible = false;
+        this.rulerRenderSignature = null;
+
+        this.horizontalRuler = document.createElement("canvas");
+        this.horizontalRuler.className = "editor-ruler horizontal";
+        this.verticalRuler = document.createElement("canvas");
+        this.verticalRuler.className = "editor-ruler vertical";
+        this.rulerCorner = document.createElement("div");
+        this.rulerCorner.className = "editor-ruler-corner";
+        this.editor.append(this.horizontalRuler, this.verticalRuler, this.rulerCorner);
     }
 
     initialize() {
@@ -53,6 +66,13 @@ class AppView {
             if (event.ctrlKey) {
                 event.preventDefault();
 
+                // Modal forms own their input. In particular, Ctrl+wheel may be
+                // used by an image preview and must never zoom the document
+                // underneath the dialog.
+                if (ModalDialogController.isActive()) {
+                    return;
+                }
+
                 // Handle mouse wheel zoom
                 let delta = event.deltaY;
                 let activeDocumentWorkspace = this.getActiveDocumentWorkspace();
@@ -73,10 +93,17 @@ class AppView {
         // Cancel right click
         document.addEventListener('contextmenu', event => event.preventDefault());
 
+        const getPointerPressure = event => {
+            const pointerInputEnabled = typeof AppSettingsStore === "undefined"
+                || AppSettingsStore.get("pen.pointerInput", true);
+            return event.pointerType === "mouse" || !pointerInputEnabled
+                ? 1
+                : Utility.clamp(event.pressure || 0.5, 0, 1);
+        };
         const getPointerPosition = event => ({
             x: event.clientX - this.editor.offsetLeft,
             y: event.clientY - this.editor.offsetTop - windowTop(),
-            pressure: event.pointerType === "mouse" ? 1 : Utility.clamp(event.pressure || 0.5, 0, 1),
+            pressure: getPointerPressure(event),
             pointerType: event.pointerType || "mouse",
             timeStamp: event.timeStamp
         });
@@ -85,7 +112,7 @@ class AppView {
                 ? event.getCoalescedEvents()
                 : [event];
             return {
-                pressure: event.pointerType === "mouse" ? 1 : Utility.clamp(event.pressure || 0.5, 0, 1),
+                pressure: getPointerPressure(event),
                 pointerType: event.pointerType || "mouse",
                 samples: events.map(getPointerPosition)
             };
@@ -111,6 +138,22 @@ class AppView {
 
         this.editor.addEventListener('pointermove', event => {
             try {
+                const autoScroll = typeof AppSettingsStore === "undefined"
+                    || AppSettingsStore.get("ui.autoScrollWhileDrawing", true);
+                const activeTool = this.getActiveTool();
+                if (autoScroll && activeTool !== null && activeTool.isActive()) {
+                    const bounds = this.editor.getBoundingClientRect();
+                    const edge = 24;
+                    const speed = 12;
+                    const deltaX = event.clientX < bounds.left + edge
+                        ? -speed
+                        : (event.clientX > bounds.right - edge ? speed : 0);
+                    const deltaY = event.clientY < bounds.top + edge
+                        ? -speed
+                        : (event.clientY > bounds.bottom - edge ? speed : 0);
+                    if (deltaX !== 0 || deltaY !== 0) this.view.scrollBy(deltaX, deltaY);
+                }
+
                 const point = getPointerPosition(event);
                 let x = point.x;
                 let y = point.y;
@@ -178,13 +221,32 @@ class AppView {
                 this.altKeyDown = true;
             }
 
-            // Check if the active element is an input field, textarea, or a contenteditable element
+            // Keep native editing and clipboard shortcuts inside text controls and
+            // for selected page text. Otherwise Ctrl+C would copy the canvas
+            // selection over text selected in an error or settings window.
             const activeElement = document.activeElement;
             const isInputField = activeElement.tagName === 'INPUT' ||
                 activeElement.tagName === 'TEXTAREA' ||
                 activeElement.isContentEditable;
+            const selection = window.getSelection();
+            const hasSelectedText = selection !== null && !selection.isCollapsed
+                && selection.toString().length > 0;
+            const normalizedKey = String(event.key).toLowerCase();
+            const isNativeSelectionShortcut = hasSelectedText
+                && (event.ctrlKey || event.metaKey)
+                && ["a", "c", "x"].includes(normalizedKey);
 
-            if (isInputField) {
+            // Do not dispatch application shortcuts while a modal form is open.
+            // Keep normal typing, focus navigation, and control interaction in
+            // the dialog, while suppressing browser/app Ctrl shortcuts.
+            if (ModalDialogController.isActive()) {
+                if ((event.ctrlKey || event.metaKey) && !isInputField && !isNativeSelectionShortcut) {
+                    event.preventDefault();
+                }
+                return;
+            }
+
+            if (isInputField || isNativeSelectionShortcut) {
                 return; // Allow default behavior for text inputs
             }
 
@@ -253,9 +315,11 @@ class AppView {
             let renderBounds = documentWorkspace.getRenderBounds();
             documentWorkspace.render(this.canvas, renderBounds);
         }
+        this.renderRulers(documentWorkspace);
     }
 
     setCursor(cursor) {
+        ++this.cursorRequest;
         if (this.editor.style.cursor === cursor) {
             return;
         }
@@ -263,7 +327,65 @@ class AppView {
     }
 
     setCursorImg(name) {
-        this.setCursor("url('assets/cursors/" + name + ".png') 10 10, auto");
+        const request = ++this.cursorRequest;
+        const cached = this.cursorImages.get(name);
+        if (typeof cached === "string") {
+            this.editor.style.cursor = this.cursorCss(cached, name);
+            return;
+        }
+
+        // The extracted Paint.NET cursor resources contain two opaque red
+        // size-marker pixels. Browsers display those markers, unlike Windows'
+        // native cursor loader, so remove them once and cache the clean bitmap.
+        if (cached instanceof Promise) {
+            cached.then(url => {
+                if (request === this.cursorRequest) this.editor.style.cursor = this.cursorCss(url, name);
+            });
+            return;
+        }
+
+        const source = "assets/cursors/" + name + ".png";
+        const loading = this.cleanCursorImage(source).catch(() => source);
+        this.cursorImages.set(name, loading);
+        loading.then(url => {
+            this.cursorImages.set(name, url);
+            if (request === this.cursorRequest) this.editor.style.cursor = this.cursorCss(url, name);
+        });
+    }
+
+    cursorCss(url, name = null) {
+        // Cursor resources have individual native hotspots. The text cursor's
+        // insertion point is the center of its I-beam; 10,10 is the brush tip.
+        const hotspot = name === "text_tool_cursor" ? [16, 16] : [10, 10];
+        return `url('${url}') ${hotspot[0]} ${hotspot[1]}, auto`;
+    }
+
+    cleanCursorImage(source) {
+        return new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = image.naturalWidth;
+                canvas.height = image.naturalHeight;
+                const context = canvas.getContext("2d");
+                context.drawImage(image, 0, 0);
+                const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+
+                for (let offset = 0; offset < pixels.data.length; offset += 4) {
+                    if (pixels.data[offset] === 255
+                        && pixels.data[offset + 1] === 0
+                        && pixels.data[offset + 2] === 0
+                        && pixels.data[offset + 3] !== 0) {
+                        pixels.data[offset + 3] = 0;
+                    }
+                }
+
+                context.putImageData(pixels, 0, 0);
+                resolve(canvas.toDataURL("image/png"));
+            };
+            image.onerror = reject;
+            image.src = source;
+        });
     }
 
     onResize(width, height) {
@@ -435,7 +557,13 @@ class AppView {
     }
 
     isGridVisible() {
-        return this.gridVisible;
+        const workspace = this.getActiveDocumentWorkspace();
+        return workspace !== null && workspace.isGridVisible();
+    }
+
+    isRulersVisible() {
+        const workspace = this.getActiveDocumentWorkspace();
+        return workspace !== null && workspace.isRulersVisible();
     }
 
     isControlKeyDown() {
@@ -451,14 +579,103 @@ class AppView {
     }
 
     setGridVisible(visible) {
-        this.gridVisible = visible;
-
-        let activeDocumentWorkspace = this.getActiveDocumentWorkspace();
-        if (activeDocumentWorkspace !== null) {
-            activeDocumentWorkspace.getGridRenderer().setVisible(visible);
-        }
+        const activeDocumentWorkspace = this.getActiveDocumentWorkspace();
+        if (activeDocumentWorkspace === null) return;
+        activeDocumentWorkspace.setGridVisible(visible);
 
         this.fire("app:grid_visibility_changed", visible);
+    }
+
+    setRulersVisible(visible) {
+        const activeDocumentWorkspace = this.getActiveDocumentWorkspace();
+        if (activeDocumentWorkspace === null) return;
+        activeDocumentWorkspace.setRulersVisible(visible);
+        this.syncRulerVisibility();
+        this.fire("app:rulers_visibility_changed", !!visible);
+    }
+
+    syncRulerVisibility() {
+        this.rulersVisible = this.isRulersVisible();
+        this.rulerRenderSignature = null;
+        this.editor.classList.toggle("rulers-visible", this.rulersVisible);
+        this.horizontalRuler.classList.toggle("visible", this.rulersVisible);
+        this.verticalRuler.classList.toggle("visible", this.rulersVisible);
+        this.rulerCorner.classList.toggle("visible", this.rulersVisible);
+
+        // Paint.NET docks the rulers around the canvas. Recompute both the
+        // canvas bounds and every anchored tool window against that inset.
+        this.updateCanvasBounds(false);
+        requestAnimationFrame(() => {
+            for (const form of FormRegistry.list()) {
+                const toolWindow = form.getWindow();
+                if (toolWindow !== null && typeof toolWindow.applyAnchor === "function") {
+                    toolWindow.applyAnchor();
+                }
+            }
+        });
+    }
+
+    renderRulers(documentWorkspace) {
+        if (!this.rulersVisible || documentWorkspace === null) return;
+
+        const bounds = documentWorkspace.getRenderBounds();
+        const zoom = documentWorkspace.getZoom();
+        const signature = [
+            this.getViewWidth(), this.getViewHeight(), bounds.x, bounds.y,
+            bounds.width, bounds.height, zoom, this.getMeasurementUnit()
+        ].join(":");
+        if (signature === this.rulerRenderSignature) return;
+        this.rulerRenderSignature = signature;
+
+        this.drawRuler(this.horizontalRuler, bounds.x, zoom, false);
+        this.drawRuler(this.verticalRuler, bounds.y, zoom, true);
+    }
+
+    drawRuler(canvas, documentStart, zoom, vertical) {
+        const rulerSize = AppView.RULER_SIZE;
+        const cssWidth = vertical ? rulerSize : Math.max(1, this.getViewWidth());
+        const cssHeight = vertical ? Math.max(1, this.getViewHeight()) : rulerSize;
+        const scale = window.devicePixelRatio || 1;
+        canvas.width = Math.round(cssWidth * scale);
+        canvas.height = Math.round(cssHeight * scale);
+        canvas.style.width = cssWidth + "px";
+        canvas.style.height = cssHeight + "px";
+
+        const context = canvas.getContext("2d");
+        context.setTransform(scale, 0, 0, scale, 0, 0);
+        context.clearRect(0, 0, cssWidth, cssHeight);
+        context.fillStyle = "#202020";
+        context.fillRect(0, 0, cssWidth, cssHeight);
+        context.strokeStyle = "#a8a8a8";
+        context.fillStyle = "#e5e5e5";
+        context.font = "10px Segoe UI, sans-serif";
+
+        const available = vertical ? cssHeight : cssWidth;
+        const start = documentStart;
+        let pixelStep = 1;
+        while (pixelStep * zoom < 35) pixelStep *= pixelStep === 2 ? 2.5 : 2;
+        const first = Math.ceil((-start / zoom) / pixelStep) * pixelStep;
+        const last = Math.floor(((available - start) / zoom) / pixelStep) * pixelStep;
+
+        for (let value = first; value <= last; value += pixelStep) {
+            const position = start + value * zoom;
+            const label = String(this.toUnit(value));
+            context.beginPath();
+            if (vertical) {
+                context.moveTo(rulerSize - 6, position + 0.5);
+                context.lineTo(rulerSize, position + 0.5);
+                context.save();
+                context.translate(rulerSize - 9, position + 2);
+                context.rotate(-Math.PI / 2);
+                context.fillText(label, 0, 0);
+                context.restore();
+            } else {
+                context.moveTo(position + 0.5, rulerSize - 6);
+                context.lineTo(position + 0.5, rulerSize);
+                context.fillText(label, position + 2, 10);
+            }
+            context.stroke();
+        }
     }
 
     on(event, callback) {
@@ -478,13 +695,7 @@ class AppView {
     }
 
     handleError(error) {
-        setTimeout(() => {
-            throw error;
-        }, 0);
-        setTimeout(() => {
-            alert("An unexpected error occurred: " + error.message);
-            location.reload();
-        }, 100);
+        ErrorForm.report(error);
     }
 
 }

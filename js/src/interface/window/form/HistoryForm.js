@@ -17,7 +17,7 @@ class HistoryForm extends Form {
     }
 
     initializeDefault(window) {
-        window.setSize(180, 200);
+        window.setSize(200, 230);
         window.setAnchor(1, 0);
     }
 

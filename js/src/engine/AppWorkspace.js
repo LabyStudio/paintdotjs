@@ -22,12 +22,12 @@ class AppWorkspace extends AppView {
         }
     }
 
-    createBlankDocumentInNewWorkspace(width, height) {
+    createBlankDocumentInNewWorkspace(width, height, resolution = 96) {
         // Create document workspace
         let documentWorkspace = new DocumentWorkspace(this);
 
         // Create document with initial size
-        let document = new Document(width, height);
+        let document = new Document(width, height, resolution);
         documentWorkspace.setDocument(document);
         documentWorkspace.fitViewport();
 
@@ -93,6 +93,7 @@ class AppWorkspace extends AppView {
         }
 
         this.activeDocumentWorkspace = documentWorkspace;
+        this.syncRulerVisibility();
         this.updateTitle();
         this.updateCanvasBounds(false);
 
@@ -127,7 +128,19 @@ class AppWorkspace extends AppView {
                 return true;
             }
         }
-        return super.onDocumentMouseDown(key, documentWorkspace);
+
+        // Paint.NET treats Escape as a contextual cancel first. If the active
+        // tool had nothing pending to cancel, it removes the current selection.
+        if (key === "Escape"
+            && !this.isControlKeyDown()
+            && !this.isShiftKeyDown()
+            && !this.isAltKeyDown()
+            && !documentWorkspace.getSelection().isEmpty()) {
+            documentWorkspace.executeFunction(new DeselectFunction());
+            return true;
+        }
+
+        return super.onDocumentKeyPress(key, documentWorkspace);
     }
 
     onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, input = null) {

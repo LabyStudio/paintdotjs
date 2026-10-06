@@ -1,0 +1,56 @@
+(function checkRequiredAssets() {
+    const assetUrl = new URL('assets/lang/en.json', document.baseURI);
+    let assetsReady = false;
+
+    try {
+        const request = new XMLHttpRequest();
+        request.open('GET', assetUrl.href, false);
+        request.send();
+        assetsReady = (request.status >= 200 && request.status < 300)
+            || (request.status === 0 && request.responseText.length > 0);
+    } catch (_) {
+        assetsReady = false;
+    }
+
+    window.paintDotJsAssetsReady = assetsReady;
+    if (assetsReady) return;
+
+    const showSetupMessage = () => {
+        const content = document.getElementById('content');
+        const overlay = document.getElementById('windowOverlay');
+        if (content !== null) content.remove();
+        if (overlay !== null) overlay.remove();
+
+        const page = document.createElement('main');
+        page.className = 'missing-assets-page';
+
+        const dialog = document.createElement('section');
+        dialog.className = 'missing-assets-dialog';
+
+        const title = document.createElement('h1');
+        title.textContent = 'Required assets are missing';
+
+        const explanation = document.createElement('p');
+        explanation.textContent = 'This paint.js checkout has not downloaded the Paint.NET assets yet.';
+
+        const instruction = document.createElement('p');
+        instruction.textContent = 'Run this command from the project directory, then reload the page:';
+
+        const command = document.createElement('code');
+        command.textContent = 'python3 scripts/download_assets.py';
+
+        const note = document.createElement('p');
+        note.className = 'missing-assets-note';
+        note.textContent = 'The assets are downloaded separately because they cannot be included in the repository.';
+
+        dialog.append(title, explanation, instruction, command, note);
+        page.appendChild(dialog);
+        document.body.appendChild(page);
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', showSetupMessage, {once: true});
+    } else {
+        showSetupMessage();
+    }
+})();

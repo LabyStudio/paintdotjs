@@ -13,7 +13,7 @@ class HelpMenu extends DropMenuItem {
             new DropEntry("menu.help.plugins", null),
             new DropEntry("menu.help.sendFeedback", () => open("https://github.com/LabyStudio/paintdotjs/issues")),
             new VerticalSeparator(),
-            new DropEntry("menu.help.about", () => WelcomeDialog.open(true))
+            new DropEntry("menu.help.about", () => AboutDialog.open())
         ]);
         ActionRegistry.registerCallback(
             "menu.help",

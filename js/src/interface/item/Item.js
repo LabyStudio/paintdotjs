@@ -4,6 +4,7 @@ class Item extends UIElement {
         super(id);
         this.pressable = pressable;
         this.enabled = this.isImplemented();
+        this.active = false;
         this.element = null;
         this.classNames = [];
     }
@@ -29,6 +30,7 @@ class Item extends UIElement {
         for (let className of this.classNames) {
             this.element.classList.add(className);
         }
+        this.setActive(this.active);
 
         this.element.onclick = event => {
             this.onPress(event);
@@ -65,6 +67,17 @@ class Item extends UIElement {
                 this.element.setAttribute("disabled", "")
             }
         }
+    }
+
+    setActive(active) {
+        this.active = !!active;
+        if (this.isInitialized()) {
+            this.element.toggleAttribute("active", this.active);
+        }
+    }
+
+    isActive() {
+        return this.active;
     }
 
     appendTo(element, parent) {

@@ -24,6 +24,14 @@ class PreviewShapeTool extends DrawingTool {
         this.curveControlIndex = -1;
         this.gradientNubs = null;
         this.gradientControlIndex = -1;
+        this.colorsForm = null;
+        this.colorsChangedListener = () => this.onColorsChanged();
+    }
+
+    onActivate() {
+        super.onActivate();
+        this.colorsForm = FormRegistry.get("colorsForm");
+        if (this.colorsForm !== null) this.colorsForm.changed.add(this.colorsChangedListener);
     }
 
     usesContinuousPointerCoordinates() {
@@ -140,9 +148,19 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     onDeactivate() {
+        if (this.colorsForm !== null) {
+            this.colorsForm.changed.remove(this.colorsChangedListener);
+            this.colorsForm = null;
+        }
         if (this.supportsPendingEdit() && (this.pending || this.tracking)) this.commitPending();
         this.destroyNubs();
         super.onDeactivate();
+    }
+
+    onColorsChanged() {
+        if ((this.pending || this.tracking) && this.startPoint !== null && this.endPoint !== null) {
+            this.renderPreview();
+        }
     }
 
     supportsPendingEdit() {
@@ -390,6 +408,7 @@ class PreviewShapeTool extends DrawingTool {
             context.setLineDash((dashPatterns[dash] || []).map(value => value * width));
         }
         context.beginPath();
+        let catalogPath = null;
         if (this.shape === "line") {
             context.moveTo(this.startPoint.x + 0.5, this.startPoint.y + 0.5);
             const curveType = this.getSetting("curveType", "spline");
@@ -411,7 +430,9 @@ class PreviewShapeTool extends DrawingTool {
         } else {
             const shape = this.getSetting("shape", this.shape);
             const rect = Utility.pointsToRectangle(this.startPoint, this.endPoint);
-            if (shape === "ellipse") {
+            if (typeof ShapeCatalog !== "undefined" && ShapeCatalog.has(shape)) {
+                catalogPath = ShapeCatalog.createPath(shape, rect);
+            } else if (shape === "ellipse") {
                 context.ellipse(rect.x + rect.width / 2, rect.y + rect.height / 2,
                     Math.max(0.5, rect.width / 2), Math.max(0.5, rect.height / 2), 0, 0, Math.PI * 2);
             } else if (shape === "roundedRectangle") {
@@ -495,9 +516,13 @@ class PreviewShapeTool extends DrawingTool {
                     ? (this.button === MouseButton.RIGHT ? MouseButton.LEFT : MouseButton.RIGHT)
                     : this.button;
                 context.fillStyle = this.createFillStyle(context, this.getColor(fillButton), this.getColor(this.button));
-                context.fill();
+                if (catalogPath === null) context.fill();
+                else context.fill(catalogPath, "evenodd");
             }
-            if (["outline", "both", "fillOutline"].includes(drawType)) context.stroke();
+            if (["outline", "both", "fillOutline"].includes(drawType)) {
+                if (catalogPath === null) context.stroke();
+                else context.stroke(catalogPath);
+            }
         }
         context.restore();
         this.lastPoint = this.endPoint.clone();

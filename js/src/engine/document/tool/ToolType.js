@@ -159,8 +159,8 @@ class ToolType {
     static {
         const selectionSettings = {combineMode: "replace", renderingQuality: "high"};
         const brushSettings = {
-            brushType: "circle", width: 2, pressure: false,
-            hardness: 100, spacing: 15, smoothing: true,
+            width: 2, pressure: true,
+            hardness: 75, spacing: 15, smoothing: true,
             antialias: true, renderingQuality: "high"
         };
         ToolType.RECTANGLE_SELECT.setSettings(Object.assign({
@@ -227,6 +227,7 @@ class ToolType {
         this.factory = factory;
         this.hotKey = hotKey;
         this.skipIfActiveOnHotKey = skipIfActiveOnHotKey;
+        this.defaultSettings = {};
         this.settings = {};
         try {
             const saved = window.localStorage.getItem("paintdotjs.toolSettings." + id);
@@ -272,8 +273,18 @@ class ToolType {
     }
 
     setSettings(settings) {
+        this.defaultSettings = Object.assign({}, this.defaultSettings, settings);
         this.settings = Object.assign({}, settings, this.settings);
         return this;
+    }
+
+    resetSettings() {
+        this.settings = Object.assign({}, this.defaultSettings);
+        try {
+            window.localStorage.removeItem("paintdotjs.toolSettings." + this.id);
+        } catch (_) {
+            // Keep the in-memory defaults when persistent storage is unavailable.
+        }
     }
 
     getSetting(name, fallback = null) {

@@ -2,6 +2,7 @@ class ColorAddItem extends IconItem {
 
     constructor() {
         super("colorAdd", _ => {
+            this.parent.toggleColorAddMode();
         });
 
         this.colorElement = null;
@@ -11,6 +12,7 @@ class ColorAddItem extends IconItem {
 
     buildElement() {
         let element = super.buildElement();
+        element.title = "Add Color to Palette";
         {
             this.colorElement = document.createElement("div");
             this.colorElement.classList.add("color");
@@ -21,5 +23,10 @@ class ColorAddItem extends IconItem {
 
     setColor(color) {
         this.colorElement.style.backgroundColor = color.toHex();
+    }
+
+    setChecked(checked) {
+        this.setActive(checked);
+        if (this.element !== null) this.element.setAttribute("aria-pressed", checked ? "true" : "false");
     }
 }

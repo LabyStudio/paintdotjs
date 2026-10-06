@@ -52,10 +52,17 @@ class MaskedSurface {
     eraseFrom(targetSurface) {
         if (this.surface === null) return;
         if (typeof targetSurface.getSurface === "function") targetSurface = targetSurface.getSurface();
+
+        // Erase with the selection mask, not with the lifted bitmap. Using the
+        // bitmap's alpha as an eraser only removes part of an anti-aliased pixel
+        // (for example, 50% alpha becomes 25%) and leaves a ghost at the source.
         const context = targetSurface.context;
         context.save();
         context.globalCompositeOperation = "destination-out";
-        context.drawImage(this.surface.canvas, this.bounds.x, this.bounds.y);
+        context.globalAlpha = 1;
+        context.fillStyle = "#000";
+        this.tracePath(context, this.path);
+        context.fill("evenodd");
         context.restore();
     }
 

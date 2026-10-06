@@ -18,7 +18,7 @@ workbox.generateSW({
 		'./icon_maskable.png',
 
 		'./js/**/*',
-		'./bundle.js',
+		'./*.bundle.js',
 		'./lib/**/*',
 		'./css/**/*',
 		'./assets/**/*',
@@ -26,7 +26,9 @@ workbox.generateSW({
 		'./run/test.png',
 	],
 	swDest: './service_worker.js',
-	maximumFileSizeToCacheInBytes: 4_096_000,
+	// The image codec is deliberately lazy-loaded, but must still be available
+	// to installed/offline PWAs once it has shipped with the app.
+	maximumFileSizeToCacheInBytes: 20_000_000,
 	sourcemap: false
 }).then(({count, size}) => {
 	console.log(`Generated service-worker, which will precache ${count} files, totaling ${(size/1e6).toFixed(2)} MB.`);

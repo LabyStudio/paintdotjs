@@ -17,6 +17,7 @@ class Surface {
         this.context.imageSmoothingEnabled = false;
 
         this.checkerboard = null;
+        this.checkerboardBrightness = null;
     }
 
     clear(color = null) {
@@ -32,16 +33,24 @@ class Surface {
         }
     }
 
-    render(renderArgs, rectangle) {
+    render(renderArgs, rectangle, opacity = 1, blendMode = null) {
         // Render surface to renderArgs.surface
         let targetSurface = renderArgs.getSurface();
         const targetContext = targetSurface.context;
+
+        if (blendMode !== null && blendMode.canvasOperation === null) {
+            this.renderCustomBlend(targetContext, rectangle, opacity, blendMode.value);
+            return;
+        }
+
         targetContext.save();
         targetContext.beginPath();
         targetContext.rect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         targetContext.clip();
-        targetContext.globalAlpha = 1;
-        targetContext.globalCompositeOperation = "source-over";
+        targetContext.globalAlpha = opacity;
+        targetContext.globalCompositeOperation = blendMode === null
+            ? "source-over"
+            : blendMode.canvasOperation;
         targetContext.imageSmoothingEnabled = false;
         // Cropping both the source and destination makes the browser sample
         // the transparent pixels just outside every dirty rectangle. At high
@@ -51,6 +60,56 @@ class Surface {
         targetContext.restore();
     }
 
+    renderCustomBlend(targetContext, rectangle, opacity, blendMode) {
+        const bounds = Rectangle.intersect(rectangle, this.getBounds());
+        if (bounds.isEmpty()) return;
+
+        const source = this.context.getImageData(bounds.x, bounds.y, bounds.width, bounds.height);
+        const target = targetContext.getImageData(bounds.x, bounds.y, bounds.width, bounds.height);
+        const sourceData = source.data;
+        const targetData = target.data;
+
+        for (let offset = 0; offset < sourceData.length; offset += 4) {
+            const sourceAlpha = sourceData[offset + 3] / 255 * opacity;
+            if (sourceAlpha <= 0) continue;
+
+            const backdropAlpha = targetData[offset + 3] / 255;
+            const outputAlpha = sourceAlpha + backdropAlpha * (1 - sourceAlpha);
+
+            for (let channel = 0; channel < 3; ++channel) {
+                const backdrop = targetData[offset + channel];
+                const foreground = sourceData[offset + channel];
+                const blended = this.blendLayerChannel(backdrop, foreground, blendMode);
+                const premultiplied = sourceAlpha * (1 - backdropAlpha) * foreground
+                    + sourceAlpha * backdropAlpha * blended
+                    + (1 - sourceAlpha) * backdropAlpha * backdrop;
+                targetData[offset + channel] = outputAlpha === 0 ? 0 : premultiplied / outputAlpha;
+            }
+            targetData[offset + 3] = outputAlpha * 255;
+        }
+
+        targetContext.putImageData(target, bounds.x, bounds.y);
+    }
+
+    blendLayerChannel(backdrop, foreground, blendMode) {
+        switch (blendMode) {
+            case "reflect":
+                return foreground === 255
+                    ? 255
+                    : Math.min(255, backdrop * backdrop / (255 - foreground));
+            case "glow":
+                return backdrop === 255
+                    ? 255
+                    : Math.min(255, foreground * foreground / (255 - backdrop));
+            case "negation":
+                return 255 - Math.abs(255 - backdrop - foreground);
+            case "xor":
+                return backdrop ^ foreground;
+            default:
+                return foreground;
+        }
+    }
+
     clone() {
         let surface = Surface.create(this.width, this.height);
         surface.context.drawImage(this.canvas, 0, 0);
@@ -58,8 +117,12 @@ class Surface {
     }
 
     renderCheckerboard(x, y, width, height) {
-        if (this.checkerboard === null) {
-            this.checkerboard = ImageUtil.createTransparentPattern(this.context, 5);
+        const brightness = typeof AppSettingsStore === "undefined"
+            ? 1
+            : AppSettingsStore.get("canvas.checkerboardBrightness", 100) / 100;
+        if (this.checkerboard === null || brightness !== this.checkerboardBrightness) {
+            this.checkerboard = ImageUtil.createTransparentPattern(this.context, 5, brightness);
+            this.checkerboardBrightness = brightness;
         }
 
         this.context.fillStyle = this.checkerboard;
@@ -136,8 +199,11 @@ class Surface {
         clipped.intersect(source.getBounds());
         if (clipped.width <= 0 || clipped.height <= 0) return;
 
-        // putImageData is an exact pixel transfer. Unlike cropped drawImage,
-        // it cannot interpolate a transparent neighbour into the ROI border.
+        // Brush restoration must be pixel-exact. A clipped drawImage can leave
+        // an antialiased edge at the clip boundary, which becomes a visible
+        // rectangle after the composition surface is scaled for display.
+        // This transfer now runs only once per frame for the latest dirty area,
+        // rather than once per pointer sample for every saved stroke tile.
         const pixels = source.context.getImageData(
             clipped.x, clipped.y, clipped.width, clipped.height
         );

@@ -1,52 +1,118 @@
 footer {
     background-color: var(--color-menu-background);
     display: flex;
+    flex: 0 0 auto;
+    height: 32px;
+    align-items: center;
 }
 
 #footerMenu {
     width: 100%;
-    height: 25px;
+    height: 32px;
     display: flex;
+    min-width: 0;
+    align-items: center;
+    overflow: hidden;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
 }
 
 #footerMenu #toolInfoItem .icon {
-    margin: 5px 0 0 5px;
+    margin: 0 3px 0 5px;
 }
 
 #footerMenu .menu-item {
-    padding: 5px 5px 5px 5px;
-    height: 11px;
+    box-sizing: border-box;
+    height: 30px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    padding: 4px 6px;
+    font-size: 14px;
+    line-height: 20px;
 }
 
 #footerMenu .icon-item {
-    padding: 2px;
-    height: 16px;
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+}
+
+#footerMenu .icon-item .icon,
+#footerMenu .label-menu-item .icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+#footerMenu .label-menu-item {
+    display: inline-flex;
+    height: 32px;
+    min-width: 0;
+    align-items: center;
 }
 
 #toolInfoItem {
     display: flex;
-    flex: auto;
-    font-size: calc(min(8.25pt, 1vw));
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+#toolInfoItem .label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 #canvasSizeItem {
-    width: 80px;
+    flex: 0 0 100px;
 }
 
 #cursorPositionItem {
-    width: 80px;
+    flex: 0 0 100px;
+}
+
+#footerMenu .selector {
+    display: inline-flex;
+    align-items: center;
+    padding-top: 4px;
+}
+
+#footerMenu .selector .separator {
+    height: 18px;
+}
+
+#footerMenu > .slider-wrapper {
+    flex: 0 0 auto;
+    height: 30px;
+    align-items: center;
+}
+
+#footerMenu > .slider-wrapper .slider-tick {
+    top: 12px;
 }
 
 #windowResize {
-    width: 11px;
-    height: 11px;
+    flex: 0 0 14px;
+    width: 14px;
+    height: 14px;
     margin-left: 4px;
-    margin-top: 11px;
-    margin-right: 2px;
+    margin-top: 15px;
+    margin-right: 3px;
     background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMSAxMSIgeG1sbnM6dj0iaHR0cHM6Ly92ZWN0YS5pby9uYW5vIj48cGF0aCBkPSJNOSAxaDJ2Mkg5VjF6TTUgNWgydjJINVY1em00IDBoMnYySDlWNXpNMSA5aDJ2MkgxVjl6bTQgMGgydjJINVY5em00IDBoMnYySDlWOXoiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNOCAwaDJ2Mkg4VjB6TTQgNGgydjJINFY0em00IDBoMnYySDhWNHpNMCA4aDJ2MkgwVjh6bTQgMGgydjJINFY4em00IDBoMnYySDhWOHoiIGZpbGw9IiNhMGEwYTAiLz48L3N2Zz4=');
     cursor: nwse-resize;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 14px 14px;
 }
 
 #zoomPercentageField {
-    width: 40px;
+    width: 50px;
+    font-size: 14px;
 }

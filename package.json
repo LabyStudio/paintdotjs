@@ -4,10 +4,15 @@
   "description": "paint.js is an open source general-purpose raster graphics editor program, developed with javascript.",
   "main": "js/platform/desktop/main.js",
   "scripts": {
+    "check-assets": "node ./scripts/check_assets.js",
+    "preweb": "npm run check-assets",
     "web": "webpack --config webpack.config.js && node ./scripts/generate_pwa.js",
     "pages": "npm run web && node ./scripts/build_pages.js",
+    "preweb-watch": "npm run check-assets",
     "web-watch": "webpack --config webpack.config.js --watch",
+    "preapp": "npm run check-assets",
     "app": "electron .",
+    "predist": "npm run check-assets",
     "dist": "electron-builder",
     "gen-imports": "node ./scripts/generate_imports.js",
     "pwa": "node ./scripts/generate_pwa.js",
@@ -31,6 +36,10 @@
     "workbox-build": "^6.5.3"
   },
   "dependencies": {
-    "custom-electron-titlebar": "^4.2.8"
+    "@imagemagick/magick-wasm": "^0.0.44",
+    "buffer": "^6.0.3",
+    "custom-electron-titlebar": "^4.2.8",
+    "jpegxr": "^0.3.0",
+    "ms-nrbf-js": "^0.1.0"
   }
 }

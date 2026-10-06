@@ -49,7 +49,7 @@ class DocumentView {
         this.app.fire("document:changed", this.document);
     }
 
-    setDocument(document) {
+    setDocument(document, onDocumentAssigned = null) {
         this.onDocumentChanging(document)
 
         // Unregister from previous document
@@ -59,6 +59,7 @@ class DocumentView {
 
         // Set new document
         this.document = document;
+        if (onDocumentAssigned !== null) onDocumentAssigned();
 
         // Register for new document
         this.document.invalidated.add(this.onDocumentInvalidated);

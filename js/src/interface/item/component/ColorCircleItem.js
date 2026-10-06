@@ -17,8 +17,8 @@ class ColorCircleItem extends Item {
             // Canvas
             this.canvas = document.createElement("canvas");
             this.canvas.classList.add("canvas");
-            this.canvas.width = 141; // Note: Also adjust size in css
-            this.canvas.height = 141;
+            this.canvas.width = 180; // Note: Also adjust size in css
+            this.canvas.height = 180;
             this.registerMouseEventsCombined(this.canvas, (mouseX, mouseY, button) => {
                 this.onMouseEvent(mouseX, mouseY, button);
             });

@@ -61,12 +61,35 @@ header {
     white-space: pre;
 }
 
+.text-tool-caret {
+    position: absolute;
+    z-index: 21;
+    box-sizing: border-box;
+    pointer-events: none;
+    background: #000;
+    outline: 1px solid #fff;
+    animation: text-tool-caret-blink 600ms step-end infinite;
+}
+
+@keyframes text-tool-caret-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+
 #view {
     flex: 1;
     overflow: scroll;
     position: relative;
     width: 100%;
     height: 100%;
+}
+
+#editor.rulers-visible #view {
+    position: absolute;
+    top: 17px;
+    left: 17px;
+    width: calc(100% - 17px);
+    height: calc(100% - 17px);
 }
 
 #environment {
@@ -79,6 +102,39 @@ header {
     left: 0;
     width: 100%;
     height: 100%;
+}
+
+.editor-ruler,
+.editor-ruler-corner {
+    display: none;
+    position: absolute;
+    z-index: 15;
+    pointer-events: none;
+    background: #202020;
+}
+
+.editor-ruler.visible,
+.editor-ruler-corner.visible {
+    display: block;
+}
+
+.editor-ruler.horizontal {
+    top: 0;
+    left: 17px;
+}
+
+.editor-ruler.vertical {
+    top: 17px;
+    left: 0;
+}
+
+.editor-ruler-corner {
+    top: 0;
+    left: 0;
+    width: 17px;
+    height: 17px;
+    border-right: 1px solid #575757;
+    border-bottom: 1px solid #575757;
 }
 
 #windowOverlay {
