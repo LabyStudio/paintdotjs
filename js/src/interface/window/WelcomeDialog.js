@@ -103,9 +103,9 @@ class ProjectInfoDialog {
         details.className = "project-info-summary-details";
         const project = document.createElement("section");
         const projectHeading = document.createElement("h3");
-        projectHeading.textContent = "A familiar paint editor for Linux, macOS, and the web";
+        projectHeading.textContent = "An unofficial Paint.NET port for Linux, macOS, and the web";
         const projectCopy = document.createElement("p");
-        projectCopy.textContent = "Paint.NET is, in my opinion, the best and simplest paint editor. After switching to Linux, I missed using it every day, so I created paint.js to bring that familiar experience to Linux, macOS, and the web.";
+        projectCopy.textContent = "Paint.NET is, in my opinion, the best and simplest paint editor. After switching to Linux, I missed using it every day, so I created paint.js as an unofficial port for Linux, macOS, and the web.";
         const compatibility = document.createElement("span");
         compatibility.className = "project-info-detail-note";
         compatibility.textContent = "This experimental build is designed for Google Chrome on desktop computers. Some features may still be incomplete.";
@@ -143,7 +143,7 @@ class ProjectInfoDialog {
         const version = document.createElement("strong");
         version.textContent = "Version " + PdjInfo.version();
         const tagline = document.createElement("span");
-        tagline.textContent = "Cross-platform raster image editor";
+        tagline.textContent = "Cross-platform Paint.NET port";
         heading.append(version, tagline);
 
         const details = document.createElement("div");
@@ -151,9 +151,9 @@ class ProjectInfoDialog {
 
         const project = document.createElement("section");
         const projectHeading = document.createElement("h3");
-        projectHeading.textContent = "About the project";
+        projectHeading.textContent = "About the port";
         const projectCopy = document.createElement("p");
-        projectCopy.textContent = "Paint.NET is, in my opinion, the best and simplest paint editor. I created paint.js after switching to Linux and missing it every day, with the goal of bringing that familiar experience to Linux, macOS, and the web.";
+        projectCopy.textContent = "Paint.NET is, in my opinion, the best and simplest paint editor. I created paint.js as an unofficial port after switching to Linux and missing it every day, bringing it to Linux, macOS, and the web.";
         const compatibility = document.createElement("span");
         compatibility.className = "project-info-detail-note";
         compatibility.textContent = "Designed for desktop Chromium browsers.";

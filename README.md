@@ -1,8 +1,8 @@
 # paint.js
 
-**paint.js** is a cross-platform raster graphics editor for the browser and Electron. It ports the
-core editing model of **Paint.NET 3.36.7**, the last version released under an MIT-compatible
-license, while recreating much of the interface and behavior of Paint.NET v5+.
+**paint.js** is an unofficial, cross-platform port of **Paint.NET** for the browser and Electron.
+Its core editing model is ported from **Paint.NET 3.36.7**, the last version released under an
+MIT-compatible license, while much of the interface and behavior follows Paint.NET v5+.
 
 The project is independent from Paint.NET. Chromium is the primary target; the Electron desktop app
 and Chromium-based browsers currently provide the most complete experience.
