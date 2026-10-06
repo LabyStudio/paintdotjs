@@ -7,10 +7,31 @@ window.desktopFileActions = {
     showItemInFolder: filePath => shell.showItemInFolder(filePath)
 };
 
-new CustomTitlebar({
+const desktopTitlebar = new CustomTitlebar({
     backgroundColor: TitlebarColor.fromHex('#0D0D0D'),
     menuPosition: 'bottom'
 });
+
+/**
+ * The Electron title bar lives outside paint.js' regular layout, so CSS
+ * variables do not style it automatically. Mirror the resolved application
+ * theme whenever Settings changes the root color-scheme attribute.
+ */
+const updateDesktopTitlebarTheme = () => {
+    const styles = getComputedStyle(document.documentElement);
+    const backgroundColor = styles.getPropertyValue('--color-title-bar').trim();
+
+    if (backgroundColor !== '') {
+        desktopTitlebar.updateBackground(TitlebarColor.fromHex(backgroundColor));
+    }
+};
+
+const titlebarThemeObserver = new MutationObserver(updateDesktopTitlebarTheme);
+titlebarThemeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-color-scheme']
+});
+updateDesktopTitlebarTheme();
 
 document.documentElement.style.setProperty('--window-top', windowTop() + 'px');
 

@@ -490,7 +490,7 @@ class SettingsDialog {
     renderDiagnostics() {
         this.addHeading("Diagnostics");
         const diagnostics = [
-            ["Application", "paint.js 1.0.0"],
+            ["Application", PdjInfo.productName() + " " + PdjInfo.version()],
             ["User agent", navigator.userAgent],
             ["Platform", navigator.platform || "Unknown"],
             ["Language", navigator.language || "Unknown"],

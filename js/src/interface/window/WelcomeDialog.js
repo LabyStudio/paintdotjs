@@ -94,7 +94,7 @@ class ProjectInfoDialog {
         const heading = document.createElement("div");
         heading.className = "project-info-summary-heading";
         const version = document.createElement("strong");
-        version.textContent = "Version " + (window.PDJVERSION || "1.0.0");
+        version.textContent = "Version " + PdjInfo.version();
         const tagline = document.createElement("span");
         tagline.textContent = "Welcome to paint.js";
         heading.append(version, tagline);
@@ -141,7 +141,7 @@ class ProjectInfoDialog {
         const heading = document.createElement("div");
         heading.className = "project-info-summary-heading";
         const version = document.createElement("strong");
-        version.textContent = "Version " + (window.PDJVERSION || "1.0.0");
+        version.textContent = "Version " + PdjInfo.version();
         const tagline = document.createElement("span");
         tagline.textContent = "Cross-platform raster image editor";
         heading.append(version, tagline);
