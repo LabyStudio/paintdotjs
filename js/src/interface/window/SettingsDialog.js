@@ -473,9 +473,71 @@ class SettingsDialog {
             disabled: true,
             note: "Automatic update checks are not implemented yet."
         });
-        this.addButton("Check now", () => {
+        let checkButton = null;
+        checkButton = this.addButton("Check now", () => this.checkForUpdates(checkButton));
+        if (!isApp) {
+            this.addNote("Clears the paint.js offline cache and reloads the latest web version.");
+        }
+    }
+
+    async checkForUpdates(button) {
+        if (isApp) {
             window.open("https://github.com/LabyStudio/paintdotjs/releases", "_blank", "noopener");
-        });
+            return;
+        }
+
+        if (window.app?.hasUnsavedDocuments?.()) {
+            const choice = await TaskDialog.show({
+                title: "Update paint.js",
+                icon: "assets/icons/settings_updates_24.png",
+                message: "Reloading will close the current documents. Save your changes before continuing.",
+                cancelValue: "cancel",
+                choices: [
+                    {
+                        value: "reload",
+                        title: "Update and reload",
+                        description: "Continue after you have saved everything.",
+                        icon: "assets/icons/settings_updates_24.png"
+                    },
+                    {
+                        value: "cancel",
+                        title: "Cancel",
+                        description: "Return to paint.js without clearing anything.",
+                        icon: "assets/icons/menu_edit_undo_icon.png"
+                    }
+                ]
+            });
+            if (choice !== "reload") return;
+        }
+
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = "Checking...";
+        this.setStatus("Clearing the offline cache and checking for updates...");
+
+        try {
+            const appScope = new URL("./", document.baseURI).href;
+            if ("serviceWorker" in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                const appRegistrations = registrations.filter(registration => registration.scope === appScope);
+                await Promise.all(appRegistrations.map(registration => registration.unregister()));
+            }
+
+            if ("caches" in window) {
+                const cacheNames = await caches.keys();
+                const appCacheNames = cacheNames.filter(name => name.toLowerCase().includes("paintdotjs"));
+                await Promise.all(appCacheNames.map(name => caches.delete(name)));
+            }
+
+            const reloadUrl = new URL(window.location.href);
+            reloadUrl.searchParams.set("v", Date.now().toString());
+            window.location.replace(reloadUrl.href);
+        } catch (error) {
+            console.error("Could not refresh paint.js", error);
+            button.disabled = false;
+            button.textContent = originalText;
+            this.setStatus("Could not clear the offline cache. Please try again.");
+        }
     }
 
     renderPlugins() {

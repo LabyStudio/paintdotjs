@@ -1,12 +1,21 @@
 const workbox = require('workbox-build');
+const fs = require('fs');
+const path = require('path');
+const packageJson = require('../package.json');
+
+// This file deliberately stays out of the precache. An already-installed
+// version must be able to ask the server which build is currently deployed.
+fs.writeFileSync(
+	path.resolve(__dirname, '../assets/update.json'),
+	JSON.stringify({version: packageJson.version}) + '\n'
+);
 
 workbox.generateSW({
 	cacheId: 'paintdotjs',
-	// Activate a newly-built worker immediately. Otherwise an already-open
-	// PaintDotJS tab can keep serving an old tool implementation until every
-	// tab using the previous worker has been closed.
-	skipWaiting: true,
-	clientsClaim: true,
+	// Leave a downloaded update waiting until the user accepts the update
+	// prompt. Workbox adds a SKIP_WAITING message handler in this mode.
+	skipWaiting: false,
+	clientsClaim: false,
 	cleanupOutdatedCaches: true,
 	// v is used by index.html to force an old worker to fetch the current
 	// bootstrap. The current worker may ignore it so deployed PWAs stay offline.
@@ -25,6 +34,7 @@ workbox.generateSW({
 		'./font/*',
 		'./run/test.png',
 	],
+	globIgnores: ['./assets/update.json'],
 	swDest: './service_worker.js',
 	// The image codec is deliberately lazy-loaded, but must still be available
 	// to installed/offline PWAs once it has shipped with the app.

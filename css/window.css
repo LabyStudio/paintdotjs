@@ -917,6 +917,69 @@
     line-height: 1.35;
 }
 
+.update-prompt-dialog {
+    width: min(520px, calc(100vw - 32px));
+}
+
+.update-prompt-dialog .task-dialog-content {
+    grid-template-columns: 132px 1fr;
+    gap: 10px 16px;
+    padding: 16px;
+}
+
+.update-prompt-preview {
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: stretch;
+    gap: 6px;
+    padding: 4px 8px 10px;
+    border-right: 1px solid var(--color-dialog-border);
+}
+
+.update-prompt-preview img {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+}
+
+.update-prompt-preview strong {
+    font-size: 11pt;
+    text-align: center;
+}
+
+.update-prompt-preview a {
+    color: var(--color-link-text, #67aee8);
+    font-size: 9pt;
+}
+
+.update-prompt-dialog .task-dialog-message {
+    grid-column: 2;
+    line-height: 1.45;
+}
+
+.update-prompt-dialog .task-dialog-choices {
+    grid-column: 2;
+}
+
+@media (max-width: 480px) {
+    .update-prompt-dialog .task-dialog-content {
+        grid-template-columns: 1fr;
+    }
+
+    .update-prompt-preview {
+        grid-row: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--color-dialog-border);
+    }
+
+    .update-prompt-dialog .task-dialog-message,
+    .update-prompt-dialog .task-dialog-choices {
+        grid-column: 1;
+    }
+}
+
 /* ----------------- New image dialog ----------------- */
 
 .new-file-dialog {
