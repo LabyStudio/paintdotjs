@@ -12,6 +12,7 @@ class ShortcutSettingsDialog {
         this.list = null;
         this.search = null;
         this.status = null;
+        this.dialogMover = null;
         this.changedListener = () => this.renderRows();
     }
 
@@ -19,13 +20,16 @@ class ShortcutSettingsDialog {
         if (this.backdrop !== null) return;
 
         this.backdrop = document.createElement("div");
-        this.backdrop.className = "shortcut-settings-backdrop";
+        this.backdrop.className = "app-dialog-backdrop shortcut-settings-backdrop";
+        if (isApp) {
+            this.backdrop.classList.add("dialog-backdrop-app");
+        }
         this.backdrop.onclick = event => {
             if (event.target === this.backdrop) this.close();
         };
 
         const dialog = document.createElement("section");
-        dialog.className = "shortcut-settings-dialog";
+        dialog.className = "app-dialog shortcut-settings-dialog";
         dialog.setAttribute("role", "dialog");
         dialog.setAttribute("aria-modal", "true");
         dialog.setAttribute("aria-label", "Settings");
@@ -34,16 +38,19 @@ class ShortcutSettingsDialog {
         };
 
         const titleBar = document.createElement("header");
-        titleBar.className = "shortcut-settings-title";
+        titleBar.className = "app-dialog-title-bar shortcut-settings-title";
+        const titleGroup = document.createElement("div");
+        titleGroup.className = "app-dialog-title";
         const title = document.createElement("strong");
         title.textContent = "Settings";
+        titleGroup.appendChild(title);
         const close = document.createElement("button");
         close.type = "button";
-        close.className = "shortcut-settings-close";
+        close.className = "app-dialog-close shortcut-settings-close";
         close.textContent = "×";
         close.title = "Close";
         close.onclick = () => this.close();
-        titleBar.append(title, close);
+        titleBar.append(titleGroup, close);
 
         const content = document.createElement("div");
         content.className = "shortcut-settings-content";
@@ -70,7 +77,7 @@ class ShortcutSettingsDialog {
         content.append(navigation, page);
 
         const footer = document.createElement("footer");
-        footer.className = "shortcut-settings-footer";
+        footer.className = "app-dialog-footer shortcut-settings-footer";
         this.status = document.createElement("span");
         const resetAll = document.createElement("button");
         resetAll.type = "button";
@@ -90,6 +97,7 @@ class ShortcutSettingsDialog {
         dialog.append(titleBar, content, footer);
         this.backdrop.appendChild(dialog);
         document.body.appendChild(this.backdrop);
+        this.dialogMover = new DialogMover(dialog, titleBar, this.backdrop);
         ActionRegistry.addChangedListener(this.changedListener);
         this.renderRows();
         this.search.focus();
@@ -98,6 +106,10 @@ class ShortcutSettingsDialog {
     close() {
         if (this.backdrop === null) return;
         ActionRegistry.removeChangedListener(this.changedListener);
+        if (this.dialogMover !== null) {
+            this.dialogMover.destroy();
+            this.dialogMover = null;
+        }
         this.backdrop.remove();
         this.backdrop = null;
         this.list = null;

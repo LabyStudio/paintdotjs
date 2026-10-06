@@ -29,3 +29,5 @@ mainView.executeFunction(new SelectAllFunction());
 
 let mainSelection = mainView.getSelection();
 console.log(mainSelection.getBounds().toString())
+
+WelcomeDialog.open();

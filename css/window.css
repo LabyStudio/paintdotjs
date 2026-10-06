@@ -56,9 +56,9 @@
     overflow-y: auto;
 }
 
-/* ----------------- Forms ----------------- */
+/* ----------------- Dialogs ----------------- */
 
-.shortcut-settings-backdrop {
+.app-dialog-backdrop {
     position: fixed;
     inset: 0;
     z-index: 5000;
@@ -66,44 +66,225 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.5);
     pointer-events: all;
 }
 
-.shortcut-settings-dialog {
-    width: min(760px, calc(100vw - 48px));
-    height: min(650px, calc(100vh - 48px));
+.dialog-backdrop-app {
+    top: var(--window-top, 30px);
+}
+
+.dialog-backdrop-app .shortcut-settings-dialog {
+    height: min(650px, calc(100vh - var(--window-top, 30px) - 48px));
+}
+
+.app-dialog {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     color: var(--color-menu-item-text);
     background: var(--color-window-background);
     border: 1px solid var(--color-title-bar-border);
-    box-shadow: 0 16px 54px rgba(0, 0, 0, 0.65);
+    border-radius: 0;
+    box-shadow: 0 12px 38px rgba(0, 0, 0, 0.65);
 }
 
-.shortcut-settings-title {
-    height: 34px;
+.app-dialog-title-bar {
+    box-sizing: border-box;
+    height: 31px;
     display: flex;
     flex: 0 0 auto;
     align-items: center;
     justify-content: space-between;
-    padding-left: 12px;
+    padding-left: 8px;
     background: var(--color-title-bar);
     border-bottom: 1px solid var(--color-window-border);
 }
 
-.shortcut-settings-close {
-    width: 42px;
-    height: 34px;
-    color: white;
-    background: transparent;
-    border: 0;
-    font-size: 20px;
+.movable-dialog-handle {
+    cursor: move;
+    user-select: none;
 }
 
-.shortcut-settings-close:hover {
+.app-dialog-title {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: var(--font-size);
+}
+
+.app-dialog-title img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.app-dialog-title strong {
+    overflow: hidden;
+    font-weight: var(--font-weight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-dialog-close {
+    align-self: stretch;
+    width: 46px;
+    height: 30px;
+    margin: 0;
+    padding: 0 0 2px;
+    color: var(--color-close-button-text);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    font-weight: normal;
+    line-height: 1;
+}
+
+.app-dialog-close:hover {
     background: var(--color-close-button-hover);
+}
+
+.app-dialog-footer {
+    box-sizing: border-box;
+    min-height: 45px;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 10px;
+    background: var(--color-menu-background);
+    border-top: 1px solid var(--color-window-border);
+}
+
+.app-dialog-footer button {
+    box-sizing: border-box;
+    min-width: 88px;
+    min-height: 26px;
+    padding: 3px 12px;
+    border-radius: 0;
+}
+
+/* ----------------- Welcome dialog ----------------- */
+
+.welcome-dialog-backdrop {
+    z-index: 6000;
+}
+
+.welcome-dialog {
+    width: min(486px, calc(100vw - 32px));
+}
+
+.welcome-dialog-content {
+    padding: 18px 20px 15px;
+    font-size: 9pt;
+    line-height: 1.48;
+}
+
+.welcome-dialog-content p {
+    margin: 0;
+}
+
+.welcome-dialog-intro {
+    color: #f0f0f0;
+    font-size: 10pt;
+}
+
+.welcome-dialog-section {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #575757;
+}
+
+.welcome-dialog-section h2 {
+    margin: 0 0 5px;
+    color: #f4f4f4;
+    font-size: 9.5pt;
+    font-weight: 600;
+}
+
+.welcome-dialog-section p {
+    color: #d4d4d4;
+}
+
+.welcome-dialog-notice {
+    display: grid;
+    gap: 3px;
+    margin-top: 14px;
+    padding: 9px 11px;
+    color: #dcdcdc;
+    background: var(--color-menu-background);
+    border: 1px solid #565656;
+}
+
+.welcome-dialog-notice strong {
+    color: white;
+    font-size: 9pt;
+}
+
+.welcome-dialog-links {
+    margin-top: 8px !important;
+}
+
+.welcome-dialog a {
+    color: #62b5ff;
+    text-decoration: none;
+}
+
+.welcome-dialog a:hover,
+.welcome-dialog a:focus-visible {
+    color: #91cdff;
+    text-decoration: underline;
+}
+
+.welcome-dialog-footer {
+    padding-left: 20px;
+}
+
+.welcome-dialog-preference {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #d7d7d7;
+    cursor: pointer;
+    user-select: none;
+}
+
+.welcome-dialog-preference input {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.welcome-dialog-continue {
+    min-width: 96px !important;
+}
+
+.welcome-dialog-continue:focus-visible {
+    outline: 2px solid var(--color-menu-item-selected-border);
+    outline-offset: 1px;
+}
+
+@media (max-height: 540px) {
+    .welcome-dialog-content {
+        max-height: calc(100vh - 140px);
+        overflow-y: auto;
+    }
+}
+
+/* ----------------- Forms ----------------- */
+
+.shortcut-settings-dialog {
+    width: min(760px, calc(100vw - 48px));
+    height: min(650px, calc(100vh - 48px));
+}
+
+.shortcut-settings-title {
+    padding-left: 8px;
 }
 
 .shortcut-settings-content {
@@ -219,18 +400,12 @@
 }
 
 .shortcut-settings-footer {
-    min-height: 42px;
-    display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 0 12px;
-    background: #202020;
-    border-top: 1px solid var(--color-window-border);
+    padding: 8px 12px;
 }
 
 .shortcut-settings-footer > span {
+    min-width: 0;
+    flex: 1 1 auto;
     overflow: hidden;
     color: #c8c8c8;
     text-overflow: ellipsis;
@@ -239,7 +414,9 @@
 
 .shortcut-settings-footer > div {
     display: flex;
+    flex: 0 0 auto;
     gap: 8px;
+    margin-left: auto;
 }
 
 /* ----------------- Tools ----------------- */
