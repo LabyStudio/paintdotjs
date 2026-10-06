@@ -829,7 +829,7 @@ class EffectConfigDialog {
         const positions = () => {
             if (input) return [values.inputLow, values.inputHigh];
             const middle = values.outputLow
-                + (values.outputHigh - values.outputLow) * Math.pow(.5, values.gamma);
+                + (values.outputHigh - values.outputLow) * Math.pow(.5, 1 / values.gamma);
             return [values.outputLow, middle, values.outputHigh];
         };
         const redraw = () => {

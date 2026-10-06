@@ -3,6 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const packageJson = require('../package.json');
 
+// Keep the public social-card URL stable while using the project screenshot as
+// its source. Social crawlers do not execute the application JavaScript.
+fs.copyFileSync(
+	path.resolve(__dirname, '../.github/assets/app.png'),
+	path.resolve(__dirname, '../assets/social-preview.png')
+);
+
 // This file deliberately stays out of the precache. An already-installed
 // version must be able to ask the server which build is currently deployed.
 fs.writeFileSync(

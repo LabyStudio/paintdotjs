@@ -291,14 +291,6 @@ class Tool {
     saveRegion(saveMeRegion, saveMeBounds) {
         let activeLayer = this.getActiveLayer();
 
-        if (this.savedTiles === null) {
-            this.savedTiles = new BitVector2D(
-                Math.floor((activeLayer.getWidth() + Tool.saveTileGranularity - 1) / Tool.saveTileGranularity),
-                Math.floor((activeLayer.getHeight() + Tool.saveTileGranularity - 1) / Tool.saveTileGranularity)
-            );
-            this.savedTiles.clear(false);
-        }
-
         let regionBounds;
         if (saveMeRegion == null) {
             regionBounds = saveMeBounds;
@@ -308,6 +300,21 @@ class Tool {
 
         let bounds = Rectangle.union(regionBounds, saveMeBounds);
         bounds.intersect(activeLayer.getBounds());
+
+        // Rectangle.intersect() keeps the clipped origin even when there is no
+        // overlap. For a stroke beyond the right or bottom canvas edge that
+        // origin can be outside savedTiles, so there is no tile to query or
+        // preserve. This also avoids allocating the tile stencil for a stroke
+        // that never touches the layer.
+        if (bounds.isEmpty()) return;
+
+        if (this.savedTiles === null) {
+            this.savedTiles = new BitVector2D(
+                Math.floor((activeLayer.getWidth() + Tool.saveTileGranularity - 1) / Tool.saveTileGranularity),
+                Math.floor((activeLayer.getHeight() + Tool.saveTileGranularity - 1) / Tool.saveTileGranularity)
+            );
+            this.savedTiles.clear(false);
+        }
 
         let leftTile = Math.floor(bounds.getLeft() / Tool.saveTileGranularity);
         let topTile = Math.floor(bounds.getTop() / Tool.saveTileGranularity);
