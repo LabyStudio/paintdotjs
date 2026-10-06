@@ -20,6 +20,8 @@ class AppView {
         this.listeners = {};
         this.cursorImages = new Map();
         this.cursorRequest = 0;
+        this.cursorState = {type: "css", value: "default"};
+        this.temporaryPanCursorState = null;
 
         this.gridVisible = false;
         this.rulersVisible = false;
@@ -319,6 +321,7 @@ class AppView {
     }
 
     setCursor(cursor) {
+        this.cursorState = {type: "css", value: cursor};
         ++this.cursorRequest;
         if (this.editor.style.cursor === cursor) {
             return;
@@ -327,6 +330,7 @@ class AppView {
     }
 
     setCursorImg(name) {
+        this.cursorState = {type: "image", value: name};
         const request = ++this.cursorRequest;
         const cached = this.cursorImages.get(name);
         if (typeof cached === "string") {
@@ -415,6 +419,7 @@ class AppView {
 
             // Handle mouse down for middle mouse click pan
             if (button === MouseButton.MIDDLE) {
+                this.temporaryPanCursorState = Object.assign({}, this.cursorState);
                 return this.panTool.onMouseDown(position.getX(), position.getY(), button);
             }
 
@@ -454,7 +459,17 @@ class AppView {
 
             // Handle mouse up for active tool
             if (this.panTool.isTracking()) {
-                return this.panTool.onMouseUp(position.getX(), position.getY(), button);
+                const handled = this.panTool.onMouseUp(position.getX(), position.getY(), button);
+                const cursorState = this.temporaryPanCursorState;
+                this.temporaryPanCursorState = null;
+                if (handled && cursorState !== null) {
+                    if (cursorState.type === "image") {
+                        this.setCursorImg(cursorState.value);
+                    } else {
+                        this.setCursor(cursorState.value);
+                    }
+                }
+                return handled;
             }
 
             if (this.onDocumentMouseUp(position.getX(), position.getY(), button, documentWorkspace,
