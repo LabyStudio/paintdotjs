@@ -51,6 +51,7 @@ class AppWorkspace extends AppView {
             i18n("newImageAction.name"),
             "assets/icons/menu_file_new_icon.png"
         ));
+        documentWorkspace.setDirty(false);
 
         // Update title
         this.updateTitle();
@@ -58,6 +59,31 @@ class AppWorkspace extends AppView {
         this.fire("app:create_document", documentWorkspace);
 
         return documentWorkspace;
+    }
+
+    closeDocumentWorkspace(documentWorkspace, confirmUnsaved = true) {
+        if (documentWorkspace === null || !this.documentWorkspaces.includes(documentWorkspace)) {
+            return false;
+        }
+        if (confirmUnsaved && documentWorkspace.isDirty()
+            && !window.confirm("Close \"" + documentWorkspace.getFriendlyName() + "\" without saving your changes?")) {
+            return false;
+        }
+
+        const index = this.documentWorkspaces.indexOf(documentWorkspace);
+        const wasActive = this.activeDocumentWorkspace === documentWorkspace;
+        this.documentWorkspaces.splice(index, 1);
+        if (wasActive) {
+            const next = this.documentWorkspaces[Math.min(index, this.documentWorkspaces.length - 1)] || null;
+            this.setActiveDocumentWorkspace(next);
+        }
+        this.fire("app:close_document", documentWorkspace);
+        this.updateTitle();
+        return true;
+    }
+
+    hasUnsavedDocuments() {
+        return this.documentWorkspaces.some(workspace => workspace.isDirty());
     }
 
     setActiveDocumentWorkspace(documentWorkspace) {

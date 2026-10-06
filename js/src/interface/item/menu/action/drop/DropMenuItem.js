@@ -48,7 +48,7 @@ class DropMenuItem extends MenuItem {
 
         // Set drop position
         let elementBounds = this.element.getBoundingClientRect();
-        dropMenu.style.left = this.element.offsetLeft
+        dropMenu.style.left = elementBounds.left
             + (elementBounds.right > window.innerWidth / 2 ? -dropMenu.offsetWidth + elementBounds.width : 0)
             + "px";
         dropMenu.style.top = elementBounds.top

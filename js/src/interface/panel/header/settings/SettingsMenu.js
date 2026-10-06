@@ -3,7 +3,7 @@ class SettingsMenu extends StripPanel {
     constructor() {
         super("settingsMenu", {
             items: [
-                new IconItem("menu.help", null),
+                new HelpMenu(),
                 new IconItem("menu.settings", () => ShortcutSettingsDialog.open())
                     .withIconPathKey("menu_utilities_settings_icon"),
                 new HorizontalSeparator(),

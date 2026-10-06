@@ -15,6 +15,23 @@ class DocumentStrip extends Panel {
             this.documentsListItem.reinitialize();
             this.updateActiveDocument();
         });
+        this.app.on("app:close_document", (documentWorkspace) => {
+            this.documentsListItem.items = this.documentsListItem.items.filter(item =>
+                item.getDocumentWorkspace() !== documentWorkspace
+            );
+            this.documentsListItem.selectedItem = this.getItemByDocumentWorkspace(
+                this.app.getActiveDocumentWorkspace()
+            );
+            this.documentsListItem.reinitialize();
+        });
+        this.app.on("document:dirty_changed", (documentWorkspace) => {
+            const item = this.getItemByDocumentWorkspace(documentWorkspace);
+            if (item !== null) item.updateDirtyIndicator();
+        });
+        this.app.on("document:file_changed", (documentWorkspace) => {
+            const item = this.getItemByDocumentWorkspace(documentWorkspace);
+            if (item !== null) item.reinitialize();
+        });
         this.app.on("document:render_layer_region", (layer, region) => {
             if (!(layer instanceof BitmapLayer)) {
                 return;

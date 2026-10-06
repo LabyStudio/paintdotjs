@@ -4,8 +4,11 @@ class DocumentWorkspace extends DocumentView {
         super(app);
 
         this.filePath = null;
+        this.fileHandle = null;
+        this.dirty = false;
         this.activeLayer = null;
         this.history = new HistoryStack(app, this);
+        this.history.executed.add(() => this.setDirty(true));
         this.selection = new Selection();
         this.selection.changed.add(() => {
             this.app.fire("document:selection_changed", this);
@@ -141,6 +144,24 @@ class DocumentWorkspace extends DocumentView {
         return this.filePath === null
             ? i18n("untitled.friendlyName")
             : this.filePath; // TODO: get file name from path
+    }
+
+    isDirty() {
+        return this.dirty;
+    }
+
+    setDirty(dirty) {
+        if (this.dirty === dirty) return;
+        this.dirty = dirty;
+        this.app.fire("document:dirty_changed", this);
+        this.app.updateTitle();
+    }
+
+    setFileInfo(fileName, fileHandle = null) {
+        this.filePath = fileName;
+        this.fileHandle = fileHandle;
+        this.app.fire("document:file_changed", this);
+        this.app.updateTitle();
     }
 
     getActiveLayer() {

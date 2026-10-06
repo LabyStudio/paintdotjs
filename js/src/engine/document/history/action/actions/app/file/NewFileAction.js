@@ -10,7 +10,7 @@ class NewFileAction extends FileAction {
     }
 
     performAction(appWorkspace) {
-        appWorkspace.createBlankDocumentInNewWorkspace(1920, 1017);
+        DocumentIO.createNewDocument();
     }
 
 }

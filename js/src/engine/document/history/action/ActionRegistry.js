@@ -13,6 +13,10 @@ class ActionRegistry {
 
         // File
         this.register(new NewFileAction());
+        this.registerCallback("menu.file.open", () => DocumentIO.openFilePicker(), "Open...", null, "Ctrl+O");
+        this.registerCallback("menu.file.save", () => DocumentIO.saveActive(false), "Save", () => window.app.getActiveDocumentWorkspace() !== null, "Ctrl+S");
+        this.registerCallback("menu.file.saveAs", () => DocumentIO.saveActive(true), "Save As...", () => window.app.getActiveDocumentWorkspace() !== null, "Ctrl+Shift+S");
+        this.registerCallback("menu.file.close", () => window.app.closeDocumentWorkspace(window.app.getActiveDocumentWorkspace()), "Close", () => window.app.getActiveDocumentWorkspace() !== null, "Ctrl+W");
 
         // Edit
         this.register(new HistoryUndoAction());
@@ -23,6 +27,8 @@ class ActionRegistry {
         this.register(new InvertSelectionAction());
         this.register(new SelectAllAction());
         this.register(new DeselectAction());
+        this.registerCallback("menu.edit.copy", () => DocumentIO.copySelection(), "Copy", () => window.app.getActiveDocumentWorkspace() !== null, "Ctrl+C");
+        this.registerCallback("menu.edit.paste", () => DocumentIO.pasteFromClipboard(), "Paste", () => window.app.getActiveDocumentWorkspace() !== null, "Ctrl+V");
 
         // Tools are actions too. Their order is significant because Paint.NET
         // cycles tools which share S, M, or O in this order.
@@ -212,6 +218,7 @@ class ActionRegistry {
     static getBuiltInDefaultShortcut(actionId) {
         const defaults = {
             "menu.settings": "Alt+X",
+            "menu.help.helpTopics": "F1",
             "menu.window.tools": "F5",
             "menu.window.history": "F6",
             "menu.window.layers": "F7",

@@ -2,19 +2,19 @@ class FileMenu extends DropMenuItem {
     constructor() {
         super("menu.file", [
             FileMenu.create("new"),
-            new DropEntry("menu.file.open", null),
+            FileMenu.create("open"),
             new DropEntry("menu.file.openRecent", null)
                 .withNoIcon(),
             new DropEntry("menu.file.acquire", null)
                 .withNoIcon(),
             new VerticalSeparator(),
-            new DropEntry("menu.file.save", null),
-            new DropEntry("menu.file.saveAs", null),
+            FileMenu.create("save"),
+            FileMenu.create("saveAs"),
             new DropEntry("menu.file.saveAll", null),
             new VerticalSeparator(),
             new DropEntry("menu.file.print", null),
             new VerticalSeparator(),
-            new DropEntry("menu.file.close", null),
+            FileMenu.create("close"),
             new VerticalSeparator(),
             new DropEntry("menu.file.exit", () => {
                 window.close();

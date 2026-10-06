@@ -33,7 +33,11 @@ class Action {
         let item = new DropEntry(this.getActionId(), () => {
             this.runPerformAction();
         });
-        item.withTranslationKey(this.getNameTranslationId());
+        if (this.getNameTranslationId() === null) {
+            item.getText = () => this.getDisplayName();
+        } else {
+            item.withTranslationKey(this.getNameTranslationId());
+        }
         return item;
     }
 
@@ -81,7 +85,7 @@ class Action {
     }
 
     getCategory() {
-        const categories = ["file", "edit", "view", "image", "layers", "adjustments", "effects", "window"];
+        const categories = ["file", "edit", "view", "image", "layers", "adjustments", "effects", "window", "help"];
         for (const category of categories) {
             if (this.actionId.startsWith("menu." + category + ".")) {
                 return category[0].toUpperCase() + category.slice(1);

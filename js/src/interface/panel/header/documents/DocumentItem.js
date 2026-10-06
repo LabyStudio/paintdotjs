@@ -7,6 +7,7 @@ class DocumentItem extends MenuItem {
         this.enabled = true;
 
         this.thumbnail = null;
+        this.dirtyIndicator = null;
     }
 
     buildElement() {
@@ -17,17 +18,20 @@ class DocumentItem extends MenuItem {
             header.className = "header";
             {
                 // Unsaved indicator
-                let unsavedIndicator = document.createElement("img");
-                unsavedIndicator.className = "dirty-indicator";
-                unsavedIndicator.src = ImageUtil.createDirtyStar(10);
-                header.appendChild(unsavedIndicator);
+                this.dirtyIndicator = document.createElement("img");
+                this.dirtyIndicator.className = "dirty-indicator";
+                this.dirtyIndicator.src = ImageUtil.createDirtyStar(10);
+                this.dirtyIndicator.title = "Unsaved changes";
+                header.appendChild(this.dirtyIndicator);
 
                 // Close button
                 let closeButtonElement = document.createElement("button");
                 closeButtonElement.className = "window-close-button";
                 closeButtonElement.innerHTML = "x";
-                closeButtonElement.onclick = () => {
-                    // TODO: Implement close button
+                closeButtonElement.title = "Close " + this.documentWorkspace.getFriendlyName();
+                closeButtonElement.onclick = event => {
+                    event.stopPropagation();
+                    window.app.closeDocumentWorkspace(this.documentWorkspace);
                 };
                 header.appendChild(closeButtonElement);
             }
@@ -39,7 +43,14 @@ class DocumentItem extends MenuItem {
             this.renderThumbnail();
             element.appendChild(this.thumbnail);
         }
+        this.updateDirtyIndicator();
         return element;
+    }
+
+    updateDirtyIndicator() {
+        if (this.dirtyIndicator !== null) {
+            this.dirtyIndicator.style.visibility = this.documentWorkspace.isDirty() ? "visible" : "hidden";
+        }
     }
 
     renderThumbnail() {
