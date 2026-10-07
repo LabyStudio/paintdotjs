@@ -192,10 +192,17 @@ class ToolType {
             sampleMode: "layer", sampleSize: 1, afterClick: "none", renderingQuality: "high"
         });
         ToolType.LINE.setSettings({
-            width: 2, dash: "solid", startCap: "round", endCap: "flat",
+            width: 2, dash: "solid", startCap: "flat", endCap: "flat",
             fillStyle: "solid", curveType: "spline", blendMode: "normal",
             antialias: true, renderingQuality: "high"
         });
+        // The previous JS default accidentally used a rounded start cap. Move
+        // that exact legacy default to Paint.NET 5's flat/flat default while
+        // preserving every other user-selected cap combination.
+        if (ToolType.LINE.settings.startCap === "round"
+            && ToolType.LINE.settings.endCap === "flat") {
+            ToolType.LINE.setSetting("startCap", "flat");
+        }
         ToolType.SHAPES.setSettings({
             shape: "rectangle", width: 2, drawType: "outline", dash: "solid",
             fillStyle: "solid", radius: 10, antialias: true,

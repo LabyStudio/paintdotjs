@@ -1185,6 +1185,79 @@ body.window-resizing * {
     line-height: 1.35;
 }
 
+/* Paint.NET presents Clone Stamp's missing-anchor error as a compact message
+   box rather than as a task dialog with large command-link buttons. */
+.clone-stamp-warning-dialog {
+    width: min(440px, calc(100vw - 32px));
+}
+
+.clone-stamp-warning-dialog .task-dialog-content {
+    grid-template-columns: 42px minmax(0, 1fr);
+    column-gap: 14px;
+    row-gap: 0;
+    padding: 14px 12px 0;
+}
+
+.clone-stamp-warning-dialog .task-dialog-content::before {
+    content: "×";
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-top: 1px;
+    border-radius: 50%;
+    color: white;
+    background: #ef4b0b;
+    font: 700 27px/1 Arial, sans-serif;
+}
+
+.clone-stamp-warning-dialog .task-dialog-content > .task-dialog-message {
+    grid-column: 2;
+    margin: 0;
+    color: var(--color-link, #185abd);
+    font-size: 12pt;
+    font-weight: 400;
+    line-height: 1.35;
+    white-space: pre-line;
+}
+
+.clone-stamp-warning-dialog .task-dialog-choices {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    margin: 14px -12px 0;
+    padding: 10px 14px;
+    border-top: 1px solid var(--color-dialog-border);
+    background: var(--color-window-background);
+}
+
+.clone-stamp-warning-dialog .task-dialog-choice {
+    display: block;
+    width: 82px;
+    min-height: 28px;
+    padding: 3px 12px;
+    border: 1px solid var(--color-button-outline);
+    border-radius: 3px;
+    color: var(--color-button-text);
+    text-align: center;
+    background: var(--color-button);
+}
+
+.clone-stamp-warning-dialog .task-dialog-choice:hover,
+.clone-stamp-warning-dialog .task-dialog-choice:focus-visible {
+    border-color: var(--color-menu-item-selected-border);
+    background: var(--color-button);
+}
+
+.clone-stamp-warning-dialog .task-dialog-choice > span {
+    display: block;
+}
+
+.clone-stamp-warning-dialog .task-dialog-choice strong {
+    font-size: 9pt;
+    font-weight: 400;
+}
+
 .unsaved-changes-dialog {
     width: min(570px, calc(100vw - 32px));
 }

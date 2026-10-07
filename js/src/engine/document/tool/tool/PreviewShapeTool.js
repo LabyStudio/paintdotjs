@@ -461,8 +461,8 @@ class PreviewShapeTool extends DrawingTool {
                 this.getColor(this.button === MouseButton.LEFT ? MouseButton.RIGHT : MouseButton.LEFT))
             : this.getColor(this.button).toHex();
         context.lineWidth = width;
-        const startCap = this.getSetting("startCap", "round");
-        const endCap = this.getSetting("endCap", "round");
+        const startCap = this.getSetting("startCap", "flat");
+        const endCap = this.getSetting("endCap", "flat");
         context.lineCap = this.shape === "line" && startCap === "round" && endCap === "round" ? "round" : "butt";
         // Paint.NET's shape pen uses miter joins. Round joins add coverage
         // around rectangle corners and make a 1px outline look wider than it
