@@ -9,6 +9,13 @@ class ToolOptionDropdown {
         this.options = options;
         this.value = options.value;
         this.menu = null;
+        this.fontRenderToken = 0;
+        this.fontEntryButtons = new Map();
+        this.fontTypeaheadValue = "";
+        this.fontTypeaheadTime = 0;
+        this.fontTypeaheadTimer = null;
+        this.pendingFontJumpValue = null;
+        this.fontTypeaheadListener = event => this.onFontTypeahead(event);
         this.documentClickListener = () => this.close();
 
         this.element = document.createElement("button");
@@ -121,7 +128,13 @@ class ToolOptionDropdown {
         this.menu.style.top = Math.round(bounds.bottom + 1) + "px";
         this.element.setAttribute("aria-expanded", "true");
         ToolOptionDropdown.active = this;
-        if (this.options.fontPreview) this.buildFontPreviewEntries();
+        if (this.options.fontPreview) {
+            this.buildFontPicker();
+            // Capture before the application's global tool shortcuts. A font
+            // prefix such as "mo" must navigate the picker, not switch to the
+            // Move and Line tools.
+            document.addEventListener("keydown", this.fontTypeaheadListener, true);
+        }
         setTimeout(() => document.addEventListener("click", this.documentClickListener, {once: true}));
     }
 
@@ -159,19 +172,87 @@ class ToolOptionDropdown {
         return button;
     }
 
-    buildFontPreviewEntries() {
+    buildFontPicker() {
+        const results = document.createElement("div");
+        results.className = "tool-font-dropdown-results";
+        this.menu.appendChild(results);
+        this.fontEntryButtons = new Map();
+        this.pendingFontJumpValue = this.value;
+
+        const token = ++this.fontRenderToken;
         let index = 0;
         const appendChunk = () => {
-            if (this.menu === null) return;
+            if (this.menu === null || token !== this.fontRenderToken
+                || !results.isConnected) return;
             const fragment = document.createDocumentFragment();
-            const end = Math.min(index + 20, this.options.values.length);
+            const end = Math.min(index + 12, this.options.values.length);
             for (; index < end; ++index) {
-                fragment.appendChild(this.createEntryButton(this.options.values[index]));
+                const entry = this.options.values[index];
+                const button = this.createEntryButton(entry);
+                this.fontEntryButtons.set(entry[0], button);
+                fragment.appendChild(button);
             }
-            this.menu.appendChild(fragment);
+            results.appendChild(fragment);
+            this.focusPendingFontEntry();
             if (index < this.options.values.length) requestAnimationFrame(appendChunk);
         };
         requestAnimationFrame(appendChunk);
+    }
+
+    onFontTypeahead(event) {
+        if (this.menu === null || !this.options.fontPreview) return;
+        if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            this.close();
+            this.element.focus();
+            return;
+        }
+        if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey
+            || event.isComposing || event.key.length !== 1) return;
+
+        // The font picker owns printable keys while open. Consume them even
+        // when no font matches so tool/action shortcuts can never fire.
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        const now = Date.now();
+        const character = event.key.toLocaleLowerCase();
+        if (now - this.fontTypeaheadTime > 1000) this.fontTypeaheadValue = "";
+        this.fontTypeaheadTime = now;
+        let candidate = this.fontTypeaheadValue + character;
+        let match = this.findFontTypeaheadMatch(candidate);
+        // If the accumulated prefix has no match, treat this keystroke as the
+        // beginning of a new lookup instead of making the user wait a second.
+        if (match === null && this.fontTypeaheadValue !== "") {
+            candidate = character;
+            match = this.findFontTypeaheadMatch(candidate);
+        }
+        this.fontTypeaheadValue = candidate;
+        clearTimeout(this.fontTypeaheadTimer);
+        this.fontTypeaheadTimer = setTimeout(() => {
+            this.fontTypeaheadValue = "";
+            this.fontTypeaheadTimer = null;
+        }, 1000);
+        if (match === null) return;
+        this.pendingFontJumpValue = match[0];
+        this.focusPendingFontEntry();
+    }
+
+    findFontTypeaheadMatch(prefix) {
+        for (const entry of this.options.values) {
+            if (String(entry[1]).toLocaleLowerCase().startsWith(prefix)) return entry;
+        }
+        return null;
+    }
+
+    focusPendingFontEntry() {
+        if (this.pendingFontJumpValue === null) return;
+        const button = this.fontEntryButtons.get(this.pendingFontJumpValue);
+        if (button === undefined || !button.isConnected) return;
+        this.pendingFontJumpValue = null;
+        button.focus({preventScroll: true});
+        button.scrollIntoView({block: "nearest"});
     }
 
     buildShapeGrid() {
@@ -251,6 +332,13 @@ class ToolOptionDropdown {
     }
 
     close() {
+        ++this.fontRenderToken;
+        document.removeEventListener("keydown", this.fontTypeaheadListener, true);
+        clearTimeout(this.fontTypeaheadTimer);
+        this.fontTypeaheadTimer = null;
+        this.fontTypeaheadValue = "";
+        this.pendingFontJumpValue = null;
+        this.fontEntryButtons.clear();
         document.removeEventListener("click", this.documentClickListener);
         this.element.setAttribute("aria-expanded", "false");
         if (this.menu !== null) this.menu.remove();

@@ -814,8 +814,10 @@ header {
 }
 
 .tool-dropdown-menu-text button:hover,
-.tool-dropdown-menu-text button[active] {
+.tool-dropdown-menu-text button[active],
+.tool-font-dropdown-menu button:focus {
     background: var(--color-menu-item-selected);
+    outline: none;
 }
 
 .tool-dropdown-menu-icons button[active] {
