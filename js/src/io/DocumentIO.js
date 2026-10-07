@@ -74,12 +74,13 @@ class DocumentIO {
         }, 100);
     }
 
-    static createUnsavedChangesPreview(workspaces) {
+    static createUnsavedChangesPreview(workspaces, explanationText = null) {
         const preview = document.createElement("div");
         preview.className = "unsaved-changes-preview";
 
         const explanation = document.createElement("p");
-        explanation.textContent = "The following images have changes that have not been saved. " +
+        explanation.textContent = explanationText ||
+            "The following images have changes that have not been saved. " +
             "Select a thumbnail to show that image in the main window.";
 
         const strip = document.createElement("div");
@@ -147,6 +148,55 @@ class DocumentIO {
         });
     }
 
+    static async closeDocumentWorkspace(workspace) {
+        if (workspace === null || !this.app.getDocumentWorkspaces().includes(workspace)) return false;
+
+        this.closingWorkspaces ??= new Set();
+        if (this.closingWorkspaces.has(workspace)) return false;
+        this.closingWorkspaces.add(workspace);
+
+        try {
+            if (workspace.isDirty()) {
+                // Saving always operates on the active workspace. This also mirrors
+                // Paint.NET, which activates a document before asking whether to save it.
+                this.app.setActiveDocumentWorkspace(workspace);
+                const choice = await TaskDialog.show({
+                    title: "Unsaved Changes",
+                    className: "unsaved-changes-dialog",
+                    icon: "assets/icons/warning_icon.png",
+                    preview: this.createUnsavedChangesPreview(
+                        [workspace],
+                        "Save changes to \"" + workspace.getFriendlyName() + "\" before closing?"
+                    ),
+                    cancelValue: "cancel",
+                    choices: [{
+                        value: "save",
+                        title: "Save",
+                        description: "Save the image, and then close it.",
+                        icon: "assets/icons/menu_file_save_icon.png"
+                    }, {
+                        value: "discard",
+                        title: "Don't Save",
+                        description: "Discard the unsaved changes, and then close the image.",
+                        icon: "assets/icons/menu_file_close_icon.png"
+                    }, {
+                        value: "cancel",
+                        title: "Cancel",
+                        description: "Keep the image open.",
+                        icon: "assets/icons/cancel_icon.png"
+                    }]
+                });
+
+                if (choice !== "save" && choice !== "discard") return false;
+                if (choice === "save" && !await this.saveActive(false)) return false;
+            }
+
+            return this.app.closeDocumentWorkspace(workspace, false);
+        } finally {
+            this.closingWorkspaces.delete(workspace);
+        }
+    }
+
     static async createNewDocument() {
         const active = this.app.getActiveDocumentWorkspace();
         const width = active === null ? 800 : active.getDocument().getWidth();
@@ -187,6 +237,23 @@ class DocumentIO {
     }
 
     static async handleDroppedFiles(files) {
+        const fontFiles = files.filter(file => FontManager.isFontFile(file));
+        if (fontFiles.length > 0) {
+            const result = await FontManager.importFiles(fontFiles);
+            if (result.errors.length > 0) {
+                alert("Some fonts could not be added:\n\n" + result.errors.map(item =>
+                    `${item.file.name}: ${item.error.message}`).join("\n"));
+            }
+            files = files.filter(file => !FontManager.isFontFile(file));
+            if (files.length === 0) {
+                SettingsDialog.open("fonts");
+                const message = result.added.length === 1
+                    ? `Added ${result.added[0].name}.`
+                    : `Added ${result.added.length} fonts.`;
+                SettingsDialog.instance.setStatus(message);
+                return;
+            }
+        }
         const choice = await TaskDialog.show({
             title: "Drag and Drop",
             icon: "assets/icons/drag_drop_open_or_import_form_icon.png",

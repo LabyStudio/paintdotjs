@@ -12,6 +12,8 @@ class AppView {
         this.lastMouseX = 0;
         this.lastMouseY = 0;
         this.pointerDown = false;
+        this.activePointerId = null;
+        this.pointerButton = MouseButton.LEFT;
         this.autoScrollPointer = null;
         this.autoScrollFrame = null;
         this.lastAutoScrollTime = 0;
@@ -82,7 +84,7 @@ class AppView {
                 // Handle mouse wheel zoom
                 let delta = event.deltaY;
                 let activeDocumentWorkspace = this.getActiveDocumentWorkspace();
-                if (activeDocumentWorkspace !== null && !activeDocumentWorkspace.isZoomToWindow()) {
+                if (activeDocumentWorkspace !== null) {
                     let zoom = activeDocumentWorkspace.getZoom() - delta * activeDocumentWorkspace.getZoom() / 1000;
                     if (zoom < 0.01) {
                         zoom = 0.01; // Limit zoom to 1%
@@ -135,16 +137,48 @@ class AppView {
                 pointerType: point.pointerType
             };
         };
+        const finishInterruptedPointer = event => {
+            if (!this.pointerDown) return;
+            try {
+                const point = event === null
+                    ? this.autoScrollPointer
+                    : getPointerPosition(event);
+                if (point === null) return;
+                const input = event === null ? {
+                    pressure: point.pressure,
+                    pointerType: point.pointerType,
+                    samples: [point]
+                } : getPointerInput(event);
+                this.fire("document:mouseup", point.x, point.y, this.pointerButton);
+                this.onMouseUp(point.x, point.y, this.pointerButton, input);
+            } catch (error) {
+                this.handleError(error);
+            } finally {
+                this.stopAutoScroll();
+            }
+        };
 
         // Pointer events retain pen pressure and the browser's coalesced input
         // samples. Paint.NET 5's brush pipeline consumes the same information
         // instead of reducing every device to a stream of mouse coordinates.
         this.editor.addEventListener('pointerdown', event => {
+            if (this.pointerDown) {
+                // Ignore additional touch/pen contacts while the active pointer
+                // owns the stroke. A repeated down from the same pointer means
+                // its previous up/cancel was lost, so finish that stroke first.
+                if (event.pointerId !== this.activePointerId) {
+                    event.preventDefault();
+                    return;
+                }
+                finishInterruptedPointer(null);
+            }
             try {
                 const point = getPointerPosition(event);
                 let x = point.x;
                 let y = point.y;
                 this.pointerDown = true;
+                this.activePointerId = event.pointerId;
+                this.pointerButton = event.button;
                 rememberAutoScrollPointer(event);
                 this.startAutoScroll();
                 this.fire("document:mousedown", x, y, event.button);
@@ -158,6 +192,7 @@ class AppView {
         });
 
         this.editor.addEventListener('pointermove', event => {
+            if (this.pointerDown && event.pointerId !== this.activePointerId) return;
             try {
                 rememberAutoScrollPointer(event);
 
@@ -174,6 +209,7 @@ class AppView {
         });
 
         this.editor.addEventListener('pointerup', event => {
+            if (!this.pointerDown || event.pointerId !== this.activePointerId) return;
             try {
                 rememberAutoScrollPointer(event);
                 const point = getPointerPosition(event);
@@ -190,9 +226,13 @@ class AppView {
             event.preventDefault();
         });
 
-        this.editor.addEventListener('pointercancel', () => this.stopAutoScroll());
-        this.editor.addEventListener('lostpointercapture', () => {
-            if (this.pointerDown) this.stopAutoScroll();
+        this.editor.addEventListener('pointercancel', event => {
+            if (event.pointerId === this.activePointerId) finishInterruptedPointer(event);
+        });
+        this.editor.addEventListener('lostpointercapture', event => {
+            if (this.pointerDown && event.pointerId === this.activePointerId) {
+                finishInterruptedPointer(event);
+            }
         });
 
         // Disable smooth scrolling
@@ -289,13 +329,25 @@ class AppView {
     }
 
     updateCanvasBounds(shiftView = true) {
+        let documentWorkspace = this.getActiveDocumentWorkspace();
+        this.view.style.overflow = documentWorkspace !== null
+            && documentWorkspace.isZoomToWindow() ? "hidden" : "scroll";
+
         let viewWidth = this.getViewWidth();
         let viewHeight = this.getViewHeight();
+        const displayScale = window.devicePixelRatio || 1;
 
-        this.canvas.setWidth(viewWidth);
-        this.canvas.setHeight(viewHeight);
+        // The canvas is positioned in CSS pixels, but its backing surface must
+        // use physical display pixels. Otherwise Chromium stretches a 1x
+        // bitmap over a HiDPI viewport and soft brush edges are resampled a
+        // second time by the browser compositor.
+        this.canvas.setWidth(Math.max(1, Math.round(viewWidth * displayScale)));
+        this.canvas.setHeight(Math.max(1, Math.round(viewHeight * displayScale)));
+        const canvasElement = this.canvas.getCanvas();
+        canvasElement.style.width = viewWidth + "px";
+        canvasElement.style.height = viewHeight + "px";
+        this.canvas.getContext().setTransform(displayScale, 0, 0, displayScale, 0, 0);
 
-        let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace === null) {
             return;
         }
@@ -315,9 +367,6 @@ class AppView {
         let environment = document.getElementById("environment")
         environment.style.width = envWidth + "px";
         environment.style.height = envHeight + "px";
-
-        // Update scrollbar visibility
-        this.view.style.overflow = documentWorkspace.isZoomToWindow() ? "hidden" : "scroll";
     }
 
     render() {
@@ -410,7 +459,7 @@ class AppView {
 
         // TODO change logic after implementing movement of the document
         let documentWorkspace = this.getActiveDocumentWorkspace();
-        if (documentWorkspace !== null) {
+        if (documentWorkspace !== null && documentWorkspace.isZoomToWindow()) {
             documentWorkspace.fitViewport();
         }
 
@@ -425,6 +474,7 @@ class AppView {
 
     stopAutoScroll() {
         this.pointerDown = false;
+        this.activePointerId = null;
         this.autoScrollPointer = null;
         if (this.autoScrollFrame !== null) cancelAnimationFrame(this.autoScrollFrame);
         this.autoScrollFrame = null;
@@ -800,6 +850,12 @@ class AppView {
             this.listeners[event] = [];
         }
         this.listeners[event].push(callback);
+    }
+
+    off(event, callback) {
+        if (typeof this.listeners[event] === "undefined") return;
+        const index = this.listeners[event].indexOf(callback);
+        if (index !== -1) this.listeners[event].splice(index, 1);
     }
 
     fire(event, ...args) {

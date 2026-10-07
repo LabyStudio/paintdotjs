@@ -434,12 +434,12 @@ class PreviewShapeTool extends DrawingTool {
         const width = this.getWidth();
         const antialias = this.getSetting("antialias", true) !== false;
         // Canvas2D exposes image smoothing for bitmap operations only; it has
-        // no switch for vector-path antialiasing. Render aliased 1px shapes
+        // no switch for vector-path antialiasing. Render aliased shapes
         // into an isolated surface so their coverage can be reduced to whole
         // pixels before the shape is composited onto the layer.
         let aliasedCanvas = null;
         let context = destinationContext;
-        if (!antialias && width === 1) {
+        if (!antialias) {
             aliasedCanvas = document.createElement("canvas");
             aliasedCanvas.width = surface.width;
             aliasedCanvas.height = surface.height;
@@ -683,10 +683,29 @@ class PreviewShapeTool extends DrawingTool {
             const y = dirtyBounds.getTop();
             const pixels = context.getImageData(x, y, dirtyBounds.getWidth(), dirtyBounds.getHeight());
             // Convert antialiased path coverage into a bi-level mask. Keep
-            // the source color channels intact so hatch/pattern fills remain
-            // unchanged; only fractional coverage is removed.
-            for (let i = 3; i < pixels.data.length; i += 4) {
-                pixels.data[i] = pixels.data[i] >= 128 ? 255 : 0;
+            // the selected color's opacity: thresholding against 128 would
+            // erase every aliased line drawn with less than 50% opacity.
+            const candidateColors = [
+                this.getColor(this.button),
+                this.getColor(this.button === MouseButton.LEFT
+                    ? MouseButton.RIGHT : MouseButton.LEFT)
+            ];
+            for (let i = 0; i < pixels.data.length; i += 4) {
+                let nearest = candidateColors[0];
+                let nearestDistance = Infinity;
+                for (const color of candidateColors) {
+                    const red = pixels.data[i] - color.red;
+                    const green = pixels.data[i + 1] - color.green;
+                    const blue = pixels.data[i + 2] - color.blue;
+                    const distance = red * red + green * green + blue * blue;
+                    if (distance < nearestDistance) {
+                        nearest = color;
+                        nearestDistance = distance;
+                    }
+                }
+                pixels.data[i + 3] = nearest.alpha > 0
+                    && pixels.data[i + 3] >= nearest.alpha / 2
+                    ? nearest.alpha : 0;
             }
             context.putImageData(pixels, x, y);
             destinationContext.save();

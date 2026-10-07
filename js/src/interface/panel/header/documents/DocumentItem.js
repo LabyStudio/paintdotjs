@@ -32,7 +32,8 @@ class DocumentItem extends MenuItem {
                 closeButtonElement.title = "Close " + this.documentWorkspace.getFriendlyName();
                 closeButtonElement.onclick = event => {
                     event.stopPropagation();
-                    window.app.closeDocumentWorkspace(this.documentWorkspace);
+                    void DocumentIO.closeDocumentWorkspace(this.documentWorkspace)
+                        .catch(error => window.app.handleError(error));
                 };
                 header.appendChild(closeButtonElement);
             }

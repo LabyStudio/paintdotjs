@@ -157,17 +157,24 @@ class SettingsDialog {
         this.activeSection = "ui";
         this.search = null;
         this.shortcutList = null;
+        this.fontList = null;
         this.changedListener = () => this.renderShortcutRows();
+        this.fontsChangedListener = () => {
+            if (this.backdrop !== null && this.activeSection === "fonts") this.renderFontRows();
+        };
+        window.addEventListener("paintdotjs:fonts-changed", this.fontsChangedListener);
         this.sections = [
             ["ui", "User Interface", "settings_u_i_24.png"],
             ["canvas", "Canvas", "settings_canvas_24.png"],
             ["tools", "Tools", "settings_tools_24.png"],
+            ["fonts", "Fonts", "text_tool_icon.png"],
             ["pen", "Pen & Tablet", "settings_pen_and_tablet_24.png"],
             ["graphics", "Graphics", "settings_graphics_24.png"],
             ["colorManagement", "Color Management", "settings_color_management_24.png"],
             ["updates", "Updates", "settings_updates_24.png"],
             ["plugins", "Plugin Errors", "settings_plugins_24.png"],
-            ["diagnostics", "Diagnostics", "settings_diagnostics_24.png"]
+            ["diagnostics", "Diagnostics", "settings_diagnostics_24.png"],
+            ["keyboard", "Keyboard", "menu_utilities_settings_icon.png"]
         ];
     }
 
@@ -275,6 +282,7 @@ class SettingsDialog {
 
         this.search = null;
         this.shortcutList = null;
+        this.fontList = null;
         this.page.className = "settings-page settings-page-" + section;
         this.page.innerHTML = "";
         const render = this["render" + section[0].toUpperCase() + section.slice(1)];
@@ -719,6 +727,134 @@ class SettingsDialog {
         this.page.appendChild(empty);
     }
 
+    renderFonts() {
+        this.addHeading("Fonts", "Add fonts for the Text tool. Font files are stored locally in this app and are not uploaded.");
+
+        const controls = document.createElement("div");
+        controls.className = "settings-font-controls";
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = FontManager.getAcceptedFileTypes();
+        input.multiple = true;
+        input.hidden = true;
+        input.onchange = async () => {
+            await this.importFonts(Array.from(input.files || []));
+            input.value = "";
+        };
+        const add = document.createElement("button");
+        add.type = "button";
+        add.className = "settings-action-button";
+        add.textContent = "Add fonts…";
+        add.onclick = () => input.click();
+        controls.append(add, input);
+        this.page.appendChild(controls);
+
+        const dropZone = document.createElement("div");
+        dropZone.className = "settings-font-drop-zone";
+        dropZone.tabIndex = 0;
+        dropZone.textContent = "Drop .ttf, .otf, .woff, or .woff2 files here";
+        dropZone.ondragenter = dropZone.ondragover = event => {
+            event.preventDefault();
+            event.stopPropagation();
+            dropZone.classList.add("drag-over");
+            if (event.dataTransfer !== null) event.dataTransfer.dropEffect = "copy";
+        };
+        dropZone.ondragleave = event => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!dropZone.contains(event.relatedTarget)) dropZone.classList.remove("drag-over");
+        };
+        dropZone.ondrop = async event => {
+            event.preventDefault();
+            event.stopPropagation();
+            dropZone.classList.remove("drag-over");
+            await this.importFonts(Array.from(event.dataTransfer?.files || []));
+        };
+        this.page.appendChild(dropZone);
+
+        this.addSectionHeading("Installed by you");
+        this.fontList = document.createElement("div");
+        this.fontList.className = "settings-font-list";
+        this.page.appendChild(this.fontList);
+        FontManager.initialize().then(() => this.renderFontRows());
+        this.renderFontRows();
+    }
+
+    async importFonts(files) {
+        const fontFiles = files.filter(file => FontManager.isFontFile(file));
+        if (fontFiles.length === 0) {
+            this.setStatus("Choose a TTF, OTF, WOFF, or WOFF2 font file.");
+            return;
+        }
+        this.setStatus("Adding font" + (fontFiles.length === 1 ? "…" : "s…"));
+        const result = await FontManager.importFiles(fontFiles);
+        if (result.errors.length > 0) {
+            const details = result.errors.map(item =>
+                `${item.file.name}: ${item.error.message}`).join("\n");
+            this.setStatus(`Added ${result.added.length}; ${result.errors.length} could not be added.`);
+            alert("Some fonts could not be added:\n\n" + details);
+        } else {
+            this.setStatus(result.added.length === 1
+                ? `Added ${result.added[0].name}.`
+                : `Added ${result.added.length} fonts.`);
+        }
+        this.renderFontRows();
+    }
+
+    renderFontRows() {
+        if (this.fontList === null || !this.fontList.isConnected) return;
+        this.fontList.innerHTML = "";
+        const fonts = FontManager.getFonts();
+        if (fonts.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "settings-empty-list settings-font-empty";
+            empty.textContent = "No custom fonts have been added.";
+            this.fontList.appendChild(empty);
+            return;
+        }
+
+        for (const font of fonts) {
+            const row = document.createElement("article");
+            row.className = "settings-font-row";
+            const details = document.createElement("div");
+            details.className = "settings-font-details";
+            const name = document.createElement("strong");
+            name.textContent = font.name;
+            const metadata = document.createElement("span");
+            metadata.textContent = `${font.fileName} · ${this.formatFileSize(font.size)}`;
+            details.append(name, metadata);
+
+            const preview = document.createElement("div");
+            preview.className = "settings-font-preview";
+            preview.style.fontFamily = `'${font.family}', sans-serif`;
+            preview.textContent = "The quick brown fox jumps over the lazy dog 0123456789";
+
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "settings-font-remove";
+            remove.textContent = "Remove";
+            remove.onclick = async () => {
+                remove.disabled = true;
+                try {
+                    await FontManager.removeFont(font.id);
+                    this.setStatus(`Removed ${font.name}.`);
+                } catch (error) {
+                    remove.disabled = false;
+                    this.setStatus(`Could not remove ${font.name}.`);
+                    alert(`Could not remove "${font.name}": ${error.message}`);
+                }
+            };
+            row.append(details, preview, remove);
+            this.fontList.appendChild(row);
+        }
+    }
+
+    formatFileSize(size) {
+        if (size < 1024) return size + " B";
+        if (size < 1024 * 1024) return (size / 1024).toFixed(1) + " KB";
+        return (size / (1024 * 1024)).toFixed(1) + " MB";
+    }
+
     renderDiagnostics() {
         this.addHeading("Diagnostics");
         const diagnostics = [
@@ -855,6 +991,7 @@ class SettingsDialog {
         this.status = null;
         this.search = null;
         this.shortcutList = null;
+        this.fontList = null;
         this.dialogMover = null;
     }
 }

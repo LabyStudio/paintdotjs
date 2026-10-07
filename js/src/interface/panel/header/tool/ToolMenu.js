@@ -18,6 +18,11 @@ class ToolMenu extends StripPanel {
                 this.closeSizeMenu();
             }
         };
+        window.addEventListener("paintdotjs:fonts-changed", () => {
+            if (this.app.getActiveTool()?.getType() === ToolType.TEXT) {
+                this.renderOptions(this.app.getActiveTool());
+            }
+        });
         this.app.on("app:active_tool_updated", tool => this.renderOptions(tool));
     }
 
@@ -363,7 +368,11 @@ class ToolMenu extends StripPanel {
             }
             case "textTool":
                 return [
-                    choices("Font:", "fontFamily", [["Calibri", "Calibri"], ["Segoe UI", "Segoe UI"], ["Arial", "Arial"], ["serif", "Serif"], ["monospace", "Monospace"]], 140),
+                    {
+                        kind: "select", label: "Font:", key: "fontFamily",
+                        values: FontManager.getTextToolChoices(), width: 140,
+                        menuWidth: 380, fontPreview: true
+                    },
                     size("", "fontSize", 1, 500, 1),
                     iconChoice("", "fontUnit", [
                         ["points", "Points (image DPI)", "enum_font_size_metric_points.png"],
@@ -418,6 +427,8 @@ class ToolMenu extends StripPanel {
                     menuIcons: false,
                     cycleOnMainClick: definition.split,
                     menuCheckmarks: definition.split,
+                    menuWidth: definition.menuWidth,
+                    fontPreview: definition.fontPreview,
                     onChange: value => this.updateSetting(type, definition.key, value)
                 }).getElement();
             } else if (definition.kind === "size") {

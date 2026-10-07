@@ -26,10 +26,16 @@ class RecolorTool extends DrawingTool {
         const surface = this.getActiveLayer().getSurface();
         const pressure = Math.max(fromPressure, toPressure);
         const radius = this.getWidth() * pressure / 2;
+        const antialiased = this.getSetting("antialias", true);
+        const hardness = antialiased
+            ? Utility.clamp(Number(this.getSetting("hardness", 100)), 0, 100) / 100
+            : 1;
+        const profile = antialiased ? this.getBrushStampProfile(radius, hardness) : null;
+        const extent = profile === null ? radius : profile.extentRadius;
         const tolerance = this.getToleranceThreshold();
         const bounds = Rectangle.absolute(
-            Math.floor(Math.min(from.x, to.x) - radius), Math.floor(Math.min(from.y, to.y) - radius),
-            Math.ceil(Math.max(from.x, to.x) + radius + 1), Math.ceil(Math.max(from.y, to.y) + radius + 1)
+            Math.floor(Math.min(from.x, to.x) - extent), Math.floor(Math.min(from.y, to.y) - extent),
+            Math.ceil(Math.max(from.x, to.x) + extent + 1), Math.ceil(Math.max(from.y, to.y) + extent + 1)
         );
         const clipped = Rectangle.intersect(bounds, surface.getBounds());
         if (clipped.isEmpty()) return;
@@ -39,35 +45,20 @@ class RecolorTool extends DrawingTool {
             || this.getColor(this.button === MouseButton.LEFT ? MouseButton.RIGHT : MouseButton.LEFT);
         const target = [targetColor.red, targetColor.green, targetColor.blue, targetColor.alpha];
         const replacement = this.getColor(this.button);
-        const hardness = this.getSetting("antialias", true)
-            ? Utility.clamp(Number(this.getSetting("hardness", 100)), 0, 100) / 100
-            : 1;
         const premultiplied = this.getSetting("alphaMode", "premultiplied") === "premultiplied";
         const segmentLength = Utility.distance(from, to);
         const spacing = Math.max(0.5, this.getWidth() * Number(this.getSetting("spacing", 15)) / 100);
         const stampCount = Math.max(1, Math.ceil(segmentLength / spacing));
         for (let py = 0; py < clipped.height; ++py) {
             for (let px = 0; px < clipped.width; ++px) {
-                const docX = clipped.x + px, docY = clipped.y + py;
-                let distance = this.distanceToSegment(docX, docY, from, to);
-                if (spacing > this.getWidth() * 0.25 && segmentLength > 0) {
-                    const projection = Utility.clamp(
-                        ((docX - from.x) * (to.x - from.x) + (docY - from.y) * (to.y - from.y))
-                        / (segmentLength * segmentLength), 0, 1
-                    );
-                    const stamp = Math.round(projection * stampCount) / stampCount;
-                    distance = Math.hypot(
-                        docX - (from.x + (to.x - from.x) * stamp),
-                        docY - (from.y + (to.y - from.y) * stamp)
-                    );
-                }
-                if (distance > radius) continue;
+                const docX = clipped.x + px + 0.5, docY = clipped.y + py + 0.5;
+                const strength = this.getRecolorBrushCoverage(
+                    docX, docY, from, to, segmentLength, spacing, stampCount,
+                    radius, profile, antialiased
+                );
+                if (strength <= 0) continue;
                 const i = (py * clipped.width + px) * 4;
                 if (this.matchesColorTolerance(pixels.data, i, target, tolerance, premultiplied)) {
-                    const hardRadius = radius * hardness;
-                    const strength = distance <= hardRadius || hardRadius >= radius
-                        ? 1
-                        : 1 - (distance - hardRadius) / Math.max(0.0001, radius - hardRadius);
                     const shiftedRed = Utility.clamp(pixels.data[i] + replacement.red - target[0], 0, 255);
                     const shiftedGreen = Utility.clamp(pixels.data[i + 1] + replacement.green - target[1], 0, 255);
                     const shiftedBlue = Utility.clamp(pixels.data[i + 2] + replacement.blue - target[2], 0, 255);
@@ -83,6 +74,43 @@ class RecolorTool extends DrawingTool {
         this.changedBounds = Rectangle.union(this.changedBounds, clipped);
         this.markBitmapTransactionDirty(this.changedBounds);
         this.getActiveLayer().invalidate(clipped);
+    }
+
+    getRecolorBrushCoverage(x, y, from, to, segmentLength, spacing,
+                            stampCount, radius, profile, antialiased) {
+        const distanceAt = (sampleX, sampleY) => {
+            if (spacing <= this.getWidth() * 0.25 || segmentLength <= 0) {
+                return this.distanceToSegment(sampleX, sampleY, from, to);
+            }
+            const projection = Utility.clamp(
+                ((sampleX - from.x) * (to.x - from.x)
+                    + (sampleY - from.y) * (to.y - from.y))
+                / (segmentLength * segmentLength), 0, 1
+            );
+            const stamp = Math.round(projection * stampCount) / stampCount;
+            return Math.hypot(
+                sampleX - (from.x + (to.x - from.x) * stamp),
+                sampleY - (from.y + (to.y - from.y) * stamp)
+            );
+        };
+
+        if (!antialiased) return distanceAt(x, y) <= radius ? 1 : 0;
+
+        // Recolor writes pixels directly instead of compositing a Canvas
+        // bitmap. Average a 4x4 pixel footprint so it receives the same
+        // supersampled hardness edge as the other sampled-brush tools.
+        let coverage = 0;
+        const samplesPerAxis = 4;
+        for (let sampleY = 0; sampleY < samplesPerAxis; ++sampleY) {
+            for (let sampleX = 0; sampleX < samplesPerAxis; ++sampleX) {
+                const offsetX = (sampleX + 0.5) / samplesPerAxis - 0.5;
+                const offsetY = (sampleY + 0.5) / samplesPerAxis - 0.5;
+                const distance = distanceAt(x + offsetX, y + offsetY);
+                coverage += distance >= profile.extentRadius
+                    ? 0 : this.getBrushProfileAlpha(distance, profile);
+            }
+        }
+        return coverage / (samplesPerAxis * samplesPerAxis);
     }
 
     distanceToSegment(x, y, a, b) {

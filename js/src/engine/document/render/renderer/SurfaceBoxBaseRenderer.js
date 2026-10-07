@@ -35,7 +35,10 @@ class SurfaceBoxBaseRenderer extends SurfaceBoxRenderer {
         context.restore();
 
         // Render the composition of the active document workspace
-        ImageUtil.drawImage(
+        const activeWorkspace = this.surfaceBox.getApp().getActiveDocumentWorkspace();
+        const revision = activeWorkspace === null
+            ? 0 : activeWorkspace.getCompositionRevision();
+        ImageUtil.drawViewportImage(
             context,
             surface.getCanvas(),
             0,
@@ -45,7 +48,8 @@ class SurfaceBoxBaseRenderer extends SurfaceBoxRenderer {
             renderBounds.getX(),
             renderBounds.getY(),
             renderBounds.getWidth(),
-            renderBounds.getHeight()
+            renderBounds.getHeight(),
+            revision
         );
 
         if (typeof AppSettingsStore !== "undefined"

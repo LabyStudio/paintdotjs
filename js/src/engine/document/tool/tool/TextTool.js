@@ -11,6 +11,11 @@ class TextTool extends DrawingTool {
         this.tracking = false;
         this.dragStart = null;
         this.originStart = null;
+        this.viewportSyncFrame = null;
+        this.viewportChangedListener = documentView => {
+            if (documentView === this.getDocumentWorkspace()) this.syncEditorToViewport();
+        };
+        this.resizeListener = () => this.syncEditorToViewport();
     }
 
     usesContinuousPointerCoordinates() {
@@ -19,10 +24,18 @@ class TextTool extends DrawingTool {
 
     onActivate() {
         super.onActivate();
+        this.app.on("document:update_viewport", this.viewportChangedListener);
+        this.app.on("app:resize", this.resizeListener);
         this.app.setCursorImg("text_tool_cursor");
     }
 
     onDeactivate() {
+        this.app.off("document:update_viewport", this.viewportChangedListener);
+        this.app.off("app:resize", this.resizeListener);
+        if (this.viewportSyncFrame !== null) {
+            cancelAnimationFrame(this.viewportSyncFrame);
+            this.viewportSyncFrame = null;
+        }
         if (this.pending) this.commitPending();
         this.destroyEditor();
         super.onDeactivate();
@@ -221,8 +234,61 @@ class TextTool extends DrawingTool {
         this.editor.style.fontSize = (this.getFontSize() * zoom) + "px";
         this.editor.style.lineHeight = "1.2";
         this.editor.style.textAlign = this.getSetting("align", "left");
+        this.updateEditorDimensions();
         this.positionEditor();
         this.updateCaret();
+    }
+
+    updateEditorDimensions() {
+        if (this.editor === null) return;
+        const context = this.getActiveLayer().getSurface().context;
+        const lines = this.editor.value.split("\n");
+        context.save();
+        context.font = this.getFontString();
+        let width = 1;
+        for (const line of lines) width = Math.max(width, context.measureText(line || " ").width);
+        context.restore();
+        const zoom = this.getDocumentWorkspace().getZoom();
+        this.editor.style.width = Math.max(24, Math.ceil(width * zoom) + 8) + "px";
+        this.editor.style.height = Math.max(24,
+            Math.ceil(lines.length * this.getLineHeight() * zoom) + 4) + "px";
+    }
+
+    syncEditorToViewport() {
+        if (!this.pending || this.editor === null) return;
+        // Canvas and DOM overlays are painted independently. Hide the overlay
+        // for the single frame in which its zoomed font metrics and position
+        // are being updated, so an old-scale caret can never flash onscreen.
+        this.editor.style.visibility = "hidden";
+        if (this.caretElement !== null) this.caretElement.style.visibility = "hidden";
+        this.updateEditorStyle();
+        if (this.viewportSyncFrame !== null) cancelAnimationFrame(this.viewportSyncFrame);
+        const editor = this.editor;
+        const caret = this.caretElement;
+        this.viewportSyncFrame = requestAnimationFrame(() => {
+            this.viewportSyncFrame = null;
+            if (this.editor !== editor || !this.pending) return;
+            editor.style.visibility = "";
+            if (caret !== null && this.caretElement === caret) caret.style.visibility = "";
+            // Browser zoom controls (especially the footer range input) take
+            // DOM focus away from the hidden textarea. Paint.NET keeps the
+            // active text insertion point alive after changing zoom, so hand
+            // focus back once the zoom interaction has updated the overlay.
+            try {
+                editor.focus({preventScroll: true});
+            } catch (_) {
+                editor.focus();
+            }
+            this.updateCaret();
+            // Toggling visibility while the viewport changes can leave a CSS
+            // animation at its invisible phase in some Chromium builds.
+            // Restart from the visible phase after the caret is repositioned.
+            if (caret !== null && this.caretElement === caret && !caret.hidden) {
+                caret.style.animation = "none";
+                void caret.offsetWidth;
+                caret.style.animation = "";
+            }
+        });
     }
 
     positionEditor() {
@@ -247,26 +313,29 @@ class TextTool extends DrawingTool {
         const fontSize = this.getFontSize();
         const lineHeight = this.getLineHeight();
         const textTop = this.getTextTop();
+        const align = this.getSetting("align", "left");
         context.save();
         context.font = this.getFontString();
-        let width = 1;
-        for (const line of lines) width = Math.max(width, context.measureText(line || " ").width);
+        context.textBaseline = "top";
+        context.textAlign = align;
+        const layout = this.measureTextLayout(context, lines, textTop, lineHeight, align);
         context.restore();
-        const zoom = this.getDocumentWorkspace().getZoom();
-        this.editor.style.width = Math.max(24, Math.ceil(width * zoom) + 8) + "px";
-        this.editor.style.height = Math.max(24, Math.ceil(lines.length * lineHeight * zoom) + 4) + "px";
+        this.updateEditorDimensions();
         this.positionEditor();
-        const align = this.getSetting("align", "left");
-        const left = align === "center" ? this.textOrigin.x - width / 2
-            : align === "right" ? this.textOrigin.x - width : this.textOrigin.x;
+        // Actual ink may extend well outside measureText().width, particularly
+        // for italic and decorative user fonts. Restore the complete ink box,
+        // with a small rasterization guard for antialiasing at its edges.
+        const padding = Math.max(4, Math.ceil(fontSize * 0.15));
         const nextBounds = Rectangle.intersect(new Rectangle(
-            Math.floor(left) - 3, Math.floor(textTop) - 3,
-            Math.ceil(width) + 6, Math.ceil(lines.length * lineHeight) + 6
+            Math.floor(layout.left) - padding,
+            Math.floor(layout.top) - padding,
+            Math.ceil(layout.right - layout.left) + padding * 2,
+            Math.ceil(layout.bottom - layout.top) + padding * 2
         ), surface.getBounds());
         let dirtyBounds = this.previewBounds === null
             ? nextBounds : Rectangle.union(this.previewBounds, nextBounds);
         dirtyBounds.intersect(surface.getBounds());
-        if (!dirtyBounds.isEmpty()) surface.copyRegionFrom(this.scratchSurface, dirtyBounds);
+        if (!dirtyBounds.isEmpty()) surface.copyRegionFromExact(this.scratchSurface, dirtyBounds);
 
         if (text.length > 0) {
             context.save();
@@ -281,7 +350,7 @@ class TextTool extends DrawingTool {
                 const y = textTop + i * lineHeight;
                 const line = lines[i];
                 context.fillText(line, this.textOrigin.x, y);
-                const lineWidth = context.measureText(line).width;
+                const lineWidth = layout.lines[i].width;
                 const lineLeft = align === "center" ? this.textOrigin.x - lineWidth / 2
                     : align === "right" ? this.textOrigin.x - lineWidth : this.textOrigin.x;
                 if (this.getSetting("underline", false)) {
@@ -299,6 +368,53 @@ class TextTool extends DrawingTool {
         this.updateCaret();
         this.getActiveLayer().invalidate(dirtyBounds);
         return true;
+    }
+
+    measureTextLayout(context, lines, textTop, lineHeight, align) {
+        let width = 1;
+        let left = this.textOrigin.x;
+        let right = this.textOrigin.x;
+        let top = textTop;
+        let bottom = textTop + Math.max(1, lines.length) * lineHeight;
+        const measurements = [];
+        const decorationThickness = Math.max(1, Math.round(this.getFontSize() / 14));
+
+        for (let index = 0; index < lines.length; ++index) {
+            const line = lines[index];
+            const metrics = context.measureText(line || " ");
+            const lineWidth = metrics.width;
+            width = Math.max(width, lineWidth);
+            const logicalLeft = align === "center" ? this.textOrigin.x - lineWidth / 2
+                : align === "right" ? this.textOrigin.x - lineWidth : this.textOrigin.x;
+            const y = textTop + index * lineHeight;
+
+            if (line.length > 0) {
+                const inkLeft = Number.isFinite(metrics.actualBoundingBoxLeft)
+                    ? this.textOrigin.x - metrics.actualBoundingBoxLeft : logicalLeft;
+                const inkRight = Number.isFinite(metrics.actualBoundingBoxRight)
+                    ? this.textOrigin.x + metrics.actualBoundingBoxRight : logicalLeft + lineWidth;
+                const inkTop = Number.isFinite(metrics.actualBoundingBoxAscent)
+                    ? y - metrics.actualBoundingBoxAscent : y;
+                const inkBottom = Number.isFinite(metrics.actualBoundingBoxDescent)
+                    ? y + metrics.actualBoundingBoxDescent : y + lineHeight;
+                left = Math.min(left, logicalLeft, inkLeft);
+                right = Math.max(right, logicalLeft + lineWidth, inkRight);
+                top = Math.min(top, inkTop);
+                bottom = Math.max(bottom, inkBottom);
+            }
+            if (this.getSetting("underline", false)) {
+                bottom = Math.max(bottom, y + this.getFontSize() + 1 + decorationThickness);
+                left = Math.min(left, logicalLeft);
+                right = Math.max(right, logicalLeft + lineWidth);
+            }
+            if (this.getSetting("strikeout", false)) {
+                left = Math.min(left, logicalLeft);
+                right = Math.max(right, logicalLeft + lineWidth);
+            }
+            measurements.push({width: lineWidth, metrics});
+        }
+        return {width, left, right: Math.max(right, left + 1), top,
+            bottom: Math.max(bottom, top + 1), lines: measurements};
     }
 
     getLineHeight() {

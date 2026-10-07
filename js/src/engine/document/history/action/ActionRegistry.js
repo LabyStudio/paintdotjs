@@ -18,7 +18,7 @@ class ActionRegistry {
         this.registerCallback("menu.file.saveAs", () => DocumentIO.saveActive(true), "Save As...", () => window.app.getActiveDocumentWorkspace() !== null, "Ctrl+Shift+S");
         this.registerCallback("menu.file.saveAll", () => DocumentIO.saveAll(), "Save All", () => window.app.getDocumentWorkspaces().some(workspace => workspace.isDirty()), "Ctrl+Alt+S");
         this.registerCallback("menu.file.print", () => DocumentIO.printActive(), "Print...", () => window.app.getActiveDocumentWorkspace() !== null, "Ctrl+P");
-        this.registerCallback("menu.file.close", () => window.app.closeDocumentWorkspace(window.app.getActiveDocumentWorkspace()), "Close", () => window.app.getActiveDocumentWorkspace() !== null, "Ctrl+W");
+        this.registerCallback("menu.file.close", () => DocumentIO.closeDocumentWorkspace(window.app.getActiveDocumentWorkspace()), "Close", () => window.app.getActiveDocumentWorkspace() !== null, "Ctrl+W");
 
         // Edit
         this.register(new HistoryUndoAction());

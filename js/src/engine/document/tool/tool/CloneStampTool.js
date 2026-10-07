@@ -220,13 +220,14 @@ class CloneStampTool extends DrawingTool {
     drawSegment(from, to, fromPressure = 1, toPressure = fromPressure) {
         const surface = this.getActiveLayer().getSurface();
         const width = this.getWidth();
-        const hardness = this.getSetting("antialias", true)
+        const antialiased = this.getSetting("antialias", true);
+        const hardness = antialiased
             ? Utility.clamp(Number(this.getSetting("hardness", 100)), 0, 100) / 100
             : 1;
         const maxStampWidth = width * Math.max(fromPressure, toPressure);
         const stampExtent = this.getBrushStampExtent(maxStampWidth, hardness);
         const segmentLength = Utility.distance(from, to);
-        const spacing = Math.max(0.5, width * Number(this.getSetting("spacing", 15)) / 100);
+        const spacing = Math.max(1, width * Number(this.getSetting("spacing", 15)) / 100);
         const distance = Math.max(1, Math.ceil(segmentLength / spacing));
         const bounds = Rectangle.absolute(
             Math.min(from.x, to.x), Math.min(from.y, to.y),
@@ -235,6 +236,7 @@ class CloneStampTool extends DrawingTool {
         bounds.inflate(Math.ceil(stampExtent) + 1, Math.ceil(stampExtent) + 1);
 
         const maskContext = this.cloneMaskSurface.context;
+        const maskColor = new Color(255, 255, 255, 255);
         maskContext.save();
         maskContext.globalCompositeOperation = "source-over";
         for (let i = 0; i <= distance; ++i) {
@@ -242,28 +244,13 @@ class CloneStampTool extends DrawingTool {
             const dx = from.x + (to.x - from.x) * t;
             const dy = from.y + (to.y - from.y) * t;
             const stampWidth = width * (fromPressure + (toPressure - fromPressure) * t);
-            const radius = stampWidth / 2;
-            if (hardness < 0.999) {
-                const profile = this.getBrushStampProfile(radius, hardness);
-                const gradient = maskContext.createRadialGradient(
-                    dx, dy, 0, dx, dy, profile.extentRadius);
-                const steps = 16;
-                for (let step = 0; step <= steps; ++step) {
-                    const profileDistance = profile.extentRadius * step / steps;
-                    const alpha = step === steps
-                        ? 0
-                        : this.getBrushProfileAlpha(profileDistance, profile);
-                    gradient.addColorStop(step / steps, `rgba(255,255,255,${alpha})`);
-                }
-                maskContext.fillStyle = gradient;
-                maskContext.beginPath();
-                maskContext.arc(dx, dy, profile.extentRadius, 0, Math.PI * 2);
+            if (antialiased) {
+                this.drawBrushStamp(maskContext, dx, dy, width, stampWidth,
+                    hardness, maskColor);
             } else {
                 maskContext.fillStyle = "white";
-                maskContext.beginPath();
-                maskContext.arc(dx, dy, radius, 0, Math.PI * 2);
+                this.drawAliasedBrushStamp(maskContext, dx, dy, stampWidth);
             }
-            maskContext.fill();
         }
         maskContext.restore();
 

@@ -1,14 +1,96 @@
 class ImageUtil {
 
+    static viewportScaleCaches = new WeakMap();
+
     /**
      * With antialiasing if the image is scaled down
      */
     static drawImage(context, image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
         const downscaling = dWidth < sWidth || dHeight < sHeight;
         context.save();
+        // Reduction needs filtering, while direct enlargement must preserve
+        // the document pixels. Bilinear enlargement makes soft brushes look
+        // progressively blurrier as the user zooms in.
         context.imageSmoothingEnabled = downscaling;
         context.imageSmoothingQuality = downscaling ? "high" : "low";
         context.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+        context.restore();
+    }
+
+    static drawViewportImage(
+        context, image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight, revision
+    ) {
+        const scaleX = dWidth / sWidth;
+        const scaleY = dHeight / sHeight;
+        const fractionalUpscaling = scaleX > 1 && scaleY > 1
+            && (Math.abs(scaleX - Math.round(scaleX)) >= 1e-6
+                || Math.abs(scaleY - Math.round(scaleY)) >= 1e-6);
+        if (!fractionalUpscaling) {
+            this.drawImage(context, image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+            return;
+        }
+
+        // Paint.NET first enlarges to the next integer scale with nearest-
+        // neighbor, then smoothly reduces that result to a fractional zoom.
+        // Render only the visible source pixels so large documents and extreme
+        // zoom levels do not require an enormous full-document intermediate.
+        const transform = context.getTransform();
+        const logicalWidth = context.canvas.width / Math.max(1e-6, Math.abs(transform.a));
+        const logicalHeight = context.canvas.height / Math.max(1e-6, Math.abs(transform.d));
+        const visibleLeft = Math.max(0, dx);
+        const visibleTop = Math.max(0, dy);
+        const visibleRight = Math.min(logicalWidth, dx + dWidth);
+        const visibleBottom = Math.min(logicalHeight, dy + dHeight);
+        if (visibleRight <= visibleLeft || visibleBottom <= visibleTop) return;
+
+        const sourceLeft = Math.max(sx,
+            Math.floor(sx + (visibleLeft - dx) / scaleX) - 1);
+        const sourceTop = Math.max(sy,
+            Math.floor(sy + (visibleTop - dy) / scaleY) - 1);
+        const sourceRight = Math.min(sx + sWidth,
+            Math.ceil(sx + (visibleRight - dx) / scaleX) + 1);
+        const sourceBottom = Math.min(sy + sHeight,
+            Math.ceil(sy + (visibleBottom - dy) / scaleY) + 1);
+        const sourceWidth = Math.max(1, sourceRight - sourceLeft);
+        const sourceHeight = Math.max(1, sourceBottom - sourceTop);
+        const integerScaleX = Math.ceil(scaleX);
+        const integerScaleY = Math.ceil(scaleY);
+        const intermediateWidth = sourceWidth * integerScaleX;
+        const intermediateHeight = sourceHeight * integerScaleY;
+        const cacheKey = [sourceLeft, sourceTop, sourceWidth, sourceHeight,
+            integerScaleX, integerScaleY].join(":");
+
+        let cache = this.viewportScaleCaches.get(image);
+        if (cache === undefined) {
+            cache = {canvas: document.createElement("canvas"), key: null, revision: -1};
+            this.viewportScaleCaches.set(image, cache);
+        }
+        if (cache.key !== cacheKey || cache.revision !== revision) {
+            if (cache.canvas.width !== intermediateWidth) cache.canvas.width = intermediateWidth;
+            if (cache.canvas.height !== intermediateHeight) cache.canvas.height = intermediateHeight;
+            const intermediateContext = cache.canvas.getContext("2d", {alpha: true});
+            intermediateContext.clearRect(0, 0, intermediateWidth, intermediateHeight);
+            intermediateContext.imageSmoothingEnabled = false;
+            intermediateContext.drawImage(
+                image,
+                sourceLeft, sourceTop, sourceWidth, sourceHeight,
+                0, 0, intermediateWidth, intermediateHeight
+            );
+            cache.key = cacheKey;
+            cache.revision = revision;
+        }
+
+        context.save();
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = "high";
+        context.drawImage(
+            cache.canvas,
+            0, 0, intermediateWidth, intermediateHeight,
+            dx + (sourceLeft - sx) * scaleX,
+            dy + (sourceTop - sy) * scaleY,
+            sourceWidth * scaleX,
+            sourceHeight * scaleY
+        );
         context.restore();
     }
 

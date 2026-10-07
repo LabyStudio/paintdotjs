@@ -16,6 +16,8 @@ class DrawingTool extends Tool {
         this.distanceSinceLastSample = 0;
         this.presentationFrame = null;
         this.pendingStrokeBounds = null;
+        this.brushProfileCache = new Map();
+        this.brushSpriteCache = new Map();
     }
 
     getWidth() {
@@ -38,6 +40,12 @@ class DrawingTool extends Tool {
 
     onMouseDown(x, y, button, input = null) {
         if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
+        // Browser pointer capture can be interrupted by focus changes, device
+        // cancellation, or a second contact. AppView normally finishes that
+        // stroke, but recover here as well so a stale transaction can never
+        // make the next valid stroke fail.
+        if (this.tracking) this.commitStroke();
+        else if (this.bitmapTransaction !== null) this.cancelBitmapTransaction();
         // Sampled strokes are repeatedly rebuilt from their original pixels.
         // Keep one immutable snapshot for the whole stroke. Lazily capturing
         // 256px tiles can capture a tile after an earlier presentation has
@@ -178,7 +186,8 @@ class DrawingTool extends Tool {
         const surface = this.getActiveLayer().getSurface();
         const context = this.strokeSurface === null ? surface.context : this.strokeSurface.context;
         const width = this.getWidth();
-        const hardness = this.getSetting("antialias", true)
+        const antialiased = this.getSetting("antialias", true);
+        const hardness = antialiased
             ? Utility.clamp(Number(this.getSetting("hardness", 100)), 0, 100) / 100
             : 1;
         const maxStampWidth = width * Math.max(fromPressure, toPressure);
@@ -212,76 +221,48 @@ class DrawingTool extends Tool {
         context.lineWidth = width * ((fromPressure + toPressure) / 2);
         context.lineCap = "round";
         context.lineJoin = "round";
-        const spacing = Math.max(0.5, width * Number(this.getSetting("spacing", 15)) / 100);
-        const variablePressure = Math.abs(fromPressure - toPressure) > 0.01;
+        // Paint.NET clamps sampled-brush spacing to one device pixel. Using a
+        // half-pixel minimum makes small soft brushes stamp twice as often and
+        // compounds their translucent centers until every hardness looks solid.
+        const spacing = Math.max(1, width * Number(this.getSetting("spacing", 15)) / 100);
         const coordinateOffset = this.usesContinuousPointerCoordinates() ? 0 : 0.5;
-        if (hardness >= 0.999 && spacing <= Math.max(1, width * 0.25)
-            && !variablePressure) {
-            context.beginPath();
-            context.moveTo(from.x + coordinateOffset, from.y + coordinateOffset);
-            context.lineTo(to.x + coordinateOffset, to.y + coordinateOffset);
-            context.stroke();
-            if (from.equals(to)) {
-                context.beginPath();
-                context.arc(from.x + coordinateOffset, from.y + coordinateOffset,
-                    width * fromPressure / 2, 0, Math.PI * 2);
-                context.fill();
+        const color = coverageColor;
+        const distance = Math.max(0, Utility.distance(from, to));
+        const offsets = [];
+        if (!this.sampledStroke) {
+            const steps = Math.max(1, Math.ceil(distance / spacing));
+            for (let i = 0; i <= steps; ++i) offsets.push(distance * i / steps);
+        } else if (!this.hasStrokeSample) {
+            offsets.push(0);
+            this.hasStrokeSample = true;
+        }
+        if (distance > 0) {
+            let offset = this.hasStrokeSample
+                ? spacing - this.distanceSinceLastSample
+                : 0;
+            let lastOffset = null;
+            while (offset <= distance + 1e-6) {
+                offsets.push(Math.min(offset, distance));
+                lastOffset = offset;
+                offset += spacing;
             }
-        } else {
-            const color = coverageColor;
-            const distance = Math.max(0, Utility.distance(from, to));
-            const offsets = [];
-            if (!this.sampledStroke) {
-                const steps = Math.max(1, Math.ceil(distance / spacing));
-                for (let i = 0; i <= steps; ++i) offsets.push(distance * i / steps);
-            } else if (!this.hasStrokeSample) {
-                offsets.push(0);
-                this.hasStrokeSample = true;
-            }
-            if (distance > 0) {
-                let offset = this.hasStrokeSample
-                    ? spacing - this.distanceSinceLastSample
-                    : 0;
-                let lastOffset = null;
-                while (offset <= distance + 1e-6) {
-                    offsets.push(Math.min(offset, distance));
-                    lastOffset = offset;
-                    offset += spacing;
-                }
-                this.distanceSinceLastSample = lastOffset === null
-                    ? this.distanceSinceLastSample + distance
-                    : Math.max(0, distance - lastOffset);
-                this.hasStrokeSample = true;
-            }
-            for (const offset of offsets) {
-                const t = distance === 0 ? 0 : offset / distance;
-                const px = from.x + (to.x - from.x) * t + coordinateOffset;
-                const py = from.y + (to.y - from.y) * t + coordinateOffset;
-                const stampWidth = width * (fromPressure + (toPressure - fromPressure) * t);
-                const radius = stampWidth / 2;
-                if (hardness < 0.999) {
-                    const profile = this.getBrushStampProfile(radius, hardness);
-                    const gradient = context.createRadialGradient(
-                        px, py, 0, px, py, profile.extentRadius);
-                    const steps = 16;
-                    for (let step = 0; step <= steps; ++step) {
-                        const distance = profile.extentRadius * step / steps;
-                        const alpha = step === steps
-                            ? 0
-                            : this.getBrushProfileAlpha(distance, profile);
-                        gradient.addColorStop(step / steps,
-                            `rgba(${color.red},${color.green},${color.blue},${alpha * color.alpha / 255})`);
-                    }
-                    context.fillStyle = gradient;
-                    context.beginPath();
-                    context.arc(px, py, profile.extentRadius, 0, Math.PI * 2);
-                } else {
-                    context.fillStyle = this.createFillStyle(context, color,
-                        coverageBackground);
-                    context.beginPath();
-                    context.arc(px, py, radius, 0, Math.PI * 2);
-                }
-                context.fill();
+            this.distanceSinceLastSample = lastOffset === null
+                ? this.distanceSinceLastSample + distance
+                : Math.max(0, distance - lastOffset);
+            this.hasStrokeSample = true;
+        }
+        for (const offset of offsets) {
+            const t = distance === 0 ? 0 : offset / distance;
+            const px = from.x + (to.x - from.x) * t + coordinateOffset;
+            const py = from.y + (to.y - from.y) * t + coordinateOffset;
+            const stampWidth = width * (fromPressure + (toPressure - fromPressure) * t);
+            if (antialiased) {
+                this.drawBrushStamp(context, px, py, width, stampWidth,
+                    hardness, color);
+            } else {
+                context.fillStyle = this.createFillStyle(context, color,
+                    coverageBackground);
+                this.drawAliasedBrushStamp(context, px, py, stampWidth);
             }
         }
         context.restore();
@@ -306,42 +287,185 @@ class DrawingTool extends Tool {
 
     getBrushStampProfile(radius, hardness) {
         // Paint.NET 5's BasicSampledBrushRenderer uses a hard shape whose
-        // diameter interpolates from 59.4375% to 100%, then applies a Gaussian
-        // blur whose radius interpolates from the full brush radius to zero.
+        // diameter interpolates from 59.4375% to 100%, then blurs it in linear
+        // light and converts the result back to sRGB. A 2D blurred disc is not
+        // the same profile as a blurred 1D edge, especially near its center.
         const coreRadius = radius * (0.594375 + 0.405625 * hardness);
         const blurRadius = radius * (1 - hardness);
-        const sigma = Math.max(0.0001, blurRadius / 3);
+        const cacheKey = Math.round(hardness * 10000);
+        let alphaStops = this.brushProfileCache.get(cacheKey);
+        if (alphaStops === undefined) {
+            alphaStops = this.createBrushProfileAlphaStops(hardness);
+            this.brushProfileCache.set(cacheKey, alphaStops);
+        }
         return {
+            radius,
             coreRadius,
-            sigma,
             extentRadius: coreRadius + blurRadius,
-            centerAlpha: this.gaussianEdgeAlpha(0, coreRadius, sigma)
+            alphaStops
         };
     }
 
-    getBrushProfileAlpha(distance, profile) {
-        return Utility.clamp(
-            this.gaussianEdgeAlpha(distance, profile.coreRadius, profile.sigma)
-                / profile.centerAlpha,
-            0,
-            1
+    drawBrushStamp(context, x, y, brushWidth, stampWidth, hardness, color) {
+        const sprite = this.getBrushSprite(brushWidth, hardness, color);
+
+        // BasicSampledBrushRenderer clamps the rendered diameter to one pixel,
+        // then preserves the area of a sub-pixel pressure dab through opacity.
+        const renderedDiameter = Math.max(1, stampWidth);
+        const opacity = stampWidth < 1 ? stampWidth * stampWidth : 1;
+        const scale = renderedDiameter / sprite.renderDiameter;
+        const destinationWidth = sprite.canvas.width * scale;
+        const destinationHeight = sprite.canvas.height * scale;
+
+        context.save();
+        context.globalAlpha *= opacity;
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = "high";
+        context.drawImage(
+            sprite.canvas,
+            x - destinationWidth / 2,
+            y - destinationHeight / 2,
+            destinationWidth,
+            destinationHeight
         );
+        context.restore();
     }
 
-    gaussianEdgeAlpha(distance, coreRadius, sigma) {
-        return 0.5 * (1 - this.approximateErf(
-            (distance - coreRadius) / (Math.SQRT2 * sigma)
-        ));
+    drawAliasedBrushStamp(context, x, y, stampWidth) {
+        // This mirrors BasicSampledBrushRenderer's aliased branch. Canvas has
+        // no vector antialias switch, so rasterize the ellipse as whole pixels
+        // instead of using arc()/fill(), which always produces soft coverage.
+        const diameter = Math.round(stampWidth * 2) / 2;
+        if (diameter < 1.5) {
+            context.fillRect(Math.round(x), Math.round(y), 1, 1);
+            return;
+        }
+
+        const left = Math.round(x - diameter / 2);
+        const top = Math.round(y - diameter / 2);
+        const right = Math.ceil(left + diameter);
+        const bottom = Math.ceil(top + diameter);
+        const radius = diameter / 2;
+        const centerX = left + radius;
+        const centerY = top + radius;
+        for (let py = top; py < bottom; ++py) {
+            const ny = (py + 0.5 - centerY) / radius;
+            for (let px = left; px < right; ++px) {
+                const nx = (px + 0.5 - centerX) / radius;
+                if (nx * nx + ny * ny <= 1) context.fillRect(px, py, 1, 1);
+            }
+        }
     }
 
-    approximateErf(value) {
-        // Abramowitz and Stegun 7.1.26; accurate enough for an 8-bit mask.
-        const sign = value < 0 ? -1 : 1;
-        const x = Math.abs(value);
-        const t = 1 / (1 + 0.3275911 * x);
-        const polynomial = (((((1.061405429 * t - 1.453152027) * t)
-            + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t;
-        return sign * (1 - polynomial * Math.exp(-x * x));
+    getBrushSprite(brushWidth, hardness, color) {
+        // Paint.NET's BasicSampledBrushRenderer creates its source bitmap at a
+        // minimum diameter of 32px and scales that bitmap for every sample.
+        // This supersampling is especially important for 1-3px curved lines:
+        // drawing the gradient at final size discards nearly all edge shades.
+        const renderDiameter = Math.max(32, brushWidth);
+        const cacheKey = [
+            Math.round(renderDiameter * 1000),
+            Math.round(hardness * 10000),
+            color.red, color.green, color.blue, color.alpha
+        ].join(":");
+        let sprite = this.brushSpriteCache.get(cacheKey);
+        if (sprite !== undefined) return sprite;
+
+        const profile = this.getBrushStampProfile(renderDiameter / 2, hardness);
+        let spriteSize = Math.ceil(profile.extentRadius * 2) + 2;
+        // Paint.NET measures an inflated, odd-sized bitmap around the center.
+        if ((spriteSize & 1) === 0) ++spriteSize;
+
+        const canvas = document.createElement("canvas");
+        canvas.width = spriteSize;
+        canvas.height = spriteSize;
+        const spriteContext = canvas.getContext("2d", {alpha: true});
+        const center = spriteSize / 2;
+        const gradient = spriteContext.createRadialGradient(
+            center, center, 0, center, center, profile.extentRadius);
+        const steps = profile.alphaStops.length - 1;
+        for (let step = 0; step <= steps; ++step) {
+            const alpha = step === steps ? 0 : profile.alphaStops[step];
+            gradient.addColorStop(step / steps,
+                `rgba(${color.red},${color.green},${color.blue},${alpha * color.alpha / 255})`);
+        }
+        spriteContext.fillStyle = gradient;
+        spriteContext.fillRect(0, 0, spriteSize, spriteSize);
+
+        sprite = {canvas, renderDiameter};
+        this.brushSpriteCache.set(cacheKey, sprite);
+        return sprite;
+    }
+
+    getBrushProfileAlpha(distance, profile) {
+        const position = distance / profile.extentRadius * (profile.alphaStops.length - 1);
+        const index = Math.min(profile.alphaStops.length - 1, Math.floor(position));
+        const nextIndex = Math.min(profile.alphaStops.length - 1, index + 1);
+        const fraction = position - index;
+        return profile.alphaStops[index]
+            + (profile.alphaStops[nextIndex] - profile.alphaStops[index]) * fraction;
+    }
+
+    createBrushProfileAlphaStops(hardness) {
+        // The native renderer keeps the intermediate in float32. More stops
+        // prevent the cached canvas gradient from quantizing that profile
+        // before the high-quality reduction to document pixels.
+        const stopCount = 128;
+        const stops = new Array(stopCount + 1);
+        const coreRadius = 0.594375 + 0.405625 * hardness;
+        const blurRadius = 1 - hardness;
+        const extentRadius = coreRadius + blurRadius;
+        const sigma = blurRadius / 3;
+
+        if (sigma <= 0.0001) {
+            for (let i = 0; i <= stopCount; ++i) {
+                stops[i] = i < stopCount ? 1 : 0;
+            }
+            return stops;
+        }
+
+        // Integrate a normalized 2D Gaussian over the circular hard core.
+        // Midpoint sampling in sigma-space is stable for every brush size,
+        // because the complete profile scales with the requested radius.
+        const sampleCount = 65;
+        const support = 3;
+        const samples = [];
+        let totalWeight = 0;
+        for (let yIndex = 0; yIndex < sampleCount; ++yIndex) {
+            const y = -support + (yIndex + 0.5) * support * 2 / sampleCount;
+            for (let xIndex = 0; xIndex < sampleCount; ++xIndex) {
+                const x = -support + (xIndex + 0.5) * support * 2 / sampleCount;
+                const weight = Math.exp(-(x * x + y * y) / 2);
+                samples.push({x, y, weight});
+                totalWeight += weight;
+            }
+        }
+
+        for (let i = 0; i <= stopCount; ++i) {
+            if (i === stopCount) {
+                stops[i] = 0;
+                continue;
+            }
+            const distance = extentRadius * i / stopCount;
+            let coveredWeight = 0;
+            for (const sample of samples) {
+                const x = distance + sample.x * sigma;
+                const y = sample.y * sigma;
+                if (x * x + y * y <= coreRadius * coreRadius) {
+                    coveredWeight += sample.weight;
+                }
+            }
+            const linearCoverage = Utility.clamp(coveredWeight / totalWeight, 0, 1);
+            stops[i] = 1 - this.linearToSrgb(1 - linearCoverage);
+        }
+        return stops;
+    }
+
+    linearToSrgb(value) {
+        value = Utility.clamp(value, 0, 1);
+        return value <= 0.0031308
+            ? value * 12.92
+            : 1.055 * Math.pow(value, 1 / 2.4) - 0.055;
     }
 
     clipToSelection(context) {

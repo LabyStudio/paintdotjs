@@ -1,4 +1,5 @@
 if (window.paintDotJsAssetsReady !== false) {
+    FontManager.initialize();
     window.app = new AppWorkspace();
     ErrorForm.install();
     app.initialize();

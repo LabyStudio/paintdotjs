@@ -4,6 +4,7 @@ class DocumentView {
         this.app = app;
         this.document = null
         this.compositionSurface = null;
+        this.compositionRevision = 0;
 
         this.surfaceBox = new SurfaceBox(app);
 
@@ -98,6 +99,11 @@ class DocumentView {
 
     updateComposition() {
         this.document.update(new RenderArgs(this.compositionSurface));
+        ++this.compositionRevision;
+    }
+
+    getCompositionRevision() {
+        return this.compositionRevision;
     }
 
     getCompositionSurface() {
@@ -149,6 +155,10 @@ class DocumentView {
         const oldBounds = this.getRenderBounds();
         const documentX = (pivotX - oldBounds.x) / this.zoom;
         const documentY = (pivotY - oldBounds.y) / this.zoom;
+        // Any explicit scale change leaves Fit to Window. Calculate the pivot
+        // against the fitted bounds first so the same document point remains
+        // under the mouse (or at the viewport center) during the transition.
+        this.zoomToWindow = false;
         this.zoom = factor;
         const newWidth = this.getRenderWidth();
         const newHeight = this.getRenderHeight();
@@ -176,12 +186,14 @@ class DocumentView {
 
     setZoomToWindow(zoomToWindow) {
         if (this.zoomToWindow === zoomToWindow) return;
-        this.zoomToWindow = zoomToWindow;
-
-        this.app.updateCanvasBounds();
-        this.app.fire("document:update_viewport", this);
-
-        if (zoomToWindow) this.fitViewport();
+        if (zoomToWindow) {
+            this.zoomToWindow = true;
+            this.fitViewport();
+        } else {
+            // Reapply the fitted scale as an explicit scale. setZoom() preserves
+            // the document center while rebuilding the scrollable environment.
+            this.setZoom(this.zoom);
+        }
     }
 
     zoomToRectangle(rectangle) {

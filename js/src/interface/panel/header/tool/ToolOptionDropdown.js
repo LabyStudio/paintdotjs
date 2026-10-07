@@ -72,6 +72,11 @@ class ToolOptionDropdown {
         if (!this.valueIcon.hidden) this.valueIcon.src = iconSource;
         this.valueLabel.hidden = !!this.options.iconOnly;
         this.valueLabel.textContent = entry[1];
+        // Keep the collapsed selector in the UI font, like Paint.NET. Using
+        // the chosen face here forced Chromium to parse/rasterize a custom
+        // font as soon as the Text tool was selected. Previews belong to the
+        // opened list, where they are already populated incrementally.
+        this.valueLabel.style.fontFamily = "";
         this.element.title = entry[1];
     }
 
@@ -99,36 +104,15 @@ class ToolOptionDropdown {
                 ? "tool-dropdown-menu-checkmarks"
                 : (this.options.iconOnly || this.options.menuIcons
                     ? "tool-dropdown-menu-icons" : "tool-dropdown-menu-text"));
+        if (this.options.fontPreview) this.menu.classList.add("tool-font-dropdown-menu");
         this.menu.style.minWidth = Math.max(this.options.menuWidth || 0, this.options.width) + "px";
 
         if (this.options.shapeGrid) {
             this.buildShapeGrid();
-        } else {
-        for (const entry of this.options.values) {
-            const button = document.createElement("button");
-            button.type = "button";
-            button.toggleAttribute("active", entry[0] === this.value);
-            if (this.options.menuCheckmarks) {
-                const check = document.createElement("span");
-                check.className = "tool-dropdown-check";
-                button.appendChild(check);
-            } else if (entry[2]) {
-                const icon = document.createElement("img");
-                icon.src = this.getIconSource(entry);
-                button.appendChild(icon);
+        } else if (!this.options.fontPreview) {
+            for (const entry of this.options.values) {
+                this.menu.appendChild(this.createEntryButton(entry));
             }
-            const label = document.createElement("span");
-            label.textContent = entry[1];
-            button.appendChild(label);
-            button.onclick = event => {
-                event.stopPropagation();
-                this.value = entry[0];
-                this.update();
-                this.options.onChange(entry[0]);
-                this.close();
-            };
-            this.menu.appendChild(button);
-        }
         }
 
         document.body.appendChild(this.menu);
@@ -137,7 +121,57 @@ class ToolOptionDropdown {
         this.menu.style.top = Math.round(bounds.bottom + 1) + "px";
         this.element.setAttribute("aria-expanded", "true");
         ToolOptionDropdown.active = this;
+        if (this.options.fontPreview) this.buildFontPreviewEntries();
         setTimeout(() => document.addEventListener("click", this.documentClickListener, {once: true}));
+    }
+
+    createEntryButton(entry) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.toggleAttribute("active", entry[0] === this.value);
+        if (this.options.menuCheckmarks) {
+            const check = document.createElement("span");
+            check.className = "tool-dropdown-check";
+            button.appendChild(check);
+        } else if (entry[2]) {
+            const icon = document.createElement("img");
+            icon.src = this.getIconSource(entry);
+            button.appendChild(icon);
+        }
+        const label = document.createElement("span");
+        label.className = "tool-dropdown-entry-label";
+        label.textContent = entry[1];
+        button.appendChild(label);
+        if (this.options.fontPreview) {
+            const preview = document.createElement("span");
+            preview.className = "tool-font-dropdown-preview";
+            preview.style.fontFamily = `'${String(entry[0]).replace(/'/g, "\\'")}', sans-serif`;
+            preview.textContent = "The quick brown fox";
+            button.appendChild(preview);
+        }
+        button.onclick = event => {
+            event.stopPropagation();
+            this.value = entry[0];
+            this.update();
+            this.options.onChange(entry[0]);
+            this.close();
+        };
+        return button;
+    }
+
+    buildFontPreviewEntries() {
+        let index = 0;
+        const appendChunk = () => {
+            if (this.menu === null) return;
+            const fragment = document.createDocumentFragment();
+            const end = Math.min(index + 20, this.options.values.length);
+            for (; index < end; ++index) {
+                fragment.appendChild(this.createEntryButton(this.options.values[index]));
+            }
+            this.menu.appendChild(fragment);
+            if (index < this.options.values.length) requestAnimationFrame(appendChunk);
+        };
+        requestAnimationFrame(appendChunk);
     }
 
     buildShapeGrid() {

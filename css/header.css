@@ -777,6 +777,33 @@ header {
     padding: 0 6px;
 }
 
+.tool-font-dropdown-menu {
+    width: min(380px, calc(100vw - 12px));
+    max-height: min(520px, calc(100vh - 130px));
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.tool-font-dropdown-menu button {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(105px, 155px) minmax(160px, 1fr);
+    gap: 12px;
+}
+
+.tool-font-dropdown-menu .tool-dropdown-entry-label,
+.tool-font-dropdown-preview {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tool-font-dropdown-preview {
+    font-size: 17px;
+    line-height: 1;
+}
+
 .tool-dropdown-menu button:hover {
     background: var(--color-menu-item-hover);
     border-color: var(--color-menu-item-border);

@@ -37,8 +37,8 @@ class DocumentContextMenu {
             text: i18n("menu.file.close.text"),
             icon: "menu_file_close_icon.png",
             shortcutActionId: "menu.file.close",
-            callback: () => {
-                if (!window.app.closeDocumentWorkspace(workspace)) return;
+            callback: async () => {
+                if (!await DocumentIO.closeDocumentWorkspace(workspace)) return;
                 if (previousWorkspace !== null
                     && window.app.getDocumentWorkspaces().includes(previousWorkspace)) {
                     window.app.setActiveDocumentWorkspace(previousWorkspace);
