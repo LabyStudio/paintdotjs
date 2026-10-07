@@ -75,6 +75,26 @@ still some additions and limitations worth noting.
 - Some browser functionality requires HTTPS or localhost, including parts of the clipboard,
   file-system, and offline-app support.
 
+## Image formats
+
+| Format | Paint.NET open | Paint.NET save | paint.js open | paint.js save | Important differences |
+| --- | :---: | :---: | :---: | :---: | --- |
+| Paint.NET (`.pdn`) | Yes | Yes | Limited | Limited | paint.js supports bitmap layers and basic layer properties, with a maximum of 64 layers when saving. History, selections, plugin data, and some newer PDN features are not preserved. |
+| PNG | Yes | Yes | Yes | Yes | — |
+| JPEG (`.jpg`, `.jpeg`, `.jpe`) | Yes | Yes | Yes | Yes | — |
+| JPEG XL (`.jxl`) | Yes | Yes | Yes | Yes | — |
+| AVIF | Yes | Yes | Yes | Yes | — |
+| HEIC/HEIF | With the Windows codec | With the Windows codec | Yes | No | The bundled paint.js codec can decode these files but cannot encode them. |
+| WebP | Yes | Yes | Yes | Yes | — |
+| DDS | Yes | Yes | Yes | Yes | paint.js saves uncompressed 32-bit images only. |
+| TIFF (`.tif`, `.tiff`) | Yes | Yes | Yes | Yes | paint.js saves uncompressed RGBA images only. |
+| GIF | Yes | Yes | Yes | Yes | paint.js saves a single static, palette-based image only. |
+| BMP | Yes | Yes | Yes | Yes | paint.js saves 32-bit images with alpha only. |
+| TGA | Yes | Yes | Yes | Yes | paint.js saves uncompressed 32-bit images only. |
+| JPEG XR (`.jxr`, `.wdp`, `.wmp`) | Yes | Yes | Limited | No | paint.js can open RGB images with 8-bit, 16-bit, or 32-bit floating-point channels but cannot save JPEG XR. |
+
+Animated and multi-page files are imported and exported as a single static image in paint.js.
+
 ## Development
 
 Development requires Node.js 22 or newer. Install the dependencies first:
@@ -110,26 +130,6 @@ The repository does not redistribute Paint.NET's modern artwork and translations
 not part of the MIT-compatible Paint.NET 3.36.7 source release on which this project is based. On the
 first build, paint.js fetches the required assets from the official Paint.NET download. This lets the
 interface follow Paint.NET v5.1.12 without redistributing those files in this repository.
-
-## Image formats
-
-| Format | Paint.NET open | Paint.NET save | paint.js open | paint.js save | Important differences |
-| --- | :---: | :---: | :---: | :---: | --- |
-| Paint.NET (`.pdn`) | Yes | Yes | Limited | Limited | paint.js supports bitmap layers and basic layer properties, with a maximum of 64 layers when saving. History, selections, plugin data, and some newer PDN features are not preserved. |
-| PNG | Yes | Yes | Yes | Yes | — |
-| JPEG (`.jpg`, `.jpeg`, `.jpe`) | Yes | Yes | Yes | Yes | — |
-| JPEG XL (`.jxl`) | Yes | Yes | Yes | Yes | — |
-| AVIF | Yes | Yes | Yes | Yes | — |
-| HEIC/HEIF | With the Windows codec | With the Windows codec | Yes | No | The bundled paint.js codec can decode these files but cannot encode them. |
-| WebP | Yes | Yes | Yes | Yes | — |
-| DDS | Yes | Yes | Yes | Yes | paint.js saves uncompressed 32-bit images only. |
-| TIFF (`.tif`, `.tiff`) | Yes | Yes | Yes | Yes | paint.js saves uncompressed RGBA images only. |
-| GIF | Yes | Yes | Yes | Yes | paint.js saves a single static, palette-based image only. |
-| BMP | Yes | Yes | Yes | Yes | paint.js saves 32-bit images with alpha only. |
-| TGA | Yes | Yes | Yes | Yes | paint.js saves uncompressed 32-bit images only. |
-| JPEG XR (`.jxr`, `.wdp`, `.wmp`) | Yes | Yes | Limited | No | paint.js can open RGB images with 8-bit, 16-bit, or 32-bit floating-point channels but cannot save JPEG XR. |
-
-Animated and multi-page files are imported and exported as a single static image in paint.js.
 
 ## License
 
