@@ -1,4 +1,4 @@
-const {app, BrowserWindow, Menu, ipcMain, net, protocol} = require('electron');
+const {app, autoUpdater: nativeAutoUpdater, BrowserWindow, Menu, ipcMain, net, protocol} = require('electron');
 const {setupTitlebar} = require('custom-electron-titlebar/main');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -17,6 +17,16 @@ let activeAssets = null;
 const pendingFiles = [];
 let closeDialogReady = false;
 let closeDialogPending = false;
+let quittingForUpdate = false;
+
+// electron-updater must be allowed to close every window synchronously before
+// its installer replaces the app. The regular close guard is asynchronous and
+// cancels that quit sequence on macOS, leaving the old app running without a
+// window and preventing Squirrel.Mac from installing the downloaded update.
+nativeAutoUpdater.on('before-quit-for-update', () => {
+    quittingForUpdate = true;
+    closeDialogPending = false;
+});
 
 // Electron/AppImage command lines may contain both the original .AppImage and
 // its executable inside /tmp/.mount_*. Only paths with document extensions we
@@ -133,6 +143,7 @@ function createWindow() {
     mainWindow.on('unmaximize', () => mainWindow.webContents.send('window-maximize', false));
     mainWindow.on('closed', () => { mainWindow = null; });
     mainWindow.on('close', event => {
+        if (quittingForUpdate) return;
         if (!closeDialogReady) return;
         event.preventDefault();
         if (closeDialogPending) return;
