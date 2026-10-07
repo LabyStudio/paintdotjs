@@ -1,6 +1,6 @@
 {
   "name": "paintdotjs",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "paint.js is an open source general-purpose raster graphics editor program, developed with javascript.",
   "main": "js/platform/desktop/main.js",
   "desktopName": "paintdotjs.desktop",
