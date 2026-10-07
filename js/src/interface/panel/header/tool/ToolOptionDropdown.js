@@ -168,9 +168,7 @@ class ToolOptionDropdown {
         }
         button.onclick = event => {
             event.stopPropagation();
-            this.value = entry[0];
-            this.update();
-            this.options.onChange(entry[0]);
+            this.selectEntry(entry);
             this.close();
         };
         return button;
@@ -212,6 +210,21 @@ class ToolOptionDropdown {
             this.element.focus();
             return;
         }
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            this.moveFontSelection(event.key === "ArrowDown" ? 1 : -1);
+            return;
+        }
+        if (event.key === "Enter") {
+            const focused = document.activeElement;
+            if ([...this.fontEntryButtons.values()].includes(focused)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                focused.click();
+            }
+            return;
+        }
         if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey
             || event.isComposing || event.key.length !== 1) return;
 
@@ -241,6 +254,37 @@ class ToolOptionDropdown {
         if (match === null) return;
         this.pendingFontJumpValue = match[0];
         this.focusPendingFontEntry();
+    }
+
+    moveFontSelection(offset) {
+        if (this.options.values.length === 0) return;
+        clearTimeout(this.fontTypeaheadTimer);
+        this.fontTypeaheadTimer = null;
+        this.fontTypeaheadValue = "";
+
+        const focused = document.activeElement;
+        let index = this.options.values.findIndex(entry =>
+            this.fontEntryButtons.get(entry[0]) === focused);
+        if (index < 0 && this.pendingFontJumpValue !== null) {
+            index = this.options.values.findIndex(entry => entry[0] === this.pendingFontJumpValue);
+        }
+        if (index < 0) index = this.options.values.findIndex(entry => entry[0] === this.value);
+        if (index < 0) index = 0;
+
+        const nextIndex = Math.max(0, Math.min(this.options.values.length - 1, index + offset));
+        const entry = this.options.values[nextIndex];
+        this.selectEntry(entry);
+        this.pendingFontJumpValue = entry[0];
+        this.focusPendingFontEntry();
+    }
+
+    selectEntry(entry) {
+        this.value = entry[0];
+        this.update();
+        for (const [value, button] of this.fontEntryButtons) {
+            button.toggleAttribute("active", value === this.value);
+        }
+        this.options.onChange(entry[0]);
     }
 
     findFontTypeaheadMatch(prefix) {

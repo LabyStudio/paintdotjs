@@ -67,7 +67,13 @@ class DocumentWorkspace extends DocumentView {
         }
 
         if (this.scratchSurface === null) {
-            this.scratchSurface = Surface.create(this.document.getWidth(), this.document.getHeight());
+            // Tools repeatedly read this immutable working copy to restore dirty
+            // regions while previewing strokes and transforms. Mark only this
+            // canvas for readback; document/layer canvases remain GPU accelerated.
+            this.scratchSurface = Surface.create(
+                this.document.getWidth(), this.document.getHeight(),
+                {willReadFrequently: true}
+            );
         }
     }
 

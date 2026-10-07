@@ -40,16 +40,32 @@ class FontManager {
         return [...builtIn, ...this.getFonts().map(font => [font.family, font.name])];
     }
 
-    static async importFiles(files) {
+    static async importFiles(files, onProgress = null) {
         await this.initialize();
         const added = [];
         const errors = [];
-        for (const file of Array.from(files || []).filter(file => this.isFontFile(file))) {
+        const fontFiles = Array.from(files || []).filter(file => this.isFontFile(file));
+        let completed = 0;
+        const report = (file, phase) => {
+            if (typeof onProgress === "function") {
+                onProgress({completed, total: fontFiles.length, file, phase});
+            }
+        };
+
+        report(null, "preparing");
+        await this.yieldToBrowser();
+        for (const file of fontFiles) {
+            report(file, "adding");
             try {
                 added.push(await this.addFont(file, false));
             } catch (error) {
                 errors.push({file, error});
             }
+            ++completed;
+            report(file, "complete");
+            // FontFace parsing can occupy the main thread. Let progress paint
+            // and input events run before beginning the next font in a batch.
+            await this.yieldToBrowser();
         }
         // One event is enough for a batch. Rebuilding the Text toolbar after
         // every file made large imports repeatedly destroy an open picker.

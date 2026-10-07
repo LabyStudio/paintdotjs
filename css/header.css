@@ -50,7 +50,10 @@ header {
     --document-item-size: 72px;
 
     position: relative;
-    flex: 1 1 0;
+    /* Paint.NET keeps the strip only as wide as its document thumbnails and
+       list button, then lets it shrink when the toolbar runs out of room. */
+    flex: 0 1 auto;
+    width: 0;
     min-width: 0;
     margin-left: 24px;
     top: calc(2px - var(--window-top));
@@ -63,8 +66,35 @@ header {
 
 #documentStrip #documentsList {
     display: flex;
-    width: 100%;
+    width: calc(100% - 19px);
     height: 100%;
+    padding: 0;
+    scrollbar-width: none;
+}
+
+#documentStrip #documentsList::-webkit-scrollbar {
+    display: none;
+}
+
+#documentStrip #documentsList.document-overflow-right {
+    -webkit-mask-image: linear-gradient(to right, #000 0,
+        #000 calc(100% - 30px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 0,
+        #000 calc(100% - 30px), transparent 100%);
+}
+
+#documentStrip #documentsList.document-overflow-left {
+    -webkit-mask-image: linear-gradient(to right, transparent 0,
+        #000 30px, #000 100%);
+    mask-image: linear-gradient(to right, transparent 0,
+        #000 30px, #000 100%);
+}
+
+#documentStrip #documentsList.document-overflow-left.document-overflow-right {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 30px,
+        #000 calc(100% - 30px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 30px,
+        #000 calc(100% - 30px), transparent 100%);
 }
 
 #documentStrip #documentsList .scroll-content {
@@ -140,15 +170,160 @@ header {
     max-width: calc(100% - 10px);
 }
 
+#documentStrip .document-strip-button {
+    position: absolute;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    top: 0;
+    width: 18px;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 0;
+    transition: background-color 140ms ease-out, border-color 140ms ease-out;
+    -webkit-app-region: no-drag;
+}
+
+#documentStrip .document-strip-button:hover {
+    background-color: color-mix(in srgb, var(--color-menu-item-hover) 55%, transparent);
+    border-color: var(--color-menu-item-border);
+}
+
+#documentStrip .document-strip-button.pushed,
+#documentStrip .document-strip-button:active {
+    background-color: var(--color-menu-item-selected);
+    border-color: var(--color-menu-item-selected-border);
+}
+
+#documentStrip .document-strip-button[hidden] {
+    display: none;
+}
+
+#documentStrip .document-strip-button img {
+    display: block;
+    flex: 0 0 auto;
+    width: 9px;
+    height: 9px;
+    margin: 0;
+    object-fit: contain;
+    image-rendering: auto;
+    pointer-events: none;
+}
+
+#documentStrip .document-strip-previous {
+    left: 0;
+}
+
+#documentStrip .document-strip-next {
+    right: 19px;
+}
+
+#documentStrip .document-strip-list {
+    right: 0;
+    width: 19px;
+}
+
+#documentStrip .document-strip-list img {
+    width: 9px;
+    height: 10px;
+}
+
+#documentStrip .document-list-popup {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% - 1px);
+    right: 0;
+    box-sizing: border-box;
+    width: 200px;
+    max-width: min(360px, calc(100vw - 8px));
+    max-height: calc(100vh - 76px);
+    padding: 2px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    color: var(--pdn-text);
+    background: var(--color-menu-background);
+    border: 1px solid var(--color-menu-item-selected-border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .55);
+    -webkit-app-region: no-drag;
+}
+
+#documentStrip .document-list-popup[hidden] {
+    display: none;
+}
+
+#documentStrip .document-list-entry {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: center;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: 82px;
+    margin: 0;
+    padding: 5px 8px 5px 5px;
+    gap: 8px;
+    color: var(--pdn-text);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 0;
+    text-align: left;
+}
+
+#documentStrip .document-list-entry:hover {
+    background: var(--color-menu-item-hover);
+    border-color: var(--color-menu-item-border);
+}
+
+#documentStrip .document-list-entry.selected {
+    background: var(--color-menu-item-selected);
+    border-color: var(--color-menu-item-selected-border);
+}
+
+#documentStrip .document-list-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 96px;
+    height: 70px;
+}
+
+#documentStrip .document-list-thumbnail {
+    display: block;
+    max-width: 88px;
+    max-height: 64px;
+    background-image: var(--image-transparency);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .55);
+}
+
+#documentStrip .document-list-name {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* ------------ Settings Menu ------------ */
 
 #settingsMenu {
     position: relative;
-    flex: 0 0 196px;
+    /* Let the real buttons determine the reserved width. A fixed empty slot
+       left the document-list arrow stranded beside the final thumbnail when
+       the auxiliary buttons were unavailable or hidden. */
+    flex: 0 0 auto;
+    min-width: 0;
     justify-content: flex-start;
     top: 7px;
     right: auto;
-    margin: 0 2px;
+    margin: 0 2px 0 auto;
     flex-direction: row-reverse;
     padding: 1px;
     gap: 1px;
@@ -414,6 +589,11 @@ header {
     font-size: 12px;
     color: var(--pdn-text);
     background: var(--pdn-control-background);
+}
+
+#toolMenu .tool-option > .pdn-number-input {
+    width: 75px;
+    height: 24px;
 }
 
 #toolMenu .tool-size-control {
@@ -913,13 +1093,57 @@ header {
 }
 
 #toolMenu .tool-option-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 23px;
     height: 23px;
     padding: 0;
-    font-weight: bold;
+    color: var(--pdn-text);
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+#toolMenu .tool-option-toggle:hover {
+    background: var(--color-menu-item-hover);
+    border-color: var(--color-menu-item-border);
 }
 
 #toolMenu .tool-option-toggle[active] {
     background: var(--color-menu-item-selected);
     border-color: var(--color-menu-item-selected-border);
+    box-shadow: inset 0 0 0 1px rgba(195, 228, 255, 0.18);
+}
+
+#toolMenu .tool-font-style-icon {
+    display: block;
+    box-sizing: border-box;
+    width: 16px;
+    height: 16px;
+    color: var(--pdn-text);
+    font-family: Calibri, "Segoe UI", sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px;
+    text-align: center;
+    text-decoration: none;
+}
+
+#toolMenu .tool-option[data-option-key="bold"] .tool-font-style-icon {
+    font-weight: 700;
+}
+
+#toolMenu .tool-option[data-option-key="italic"] .tool-font-style-icon {
+    font-style: italic;
+}
+
+#toolMenu .tool-option[data-option-key="underline"] .tool-font-style-icon {
+    text-decoration: underline;
+    text-underline-offset: 1px;
+}
+
+#toolMenu .tool-option[data-option-key="strikeout"] .tool-font-style-icon {
+    font-size: 11px;
+    text-decoration: line-through;
 }

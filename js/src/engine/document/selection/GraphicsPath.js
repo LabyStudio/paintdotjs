@@ -3,6 +3,7 @@ class GraphicsPath {
     // Initialize the path with an empty array to hold path data
     constructor(vertexLists = []) {
         this.vertexLists = vertexLists;
+        this.pixelStencil = null;
     }
 
     isEmpty() {
@@ -26,6 +27,7 @@ class GraphicsPath {
                 return new Point(transformedX, transformedY);
             });
         }
+        this.pixelStencil = null;
     }
 
     // Add a rectangle to the path
@@ -39,6 +41,7 @@ class GraphicsPath {
         let vertexList = new VertexList();
         vertexList.addRectangle(x, y, width, height);
         this.vertexLists.push(vertexList);
+        this.pixelStencil = null;
     }
 
     addEllipse(rectangle) {
@@ -51,6 +54,7 @@ class GraphicsPath {
         let vertexList = new VertexList();
         vertexList.addEllipse(x, y, width, height);
         this.vertexLists.push(vertexList);
+        this.pixelStencil = null;
     }
 
     flatten(matrix, flatness) {
@@ -77,6 +81,7 @@ class GraphicsPath {
             }
             vertexList.vertices = flattenedVertices;
         }
+        this.pixelStencil = null;
     }
 
     addLines(points) {
@@ -93,6 +98,7 @@ class GraphicsPath {
         let vertices = new VertexList();
         vertices.push(...points);
         this.vertexLists.push(vertices);
+        this.pixelStencil = null;
     }
 
     getPathPoints() {
@@ -106,6 +112,7 @@ class GraphicsPath {
     // Reset the path to be empty
     reset() {
         this.vertexLists = [];
+        this.pixelStencil = null;
     }
 
     // Close all open figures in the path
@@ -127,13 +134,40 @@ class GraphicsPath {
     // Dispose of the path (clean up resources)
     dispose() {
         this.vertexLists = null;
+        this.pixelStencil = null;
     }
 
     // Create a clone of the current path
     clone() {
         const clonedPath = new GraphicsPath();
         clonedPath.vertexLists = this.vertexLists.map(point => point.clone());
+        if (this.pixelStencil !== null) {
+            clonedPath.pixelStencil = {
+                width: this.pixelStencil.width,
+                height: this.pixelStencil.height,
+                data: new Uint8Array(this.pixelStencil.data)
+            };
+        }
         return clonedPath;
+    }
+
+    setPixelStencil(stencil) {
+        this.pixelStencil = {
+            width: stencil.width,
+            height: stencil.height,
+            data: new Uint8Array(stencil.bitArray)
+        };
+    }
+
+    getPixelStencil(width, height) {
+        if (this.pixelStencil === null
+            || this.pixelStencil.width !== width
+            || this.pixelStencil.height !== height) {
+            return null;
+        }
+        const stencil = new BitVector2D(width, height);
+        stencil.bitArray.set(this.pixelStencil.data);
+        return stencil;
     }
 
     // Get the bounding rectangle of the path
@@ -365,6 +399,10 @@ class GraphicsPath {
             ret.closeFigure();
         }
 
+        if (bounds.x === 0 && bounds.y === 0
+            && bounds.width === stencil.width && bounds.height === stencil.height) {
+            ret.setPixelStencil(stencil);
+        }
         return ret;
     }
 }

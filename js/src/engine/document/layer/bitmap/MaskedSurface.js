@@ -1,6 +1,6 @@
 class MaskedSurface {
 
-    constructor(surface, path, deferMaskUntilRender = false) {
+    constructor(surface, path, deferMaskUntilRender = false, sourceOrigin = null) {
         if (!(surface instanceof Surface) || !(path instanceof GraphicsPath)) {
             throw new Error("MaskedSurface requires a Surface and GraphicsPath");
         }
@@ -14,6 +14,8 @@ class MaskedSurface {
         this.deferMaskUntilRender = deferMaskUntilRender;
         this.compositeCanvas = null;
 
+        const originX = sourceOrigin === null ? 0 : sourceOrigin.x;
+        const originY = sourceOrigin === null ? 0 : sourceOrigin.y;
         const pathBounds = path.getBounds();
         this.bounds = Rectangle.intersect(
             Rectangle.absolute(
@@ -22,7 +24,7 @@ class MaskedSurface {
                 Math.ceil(pathBounds.getRight()),
                 Math.ceil(pathBounds.getBottom())
             ),
-            surface.getBounds()
+            new Rectangle(originX, originY, surface.getWidth(), surface.getHeight())
         );
         this.rectangleMaskBounds = deferMaskUntilRender
             ? this.getRectangleMaskBounds(path) : null;
@@ -50,13 +52,13 @@ class MaskedSurface {
             // the transformed selection coverage afterwards. Baking transparency
             // into this bitmap would make rotation interpolate transparent edge
             // texels and produce a visible halo around a moved selection.
-            context.drawImage(surface.canvas, -this.bounds.x, -this.bounds.y);
+            context.drawImage(surface.canvas, originX - this.bounds.x, originY - this.bounds.y);
         } else {
             context.save();
             context.translate(-this.bounds.x, -this.bounds.y);
             this.tracePath(context, path);
             context.clip("evenodd");
-            context.drawImage(surface.canvas, 0, 0);
+            context.drawImage(surface.canvas, originX, originY);
             context.restore();
         }
     }

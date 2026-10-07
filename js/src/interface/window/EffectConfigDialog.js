@@ -172,7 +172,7 @@ class EffectConfigDialog {
                 range.onchange = () => notify(true);
                 number.oninput = () => { set(number.value); notify(); };
                 number.onchange = () => notify(true);
-                controls.append(range, number);
+                controls.append(range, NumberInput.wrap(number));
                 row.append(label, controls);
                 content.appendChild(row);
                 setters.set(control.key, set);
@@ -299,10 +299,7 @@ class EffectConfigDialog {
         range.onchange = () => notify(true);
         number.oninput = () => { set(number.value); notify(); };
         number.onchange = () => notify(true);
-        const numberBox = this.createNumberStepper(number, delta => {
-            set(Number(number.value) + delta * control.step);
-            notify();
-        });
+        const numberBox = NumberInput.wrap(number);
         line.append(range, numberBox);
         if (options.reset !== false) {
             const reset = document.createElement("button");
@@ -316,25 +313,6 @@ class EffectConfigDialog {
         row.appendChild(line);
         set(values[control.key]);
         return {element: row, setValue: set};
-    }
-
-    static createNumberStepper(input, onStep) {
-        const wrapper = document.createElement("span");
-        wrapper.className = "effect-number-stepper";
-        const buttons = document.createElement("span");
-        const up = document.createElement("button");
-        up.type = "button";
-        up.tabIndex = -1;
-        up.textContent = "▲";
-        up.onclick = () => onStep(1);
-        const down = document.createElement("button");
-        down.type = "button";
-        down.tabIndex = -1;
-        down.textContent = "▼";
-        down.onclick = () => onStep(-1);
-        buttons.append(up, down);
-        wrapper.append(input, buttons);
-        return wrapper;
     }
 
     static createSpecializedSelect(control, values, notify, labelText = control.label) {
@@ -948,10 +926,7 @@ class EffectConfigDialog {
         input.oninput = () => { set(input.value); notify(); };
         input.onchange = () => notify(true);
         set(values[control.key]);
-        const element = this.createNumberStepper(input, delta => {
-            set(Number(input.value) + delta * control.step);
-            notify();
-        });
+        const element = NumberInput.wrap(input);
         return {element, setValue: set};
     }
 

@@ -12,6 +12,7 @@ class MoveTool extends MoveToolBase {
         this.didPaste = false;
         this.pendingPasteSurface = null;
         this.pendingPasteUnderlay = null;
+        this.pendingPasteOrigin = null;
         this.pendingMoveFrame = null;
         this.pendingMovePoint = null;
         this.processingMoveFrame = false;
@@ -79,6 +80,7 @@ class MoveTool extends MoveToolBase {
             this.pendingPasteUnderlay.dispose();
             this.pendingPasteUnderlay = null;
         }
+        this.pendingPasteOrigin = null;
 
         this.tracking = false;
         this.destroyNubs();
@@ -86,12 +88,13 @@ class MoveTool extends MoveToolBase {
         super.onDeactivate();
     }
 
-    setPendingPaste(image, underlay = null) {
+    setPendingPaste(image, underlay = null, origin = null) {
         if (this.pendingPasteSurface !== null) this.pendingPasteSurface.dispose();
         if (this.pendingPasteUnderlay !== null) this.pendingPasteUnderlay.dispose();
         this.pendingPasteSurface = Surface.create(image.width, image.height);
         this.pendingPasteSurface.context.drawImage(image, 0, 0);
         this.pendingPasteUnderlay = underlay === null ? null : underlay.clone();
+        this.pendingPasteOrigin = origin === null ? new Point(0, 0) : origin.clone();
     }
 
     drop() {
@@ -192,9 +195,11 @@ class MoveTool extends MoveToolBase {
         // the layer canvas, but keep the original source until the floating pixels
         // are committed so dragging can bring the overflow back into view.
         if (this.pendingPasteSurface !== null) {
-            this.context.liftedPixels = new MaskedSurface(this.pendingPasteSurface, liftPath, true);
+            this.context.liftedPixels = new MaskedSurface(
+                this.pendingPasteSurface, liftPath, true, this.pendingPasteOrigin);
             this.pendingPasteSurface.dispose();
             this.pendingPasteSurface = null;
+            this.pendingPasteOrigin = null;
             if (this.pendingPasteUnderlay !== null) {
                 this.pendingPasteUnderlay.dispose();
                 this.pendingPasteUnderlay = null;

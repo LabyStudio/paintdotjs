@@ -199,11 +199,46 @@ class DocumentIO {
 
     static async createNewDocument() {
         const active = this.app.getActiveDocumentWorkspace();
-        const width = active === null ? 800 : active.getDocument().getWidth();
-        const height = active === null ? 600 : active.getDocument().getHeight();
+        let width = active === null ? 800 : active.getDocument().getWidth();
+        let height = active === null ? 600 : active.getDocument().getHeight();
+        const clipboardSize = await this.getClipboardImageSize();
+        if (clipboardSize !== null) {
+            width = clipboardSize.width;
+            height = clipboardSize.height;
+        }
         const result = await NewFileDialog.open(width, height);
         if (result !== null) this.app.createBlankDocumentInNewWorkspace(
             result.width, result.height, result.resolution);
+    }
+
+    static async getClipboardImageSize() {
+        const nativeReader = window.desktopFileActions?.getClipboardImageSize;
+        if (typeof nativeReader === "function") {
+            try {
+                const size = nativeReader();
+                return size !== null && Number.isFinite(size.width) && Number.isFinite(size.height)
+                    && size.width > 0 && size.height > 0
+                    ? {width: Math.round(size.width), height: Math.round(size.height)}
+                    : null;
+            } catch (_) {
+                // Fall through to the browser clipboard implementation.
+            }
+        }
+
+        const blob = await this.readClipboardImage();
+        if (blob === null) return null;
+
+        let image = null;
+        try {
+            image = await this.loadImage(blob);
+            return image.width > 0 && image.height > 0
+                ? {width: image.width, height: image.height}
+                : null;
+        } catch (_) {
+            return null;
+        } finally {
+            if (image !== null && typeof image.close === "function") image.close();
+        }
     }
 
     static openFilePicker() {
@@ -239,6 +274,11 @@ class DocumentIO {
     static async handleDroppedFiles(files) {
         const fontFiles = files.filter(file => FontManager.isFontFile(file));
         if (fontFiles.length > 0) {
+            if (fontFiles.length === files.length) {
+                SettingsDialog.open("fonts");
+                await SettingsDialog.instance.importFonts(fontFiles);
+                return;
+            }
             const result = await FontManager.importFiles(fontFiles);
             if (result.errors.length > 0) {
                 alert("Some fonts could not be added:\n\n" + result.errors.map(item =>
@@ -696,11 +736,13 @@ class DocumentIO {
             ? workspace.getCompositionSurface()
             : workspace.getActiveLayer().getSurface();
         let canvas;
+        let clipboardBounds;
         if (workspace.getSelection().isEmpty()) {
             canvas = document.createElement("canvas");
             canvas.width = layerSurface.getWidth();
             canvas.height = layerSurface.getHeight();
             canvas.getContext("2d").drawImage(layerSurface.getCanvas(), 0, 0);
+            clipboardBounds = new Rectangle(0, 0, canvas.width, canvas.height);
         } else {
             const path = workspace.getSelection().createPath();
             const masked = new MaskedSurface(layerSurface, path);
@@ -713,10 +755,17 @@ class DocumentIO {
             canvas.width = masked.surface.getWidth();
             canvas.height = masked.surface.getHeight();
             canvas.getContext("2d").drawImage(masked.surface.getCanvas(), 0, 0);
+            clipboardBounds = masked.bounds.clone();
             masked.dispose();
         }
         const blob = await this.canvasToBlob(canvas, "image/png");
         this.internalClipboard = blob;
+        this.internalClipboardInfo = {
+            width: canvas.width,
+            height: canvas.height,
+            bounds: clipboardBounds,
+            pixelDigest: await this.getImagePixelDigest(canvas, canvas.width, canvas.height)
+        };
         if (navigator.clipboard && typeof navigator.clipboard.write === "function" && typeof ClipboardItem !== "undefined") {
             try {
                 await navigator.clipboard.write([new ClipboardItem({"image/png": blob})]);
@@ -798,6 +847,9 @@ class DocumentIO {
         const image = await this.loadImage(blob);
         this.finishActiveTool(false);
         const documentModel = workspace.getDocument();
+        const sourceBounds = await this.getClipboardSourceBounds(blob, image);
+        const pastePosition = this.getPastePosition(
+            workspace, sourceBounds, image.width, image.height);
         const layerIndex = workspace.getActiveLayerIndex() + 1;
         const layer = Layer.createLayer(
             workspace,
@@ -805,7 +857,7 @@ class DocumentIO {
             documentModel.getHeight(),
             i18n("addNewBlankLayer.layerName.format", documentModel.getLayers().size() + 1)
         );
-        layer.getSurface().context.drawImage(image, 0, 0);
+        layer.getSurface().context.drawImage(image, pastePosition.x, pastePosition.y);
 
         const layerMemento = new NewLayerHistoryMemento(
             i18n("menu.edit.pasteInToNewLayer.text"),
@@ -825,9 +877,9 @@ class DocumentIO {
         selection.push();
         selection.reset();
         selection.setContinuation(new Rectangle(
-            0, 0,
-            Math.min(image.width, documentModel.getWidth()),
-            Math.min(image.height, documentModel.getHeight())
+            pastePosition.x, pastePosition.y,
+            Math.min(image.width, documentModel.getWidth() - pastePosition.x),
+            Math.min(image.height, documentModel.getHeight() - pastePosition.y)
         ), CombineMode.REPLACE);
         selection.commitContinuation();
         selection.pop();
@@ -938,6 +990,9 @@ class DocumentIO {
                 false
             );
         }
+        const sourceBounds = await this.getClipboardSourceBounds(blob, image);
+        const pastePosition = this.getPastePosition(
+            workspace, sourceBounds, image.width, image.height);
         const activeLayer = workspace.getActiveLayer();
         // Keep the pixels from before the paste separate from the floating
         // bitmap. MoveTool uses this underlay while the paste is still being
@@ -951,14 +1006,14 @@ class DocumentIO {
                 workspace.getActiveLayerIndex()
             );
         }
-        activeLayer.getSurface().context.drawImage(image, 0, 0);
+        activeLayer.getSurface().context.drawImage(image, pastePosition.x, pastePosition.y);
         workspace.getHistory().pushNewMemento(history);
         activeLayer.invalidate();
         const selection = workspace.getSelection();
         selection.push();
         selection.reset();
         selection.setContinuation(new Rectangle(
-            0, 0,
+            pastePosition.x, pastePosition.y,
             preserveOverflow ? image.width : Math.min(image.width, workspace.getDocument().getWidth()),
             preserveOverflow ? image.height : Math.min(image.height, workspace.getDocument().getHeight())
         ), CombineMode.REPLACE);
@@ -966,11 +1021,97 @@ class DocumentIO {
         selection.pop();
         this.app.setActiveToolFromType(ToolType.MOVE);
         const moveTool = this.app.getActiveTool();
-        if (moveTool instanceof MoveTool) moveTool.setPendingPaste(image, pasteUnderlay);
+        if (moveTool instanceof MoveTool) {
+            moveTool.setPendingPaste(image, pasteUnderlay, pastePosition);
+        }
         pasteUnderlay.dispose();
         workspace.setDirty(true);
         if (typeof image.close === "function") image.close();
         return true;
+    }
+
+    static async getClipboardSourceBounds(blob, image) {
+        const info = this.internalClipboardInfo;
+        if (info !== null
+            && info.width === image.width
+            && info.height === image.height) {
+            // Chromium/Electron may decode and re-encode clipboard images. The
+            // resulting PNG has different bytes (and often a different size),
+            // even though its pixels are identical. Compare decoded pixels so
+            // an in-app copy keeps its original document coordinates without
+            // accidentally applying stale coordinates to an external image.
+            if (blob === this.internalClipboard
+                || info.pixelDigest === await this.getImagePixelDigest(
+                    image, image.width, image.height)) {
+                return info.bounds.clone();
+            }
+        }
+        return new Rectangle(0, 0, image.width, image.height);
+    }
+
+    static async getImagePixelDigest(source, width, height) {
+        let canvas;
+        if (source instanceof HTMLCanvasElement
+            && source.width === width && source.height === height) {
+            canvas = source;
+        } else {
+            canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext("2d", {willReadFrequently: true}).drawImage(source, 0, 0);
+        }
+
+        const pixels = canvas.getContext("2d", {willReadFrequently: true})
+            .getImageData(0, 0, width, height).data;
+        if (globalThis.crypto?.subtle !== undefined) {
+            const digest = await globalThis.crypto.subtle.digest("SHA-256", pixels);
+            return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+        }
+
+        // WebCrypto is available in supported browsers and Electron. Keep a
+        // deterministic fallback for unusual embedded environments.
+        let hash1 = 2166136261;
+        let hash2 = 2246822519;
+        for (let index = 0; index < pixels.length; index++) {
+            hash1 = Math.imul(hash1 ^ pixels[index], 16777619);
+            hash2 = Math.imul(hash2 ^ pixels[index], 3266489917);
+        }
+        return (hash1 >>> 0).toString(16).padStart(8, "0")
+            + (hash2 >>> 0).toString(16).padStart(8, "0");
+    }
+
+    static getPastePosition(workspace, sourceBounds, width, height) {
+        const visible = workspace.getVisibleDocumentRect();
+        let visibleLeft = Math.ceil(visible.getLeft());
+        let visibleTop = Math.ceil(visible.getTop());
+        let visibleRight = Math.floor(visible.getRight());
+        let visibleBottom = Math.floor(visible.getBottom());
+        if (visibleRight <= visibleLeft) {
+            visibleLeft = Math.floor(visible.getLeft());
+            visibleRight = Math.ceil(visible.getRight());
+        }
+        if (visibleBottom <= visibleTop) {
+            visibleTop = Math.floor(visible.getTop());
+            visibleBottom = Math.ceil(visible.getBottom());
+        }
+
+        let x = Math.round(sourceBounds.getLeft());
+        let y = Math.round(sourceBounds.getTop());
+        if (x < visibleLeft) x = visibleLeft;
+        else if (x + width > visibleRight) x = visibleRight - width;
+        if (y < visibleTop) y = visibleTop;
+        else if (y + height > visibleBottom) y = visibleBottom - height;
+
+        x = Math.max(0, x);
+        y = Math.max(0, y);
+        const documentModel = workspace.getDocument();
+        if (x + width > documentModel.getWidth()) {
+            x -= Math.min(x + width - documentModel.getWidth(), x);
+        }
+        if (y + height > documentModel.getHeight()) {
+            y -= Math.min(y + height - documentModel.getHeight(), y);
+        }
+        return new Point(x, y);
     }
 
     static finishActiveTool(reactivate = true) {
@@ -1405,6 +1546,7 @@ class DocumentIO {
 DocumentIO.initialized = false;
 DocumentIO.app = null;
 DocumentIO.internalClipboard = null;
+DocumentIO.internalClipboardInfo = null;
 DocumentIO.internalSelectionPath = null;
 DocumentIO.webCloseDialogScheduled = false;
 DocumentIO.webCloseDialogOpen = false;

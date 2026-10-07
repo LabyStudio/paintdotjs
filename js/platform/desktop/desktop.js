@@ -7,6 +7,10 @@ const localFilePaths = new WeakMap();
 
 window.desktopFileActions = {
     copyText: text => clipboard.writeText(text),
+    getClipboardImageSize: () => {
+        const image = clipboard.readImage();
+        return image.isEmpty() ? null : image.getSize();
+    },
     getPathForFile: file => localFilePaths.get(file) || webUtils.getPathForFile(file),
     showItemInFolder: filePath => shell.showItemInFolder(filePath)
 };

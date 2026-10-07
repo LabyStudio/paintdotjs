@@ -13,13 +13,13 @@ class NumberItem extends TextFieldItem {
     }
 
     buildElement() {
-        let element = super.buildElement();
-        element.type = "number";
-        element.min = this.min;
-        element.max = this.max;
-        element.step = this.step;
-        element.value = this.value;
-        return element;
+        this.input = super.buildElement();
+        this.input.type = "number";
+        this.input.min = this.min;
+        this.input.max = this.max;
+        this.input.step = this.step;
+        this.input.value = this.value;
+        return NumberInput.wrap(this.input);
     }
 
     setChangeCallback(callback) {
@@ -30,30 +30,40 @@ class NumberItem extends TextFieldItem {
 
     setMin(min) {
         this.min = min;
-        if (this.element !== null) {
-            this.element.min = min;
+        if (this.input !== undefined) {
+            this.input.min = min;
         }
     }
 
     setMax(max) {
         this.max = max;
-        if (this.element !== null) {
-            this.element.max = max;
+        if (this.input !== undefined) {
+            this.input.max = max;
         }
     }
 
     setStep(step) {
         this.step = step;
-        if (this.element !== null) {
-            this.element.step = step;
+        if (this.input !== undefined) {
+            this.input.step = step;
         }
     }
 
     setValue(value) {
         this.value = value;
-        if (this.element !== null) {
-            this.element.value = value;
+        this.text = String(value);
+        if (this.input !== undefined) {
+            this.input.value = value;
         }
+    }
+
+    setText(value) {
+        this.setValue(value);
+    }
+
+    setEnabled(enabled) {
+        super.setEnabled(enabled);
+        if (this.input !== undefined) this.input.disabled = !enabled;
     }
 
     getValue() {

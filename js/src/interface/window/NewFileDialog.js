@@ -182,7 +182,7 @@ class NewFileDialog {
         input.value = value;
         const suffix = document.createElement("span");
         suffix.textContent = unit;
-        row.append(label, input, suffix);
+        row.append(label, NumberInput.wrap(input), suffix);
         return {row, input};
     }
 }

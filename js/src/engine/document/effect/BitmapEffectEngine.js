@@ -524,7 +524,12 @@ class BitmapEffectEngine {
     }
 
     static createSelectionMask(width, height, selection) {
-        if (selection === null || selection.isEmpty()) return null;
+        if (selection === null) return null;
+        // Effect previews rasterize the document selection once and reuse the
+        // resulting mask for each render. Do not treat that byte mask as a live
+        // Selection object and try to call Selection methods on it.
+        if (selection instanceof Uint8Array) return selection;
+        if (selection.isEmpty()) return null;
         const path = selection.createPath();
         const canvas = document.createElement("canvas");
         canvas.width = width;

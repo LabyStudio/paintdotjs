@@ -252,6 +252,18 @@ class DocumentView {
         return new Point(screenX, screenY);
     }
 
+    getVisibleDocumentRect() {
+        const bounds = this.getRenderBounds();
+        const zoom = this.getZoom();
+        const left = Utility.clamp(-bounds.getLeft() / zoom, 0, this.getWidth());
+        const top = Utility.clamp(-bounds.getTop() / zoom, 0, this.getHeight());
+        const right = Utility.clamp(
+            (this.app.getViewWidth() - bounds.getLeft()) / zoom, 0, this.getWidth());
+        const bottom = Utility.clamp(
+            (this.app.getViewHeight() - bounds.getTop()) / zoom, 0, this.getHeight());
+        return Rectangle.absolute(left, top, right, bottom);
+    }
+
     getRenderBounds() {
         let viewWidth = this.app.getViewWidth();
         let viewHeight = this.app.getViewHeight();

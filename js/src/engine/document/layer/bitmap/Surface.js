@@ -1,6 +1,6 @@
 class Surface {
 
-    constructor(canvas) {
+    constructor(canvas, options = {}) {
         if (!(canvas instanceof HTMLCanvasElement)) {
             throw new Error("Expected an HTMLCanvasElement");
         }
@@ -9,11 +9,13 @@ class Surface {
         this.width = canvas.width;
         this.height = canvas.height;
 
-        // Editing is dominated by drawImage, compositing, and transforms. The
-        // willReadFrequently hint may force a software-backed canvas in Chrome,
-        // which makes interactive movement dramatically slower. Pixel-reading
-        // tools still work without opting every surface into that slow path.
-        this.context = canvas.getContext('2d', {alpha: true});
+        // Normal document surfaces stay GPU-oriented because editing is dominated
+        // by drawImage, compositing, and transforms. Dedicated readback surfaces
+        // may opt into a software backing store without slowing every layer.
+        this.context = canvas.getContext('2d', {
+            alpha: true,
+            willReadFrequently: options.willReadFrequently === true
+        });
         this.context.imageSmoothingEnabled = false;
 
         this.checkerboard = null;
@@ -315,13 +317,12 @@ class Surface {
     }
 
     static fromCanvas(canvas) {
-        let context = canvas.getContext('2d');
-        return new Surface(canvas, context);
+        return new Surface(canvas);
     }
 
-    static create(width, height) {
+    static create(width, height, options = {}) {
         let canvas = document.createElement('canvas');
-        let surface = new Surface(canvas);
+        let surface = new Surface(canvas, options);
         surface.setWidth(width);
         surface.setHeight(height);
         return surface;

@@ -47,6 +47,110 @@ input[type=number]::-webkit-inner-spin-button {
     -webkit-appearance: none;
 }
 
+.pdn-number-input {
+    box-sizing: border-box;
+    display: inline-grid;
+    grid-template-columns: minmax(0, 1fr) 17px;
+    width: 50px;
+    height: 25px;
+    overflow: hidden;
+    vertical-align: middle;
+    background: var(--color-number-input-background);
+    border: 1px solid var(--color-button-outline);
+    outline: 1px solid var(--color-button-outline);
+}
+
+.pdn-number-input:focus-within {
+    border-color: var(--color-menu-item-selected-border);
+    outline-color: var(--color-menu-item-selected-border);
+}
+
+.pdn-number-input > input[type="number"] {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0;
+    padding: 1px 3px;
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+}
+
+.pdn-number-input > input[type="number"]:focus-visible {
+    box-shadow: none;
+}
+
+.pdn-number-input-buttons {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    min-width: 0;
+    min-height: 0;
+}
+
+.pdn-number-input-buttons > button {
+    position: relative;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    width: 17px;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(#fafafa, #dedede);
+    border: 0;
+    border-left: 1px solid #a0a0a0;
+    border-radius: 0;
+}
+
+.pdn-number-input-buttons > button:first-child {
+    border-bottom: 1px solid #a0a0a0;
+}
+
+.pdn-number-input-buttons > button::after {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    content: "";
+    transform: translate(-50%, -50%);
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+}
+
+.pdn-number-input-up::after {
+    border-bottom: 4px solid #555;
+}
+
+.pdn-number-input-down::after {
+    border-top: 4px solid #555;
+}
+
+.pdn-number-input-buttons > button:hover {
+    background: linear-gradient(#f5fbff, #cce8f9);
+}
+
+.pdn-number-input-buttons > button:active {
+    background: #b8dcf2;
+}
+
+.pdn-number-input-buttons > button:disabled {
+    background: linear-gradient(#eee, #d5d5d5);
+}
+
+.pdn-number-input-buttons > button:disabled::after {
+    opacity: .5;
+}
+
+.pdn-number-input:has(input:disabled) {
+    opacity: .55;
+}
+
+.pdn-number-input:has(input:disabled) .pdn-number-input-buttons > button {
+    pointer-events: none;
+}
+
 /* ------------ Checkbox ------------ */
 
 input[type="checkbox"] {

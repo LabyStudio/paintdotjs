@@ -7,6 +7,9 @@ class MagicWandTool extends Tool {
         this.dragStart = null;
         this.originStart = null;
         this.baseSelectionData = null;
+        this.baseSelectionStencil = null;
+        this.combineModeOverride = null;
+        this.floodModeOverride = null;
         this.historyMemento = null;
         this.sampleSnapshot = null;
         this.originNub = null;
@@ -28,7 +31,7 @@ class MagicWandTool extends Tool {
     }
 
     onMouseDown(x, y, button) {
-        if (button !== MouseButton.LEFT) return false;
+        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
         const point = new Point(x, y);
         if (this.pending && this.originNub !== null && this.originNub.isPointTouching(point, true)) {
             this.tracking = true;
@@ -43,6 +46,13 @@ class MagicWandTool extends Tool {
             : this.getActiveLayer().getSurface();
         if (!sampleSurface.getBounds().contains(point)) return false;
         this.baseSelectionData = this.getSelection().save();
+        this.combineModeOverride = this.getCombineModeOverride(button);
+        this.floodModeOverride = this.app.isShiftKeyDown() ? "global" : null;
+        const combineMode = this.combineModeOverride ?? this.getConfiguredCombineMode();
+        this.baseSelectionStencil = combineMode === CombineMode.REPLACE
+            ? null
+            : MagicWandTool.createSelectionStencil(
+                this.getSelection().createPath(), sampleSurface.width, sampleSurface.height);
         this.historyMemento = new SelectionHistoryMemento(
             this.getName(), this.getImage(), this.getDocumentWorkspace());
         this.sampleSnapshot = sampleSurface.clone();
@@ -98,53 +108,53 @@ class MagicWandTool extends Tool {
         const y = Math.floor(this.origin.y);
         const selection = this.getSelection();
         selection.restore(this.baseSelectionData);
-        if (x < 0 || y < 0 || x >= surface.width || y >= surface.height) return true;
-
-        const image = surface.context.getImageData(0, 0, surface.width, surface.height).data;
-        const start = (y * surface.width + x) * 4;
-        const target = [image[start], image[start + 1], image[start + 2], image[start + 3]];
-        const tolerance = this.getToleranceThreshold();
-        const premultiplied = this.getSetting("alphaMode", "premultiplied") === "premultiplied";
-        const visited = new Uint8Array(surface.width * surface.height);
         const stencil = new BitVector2D(surface.width, surface.height);
-        const stack = [x, y];
-        const matches = (px, py) => {
-            if (px < 0 || py < 0 || px >= surface.width || py >= surface.height) return false;
-            const pixel = py * surface.width + px;
-            if (visited[pixel]) return false;
-            return this.matchesColorTolerance(image, pixel * 4, target, tolerance, premultiplied);
-        };
-        const floodMode = this.app.isShiftKeyDown() ? "global" : this.getSetting("floodMode", "contiguous");
-        if (floodMode === "global") {
-            for (let py = 0; py < surface.height; ++py) {
-                let runStart = -1;
-                for (let px = 0; px <= surface.width; ++px) {
-                    const matching = px < surface.width && matches(px, py);
-                    if (matching) {
-                        visited[py * surface.width + px] = 1;
-                        stencil.set(px, py, true);
-                        if (runStart === -1) runStart = px;
-                    } else if (runStart !== -1) {
-                        runStart = -1;
+        if (x >= 0 && y >= 0 && x < surface.width && y < surface.height) {
+            const image = surface.context.getImageData(0, 0, surface.width, surface.height).data;
+            const start = (y * surface.width + x) * 4;
+            const target = [image[start], image[start + 1], image[start + 2], image[start + 3]];
+            const tolerance = this.getToleranceThreshold();
+            const premultiplied = this.getSetting("alphaMode", "premultiplied") === "premultiplied";
+            const visited = new Uint8Array(surface.width * surface.height);
+            const stack = [x, y];
+            const matches = (px, py) => {
+                if (px < 0 || py < 0 || px >= surface.width || py >= surface.height) return false;
+                const pixel = py * surface.width + px;
+                if (visited[pixel]) return false;
+                return this.matchesColorTolerance(image, pixel * 4, target, tolerance, premultiplied);
+            };
+            const floodMode = this.floodModeOverride ?? this.getSetting("floodMode", "contiguous");
+            if (floodMode === "global") {
+                for (let py = 0; py < surface.height; ++py) {
+                    for (let px = 0; px < surface.width; ++px) {
+                        if (matches(px, py)) {
+                            visited[py * surface.width + px] = 1;
+                            stencil.set(px, py, true);
+                        }
+                    }
+                }
+            } else {
+                while (stack.length > 0) {
+                    const seedY = stack.pop();
+                    const seedX = stack.pop();
+                    if (!matches(seedX, seedY)) continue;
+                    let left = seedX;
+                    while (matches(left - 1, seedY)) --left;
+                    let right = left;
+                    while (matches(right, seedY)) {
+                        visited[seedY * surface.width + right] = 1;
+                        stencil.set(right, seedY, true);
+                        if (matches(right, seedY - 1)) stack.push(right, seedY - 1);
+                        if (matches(right, seedY + 1)) stack.push(right, seedY + 1);
+                        ++right;
                     }
                 }
             }
-        } else {
-            while (stack.length > 0) {
-                const seedY = stack.pop();
-                const seedX = stack.pop();
-                if (!matches(seedX, seedY)) continue;
-                let left = seedX;
-                while (matches(left - 1, seedY)) --left;
-                let right = left;
-                while (matches(right, seedY)) {
-                    visited[seedY * surface.width + right] = 1;
-                    stencil.set(right, seedY, true);
-                    if (matches(right, seedY - 1)) stack.push(right, seedY - 1);
-                    if (matches(right, seedY + 1)) stack.push(right, seedY + 1);
-                    ++right;
-                }
-            }
+        }
+
+        const combineMode = this.combineModeOverride ?? this.getConfiguredCombineMode();
+        if (combineMode !== CombineMode.REPLACE) {
+            MagicWandTool.combineStencils(stencil, this.baseSelectionStencil, combineMode);
         }
 
         // Paint.NET 5 turns the filled BitSurface into a GeometryList before
@@ -155,15 +165,58 @@ class MagicWandTool extends Tool {
             new Rectangle(0, 0, surface.width, surface.height)
         );
 
-        let combineMode;
-        if (this.app.isControlKeyDown()) combineMode = CombineMode.UNION;
-        else if (this.app.isAltKeyDown()) combineMode = CombineMode.EXCLUDE;
-        else combineMode = this.getConfiguredCombineMode();
-        if (combineMode === CombineMode.REPLACE) selection.reset();
-        else selection.resetContinuation();
-        selection.setContinuationPath(path, combineMode);
+        // The original combines pixelated selections as bit stencils. Besides
+        // being exact, this avoids the polygon clipper's explosive complexity
+        // when Ctrl adds many disconnected regions.
+        selection.reset();
+        selection.setContinuationPath(path, CombineMode.REPLACE);
         selection.commitContinuation();
         return true;
+    }
+
+    getCombineModeOverride(button) {
+        if (this.app.isControlKeyDown() && button === MouseButton.LEFT) return CombineMode.UNION;
+        if (this.app.isAltKeyDown() && button === MouseButton.LEFT) return CombineMode.EXCLUDE;
+        if (this.app.isControlKeyDown() && button === MouseButton.RIGHT) return CombineMode.XOR;
+        if (this.app.isAltKeyDown() && button === MouseButton.RIGHT) return CombineMode.INTERSECT;
+        return null;
+    }
+
+    static combineStencils(stencil, baseStencil, combineMode) {
+        if (baseStencil === null) return;
+        const data = stencil.bitArray;
+        const base = baseStencil.bitArray;
+        for (let i = 0; i < data.length; ++i) {
+            switch (combineMode) {
+                case CombineMode.UNION: data[i] |= base[i]; break;
+                case CombineMode.EXCLUDE: data[i] = base[i] & (data[i] ^ 1); break;
+                case CombineMode.INTERSECT: data[i] &= base[i]; break;
+                case CombineMode.XOR: data[i] ^= base[i]; break;
+            }
+        }
+    }
+
+    static createSelectionStencil(path, width, height) {
+        const cached = path.getPixelStencil(width, height);
+        if (cached !== null) return cached;
+
+        const stencil = new BitVector2D(width, height);
+        for (const vertexList of path.getVertexLists()) {
+            const vertices = vertexList.getVertices();
+            if (vertices.length < 3) continue;
+            const scans = Utility.getScans(vertices);
+            for (const scan of scans) {
+                const y = scan.getY();
+                if (y < 0 || y >= height) continue;
+                const start = Math.max(0, scan.getX());
+                const end = Math.min(width, scan.getX() + scan.getLength());
+                const row = y * width;
+                for (let x = start; x < end; ++x) {
+                    stencil.bitArray[row + x] ^= 1;
+                }
+            }
+        }
+        return stencil;
     }
 
     getConfiguredCombineMode() {
@@ -203,6 +256,9 @@ class MagicWandTool extends Tool {
         this.disposeSampleSnapshot();
         if (this.baseSelectionData !== null) this.baseSelectionData.dispose();
         this.baseSelectionData = null;
+        this.baseSelectionStencil = null;
+        this.combineModeOverride = null;
+        this.floodModeOverride = null;
     }
 
     disposeSampleSnapshot() {

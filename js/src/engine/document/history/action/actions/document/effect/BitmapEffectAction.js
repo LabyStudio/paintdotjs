@@ -1,5 +1,8 @@
 class BitmapEffectAction extends DocumentWorkspaceAction {
 
+    static rememberedValues = new Map();
+    static lastEffect = null;
+
     constructor(definition, shortcut = null) {
         super(
             definition.actionId || "adjustment." + definition.id,
@@ -10,7 +13,33 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
         this.definition = definition;
     }
 
-    async performAction(documentWorkspace) {
+    static cloneValues(values) {
+        if (values === null || values === undefined) return values;
+        if (typeof structuredClone === "function") return structuredClone(values);
+        return JSON.parse(JSON.stringify(values));
+    }
+
+    static getRememberedValues(definition) {
+        const values = this.rememberedValues.get(definition.id);
+        return values === undefined ? null : this.cloneValues(values);
+    }
+
+    static getLastEffect() {
+        if (this.lastEffect === null) return null;
+        return {
+            definition: this.lastEffect.definition,
+            values: this.cloneValues(this.lastEffect.values)
+        };
+    }
+
+    static repeatLast(documentWorkspace) {
+        const last = this.getLastEffect();
+        if (last === null) return null;
+        return new BitmapEffectAction(last.definition)
+            .performAction(documentWorkspace, last.values);
+    }
+
+    async performAction(documentWorkspace, repeatedValues = undefined) {
         const layer = documentWorkspace.getActiveLayer();
         if (!(layer instanceof BitmapLayer)) return null;
 
@@ -39,7 +68,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
             );
 
         if (this.definition.controls.length === 0) {
-            present(render({}));
+            const values = repeatedValues === undefined ? {} : repeatedValues;
+            present(render(values));
+            this.rememberSuccessfulEffect(app, values);
             return memento;
         }
 
@@ -143,21 +174,28 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
             });
         };
 
-        const values = await EffectConfigDialog.open({
-            title: this.definition.dialogTitle
-                || i18n(this.definition.translationKey || this.definition.id + ".name"),
-            icon: "assets/icons/" + this.definition.icon,
-            layout: this.definition.dialog,
-            controls: this.definition.controls,
-            values: BitmapEffectEngine.defaults(this.definition),
-            source,
-            onPreview: preview
-        });
+        const remembered = BitmapEffectAction.getRememberedValues(this.definition);
+        const values = repeatedValues === undefined
+            ? await EffectConfigDialog.open({
+                title: this.definition.dialogTitle
+                    || i18n(this.definition.translationKey || this.definition.id + ".name"),
+                icon: "assets/icons/" + this.definition.icon,
+                layout: this.definition.dialog,
+                controls: this.definition.controls,
+                values: remembered || BitmapEffectEngine.defaults(this.definition),
+                source,
+                onPreview: preview
+            })
+            : BitmapEffectAction.cloneValues(repeatedValues);
         if (values === null) {
             cancelWorker();
             present(source);
             if (workerUrl !== null) URL.revokeObjectURL(workerUrl);
             return null;
+        }
+        if (repeatedValues === undefined) {
+            BitmapEffectAction.rememberedValues.set(
+                this.definition.id, BitmapEffectAction.cloneValues(values));
         }
         cancelWorker();
         if (useWorker) {
@@ -175,11 +213,44 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
         }
         cancelWorker();
         if (workerUrl !== null) URL.revokeObjectURL(workerUrl);
-        app.fire("document:effect_applied", this.definition.id);
+        this.rememberSuccessfulEffect(app, values);
         return memento;
+    }
+
+    rememberSuccessfulEffect(app, values) {
+        if (BitmapEffectEngine.EFFECTS[this.definition.id] === this.definition) {
+            BitmapEffectAction.lastEffect = {
+                definition: this.definition,
+                values: BitmapEffectAction.cloneValues(values)
+            };
+        }
+        app.fire("document:effect_applied", this.definition.id);
     }
 
     isActionExecutable(documentWorkspace) {
         return documentWorkspace.getActiveLayer() instanceof BitmapLayer;
+    }
+}
+
+class RepeatEffectAction extends DocumentWorkspaceAction {
+
+    constructor() {
+        super("menu.effects.repeat", null, null, "Ctrl+F");
+    }
+
+    performAction(documentWorkspace) {
+        return BitmapEffectAction.repeatLast(documentWorkspace);
+    }
+
+    isActionExecutable(documentWorkspace) {
+        return BitmapEffectAction.getLastEffect() !== null
+            && documentWorkspace.getActiveLayer() instanceof BitmapLayer;
+    }
+
+    getDisplayName() {
+        const last = BitmapEffectAction.getLastEffect();
+        if (last === null) return i18n("effects.repeatMenuItem.format", [""]);
+        const name = i18n(last.definition.translationKey || last.definition.id + ".name");
+        return i18n("effects.repeatMenuItem.format", [name]);
     }
 }

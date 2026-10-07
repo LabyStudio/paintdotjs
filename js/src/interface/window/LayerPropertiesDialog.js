@@ -55,7 +55,7 @@ class LayerPropertiesDialog {
             };
             opacityInput.oninput = () => setOpacity(opacityInput.value);
             opacityValue.oninput = () => setOpacity(opacityValue.value);
-            opacityControls.append(opacityInput, opacityValue);
+            opacityControls.append(opacityInput, NumberInput.wrap(opacityValue));
             opacityRow.appendChild(opacityControls);
             setOpacity(properties.opacity);
 

@@ -93,7 +93,7 @@ class SaveImageDialog {
             qualityNumber.min = "0";
             qualityNumber.max = "100";
             qualityNumber.step = "1";
-            qualityControls.append(quality, qualityNumber);
+            qualityControls.append(quality, NumberInput.wrap(qualityNumber));
             qualityGroup.appendChild(qualityControls);
 
             const chromaGroup = document.createElement("section");

@@ -65,7 +65,9 @@ class ToolMenu extends StripPanel {
             kind: "shapeChoice", label: "", key: "shape", values, groups, width: 126
         });
         const iconGroup = (label, key, values) => ({kind: "iconGroup", label, key, values});
-        const toggle = (label, key) => ({kind: "toggle", label, key});
+        const fontStyleToggle = (text, key, title) => ({
+            kind: "fontStyleToggle", label: "", key, text, title
+        });
         const section = definition => Object.assign(definition, {section: true});
         const combine = iconGroup("", "combineMode", [
             ["replace", "Replace", "enum_selection_combine_mode_replace.png"],
@@ -380,7 +382,10 @@ class ToolMenu extends StripPanel {
                         ["points", "Points (image DPI)", "enum_font_size_metric_points.png"],
                         ["pixels", "Pixels", "enum_font_size_metric_fixed96_dpi.png"]
                     ]),
-                    section(toggle("B", "bold")), toggle("I", "italic"), toggle("U", "underline"), toggle("S", "strikeout"),
+                    section(fontStyleToggle("B", "bold", "Bold")),
+                    fontStyleToggle("I", "italic", "Italic"),
+                    fontStyleToggle("U", "underline", "Underline"),
+                    fontStyleToggle("abc", "strikeout", "Strikeout"),
                     choices("", "textRendering", [["smooth", "Smooth"], ["sharp", "Sharp"], ["aliased", "Aliased"]], 68, true),
                     section(iconGroup("", "align", [
                         ["left", "Align Left", "enum_text_alignment_left.png"],
@@ -588,39 +593,52 @@ class ToolMenu extends StripPanel {
                 control.appendChild(text);
                 label.textContent = "";
             } else if (definition.kind === "number") {
-                control = document.createElement("input");
-                control.type = "number";
-                control.min = definition.min;
-                control.max = definition.max;
-                control.step = definition.step;
-                control.value = type.getSetting(definition.key);
-                control.oninput = () => {
-                    if (control.value === "") return;
-                    const value = Number(control.value);
+                const numberInput = document.createElement("input");
+                numberInput.type = "number";
+                numberInput.min = definition.min;
+                numberInput.max = definition.max;
+                numberInput.step = definition.step;
+                numberInput.value = type.getSetting(definition.key);
+                numberInput.oninput = () => {
+                    if (numberInput.value === "") return;
+                    const value = Number(numberInput.value);
                     if (Number.isFinite(value)) {
                         this.updateSetting(type, definition.key,
                             Utility.clamp(value, definition.min, definition.max));
                     }
                 };
-                control.onchange = () => {
-                    const entered = Number(control.value);
+                numberInput.onchange = () => {
+                    const entered = Number(numberInput.value);
                     const value = Utility.clamp(Number.isFinite(entered) ? entered : definition.min,
                         definition.min, definition.max);
-                    control.value = value;
+                    numberInput.value = value;
                     this.updateSetting(type, definition.key, value);
                 };
-            } else {
+                control = NumberInput.wrap(numberInput);
+            } else if (definition.kind === "fontStyleToggle") {
                 control = document.createElement("button");
                 control.type = "button";
-                control.className = "tool-option-toggle";
-                control.textContent = definition.label;
+                control.className = "tool-option-toggle tool-font-style-toggle";
+                control.title = definition.title;
+                control.setAttribute("aria-label", definition.title);
+                const icon = document.createElement("span");
+                icon.className = "tool-font-style-icon";
+                icon.textContent = definition.text;
+                icon.setAttribute("aria-hidden", "true");
+                control.appendChild(icon);
                 label.textContent = "";
-                const updatePressed = () => control.toggleAttribute("active", !!type.getSetting(definition.key));
+                const updatePressed = () => {
+                    const pressed = !!type.getSetting(definition.key);
+                    control.toggleAttribute("active", pressed);
+                    control.setAttribute("aria-pressed", String(pressed));
+                };
                 updatePressed();
                 control.onclick = () => {
                     this.updateSetting(type, definition.key, !type.getSetting(definition.key));
                     updatePressed();
                 };
+            } else {
+                throw new Error("Unknown tool option kind: " + definition.kind);
             }
             if (!definition.fitSelected
                 && definition.width !== null && definition.width !== undefined) {

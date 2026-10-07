@@ -162,6 +162,13 @@ class SettingsDialog {
         this.search = null;
         this.shortcutList = null;
         this.fontList = null;
+        this.fontAddButton = null;
+        this.fontDropZone = null;
+        this.fontImportPanel = null;
+        this.fontImportLabel = null;
+        this.fontImportBar = null;
+        this.fontImportState = null;
+        this.fontImporting = false;
         this.changedListener = () => this.renderShortcutRows();
         this.fontsChangedListener = () => {
             if (this.backdrop !== null && this.activeSection === "fonts") this.renderFontRows();
@@ -460,7 +467,7 @@ class SettingsDialog {
             input.max = "255";
             input.step = "1";
             rgbInputs[channel] = input;
-            row.append(text, input);
+            row.append(text, NumberInput.wrap(input));
             rgbPanel.appendChild(row);
         }
         const resetColor = document.createElement("button");
@@ -566,7 +573,7 @@ class SettingsDialog {
         range.oninput = () => setBrightness(range.value);
         output.onchange = () => setBrightness(output.value);
         resetBrightness.onclick = () => setBrightness(0.75);
-        brightnessRow.append(range, output, resetBrightness);
+        brightnessRow.append(range, NumberInput.wrap(output), resetBrightness);
         brightnessGroup.appendChild(brightnessRow);
         this.page.appendChild(brightnessGroup);
     }
@@ -750,6 +757,7 @@ class SettingsDialog {
         add.className = "settings-action-button";
         add.textContent = "Add fonts…";
         add.onclick = () => input.click();
+        this.fontAddButton = add;
         controls.append(add, input);
         this.page.appendChild(controls);
 
@@ -774,7 +782,28 @@ class SettingsDialog {
             dropZone.classList.remove("drag-over");
             await this.importFonts(Array.from(event.dataTransfer?.files || []));
         };
+        this.fontDropZone = dropZone;
         this.page.appendChild(dropZone);
+
+        const progressPanel = document.createElement("div");
+        progressPanel.className = "settings-font-import-progress";
+        progressPanel.setAttribute("role", "status");
+        progressPanel.setAttribute("aria-live", "polite");
+        const spinner = document.createElement("span");
+        spinner.className = "settings-font-import-spinner";
+        spinner.setAttribute("aria-hidden", "true");
+        const progressBody = document.createElement("div");
+        const progressLabel = document.createElement("span");
+        const progress = document.createElement("progress");
+        progress.max = 1;
+        progress.value = 0;
+        progressBody.append(progressLabel, progress);
+        progressPanel.append(spinner, progressBody);
+        this.page.appendChild(progressPanel);
+        this.fontImportPanel = progressPanel;
+        this.fontImportLabel = progressLabel;
+        this.fontImportBar = progress;
+        this.updateFontImportProgress();
 
         this.addSectionHeading("Installed by you");
         this.fontList = document.createElement("div");
@@ -788,21 +817,59 @@ class SettingsDialog {
         const fontFiles = files.filter(file => FontManager.isFontFile(file));
         if (fontFiles.length === 0) {
             this.setStatus("Choose a TTF, OTF, WOFF, or WOFF2 font file.");
-            return;
+            return null;
         }
-        this.setStatus("Adding font" + (fontFiles.length === 1 ? "…" : "s…"));
-        const result = await FontManager.importFiles(fontFiles);
-        if (result.errors.length > 0) {
-            const details = result.errors.map(item =>
-                `${item.file.name}: ${item.error.message}`).join("\n");
-            this.setStatus(`Added ${result.added.length}; ${result.errors.length} could not be added.`);
-            alert("Some fonts could not be added:\n\n" + details);
-        } else {
-            this.setStatus(result.added.length === 1
-                ? `Added ${result.added[0].name}.`
-                : `Added ${result.added.length} fonts.`);
+        if (this.fontImporting) {
+            this.setStatus("Wait for the current font import to finish.");
+            return null;
         }
-        this.renderFontRows();
+        this.fontImporting = true;
+        this.fontImportState = {completed: 0, total: fontFiles.length, file: null, phase: "preparing"};
+        this.updateFontImportProgress();
+        this.setStatus(`Preparing to add ${fontFiles.length} font${fontFiles.length === 1 ? "" : "s"}…`);
+        try {
+            const result = await FontManager.importFiles(fontFiles, state => {
+                this.fontImportState = state;
+                this.updateFontImportProgress();
+                if (state.phase === "adding") {
+                    this.setStatus(`Adding font ${state.completed + 1} of ${state.total}: ${state.file.name}`);
+                }
+            });
+            if (result.errors.length > 0) {
+                const details = result.errors.map(item =>
+                    `${item.file.name}: ${item.error.message}`).join("\n");
+                this.setStatus(`Added ${result.added.length}; ${result.errors.length} could not be added.`);
+                alert("Some fonts could not be added:\n\n" + details);
+            } else {
+                this.setStatus(result.added.length === 1
+                    ? `Added ${result.added[0].name}.`
+                    : `Added ${result.added.length} fonts.`);
+            }
+            this.renderFontRows();
+            return result;
+        } finally {
+            this.fontImporting = false;
+            this.fontImportState = null;
+            this.updateFontImportProgress();
+        }
+    }
+
+    updateFontImportProgress() {
+        const state = this.fontImportState;
+        if (this.fontAddButton !== null) this.fontAddButton.disabled = this.fontImporting;
+        if (this.fontDropZone !== null) {
+            this.fontDropZone.classList.toggle("busy", this.fontImporting);
+            this.fontDropZone.setAttribute("aria-busy", String(this.fontImporting));
+        }
+        if (this.fontImportPanel === null) return;
+        this.fontImportPanel.hidden = state === null;
+        if (state === null) return;
+
+        this.fontImportBar.max = Math.max(1, state.total);
+        this.fontImportBar.value = state.completed;
+        this.fontImportLabel.textContent = state.file === null
+            ? `Preparing ${state.total} font${state.total === 1 ? "" : "s"}…`
+            : `Adding ${state.completed + (state.phase === "adding" ? 1 : 0)} of ${state.total}: ${state.file.name}`;
     }
 
     renderFontRows() {
@@ -996,6 +1063,11 @@ class SettingsDialog {
         this.search = null;
         this.shortcutList = null;
         this.fontList = null;
+        this.fontAddButton = null;
+        this.fontDropZone = null;
+        this.fontImportPanel = null;
+        this.fontImportLabel = null;
+        this.fontImportBar = null;
         this.dialogMover = null;
     }
 }

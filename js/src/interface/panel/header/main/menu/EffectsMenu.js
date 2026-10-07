@@ -23,10 +23,32 @@ class EffectsMenu extends DropMenuItem {
     });
 
     constructor() {
-        super("menu.effects", Object.entries(EffectsMenu.CATEGORIES).map(([category, effects]) =>
+        const effectEntries = Object.entries(EffectsMenu.CATEGORIES).map(([category, effects]) =>
             EffectsMenu.createCategory(category, effects)
-        ));
-        this.updateEntriesOn("app:update_active_document", "document:active_layer_changed");
+        );
+        super("menu.effects", effectEntries);
+
+        this.effectEntries = effectEntries;
+        this.repeatEntry = ActionRegistry.get("menu.effects.repeat").createDropEntry();
+        this.repeatEntry.getIconPath = () => {
+            const last = BitmapEffectAction.getLastEffect();
+            return last === null ? "effect_icon.png" : last.definition.icon;
+        };
+        this.repeatSeparator = new HorizontalSeparator();
+
+        this.updateEntriesOn(
+            "app:update_active_document",
+            "document:active_layer_changed",
+            "document:effect_applied"
+        );
+    }
+
+    open() {
+        const hasLastEffect = BitmapEffectAction.getLastEffect() !== null;
+        this.entries = hasLastEffect
+            ? [this.repeatEntry, this.repeatSeparator, ...this.effectEntries]
+            : this.effectEntries;
+        super.open();
     }
 
     static createCategory(category, effectIds) {

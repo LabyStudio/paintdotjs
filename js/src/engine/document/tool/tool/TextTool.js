@@ -12,6 +12,7 @@ class TextTool extends DrawingTool {
         this.dragStart = null;
         this.originStart = null;
         this.viewportSyncFrame = null;
+        this.blockMiddlePasteUntil = 0;
         this.viewportChangedListener = documentView => {
             if (documentView === this.getDocumentWorkspace()) this.syncEditorToViewport();
         };
@@ -148,7 +149,17 @@ class TextTool extends DrawingTool {
         editor.onfocus = () => this.updateCaret();
         editor.onblur = () => this.updateCaret();
         editor.onkeydown = event => {
-            if (event.key === "Escape") {
+            const undoAction = typeof ActionRegistry === "undefined"
+                ? null : ActionRegistry.get("menu.edit.undo");
+            if ((event.ctrlKey || event.metaKey)
+                && undoAction !== null && undoAction.matchesShortcutEvent(event)) {
+                event.preventDefault();
+                event.stopPropagation();
+                // Text remains an editable preview until it is finished. Make
+                // it a history entry first so the same shortcut can undo it.
+                this.commitPending();
+                undoAction.runPerformAction();
+            } else if (event.key === "Escape") {
                 event.preventDefault();
                 event.stopPropagation();
                 this.commitPending();
@@ -165,7 +176,13 @@ class TextTool extends DrawingTool {
         // committed/restarted the text and made typing require a double click.
         editor.addEventListener("pointerdown", event => {
             event.stopPropagation();
-            if (event.button === MouseButton.RIGHT) {
+            if (event.button === MouseButton.MIDDLE) {
+                // Chromium/Linux pastes the primary selection into text fields
+                // on a wheel click. The middle button is reserved for canvas
+                // panning in paint.js, never text insertion.
+                this.blockMiddlePasteUntil = Date.now() + 750;
+                event.preventDefault();
+            } else if (event.button === MouseButton.RIGHT) {
                 event.preventDefault();
                 this.beginMove(this.eventToDocumentPoint(event));
                 if (typeof editor.setPointerCapture === "function") {
@@ -175,6 +192,25 @@ class TextTool extends DrawingTool {
                 event.preventDefault();
                 this.placeCaretAt(this.eventToDocumentPoint(event));
             }
+        });
+        const blockMiddleButton = event => {
+            if (event.button !== MouseButton.MIDDLE) return;
+            this.blockMiddlePasteUntil = Date.now() + 750;
+            event.preventDefault();
+            event.stopPropagation();
+        };
+        editor.addEventListener("mousedown", blockMiddleButton);
+        editor.addEventListener("auxclick", blockMiddleButton);
+        editor.addEventListener("paste", event => {
+            if (Date.now() >= this.blockMiddlePasteUntil) return;
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        editor.addEventListener("beforeinput", event => {
+            if (event.inputType !== "insertFromPaste"
+                || Date.now() >= this.blockMiddlePasteUntil) return;
+            event.preventDefault();
+            event.stopPropagation();
         });
         editor.addEventListener("pointermove", event => {
             event.stopPropagation();

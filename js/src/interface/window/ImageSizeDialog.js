@@ -56,7 +56,7 @@ class ImageSizeDialog {
             percentSuffix.textContent = "%";
             const percentRow = document.createElement("div");
             percentRow.className = "image-size-choice-row";
-            percentRow.append(percentChoice.label, percentInput, percentSuffix);
+            percentRow.append(percentChoice.label, NumberInput.wrap(percentInput), percentSuffix);
             const absoluteChoice = this.radio("image-size-mode", "absolute", "By absolute size:", true);
             const maintainLabel = document.createElement("label");
             maintainLabel.className = "image-size-maintain";
@@ -425,7 +425,7 @@ class ImageSizeDialog {
         const label = document.createElement("span");
         label.textContent = labelText;
         const input = this.numberInput(value, min, max, step);
-        row.append(label, input);
+        row.append(label, NumberInput.wrap(input));
         if (suffixText !== null) {
             const suffix = document.createElement("span");
             suffix.textContent = suffixText;

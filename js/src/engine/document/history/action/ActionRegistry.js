@@ -112,6 +112,7 @@ class ActionRegistry {
             definition.actionId = "menu.effects." + definition.id;
             this.register(new BitmapEffectAction(definition));
         }
+        this.register(new RepeatEffectAction());
         this.register(new BitmapEffectAction(BitmapEffectEngine.ROTATE_ZOOM));
 
         // Tools are actions too. Their order is significant because Paint.NET
