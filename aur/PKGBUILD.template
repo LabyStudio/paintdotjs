@@ -11,11 +11,11 @@ provides=('paintdotjs')
 conflicts=('paintdotjs')
 options=('!strip')
 source=(
-  "paintdotjs-source.tar.gz::https://github.com/LabyStudio/paintdotjs/archive/refs/tags/v${pkgver}.tar.gz"
+  "paintdotjs-${pkgver}-source.tar.gz::https://github.com/LabyStudio/paintdotjs/archive/refs/tags/v${pkgver}.tar.gz"
   "paintdotnet.zip::https://github.com/paintdotnet/release/releases/download/v@PAINTDOTNET_VERSION@/paint.net.@PAINTDOTNET_VERSION@.portable.x64.zip"
 )
-source_x86_64=("paintdotjs.AppImage::https://github.com/LabyStudio/paintdotjs/releases/download/v${pkgver}/paintdotjs-${pkgver}-linux-x86_64.AppImage")
-noextract=('paintdotnet.zip' 'paintdotjs.AppImage')
+source_x86_64=("paintdotjs-${pkgver}.AppImage::https://github.com/LabyStudio/paintdotjs/releases/download/v${pkgver}/paintdotjs-${pkgver}-linux-x86_64.AppImage")
+noextract=('paintdotnet.zip' "paintdotjs-${pkgver}.AppImage")
 sha256sums=('@SOURCE_SHA256@' '@PAINTDOTNET_SHA256@')
 sha256sums_x86_64=('@APPIMAGE_SHA256@')
 
@@ -26,7 +26,7 @@ prepare() {
 
 package() {
   local project="paintdotjs-${pkgver}"
-  install -Dm755 paintdotjs.AppImage "$pkgdir/opt/paintdotjs/paintdotjs.AppImage"
+  install -Dm755 "paintdotjs-${pkgver}.AppImage" "$pkgdir/opt/paintdotjs/paintdotjs.AppImage"
   node "$project/scripts/install_desktop_assets.js" \
     --source paintdotnet-source \
     --output "$pkgdir/opt/paintdotjs/assets" \
