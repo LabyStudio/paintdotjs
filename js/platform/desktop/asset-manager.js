@@ -7,7 +7,10 @@ const {downloadArchive: downloadVerifiedArchive, extractArchive} = require('../.
 const {installAssets} = require('../../../scripts/install_desktop_assets');
 
 const packageJson = require('../../../package.json');
-const assetManifest = require('../../../desktop-resources/asset-manifest.json');
+const assetManifestPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'desktop', 'asset-manifest.json')
+    : path.join(app.getAppPath(), 'desktop-resources', 'asset-manifest.json');
+const assetManifest = JSON.parse(fs.readFileSync(assetManifestPath, 'utf8'));
 const paintDotNetVersion = packageJson.paintdotjs.paintDotNetVersion;
 const paintDotNetSha256 = packageJson.paintdotjs.paintDotNetSha256;
 const downloadUrl = `https://github.com/paintdotnet/release/releases/download/v${paintDotNetVersion}/paint.net.${paintDotNetVersion}.portable.x64.zip`;

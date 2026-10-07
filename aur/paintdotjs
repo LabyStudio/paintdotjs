@@ -1,4 +1,5 @@
 #!/bin/sh
+export APPIMAGELAUNCHER_DISABLE=1
 export PAINTDOTJS_ASSETS_DIR=/opt/paintdotjs/assets
 export PAINTDOTJS_PACKAGE_MANAGER=aur
 exec /opt/paintdotjs/paintdotjs.AppImage "$@"
