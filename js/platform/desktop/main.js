@@ -1,4 +1,4 @@
-const {app, BrowserWindow, Menu, dialog, ipcMain, net, protocol} = require('electron');
+const {app, BrowserWindow, Menu, ipcMain, net, protocol} = require('electron');
 const {setupTitlebar} = require('custom-electron-titlebar/main');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -15,6 +15,8 @@ setupTitlebar();
 let mainWindow = null;
 let activeAssets = null;
 const pendingFiles = [];
+let closeDialogReady = false;
+let closeDialogPending = false;
 
 function commandLineFiles(argv) {
     return argv
@@ -83,6 +85,8 @@ async function registerAppProtocol() {
 }
 
 function createWindow() {
+    closeDialogReady = false;
+    closeDialogPending = false;
     mainWindow = new BrowserWindow({
         icon: app.isPackaged
             ? path.join(process.resourcesPath, 'desktop', 'icon.png')
@@ -91,7 +95,6 @@ function createWindow() {
         show: false,
         frame: false,
         titleBarStyle: 'hidden',
-        titleBarOverlay: true,
         width: 1080,
         height: 720,
         minWidth: 640,
@@ -110,7 +113,16 @@ function createWindow() {
     void mainWindow.loadURL(`paintjs://app/index.html${startupQuery}`);
     mainWindow.once('ready-to-show', () => mainWindow.show());
     mainWindow.webContents.on('did-finish-load', () => setImmediate(deliverPendingFiles));
+    mainWindow.on('maximize', () => mainWindow.webContents.send('window-maximize', true));
+    mainWindow.on('unmaximize', () => mainWindow.webContents.send('window-maximize', false));
     mainWindow.on('closed', () => { mainWindow = null; });
+    mainWindow.on('close', event => {
+        if (!closeDialogReady) return;
+        event.preventDefault();
+        if (closeDialogPending) return;
+        closeDialogPending = true;
+        mainWindow.webContents.send('desktop:request-close');
+    });
 
     mainWindow.webContents.on('before-input-event', (_event, input) => {
         if (input.type === 'keyDown' && input.key === 'F12') {
@@ -120,19 +132,6 @@ function createWindow() {
         }
     });
 
-    mainWindow.webContents.on('will-prevent-unload', event => {
-        const choice = dialog.showMessageBoxSync(mainWindow, {
-            type: 'warning',
-            buttons: ['Close without saving', 'Cancel'],
-            defaultId: 1,
-            cancelId: 1,
-            noLink: true,
-            title: 'Unsaved Changes',
-            message: 'There are unsaved changes.',
-            detail: 'Do you want to close paint.js and discard them?'
-        });
-        if (choice === 0) event.preventDefault();
-    });
     updater.initializeUpdater(mainWindow);
 }
 
@@ -140,6 +139,14 @@ ipcMain.on('resize-window', (_event, {width, height}) => {
     if (!mainWindow) return;
     const bounds = mainWindow.getBounds();
     mainWindow.setBounds({...bounds, width: Math.max(width, 100), height: Math.max(height, 100)});
+});
+ipcMain.on('desktop:close-dialog-ready', event => {
+    if (mainWindow !== null && event.sender === mainWindow.webContents) closeDialogReady = true;
+});
+ipcMain.on('desktop:close-response', (event, shouldClose) => {
+    if (mainWindow === null || event.sender !== mainWindow.webContents) return;
+    closeDialogPending = false;
+    if (shouldClose) mainWindow.destroy();
 });
 ipcMain.handle('desktop:check-for-updates', () => updater.checkForUpdates());
 ipcMain.on('desktop:install-update', () => updater.installUpdate());

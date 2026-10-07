@@ -19,6 +19,31 @@ const waitForApplication = () => new Promise(resolve => {
     poll();
 });
 
+let closeDialogOpen = false;
+ipcRenderer.on('desktop:request-close', async () => {
+    if (closeDialogOpen) return;
+    closeDialogOpen = true;
+    let shouldClose = false;
+    try {
+        await waitForApplication();
+        const dirtyWorkspaces = app.getDocumentWorkspaces().filter(workspace => workspace.isDirty());
+        if (dirtyWorkspaces.length === 0) {
+            shouldClose = true;
+        } else {
+            const choice = await DocumentIO.showUnsavedChangesDialog(dirtyWorkspaces);
+            shouldClose = choice === 'discard'
+                || (choice === 'save' && await DocumentIO.saveAll());
+        }
+    } catch (error) {
+        console.error('Could not finish the close request', error);
+    } finally {
+        closeDialogOpen = false;
+        ipcRenderer.send('desktop:close-response', shouldClose);
+    }
+});
+
+void waitForApplication().then(() => ipcRenderer.send('desktop:close-dialog-ready'));
+
 const openLocalFiles = async filenames => {
     await waitForApplication();
     const files = [];

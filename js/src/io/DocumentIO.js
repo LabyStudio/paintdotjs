@@ -6,9 +6,10 @@ class DocumentIO {
         this.app = app;
 
         window.addEventListener("beforeunload", event => {
-            if (!app.hasUnsavedDocuments()) return;
+            if (isApp || !app.hasUnsavedDocuments() || Date.now() < this.allowWebCloseUntil) return;
             event.preventDefault();
             event.returnValue = "";
+            this.scheduleWebCloseDialog();
         });
         // Browser image elements are draggable by default. App icons can then
         // arrive at the document drop handler as file payloads and accidentally
@@ -38,6 +39,111 @@ class DocumentIO {
                 event.preventDefault();
                 this.pasteBlob(file);
             }
+        });
+    }
+
+    static scheduleWebCloseDialog() {
+        if (this.webCloseDialogScheduled || this.webCloseDialogOpen) return;
+        this.webCloseDialogScheduled = true;
+        setTimeout(async () => {
+            this.webCloseDialogScheduled = false;
+            if (!this.app.hasUnsavedDocuments() || this.webCloseDialogOpen) return;
+            this.webCloseDialogOpen = true;
+            try {
+                const dirtyWorkspaces = this.app.getDocumentWorkspaces()
+                    .filter(workspace => workspace.isDirty());
+                const choice = await this.showUnsavedChangesDialog(dirtyWorkspaces, false);
+                if (choice === "save") {
+                    if (await this.saveAll()) this.exitWebApp();
+                } else if (choice === "discard") {
+                    this.exitWebApp();
+                }
+            } finally {
+                this.webCloseDialogOpen = false;
+            }
+        }, 0);
+    }
+
+    static exitWebApp() {
+        // Browsers only permit scripts to close script-opened tabs. Try to close first;
+        // if this is a normal user-opened tab, leave the app instead of doing nothing.
+        this.allowWebCloseUntil = Date.now() + 10000;
+        window.close();
+        setTimeout(() => {
+            if (!document.hidden) window.location.replace("about:blank");
+        }, 100);
+    }
+
+    static createUnsavedChangesPreview(workspaces) {
+        const preview = document.createElement("div");
+        preview.className = "unsaved-changes-preview";
+
+        const explanation = document.createElement("p");
+        explanation.textContent = "The following images have changes that have not been saved. " +
+            "Select a thumbnail to show that image in the main window.";
+
+        const strip = document.createElement("div");
+        strip.className = "unsaved-changes-thumbnails";
+        const buttons = [];
+        const selectWorkspace = workspace => {
+            this.app.setActiveDocumentWorkspace(workspace);
+            for (const entry of buttons) {
+                entry.button.classList.toggle("selected", entry.workspace === workspace);
+            }
+        };
+
+        for (const workspace of workspaces) {
+            workspace.updateComposition();
+            const source = workspace.getCompositionSurface().getCanvas();
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "unsaved-changes-thumbnail";
+            button.title = workspace.getFriendlyName();
+
+            const canvas = document.createElement("canvas");
+            const scale = Math.min(1, 80 / source.width, 64 / source.height);
+            canvas.width = Math.max(1, Math.round(source.width * scale));
+            canvas.height = Math.max(1, Math.round(source.height * scale));
+            canvas.getContext("2d").drawImage(source, 0, 0, canvas.width, canvas.height);
+
+            const name = document.createElement("span");
+            name.textContent = workspace.getFriendlyName();
+            button.append(canvas, name);
+            button.onclick = () => selectWorkspace(workspace);
+            strip.appendChild(button);
+            buttons.push({button, workspace});
+        }
+
+        preview.append(explanation, strip);
+        selectWorkspace(this.app.getActiveDocumentWorkspace());
+        return preview;
+    }
+
+    static showUnsavedChangesDialog(workspaces, canCloseImmediately = true) {
+        return TaskDialog.show({
+            title: "Unsaved Changes",
+            className: "unsaved-changes-dialog",
+            icon: "assets/icons/warning_icon.png",
+            preview: this.createUnsavedChangesPreview(workspaces),
+            cancelValue: "cancel",
+            choices: [{
+                value: "save",
+                title: "Save",
+                description: "Save the images listed above, and then exit.",
+                icon: "assets/icons/menu_file_save_all_icon.png"
+            }, {
+                value: "discard",
+                title: "Don't Save",
+                description: canCloseImmediately
+                    ? "Discard all unsaved changes, and then exit."
+                    : "Discard all unsaved changes, and then exit paint.js.",
+                icon: "assets/icons/menu_file_close_icon.png"
+            }, {
+                value: "cancel",
+                title: "Cancel",
+                description: "Go back to paint.js.",
+                icon: "assets/icons/cancel_icon.png"
+            }]
         });
     }
 
@@ -1230,3 +1336,6 @@ DocumentIO.initialized = false;
 DocumentIO.app = null;
 DocumentIO.internalClipboard = null;
 DocumentIO.internalSelectionPath = null;
+DocumentIO.webCloseDialogScheduled = false;
+DocumentIO.webCloseDialogOpen = false;
+DocumentIO.allowWebCloseUntil = 0;
