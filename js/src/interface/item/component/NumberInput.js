@@ -22,6 +22,7 @@ class NumberInput {
             attributeFilter: ["disabled", "readonly"]
         });
         updateDisabledState();
+        this.enableKeyboardStepping(input);
         buttons.append(up, down);
         wrapper.append(input, buttons);
         input._numberInputWrapper = wrapper;
@@ -45,12 +46,7 @@ class NumberInput {
             repeatInterval = null;
         };
         const step = () => {
-            if (input.disabled || input.readOnly) return;
-            const previous = input.value;
-            if (direction > 0) input.stepUp(); else input.stepDown();
-            if (input.value === previous) return;
-            input.dispatchEvent(new Event("input", {bubbles: true}));
-            input.dispatchEvent(new Event("change", {bubbles: true}));
+            this.stepInput(input, direction);
         };
         button.onpointerdown = event => {
             if (event.button !== 0 || input.disabled || input.readOnly) return;
@@ -66,5 +62,30 @@ class NumberInput {
         button.onlostpointercapture = stopRepeating;
         button.onclick = event => event.preventDefault();
         return button;
+    }
+
+    static enableKeyboardStepping(input, customStep = null) {
+        if (input._numberInputKeyboardStepping) return;
+        input._numberInputKeyboardStepping = true;
+        input.addEventListener("keydown", event => {
+            if ((event.key !== "ArrowUp" && event.key !== "ArrowDown")
+                || event.altKey || event.ctrlKey || event.metaKey
+                || input.disabled || input.readOnly || event.isComposing) return;
+
+            event.preventDefault();
+            const direction = event.key === "ArrowUp" ? 1 : -1;
+            if (customStep === null) this.stepInput(input, direction);
+            else customStep(direction);
+        });
+    }
+
+    static stepInput(input, direction) {
+        if (input.disabled || input.readOnly) return false;
+        const previous = input.value;
+        if (direction > 0) input.stepUp(); else input.stepDown();
+        if (input.value === previous) return false;
+        input.dispatchEvent(new Event("input", {bubbles: true}));
+        input.dispatchEvent(new Event("change", {bubbles: true}));
+        return true;
     }
 }

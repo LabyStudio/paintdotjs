@@ -465,6 +465,12 @@ class ToolMenu extends StripPanel {
                     input.value = value;
                     this.updateSetting(type, definition.key, value);
                 };
+                NumberInput.enableKeyboardStepping(input, direction => {
+                    const entered = Number(input.value);
+                    const value = Number.isFinite(entered)
+                        ? entered : Number(type.getSetting(definition.key));
+                    change(value + direction * definition.step);
+                });
                 input.oninput = () => {
                     if (input.value !== "" && Number.isFinite(Number(input.value))) {
                         this.updateSetting(type, definition.key,
