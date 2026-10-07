@@ -282,11 +282,18 @@ class ToolType {
     setSettings(settings) {
         this.defaultSettings = Object.assign({}, this.defaultSettings, settings);
         this.settings = Object.assign({}, settings, this.settings);
+        if (Object.prototype.hasOwnProperty.call(settings, "renderingQuality")) {
+            this.settings.renderingQuality = ToolType.getSelectionRenderingQuality(
+                this.settings.renderingQuality);
+        }
         return this;
     }
 
     resetSettings() {
         this.settings = Object.assign({}, this.defaultSettings);
+        if (Object.prototype.hasOwnProperty.call(this.defaultSettings, "renderingQuality")) {
+            ToolType.setSelectionRenderingQuality(this.defaultSettings.renderingQuality);
+        }
         try {
             window.localStorage.removeItem("paintdotjs.toolSettings." + this.id);
         } catch (_) {
@@ -295,12 +302,21 @@ class ToolType {
     }
 
     getSetting(name, fallback = null) {
+        if (name === "renderingQuality"
+            && Object.prototype.hasOwnProperty.call(this.defaultSettings, name)) {
+            return ToolType.getSelectionRenderingQuality(fallback);
+        }
         return Object.prototype.hasOwnProperty.call(this.settings, name)
             ? this.settings[name]
             : fallback;
     }
 
     setSetting(name, value) {
+        if (name === "renderingQuality"
+            && Object.prototype.hasOwnProperty.call(this.defaultSettings, name)) {
+            ToolType.setSelectionRenderingQuality(value);
+            return;
+        }
         this.settings[name] = value;
         try {
             window.localStorage.setItem(
@@ -319,5 +335,51 @@ class ToolType {
             }
         }
         return null;
+    }
+
+    static getSelectionRenderingQuality(fallback = "high") {
+        if (ToolType.selectionRenderingQuality !== undefined) {
+            return ToolType.selectionRenderingQuality;
+        }
+
+        let quality = null;
+        try {
+            quality = window.localStorage.getItem("paintdotjs.selectionRenderingQuality");
+        } catch (_) {
+            // Fall back to the settings saved by older paint.js versions.
+        }
+        if (quality !== "high" && quality !== "aliased") {
+            // Before this setting was shared, each tool persisted its own copy.
+            // Prefer an explicitly saved selection-tool value when migrating.
+            const selectionTypes = [
+                ToolType.MOVE_SELECTION,
+                ToolType.RECTANGLE_SELECT,
+                ToolType.LASSO_SELECT,
+                ToolType.ELLIPSE_SELECT,
+                ToolType.MAGIC_WAND,
+                ToolType.MOVE
+            ];
+            const saved = selectionTypes.find(type =>
+                type.settings.renderingQuality === "high"
+                || type.settings.renderingQuality === "aliased");
+            quality = saved === undefined ? fallback : saved.settings.renderingQuality;
+        }
+        ToolType.selectionRenderingQuality = quality === "aliased" ? "aliased" : "high";
+        return ToolType.selectionRenderingQuality;
+    }
+
+    static setSelectionRenderingQuality(value) {
+        const quality = value === "aliased" ? "aliased" : "high";
+        ToolType.selectionRenderingQuality = quality;
+        for (const type of ToolType.VALUES) {
+            if (Object.prototype.hasOwnProperty.call(type.defaultSettings, "renderingQuality")) {
+                type.settings.renderingQuality = quality;
+            }
+        }
+        try {
+            window.localStorage.setItem("paintdotjs.selectionRenderingQuality", quality);
+        } catch (_) {
+            // Keep the shared in-memory value when persistence is unavailable.
+        }
     }
 }

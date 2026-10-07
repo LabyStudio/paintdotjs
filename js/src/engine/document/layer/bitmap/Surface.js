@@ -181,6 +181,8 @@ class Surface {
         // normal source-over compositing.
         this.context.clearRect(clipped.x, clipped.y, clipped.width, clipped.height);
         this.context.save();
+        this.context.globalCompositeOperation = "source-over";
+        this.context.globalAlpha = 1;
         this.context.imageSmoothingEnabled = false;
         this.context.drawImage(
             source.canvas,

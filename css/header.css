@@ -331,6 +331,11 @@ header {
     white-space: nowrap;
 }
 
+#toolMenu .tool-dropdown-fit-selected .tool-dropdown-value-label {
+    flex: 0 1 auto;
+    padding-right: 4px;
+}
+
 #toolMenu .tool-dropdown-arrow {
     position: relative;
     align-self: stretch;
@@ -386,6 +391,15 @@ header {
     border-left-width: 3px;
     border-right-width: 3px;
     border-top-color: var(--pdn-text);
+}
+
+#toolMenu .tool-dropdown-toolbar.tool-dropdown-split .tool-dropdown-arrow:after {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid var(--pdn-text, var(--color-menu-item-text));
 }
 
 #toolMenu .tool-option input[type="number"] {

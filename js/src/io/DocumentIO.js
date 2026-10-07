@@ -939,6 +939,10 @@ class DocumentIO {
             );
         }
         const activeLayer = workspace.getActiveLayer();
+        // Keep the pixels from before the paste separate from the floating
+        // bitmap. MoveTool uses this underlay while the paste is still being
+        // positioned, so transparent areas can never erase existing artwork.
+        const pasteUnderlay = activeLayer.getSurface().clone();
         if (!expand) {
             history = new BitmapHistoryMemento(
                 "Paste",
@@ -961,10 +965,9 @@ class DocumentIO {
         selection.commitContinuation();
         selection.pop();
         this.app.setActiveToolFromType(ToolType.MOVE);
-        if (preserveOverflow) {
-            const moveTool = this.app.getActiveTool();
-            if (moveTool instanceof MoveTool) moveTool.setPendingPaste(image);
-        }
+        const moveTool = this.app.getActiveTool();
+        if (moveTool instanceof MoveTool) moveTool.setPendingPaste(image, pasteUnderlay);
+        pasteUnderlay.dispose();
         workspace.setDirty(true);
         if (typeof image.close === "function") image.close();
         return true;

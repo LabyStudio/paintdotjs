@@ -35,8 +35,9 @@ class ToolMenu extends StripPanel {
     }
 
     getOptionDefinitions(type) {
-        const choices = (label, key, values, width = null, toolbar = false, split = false) => (
-            {kind: "select", label, key, values, width, toolbar, split}
+        const choices = (label, key, values, width = null, toolbar = false, split = false,
+            fitSelected = false) => (
+            {kind: "select", label, key, values, width, toolbar, split, fitSelected}
         );
         const number = (label, key, min, max, step = 1, suffix = "") => (
             {kind: "number", label, key, min, max, step, suffix}
@@ -175,7 +176,7 @@ class ToolMenu extends StripPanel {
             case "ellipseSelectTool":
                 return [combine];
             case "moveSelectionTool":
-                return [finish];
+                return [quality, section(finish)];
             case "moveTool":
                 return [
                     choices("Sampling:", "resampling", [
@@ -184,11 +185,12 @@ class ToolMenu extends StripPanel {
                         ["multisampleLinear", "Multisample Bilinear"],
                         ["anisotropic", "Anisotropic"],
                         ["highQualityCubic", "Bicubic"]
-                    ], 166, true, true),
+                    ], 166, true, true, true),
                     section(iconChoice("", "gammaCorrected", [
                         [true, "Gamma Corrected", "enum_tool_gamma_mode_linear.png"],
                         [false, "Companded", "enum_tool_gamma_mode_companded.png"]
                     ])),
+                    quality,
                     section(finish)
                 ];
             case "zoomTool":
@@ -429,6 +431,7 @@ class ToolMenu extends StripPanel {
                     menuCheckmarks: definition.split,
                     menuWidth: definition.menuWidth,
                     fontPreview: definition.fontPreview,
+                    fitSelected: definition.fitSelected,
                     onChange: value => this.updateSetting(type, definition.key, value)
                 }).getElement();
             } else if (definition.kind === "size") {
@@ -619,7 +622,8 @@ class ToolMenu extends StripPanel {
                     updatePressed();
                 };
             }
-            if (definition.width !== null && definition.width !== undefined) {
+            if (!definition.fitSelected
+                && definition.width !== null && definition.width !== undefined) {
                 control.style.width = definition.width + "px";
                 control.style.minWidth = definition.width + "px";
             }

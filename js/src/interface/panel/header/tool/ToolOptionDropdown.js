@@ -24,8 +24,12 @@ class ToolOptionDropdown {
             + (options.iconOnly ? "tool-dropdown-icon" : "tool-dropdown-text")
             + (options.toolbar ? " tool-dropdown-toolbar" : " tool-dropdown-field");
         if (options.cycleOnMainClick) this.element.classList.add("tool-dropdown-split");
-        this.element.style.width = options.width + "px";
-        this.element.style.minWidth = options.width + "px";
+        if (options.fitSelected) {
+            this.element.classList.add("tool-dropdown-fit-selected");
+        } else {
+            this.element.style.width = options.width + "px";
+            this.element.style.minWidth = options.width + "px";
+        }
 
         if (options.leadingIcon) {
             this.leadingIcon = document.createElement("img");

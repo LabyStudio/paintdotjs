@@ -11,12 +11,23 @@ class MoveTool extends MoveToolBase {
         this.renderArgs = null;
         this.didPaste = false;
         this.pendingPasteSurface = null;
+        this.pendingPasteUnderlay = null;
         this.pendingMoveFrame = null;
         this.pendingMovePoint = null;
         this.processingMoveFrame = false;
+        this.exactPreviewRestoreRequired = false;
     }
 
     onActivate() {
+        if (MaskedSurface.gpuRenderer === undefined) {
+            const prepareRenderer = () => MaskedSurface.getGpuRenderer();
+            if (typeof requestIdleCallback === "function") {
+                requestIdleCallback(prepareRenderer, {timeout: 1000});
+            } else {
+                setTimeout(prepareRenderer, 0);
+            }
+        }
+
         // TODO find the texture for the move tool cursor
         // this.app.setCursorImg("move_tool_cursor");
 
@@ -25,6 +36,7 @@ class MoveTool extends MoveToolBase {
         this.context.offset = new Point(0, 0);
         this.context.liftedBounds = this.getSelection().getBounds();
         this.activeLayer = this.getActiveLayer();
+        this.exactPreviewRestoreRequired = false;
 
         if (this.renderArgs !== null) {
             this.renderArgs.dispose();
@@ -63,6 +75,10 @@ class MoveTool extends MoveToolBase {
             this.pendingPasteSurface.dispose();
             this.pendingPasteSurface = null;
         }
+        if (this.pendingPasteUnderlay !== null) {
+            this.pendingPasteUnderlay.dispose();
+            this.pendingPasteUnderlay = null;
+        }
 
         this.tracking = false;
         this.destroyNubs();
@@ -70,14 +86,22 @@ class MoveTool extends MoveToolBase {
         super.onDeactivate();
     }
 
-    setPendingPaste(image) {
+    setPendingPaste(image, underlay = null) {
         if (this.pendingPasteSurface !== null) this.pendingPasteSurface.dispose();
+        if (this.pendingPasteUnderlay !== null) this.pendingPasteUnderlay.dispose();
         this.pendingPasteSurface = Surface.create(image.width, image.height);
         this.pendingPasteSurface.context.drawImage(image, 0, 0);
+        this.pendingPasteUnderlay = underlay === null ? null : underlay.clone();
     }
 
     drop() {
-        this.restorePreview();
+        // The final restore must be synchronous and pixel-exact. The normal
+        // preview restore uses drawImage so dragging stays GPU accelerated,
+        // but Chromium may defer that cross-canvas copy. If the final render
+        // follows immediately, its transparent padding can then expose the
+        // preceding clearRect as an axis-aligned checkerboard outline.
+        this.restorePreview(true);
+        this.exactPreviewRestoreRequired = false;
 
         // Keep the floating-pixel transaction itself in the Finish history
         // entry. Undoing Finish must restore this context before older move
@@ -89,8 +113,15 @@ class MoveTool extends MoveToolBase {
         );
         this.currentHistoryMementos.push(contextAction);
 
-        let regionCopy = this.getSelection().createRegion();
-        let simplifiedRegion = Utility.simplifyAndInflateRegion(regionCopy, Utility.defaultSimplificationFactor, 2);
+        // Capture and invalidate the resampler's complete output footprint.
+        // A rotated bitmap crop can extend beyond the transformed selection by
+        // a pixel before the filter padding is added. Using only the selection
+        // bounds leaves that outer strip stale in the composition surface.
+        const commitBounds = this.context.liftedPixels.getTransformedBounds(
+            this.context.deltaTransform,
+            this.activeLayer.getSurface()
+        );
+        let simplifiedRegion = Region.fromRectangle(commitBounds);
         let bitmapAction2 = new BitmapHistoryMemento(
             this.getName(),
             this.getImage(),
@@ -107,9 +138,6 @@ class MoveTool extends MoveToolBase {
 
         this.activeLayer.invalidate(simplifiedRegion);
         // this.update();
-
-        regionCopy.dispose();
-        regionCopy = null;
 
         let sha = new SelectionHistoryMemento(this.getName(), this.getImage(), this.getDocumentWorkspace());
         this.currentHistoryMementos.push(sha);
@@ -149,21 +177,30 @@ class MoveTool extends MoveToolBase {
     onLift(mouseX, mouseY, button) {
         let liftPath = this.getSelection().createPath();
         let liftRegion = this.getSelection().createRegion();
+        const isPaste = this.pendingPasteSurface !== null;
 
         // Keep one immutable pre-lift image. Preview frames are always rebuilt
         // from this snapshot so transparent pixels and resampling artifacts can
         // never accumulate while dragging or rotating.
-        this.scratchSurface.copySurface(this.activeLayer.getSurface());
+        if (isPaste && this.pendingPasteUnderlay !== null) {
+            this.scratchSurface.copySurface(this.pendingPasteUnderlay);
+        } else {
+            this.scratchSurface.copySurface(this.activeLayer.getSurface());
+        }
 
         // A paste may extend beyond the document. Its visible preview is clipped by
         // the layer canvas, but keep the original source until the floating pixels
         // are committed so dragging can bring the overflow back into view.
         if (this.pendingPasteSurface !== null) {
-            this.context.liftedPixels = new MaskedSurface(this.pendingPasteSurface, liftPath);
+            this.context.liftedPixels = new MaskedSurface(this.pendingPasteSurface, liftPath, true);
             this.pendingPasteSurface.dispose();
             this.pendingPasteSurface = null;
+            if (this.pendingPasteUnderlay !== null) {
+                this.pendingPasteUnderlay.dispose();
+                this.pendingPasteUnderlay = null;
+            }
         } else {
-            this.context.liftedPixels = new MaskedSurface(this.activeLayer.getSurface(), liftPath);
+            this.context.liftedPixels = new MaskedSurface(this.activeLayer.getSurface(), liftPath, true);
         }
 
         let bitmapAction = new BitmapHistoryMemento(
@@ -175,8 +212,12 @@ class MoveTool extends MoveToolBase {
         );
         this.currentHistoryMementos.push(bitmapAction);
 
-        this.context.copying = this.app.isControlKeyDown();
+        // Pasted pixels do not originate in the active layer. Treat them like
+        // copied content so moving the floating paste never erases its source
+        // rectangle from the preserved underlay.
+        this.context.copying = isPaste || this.app.isControlKeyDown();
         this.context.previewBounds = null;
+        this.exactPreviewRestoreRequired = false;
 
         liftRegion.dispose();
         liftRegion = null;
@@ -231,9 +272,13 @@ class MoveTool extends MoveToolBase {
         sourceBounds.inflate(2, 2);
         sourceBounds.intersect(this.activeLayer.getBounds());
 
-        let destinationBounds = Utility.roundRectangle(this.getSelection().getBounds());
-        destinationBounds.inflate(2, 2);
-        destinationBounds.intersect(this.activeLayer.getBounds());
+        // This must match the renderer's actual padded bitmap footprint, not
+        // merely the transformed selection path. The integer source crop may
+        // be up to one pixel larger than that path after rotation.
+        let destinationBounds = this.context.liftedPixels.getTransformedBounds(
+            this.context.deltaTransform,
+            this.activeLayer.getSurface()
+        );
         let previousBounds = this.context.previewBounds;
 
         // TODO wait cursor changer
@@ -261,7 +306,9 @@ class MoveTool extends MoveToolBase {
             this.renderArgs.getSurface(),
             this.context.deltaTransform,
             resampling,
-            !!this.getSetting("gammaCorrected", true)
+            !!this.getSetting("gammaCorrected", true),
+            this.fullQuality,
+            this.getSetting("renderingQuality", "high")
         );
 
         let dirtyRectangles = [sourceBounds, destinationBounds];
@@ -282,7 +329,7 @@ class MoveTool extends MoveToolBase {
         // transaction. Rebuild the floating-pixel preview immediately instead
         // of waiting for another drag or for the selection to be committed.
         this.cancelPendingMove();
-        this.restorePreview();
+        this.restorePreviewBeforeRender();
         const oldFullQuality = this.fullQuality;
         this.fullQuality = true;
         try {
@@ -293,7 +340,13 @@ class MoveTool extends MoveToolBase {
     }
 
     preRender() {
-        this.restorePreview();
+        this.restorePreviewBeforeRender();
+    }
+
+    restorePreviewBeforeRender() {
+        const exact = this.exactPreviewRestoreRequired;
+        this.exactPreviewRestoreRequired = false;
+        this.restorePreview(exact);
     }
 
     cancelPendingMove() {
@@ -335,15 +388,19 @@ class MoveTool extends MoveToolBase {
         return true;
     }
 
-    restorePreview() {
+    restorePreview(exact = false) {
         if (!this.context.lifted || this.context.liftedBounds === null) return;
+        const restore = exact
+            ? (surface, rectangle) => surface.copyRegionFromExact(this.scratchSurface, rectangle)
+            : (surface, rectangle) => surface.copyRegionFrom(this.scratchSurface, rectangle);
+        const surface = this.activeLayer.getSurface();
         let sourceBounds = Utility.roundRectangle(this.context.liftedBounds);
         sourceBounds.inflate(2, 2);
         sourceBounds.intersect(this.activeLayer.getBounds());
-        this.activeLayer.getSurface().copyRegionFrom(this.scratchSurface, sourceBounds);
+        restore(surface, sourceBounds);
 
         if (this.context.previewBounds !== null) {
-            this.activeLayer.getSurface().copyRegionFrom(this.scratchSurface, this.context.previewBounds);
+            restore(surface, this.context.previewBounds);
         }
     }
 
@@ -432,6 +489,15 @@ class MoveTool extends MoveToolBase {
 
         this.destroyNubs();
 
+        if (this.pendingPasteSurface !== null) {
+            this.pendingPasteSurface.dispose();
+            this.pendingPasteSurface = null;
+        }
+        if (this.pendingPasteUnderlay !== null) {
+            this.pendingPasteUnderlay.dispose();
+            this.pendingPasteUnderlay = null;
+        }
+
         if (this.context !== null) {
             this.context.dispose();
             this.context = null;
@@ -445,6 +511,7 @@ class MoveTool extends MoveToolBase {
 
     onExecutingHistoryMemento() {
         this.dontDrop = true;
+        this.exactPreviewRestoreRequired = false;
 
         if (this.context.lifted && this.activeLayer !== null
             && this.scratchSurface !== null) {
@@ -467,7 +534,16 @@ class MoveTool extends MoveToolBase {
             this.render(this.context.offset, true);
             // this.clearSavedMemory();
             this.fullQuality = oldHQ;
+
+            // Undoing Finish revives the floating preview. Its first movement
+            // must restore the position drawn above before painting the new
+            // one. A drawImage-based canvas copy may be deferred until after
+            // that next render, leaving the old position duplicated. Pay for
+            // one synchronous pixel copy on that first restore; subsequent
+            // drag frames keep using the accelerated preview path.
+            this.exactPreviewRestoreRequired = true;
         } else {
+            this.exactPreviewRestoreRequired = false;
             this.destroyNubs();
             this.positionNubs(this.context.currentMode);
         }

@@ -358,10 +358,20 @@ class MoveToolBase extends Tool {
         startWidth,
         startHeight,
         newWidth,
-        newHeight
+        newHeight,
+        scalesHorizontally = true,
+        scalesVertically = true
     ) {
-        let hRatio = newWidth / liftedBounds.getWidth();
-        let vRatio = newHeight / liftedBounds.getHeight();
+        // A side handle only supplies one scale component. Treat the inactive
+        // component as unconstrained so Shift can derive both dimensions from
+        // the side that is actually being dragged, matching Paint.NET's
+        // TransformControl scale calculation.
+        let hRatio = scalesHorizontally
+            ? newWidth / liftedBounds.getWidth()
+            : Number.POSITIVE_INFINITY;
+        let vRatio = scalesVertically
+            ? newHeight / liftedBounds.getHeight()
+            : Number.POSITIVE_INFINITY;
 
         let bestScale = Math.min(hRatio, vRatio);
         let bestWidth = liftedBounds.getWidth() * bestScale;
@@ -677,6 +687,8 @@ class MoveToolBase extends Tool {
                     break;
                 case MoveToolBaseMode.SCALE:
                     let xyAxes = this.getEdgeVector(this.context.startEdge);
+                    const scalesHorizontally = xyAxes.getX() !== 0;
+                    const scalesVertically = xyAxes.getY() !== 0;
                     let xAxis = new Point(xyAxes.getX(), 0);
                     let yAxis = new Point(0, xyAxes.getY());
                     let edgeX = Utility.transformOneVector(interim, xAxis);
@@ -684,8 +696,12 @@ class MoveToolBase extends Tool {
                     let edgeXN = Utility.normalizeVector2(edgeX);
                     let edgeYN = Utility.normalizeVector2(edgeY);
 
-                    let xulen = Math.round(Utility.getProjection(newOffset, edgeXN).yhatLen);
-                    let yulen = Math.round(Utility.getProjection(newOffset, edgeYN).yhatLen);
+                    let xulen = scalesHorizontally
+                        ? Math.round(Utility.getProjection(newOffset, edgeXN).yhatLen)
+                        : 0;
+                    let yulen = scalesVertically
+                        ? Math.round(Utility.getProjection(newOffset, edgeYN).yhatLen)
+                        : 0;
 
                     let startPath2 = this.context.startPath.clone();
                     let sp2Bounds = startPath2.getBounds();
@@ -711,8 +727,6 @@ class MoveToolBase extends Tool {
 
                     let xTranslate;
                     let yTranslate;
-                    let allowConstrain;
-
                     let theEdge = this.context.startEdge;
 
                     // If the transform is flipped, then GetTransformAngle will return 180 degrees
@@ -728,52 +742,55 @@ class MoveToolBase extends Tool {
                             throw new Error("Invalid enum value");
 
                         case MoveToolBaseEdge.TOP_LEFT:
-                            allowConstrain = true;
                             xTranslate = -spBounds2.getLeft() - spBounds2.getWidth();
                             yTranslate = -spBounds2.getTop() - spBounds2.getHeight();
                             break;
 
                         case MoveToolBaseEdge.TOP:
-                            allowConstrain = false;
-                            xTranslate = 0;
+                            xTranslate = -spBounds2.getLeft() - (spBounds2.getWidth() / 2);
                             yTranslate = -spBounds2.getTop() - spBounds2.getHeight();
                             break;
 
                         case MoveToolBaseEdge.TOP_RIGHT:
-                            allowConstrain = true;
                             xTranslate = -spBounds2.getLeft();
                             yTranslate = -spBounds2.getTop() - spBounds2.getHeight();
                             break;
 
                         case MoveToolBaseEdge.LEFT:
-                            allowConstrain = false;
                             xTranslate = -spBounds2.getLeft() - spBounds2.getWidth();
-                            yTranslate = 0;
+                            yTranslate = -spBounds2.getTop() - (spBounds2.getHeight() / 2);
                             break;
 
                         case MoveToolBaseEdge.RIGHT:
-                            allowConstrain = false;
                             xTranslate = -spBounds2.getLeft();
-                            yTranslate = 0;
+                            yTranslate = -spBounds2.getTop() - (spBounds2.getHeight() / 2);
                             break;
 
                         case MoveToolBaseEdge.BOTTOM_LEFT:
-                            allowConstrain = true;
                             xTranslate = -spBounds2.getLeft() - spBounds2.getWidth();
                             yTranslate = -spBounds2.getTop();
                             break;
 
                         case MoveToolBaseEdge.BOTTOM:
-                            allowConstrain = false;
-                            xTranslate = 0;
+                            xTranslate = -spBounds2.getLeft() - (spBounds2.getWidth() / 2);
                             yTranslate = -spBounds2.getTop();
                             break;
 
                         case MoveToolBaseEdge.BOTTOM_RIGHT:
-                            allowConstrain = true;
                             xTranslate = -spBounds2.getLeft();
                             yTranslate = -spBounds2.getTop();
                             break;
+                    }
+
+                    const scaleFromCenter = this.app.isAltKeyDown();
+                    if (scaleFromCenter) {
+                        // Alt moves the opposite edge by the same amount and
+                        // anchors the transform at the center. This applies to
+                        // side handles as well as corner handles.
+                        xulen *= 2;
+                        yulen *= 2;
+                        xTranslate = -spBounds2.getLeft() - (spBounds2.getWidth() / 2);
+                        yTranslate = -spBounds2.getTop() - (spBounds2.getHeight() / 2);
                     }
 
                     let newWidth = spBounds2.getWidth() + xulen;
@@ -781,13 +798,15 @@ class MoveToolBase extends Tool {
                     let xScale = newWidth / spBounds2.getWidth();
                     let yScale = newHeight / spBounds2.getHeight();
 
-                    if (allowConstrain && this.app.isShiftKeyDown()) {
+                    if (this.app.isShiftKeyDown()) {
                         let out3 = this.constrainScaling(
                             this.context.liftedBounds,
                             spBounds2.getWidth(),
                             spBounds2.getHeight(),
                             newWidth,
-                            newHeight
+                            newHeight,
+                            scalesHorizontally,
+                            scalesVertically
                         );
 
                         xScale = out3.width;
