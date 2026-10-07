@@ -6,6 +6,7 @@ const {execFileSync} = require('child_process');
 const current = require('../../package.json');
 const manual = process.env.GITHUB_EVENT_NAME === 'workflow_dispatch';
 let previousVersion = null;
+let previousSha = '';
 
 if (!manual) {
     const before = process.env.BEFORE_SHA;
@@ -19,12 +20,14 @@ if (!manual) {
         {encoding: 'utf8'}
     );
     previousVersion = JSON.parse(previousPackage).version;
+    previousSha = before;
 }
 
 const changed = manual || current.version !== previousVersion;
 fs.appendFileSync(
     process.env.GITHUB_OUTPUT,
     `changed=${changed}\n` +
+    `previous_sha=${previousSha}\n` +
     `version=${current.version}\n` +
     `paintdotnet=${current.paintdotjs.paintDotNetVersion}\n` +
     `paintdotnet_sha256=${current.paintdotjs.paintDotNetSha256}\n`

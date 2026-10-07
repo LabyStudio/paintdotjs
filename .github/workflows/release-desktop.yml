@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release: ${{ steps.version.outputs.changed }}
+      previous_sha: ${{ steps.version.outputs.previous_sha }}
       version: ${{ steps.version.outputs.version }}
       paintdotnet: ${{ steps.version.outputs.paintdotnet }}
       paintdotnet_sha256: ${{ steps.version.outputs.paintdotnet_sha256 }}
@@ -125,15 +126,21 @@ jobs:
           merge-multiple: true
       - name: Generate release notes
         env:
+          PREVIOUS_SHA: ${{ needs.version.outputs.previous_sha }}
           VERSION: ${{ needs.version.outputs.version }}
         run: |
-          previous_tag=$(git describe --tags --abbrev=0 "$GITHUB_SHA^" 2>/dev/null || true)
-          if [ -n "$previous_tag" ]; then
-            commit_range="${previous_tag}..${GITHUB_SHA}"
-            changelog_url="https://github.com/${GITHUB_REPOSITORY}/compare/${previous_tag}...v${VERSION}"
+          if [ -n "$PREVIOUS_SHA" ] && git cat-file -e "${PREVIOUS_SHA}^{commit}" 2>/dev/null; then
+            commit_range="${PREVIOUS_SHA}..${GITHUB_SHA}"
+            changelog_url="https://github.com/${GITHUB_REPOSITORY}/compare/${PREVIOUS_SHA}...v${VERSION}"
           else
-            commit_range="$GITHUB_SHA"
-            changelog_url="https://github.com/${GITHUB_REPOSITORY}/commits/v${VERSION}"
+            previous_tag=$(git describe --tags --abbrev=0 "$GITHUB_SHA^" 2>/dev/null || true)
+            if [ -n "$previous_tag" ]; then
+              commit_range="${previous_tag}..${GITHUB_SHA}"
+              changelog_url="https://github.com/${GITHUB_REPOSITORY}/compare/${previous_tag}...v${VERSION}"
+            else
+              commit_range="$GITHUB_SHA"
+              changelog_url="https://github.com/${GITHUB_REPOSITORY}/commits/v${VERSION}"
+            fi
           fi
           {
             echo '## What changed'
