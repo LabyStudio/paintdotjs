@@ -128,11 +128,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           pattern: desktop-*
           path: release-artifacts
           merge-multiple: true
+      - name: Generate release notes
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          previous_tag=$(git describe --tags --abbrev=0 "$GITHUB_SHA^" 2>/dev/null || true)
+          if [ -n "$previous_tag" ]; then
+            commit_range="${previous_tag}..${GITHUB_SHA}"
+            changelog_url="https://github.com/${GITHUB_REPOSITORY}/compare/${previous_tag}...v${VERSION}"
+          else
+            commit_range="$GITHUB_SHA"
+            changelog_url="https://github.com/${GITHUB_REPOSITORY}/commits/v${VERSION}"
+          fi
+          {
+            echo '## What changed'
+            echo
+            git log --reverse --no-merges --pretty='- %s (`%h`)' "$commit_range"
+            echo
+            echo "**Full Changelog**: ${changelog_url}"
+          } > release-notes.md
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -140,7 +161,7 @@ jobs:
           gh release create "v${{ needs.version.outputs.version }}" release-artifacts/* \
             --target "$GITHUB_SHA" \
             --title "paint.js ${{ needs.version.outputs.version }}" \
-            --generate-notes
+            --notes-file release-notes.md
 
   aur:
     needs: [version, release]
