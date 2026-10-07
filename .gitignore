@@ -1,5 +1,6 @@
 /dist/
 /dist-electron/
+/build/
 /pages-dist/
 index.php
 electron-builder.env

@@ -1,4 +1,5 @@
 const {DefinePlugin, ProvidePlugin} = require('webpack')
+const path = require('node:path')
 
 module.exports = {
     mode: 'production',
@@ -7,7 +8,8 @@ module.exports = {
     devtool: 'eval-source-map',
     output: {
         filename: 'bundle.js',
-        path: __dirname
+        path: path.resolve(__dirname, 'build/web'),
+        clean: true
     },
     resolve: {
         fallback: {

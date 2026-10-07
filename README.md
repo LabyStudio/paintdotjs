@@ -153,7 +153,7 @@ application-data directory. AUR builds perform the same extraction during `makep
 
 ### 3. Build and run the web app
 
-Build the JavaScript bundle and offline service worker:
+Build the JavaScript bundle into `build/web/`:
 
 ```bash
 npm run web
@@ -179,13 +179,18 @@ npm run web-watch
 Keep a local HTTP server running in a second terminal. Localhost development deliberately disables
 the service worker so stale cached files do not hide source changes.
 
+The complete offline-capable deployment is assembled separately in `pages-dist/` by
+`npm run pages`. Only that deployment is compiled and minified; the root application keeps its
+individual readable source scripts for local debugging. Generated bundles and service-worker files
+therefore stay out of the source root.
+
 Other useful commands:
 
 ```bash
-npm run web       # production web bundle and service worker
-npm run pages     # build the GitHub Pages output
+npm run web       # production web bundle in build/web
+npm run pages     # complete GitHub Pages output in pages-dist
 npm run dist      # package the Electron application
-npm run pwa       # regenerate only the service worker
+npm run pwa       # reassemble pages-dist and regenerate its service worker
 ```
 
 ## License

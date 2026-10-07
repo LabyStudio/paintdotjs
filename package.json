@@ -17,11 +17,11 @@
   "scripts": {
     "check-assets": "node ./scripts/check_assets.js",
     "preweb": "npm run check-assets",
-    "web": "webpack --config webpack.config.js && node ./scripts/generate_pwa.js",
-    "pages": "npm run web && node ./scripts/build_pages.js",
+    "web": "webpack --config webpack.config.js",
+    "pages": "npm run web && node ./scripts/build_pages.js && node ./scripts/generate_pwa.js",
     "preweb-watch": "npm run check-assets",
     "web-watch": "webpack --config webpack.config.js --watch",
-    "preapp": "npm run check-assets",
+    "preapp": "npm run desktop:build",
     "app": "electron .",
     "predesktop:build": "npm run check-assets",
     "desktop:build": "webpack --config webpack.config.js",
@@ -30,7 +30,7 @@
     "dist:mac": "npm run desktop:build && electron-builder --mac dmg zip --universal",
     "assets:manifest": "node ./scripts/check_assets.js --refresh-manifest",
     "gen-imports": "node ./scripts/generate_imports.js",
-    "pwa": "node ./scripts/generate_pwa.js",
+    "pwa": "npm run pages",
     "prepublish": "npm run web"
   },
   "keywords": [
@@ -49,6 +49,7 @@
   "devDependencies": {
     "electron": "44.5.1",
     "electron-builder": "^26.15.3",
+    "terser": "^5.39.0",
     "webpack": "^5.74.0",
     "webpack-cli": "^5.1.4",
     "workbox-build": "^6.5.3"
@@ -70,6 +71,7 @@
     "asar": true,
     "files": [
       "**/*",
+      "build/web/**/*",
       "!assets/**/*",
       "!pages-dist/**/*",
       "!dist/**/*",

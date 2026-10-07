@@ -2,18 +2,24 @@ const workbox = require('workbox-build');
 const fs = require('fs');
 const path = require('path');
 const packageJson = require('../package.json');
+const root = path.resolve(__dirname, '..');
+const output = path.join(root, 'pages-dist');
+
+if (!fs.existsSync(path.join(output, 'index.html'))) {
+	throw new Error('Missing Pages build. Run scripts/build_pages.js before generating the PWA.');
+}
 
 // Keep the public social-card URL stable while using the project screenshot as
 // its source. Social crawlers do not execute the application JavaScript.
 fs.copyFileSync(
-	path.resolve(__dirname, '../.github/assets/app.png'),
-	path.resolve(__dirname, '../assets/social-preview.png')
+	path.join(root, '.github/assets/app.png'),
+	path.join(output, 'assets/social-preview.png')
 );
 
 // This file deliberately stays out of the precache. An already-installed
 // version must be able to ask the server which build is currently deployed.
 fs.writeFileSync(
-	path.resolve(__dirname, '../assets/update.json'),
+	path.join(output, 'assets/update.json'),
 	JSON.stringify({version: packageJson.version}) + '\n'
 );
 
@@ -27,22 +33,18 @@ workbox.generateSW({
 	// v is used by index.html to force an old worker to fetch the current
 	// bootstrap. The current worker may ignore it so deployed PWAs stay offline.
 	ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
-	globDirectory: './',
+	globDirectory: output,
 	globPatterns: [
 		'./index.html',
-		'./favicon.png',
-		'./icon_maskable.png',
 
-		'./js/**/*',
-		'./*.bundle.js',
-		'./lib/**/*',
+		'./build/web/**/*',
 		'./css/**/*',
 		'./assets/**/*',
 		'./font/*',
 		'./run/test.png',
 	],
 	globIgnores: ['./assets/update.json'],
-	swDest: './service_worker.js',
+	swDest: path.join(output, 'service_worker.js'),
 	// The image codec is deliberately lazy-loaded, but must still be available
 	// to installed/offline PWAs once it has shipped with the app.
 	maximumFileSizeToCacheInBytes: 20_000_000,
