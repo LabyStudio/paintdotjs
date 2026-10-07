@@ -23,6 +23,7 @@
     "web-watch": "webpack --config webpack.config.js --watch",
     "preapp": "npm run check-assets",
     "app": "electron .",
+    "predesktop:build": "npm run check-assets",
     "desktop:build": "webpack --config webpack.config.js",
     "dist": "npm run desktop:build && electron-builder",
     "dist:linux": "npm run desktop:build && electron-builder --linux AppImage",
