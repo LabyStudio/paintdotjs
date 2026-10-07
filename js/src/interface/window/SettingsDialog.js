@@ -71,7 +71,8 @@ class AppSettingsStore {
         }
 
         this.apply();
-        if (path.startsWith("canvas.") && window.app !== undefined) {
+        if ((path.startsWith("canvas.") || path === "ui.colorScheme")
+            && window.app !== undefined) {
             const workspace = window.app.getActiveDocumentWorkspace?.();
             workspace?.getDocument()?.invalidate();
         }
@@ -134,6 +135,9 @@ class AppSettingsStore {
             if (this.get("ui.colorScheme", "default") !== "default") return;
 
             this.apply();
+            if (window.app !== undefined) {
+                window.app.getActiveDocumentWorkspace?.()?.getDocument()?.invalidate();
+            }
             window.dispatchEvent(new CustomEvent("paintdotjs:theme-changed", {
                 detail: {colorScheme: document.documentElement.dataset.colorScheme, preference: "default"}
             }));

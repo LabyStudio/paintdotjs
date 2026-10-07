@@ -111,7 +111,7 @@ class TextTool extends DrawingTool {
 
     onKeyPress(key) {
         if (!this.pending) return false;
-        if (key === "Escape") return this.cancelPending();
+        if (key === "Escape") return this.commitPending();
         return false;
     }
 
@@ -151,7 +151,7 @@ class TextTool extends DrawingTool {
             if (event.key === "Escape") {
                 event.preventDefault();
                 event.stopPropagation();
-                this.cancelPending();
+                this.commitPending();
             } else if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
                 event.preventDefault();
                 event.stopPropagation();

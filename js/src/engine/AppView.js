@@ -442,9 +442,13 @@ class AppView {
     }
 
     cursorCss(url, name = null) {
-        // Cursor resources have individual native hotspots. The text cursor's
-        // insertion point is the center of its I-beam; 10,10 is the brush tip.
-        const hotspot = name === "text_tool_cursor" ? [16, 16] : [10, 10];
+        // Cursor resources have individual native hotspots. Selection cursors
+        // use the crosshair at the center of their 33x33 bitmap. Pointing them
+        // at the generic brush hotspot offsets the visible target by 6 screen
+        // pixels, which can become several document pixels when zoomed out.
+        const centered = name === "text_tool_cursor"
+            || /^(rectangle_select|lasso_select|ellipse_select|magic_wand)_tool_/.test(name || "");
+        const hotspot = centered ? [16, 16] : [10, 10];
         return `url('${url}') ${hotspot[0]} ${hotspot[1]}, auto`;
     }
 

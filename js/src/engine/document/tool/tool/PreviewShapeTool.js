@@ -153,14 +153,9 @@ class PreviewShapeTool extends DrawingTool {
             return true;
         }
         if (key === "Escape") {
-            if (this.pending && this.drawHistoryPushed) {
-                // Ending the drawing placed the editable shape in history.
-                // Walk back its edit entries and draw entry so Escape cannot
-                // leave a memento that expects a now-missing pending shape.
-                while (this.pending) this.historyStack.stepBackward();
-            } else {
-                this.cancelPending();
-            }
+            // Paint.NET treats Escape as Finish for editable lines, gradients,
+            // and shapes. It removes the edit handles but keeps the pixels.
+            this.commitPending();
             return true;
         }
         return false;

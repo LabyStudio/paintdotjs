@@ -18,10 +18,13 @@ class SurfaceBoxBaseRenderer extends SurfaceBoxRenderer {
             || AppSettingsStore.get("canvas.dropShadow", true);
         context.save();
         if (dropShadow) {
-            context.shadowColor = "rgba(0, 0, 0, .62)";
-            context.shadowBlur = 10;
-            context.shadowOffsetX = 3;
-            context.shadowOffsetY = 4;
+            // Paint.NET's BackgroundCanvasLayer uses a symmetric Gaussian
+            // shadow with a 3 DIP outset and a 1.5 DIP inset. There is no
+            // directional offset; the combined radius is only 4.5 DIPs.
+            context.shadowColor = "rgba(0, 0, 0, .5)";
+            context.shadowBlur = 4.5;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
         }
 
         // Render transparent background pattern. Drawing the shadow with this
@@ -52,18 +55,26 @@ class SurfaceBoxBaseRenderer extends SurfaceBoxRenderer {
             revision
         );
 
-        if (typeof AppSettingsStore !== "undefined"
-            && AppSettingsStore.get("canvas.customBorder", false)) {
-            context.save();
-            context.strokeStyle = AppSettingsStore.get("canvas.borderColor", "#808080");
-            context.lineWidth = 1;
-            context.strokeRect(
-                renderBounds.getX() + .5,
-                renderBounds.getY() + .5,
-                Math.max(0, renderBounds.getWidth() - 1),
-                Math.max(0, renderBounds.getHeight() - 1)
-            );
-            context.restore();
-        }
+        // Paint.NET draws a one-device-pixel neutral hairline on the exact
+        // canvas boundary. Without it, a reduced image exposes the outermost
+        // checkerboard samples and looks like it has a transparent fringe.
+        const customBorder = typeof AppSettingsStore !== "undefined"
+            && AppSettingsStore.get("canvas.customBorder", false);
+        const transform = context.getTransform();
+        const displayScale = Math.max(1, Math.abs(transform.a), Math.abs(transform.d));
+        const lineWidth = 1 / displayScale;
+        context.save();
+        context.strokeStyle = customBorder
+            ? AppSettingsStore.get("canvas.borderColor", "#808080")
+            : getComputedStyle(document.documentElement)
+                .getPropertyValue("--canvas-outline-color").trim() || "#505050";
+        context.lineWidth = lineWidth;
+        context.strokeRect(
+            renderBounds.getX(),
+            renderBounds.getY(),
+            renderBounds.getWidth(),
+            renderBounds.getHeight()
+        );
+        context.restore();
     }
 }

@@ -70,7 +70,7 @@ class PaintBucketTool extends Tool {
     onKeyPress(key) {
         if (!this.pending) return false;
         if (key === "Enter") return this.commitPending();
-        if (key === "Escape") return this.cancelPending();
+        if (key === "Escape") return this.commitPending();
         return false;
     }
 
