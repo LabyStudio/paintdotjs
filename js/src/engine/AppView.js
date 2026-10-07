@@ -32,6 +32,8 @@ class AppView {
         this.gridVisible = false;
         this.rulersVisible = false;
         this.rulerRenderSignature = null;
+        this.lastViewWidth = null;
+        this.lastViewHeight = null;
 
         this.horizontalRuler = document.createElement("canvas");
         this.horizontalRuler.className = "editor-ruler horizontal";
@@ -335,6 +337,8 @@ class AppView {
 
         let viewWidth = this.getViewWidth();
         let viewHeight = this.getViewHeight();
+        const previousViewWidth = this.lastViewWidth ?? viewWidth;
+        const previousViewHeight = this.lastViewHeight ?? viewHeight;
         const displayScale = window.devicePixelRatio || 1;
 
         // The canvas is positioned in CSS pixels, but its backing surface must
@@ -349,24 +353,42 @@ class AppView {
         this.canvas.getContext().setTransform(displayScale, 0, 0, displayScale, 0, 0);
 
         if (documentWorkspace === null) {
+            this.lastViewWidth = viewWidth;
+            this.lastViewHeight = viewHeight;
             return;
         }
 
         let envWidth = documentWorkspace.getEnvironmentWidth();
         let envHeight = documentWorkspace.getEnvironmentHeight();
 
-        let offsetX = this.environment.clientWidth - envWidth;
-        let offsetY = this.environment.clientHeight - envHeight;
+        // Resize the scrollable area before applying its new scroll position.
+        // When a window grows, the centered position may be outside the old
+        // environment's scroll range. Setting it first makes Chromium clamp
+        // it to that old range, leaving the document near a corner once the
+        // environment is enlarged.
+        this.environment.style.width = envWidth + "px";
+        this.environment.style.height = envHeight + "px";
 
-        // Shift the view position so it stays centered
+        // Preserve the document-space point at the center of the viewport.
+        // The environment is deliberately larger than both the viewport and
+        // the document, so half of its size delta is not the viewport delta.
+        // Account only for the viewport change and for the part of the image
+        // that participates in getRenderBounds().
         if (shiftView) {
-            documentWorkspace.shiftViewPosition(-offsetX / 2, -offsetY / 2);
+            const renderWidth = documentWorkspace.getRenderWidth();
+            const renderHeight = documentWorkspace.getRenderHeight();
+            const oldVisibleWidth = Math.min(renderWidth, previousViewWidth);
+            const oldVisibleHeight = Math.min(renderHeight, previousViewHeight);
+            const newVisibleWidth = Math.min(renderWidth, viewWidth);
+            const newVisibleHeight = Math.min(renderHeight, viewHeight);
+            documentWorkspace.shiftViewPosition(
+                ((viewWidth - previousViewWidth) - (newVisibleWidth - oldVisibleWidth)) / 2,
+                ((viewHeight - previousViewHeight) - (newVisibleHeight - oldVisibleHeight)) / 2
+            );
         }
 
-        // Update environment size
-        let environment = document.getElementById("environment")
-        environment.style.width = envWidth + "px";
-        environment.style.height = envHeight + "px";
+        this.lastViewWidth = viewWidth;
+        this.lastViewHeight = viewHeight;
     }
 
     render() {
