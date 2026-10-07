@@ -19,185 +19,117 @@ to bring that same experience to macOS, Linux, and the web.
 
 ![Web application](.github/assets/web.png)
 
-## Features
+## Installation
 
-### Editing workspace
+### Web
 
-- Multiple open documents with document tabs, context menus, unsaved-change tracking, and Save All
-- Zooming, panning, fit-to-window, actual-size, and zoom-to-selection commands
-- Optional pixel grid, rulers, and pixel/inch/centimeter measurements
-- Full undo/redo history with a History window
-- Clipboard operations for pixels and selection outlines
-- Drag and drop images as new documents or layers; the canvas expands when an imported layer is larger
-- Image resizing with pixel/print dimensions, DPI, aspect-ratio, percentage, gamma-correct resampling,
-  and Paint.NET-style filter controls
-- Canvas resizing with synchronized pixel/print dimensions, DPI, nine-point anchoring, and transparent,
-  primary, secondary, white, or black fill
-- Crop, flatten, flip, and rotate commands for documents and layers
-- Browser printing and offline-capable deployed web builds
+Use paint.js directly at [paintjs.net](https://paintjs.net/). No installation is required.
 
-### Layers
+### Arch Linux
 
-- Add, delete, duplicate, rename, show/hide, reorder, merge down, and flatten
-- Layer opacity and Paint.NET-style blend modes
-- Import images and `.pdn` documents as layers
-- Layers, History, Colors, and Tools windows modeled after the Paint.NET interface
+Install [`paintdotjs-bin`](https://aur.archlinux.org/packages/paintdotjs-bin) from the AUR with an
+AUR helper, for example:
 
-### Tools
+```bash
+yay -S paintdotjs-bin
+```
 
-All 19 tools in the current toolbox are usable:
+During installation, the AUR package fetches the required artwork and translations from the official
+Paint.NET download.
 
-- Rectangle, ellipse, lasso, and magic-wand selections
-- Move selected pixels and move selection, including resize and rotation handles
-- Zoom and pan
-- Paint bucket, gradient, paintbrush, eraser, and pencil
-- Color picker, clone stamp, and recolor
-- Text, line/curve, and shapes
+### macOS
 
-Tool-specific options include brush size, hardness, spacing, pressure, smoothing, antialiasing,
-tolerance, sampling mode, fill and blend modes, line caps/dashes, fonts, gradient modes, selection
-combining, and rendering quality. Tool defaults and keyboard shortcuts are persisted locally.
+Download the latest universal `.dmg` from [GitHub Releases](https://github.com/LabyStudio/paintdotjs/releases/latest),
+open it, and drag paint.js into the Applications folder.
 
-The Shapes tool includes the Paint.NET-style grouped picker for basic shapes, polygons and stars,
-arrows, callouts, symbols, and a large custom-shape catalog.
+The macOS app fetches the required artwork and translations from the official Paint.NET download on
+first launch.
 
-### Adjustments and effects
+## Differences from Paint.NET
 
-- Adjustments including Auto-Level, Black and White, Brightness/Contrast, Curves, Exposure,
-  Highlights/Shadows, Hue/Saturation, Invert Alpha/Colors, Levels, Posterize, Sepia, and
-  Temperature/Tint
-- Effects grouped under Artistic, Blurs, Color, Distort, Noise, Object, Photo, Render, and Stylize
-- Configurable effects use a live preview dialog and integrate with undo/redo
-- Rotate/Zoom supports rotation, tilt, panning, zooming, sampling, and tiling
+paint.js is largely feature-complete and closely reproduces the Paint.NET experience, but there are
+still some additions and limitations worth noting.
 
-### File support
+### Added in paint.js
 
-The combined Save Configuration window lets you choose the format and shows a zoomable encoded
-preview with the resulting file size. JPEG also provides quality and chroma-subsampling controls.
+- Runs on macOS, Linux, Windows, and the web through a shared JavaScript codebase, with an Electron
+  desktop application for a more native experience.
+- A **Fonts** settings page lets you add font files by picker or drag and drop, preview installed
+  fonts, and remove individual fonts or clear them all. Added fonts are stored locally and are
+  available in the Text tool.
+- A searchable **Keyboard** settings page lets you rebind, clear, and reset keyboard shortcuts.
+- Interface, canvas, tool, pen, window, and dialog preferences are stored locally and restored across
+  sessions.
+- The deployed web version can work offline and provides browser-oriented file, clipboard, and drag
+  and drop workflows.
 
-| Format | Open | Save | Notes |
-| --- | :---: | :---: | --- |
-| Paint.NET (`.pdn`) | Yes | Yes | Native PDN3 bitmap layers; currently limited to 1–64 layers |
-| PNG | Yes | Yes | Preserves transparency |
-| JPEG (`.jpg`, `.jpeg`, `.jpe`) | Yes | Yes | Quality, chroma subsampling, live preview, and file size |
-| JPEG XL (`.jxl`) | Yes | Yes | Encoded/decoded with the bundled portable codec |
-| AVIF | Yes | Yes | Native browser support is used when available, with a portable fallback |
-| HEIC/HEIF | Yes | Yes | Encoded/decoded with the bundled portable codec when needed |
-| WebP | Yes | Yes | Quality control; requires browser WebP encoding support |
-| DDS | Yes | Yes | Saved as an uncompressed 32-bit surface |
-| TIFF (`.tif`, `.tiff`) | Yes | Yes | Saved as an uncompressed RGBA image |
-| GIF | Yes | Yes | Static, palette-based image only |
-| BMP | Yes | Yes | 32-bit bitmap with alpha |
-| TGA | Yes | Yes | Uncompressed 32-bit image |
-| JPEG XR (`.jxr`, `.wdp`, `.wmp`) | Yes | Yes | Encoded/decoded with the bundled portable codec |
+### Missing or limited compared with Paint.NET
 
-Saving a layered document to a flat image format asks before flattening it. The flatten operation is
-added to history and can be undone. The app also understands the legacy JSON-based paint.js document
-format used by older builds.
-
-### Reliability and interface
-
-- Modal dialogs block commands and pointer input in the background
-- Application error window displays console errors and stack traces without a native browser alert
-- Error recovery includes Copy Error, Ignore, and Save All actions
-- Settings for interface colors, animations, canvas appearance, tool defaults, pen input, and shortcuts
-- Interface localization with automatic browser-language detection, a manual language selector, and the
-  translations shipped with Paint.NET
-- Larger slider hit areas and consistent text/icon sizing throughout the interface
-
-## Current limitations
-
-paint.js is usable but is not yet a complete replacement for Paint.NET. Known gaps include:
-
-- Chromium is the supported browser family. Firefox and Safari are not regularly tested, and browser
-  file-system/clipboard capabilities differ.
-- Open Recent, scanner/camera acquisition, and color-profile commands are visible but not implemented yet.
+- Chromium is the supported browser family. Firefox and Safari are not regularly tested, and their
+  file-system and clipboard capabilities differ.
+- Open Recent, scanner/camera acquisition, and color-profile commands are not implemented yet.
 - Native Paint.NET plugins and file-type plugins cannot be loaded.
-- Native `.pdn` support currently covers bitmap layers and their basic properties. It does not preserve
-  Paint.NET history, selections, plugin data, or every newer PDN feature, and saving is limited to 64 layers.
-- Animated and multi-page formats are imported and exported as a single static image.
 - Manual GPU/device selection and direct advanced-color management are not implemented.
-- Very large documents, large-radius effects, and complex selections may still be slow or memory-intensive.
-- Some browser security features require HTTPS or localhost, including parts of the clipboard,
-  file-system, and PWA functionality.
+- Very large documents, large-radius effects, and complex selections may still be slower or more
+  memory-intensive than in Paint.NET.
+- Some browser functionality requires HTTPS or localhost, including parts of the clipboard,
+  file-system, and offline-app support.
 
-## Getting started
+## Development
 
-### Requirements
-
-- Node.js 22 or newer and npm
-- A Chromium-based browser for the web version
-
-### 1. Install dependencies
+Development requires Node.js 22 or newer. Install the dependencies first:
 
 ```bash
 npm ci
 ```
 
-### 2. Run the Electron desktop app
+### Run the web version
 
-```bash
-npm run app
-```
-
-The first `npm run app`, `npm run web`, or `npm run web-watch` automatically downloads the configured
-Paint.NET portable archive, verifies its pinned checksum, and extracts the required artwork and
-translations. The archive is cached below `.tmp/paintdotnet`; no Python setup or manual asset command
-is needed. Change `paintdotjs.paintDotNetVersion` in `package.json`; the next asset check downloads
-that release, records its archive checksum, and regenerates the asset manifest automatically
-when intentionally moving to a newer upstream asset version.
-
-To explicitly verify or prepare the assets, run:
-
-```bash
-npm run check-assets
-```
-
-Packaged desktop builds do not contain Paint.NET artwork or translations. On first launch, paint.js
-downloads the official Paint.NET portable archive and extracts the required resources into the user's
-application-data directory. AUR builds perform the same extraction during `makepkg`.
-
-### 3. Build and run the web app
-
-Build the JavaScript bundle into `build/web/`:
-
-```bash
-npm run web
-```
-
-Serve the repository root over HTTP, then open <http://127.0.0.1:8773/>:
-
-```bash
-npx http-server . -p 8773
-```
-
-Do not open `index.html` directly from the filesystem: browser security restrictions will prevent
-some codecs, file APIs, and PWA behavior from working correctly.
-
-## Development
-
-Run webpack in watch mode while editing:
+Run the development build in watch mode:
 
 ```bash
 npm run web-watch
 ```
 
-Keep a local HTTP server running in a second terminal. Localhost development deliberately disables
-the service worker so stale cached files do not hide source changes.
-
-The complete offline-capable deployment is assembled separately in `pages-dist/` by
-`npm run pages`. Only that deployment is compiled and minified; the root application keeps its
-individual readable source scripts for local debugging. Generated bundles and service-worker files
-therefore stay out of the source root.
-
-Other useful commands:
+In a second terminal, start a local web server and open <http://127.0.0.1:8773/>:
 
 ```bash
-npm run web       # production web bundle in build/web
-npm run pages     # complete GitHub Pages output in pages-dist
-npm run dist      # package the Electron application
-npm run pwa       # reassemble pages-dist and regenerate its service worker
+npx http-server . -p 8773
 ```
+
+Do not open `index.html` directly from the filesystem because browser security restrictions disable
+required functionality.
+
+### Run the Electron app
+
+```bash
+npm run app
+```
+
+The repository does not redistribute Paint.NET's modern artwork and translations because they are
+not part of the MIT-compatible Paint.NET 3.36.7 source release on which this project is based. On the
+first build, paint.js fetches the required assets from the official Paint.NET download. This lets the
+interface follow Paint.NET v5.1.12 without redistributing those files in this repository.
+
+## Image formats
+
+| Format | Paint.NET open | Paint.NET save | paint.js open | paint.js save | Important differences |
+| --- | :---: | :---: | :---: | :---: | --- |
+| Paint.NET (`.pdn`) | Yes | Yes | Limited | Limited | paint.js supports bitmap layers and basic layer properties, with a maximum of 64 layers when saving. History, selections, plugin data, and some newer PDN features are not preserved. |
+| PNG | Yes | Yes | Yes | Yes | — |
+| JPEG (`.jpg`, `.jpeg`, `.jpe`) | Yes | Yes | Yes | Yes | — |
+| JPEG XL (`.jxl`) | Yes | Yes | Yes | Yes | — |
+| AVIF | Yes | Yes | Yes | Yes | — |
+| HEIC/HEIF | With the Windows codec | With the Windows codec | Yes | No | The bundled paint.js codec can decode these files but cannot encode them. |
+| WebP | Yes | Yes | Yes | Yes | — |
+| DDS | Yes | Yes | Yes | Yes | paint.js saves uncompressed 32-bit images only. |
+| TIFF (`.tif`, `.tiff`) | Yes | Yes | Yes | Yes | paint.js saves uncompressed RGBA images only. |
+| GIF | Yes | Yes | Yes | Yes | paint.js saves a single static, palette-based image only. |
+| BMP | Yes | Yes | Yes | Yes | paint.js saves 32-bit images with alpha only. |
+| TGA | Yes | Yes | Yes | Yes | paint.js saves uncompressed 32-bit images only. |
+| JPEG XR (`.jxr`, `.wdp`, `.wmp`) | Yes | Yes | Limited | No | paint.js can open RGB images with 8-bit, 16-bit, or 32-bit floating-point channels but cannot save JPEG XR. |
+
+Animated and multi-page files are imported and exported as a single static image in paint.js.
 
 ## License
 

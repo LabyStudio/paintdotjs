@@ -17,34 +17,22 @@ jobs:
   version:
     runs-on: ubuntu-latest
     outputs:
-      release: ${{ steps.version.outputs.release }}
+      release: ${{ steps.version.outputs.changed }}
       version: ${{ steps.version.outputs.version }}
       paintdotnet: ${{ steps.version.outputs.paintdotnet }}
       paintdotnet_sha256: ${{ steps.version.outputs.paintdotnet_sha256 }}
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          fetch-depth: 0
       - id: version
         name: Detect a version bump
         shell: bash
-        run: |
-          node <<'NODE'
-          const fs = require('fs');
-          const {execFileSync} = require('child_process');
-          const current = require('./package.json');
-          let previousVersion = null;
-          try {
-            previousVersion = JSON.parse(execFileSync('git', ['show', 'HEAD^:package.json'], {encoding: 'utf8'})).version;
-          } catch (_) {}
-          const manual = process.env.GITHUB_EVENT_NAME === 'workflow_dispatch';
-          const release = manual || current.version !== previousVersion;
-          fs.appendFileSync(process.env.GITHUB_OUTPUT,
-            `release=${release}\nversion=${current.version}\npaintdotnet=${current.paintdotjs.paintDotNetVersion}\n` +
-            `paintdotnet_sha256=${current.paintdotjs.paintDotNetSha256}\n`);
-          NODE
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: node .github/scripts/detect-version-change.cjs
       - name: Ensure the version is unreleased
-        if: steps.version.outputs.release == 'true'
+        if: steps.version.outputs.changed == 'true'
         run: |
           if git ls-remote --exit-code --tags origin "refs/tags/v${{ steps.version.outputs.version }}"; then
             echo "v${{ steps.version.outputs.version }} already exists" >&2

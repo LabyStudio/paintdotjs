@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    paths:
+      - package.json
   workflow_dispatch:
 
 permissions:
@@ -16,7 +18,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.version.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - id: version
+        name: Detect a version bump
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: node .github/scripts/detect-version-change.cjs
+
   build:
+    needs: version
+    if: needs.version.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
