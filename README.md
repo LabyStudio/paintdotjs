@@ -1,11 +1,17 @@
-# paint.js
+![header.png](.github/assets/header.png)
 
-**paint.js** is an unofficial, cross-platform port of **Paint.NET** for the browser and Electron.
-Its core editing model is ported from **Paint.NET 3.36.7**, the last version released under an
-MIT-compatible license, while much of the interface and behavior follows Paint.NET v5+.
+**paint.js** is an unofficial, proof-of-concept, cross-platform **JavaScript** port of the Windows only
+raster graphics editor **Paint.NET** by [Rick Brewster](https://www.getpaint.net/). This port is
+available for the web and as an Electron desktop application.
 
-The project is independent from Paint.NET. Chromium is the primary target; the Electron desktop app
-and Chromium-based browsers currently provide the most complete experience.
+Its core editing model is based on **Paint.NET 3.36.7**, the last version released under the original
+MIT-compatible license, while the current interface and behavior follow Paint.NET v5.1.12.
+
+## Why?
+
+Paint.NET is arguably the best and simplest painting tool available on Windows. Since switching to
+Linux, it has been the program I miss the most and one that I used every day. The goal of this port is
+to bring that same experience to macOS, Linux, and the web.
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE.md)
 
