@@ -2987,6 +2987,8 @@ html.effect-rendering * {
     display: block;
     max-width: none;
     max-height: none;
+    background-image: var(--image-transparency);
+    background-repeat: repeat;
     image-rendering: auto;
     box-shadow: 0 0 0 1px var(--color-dialog-border);
 }

@@ -154,6 +154,7 @@ class SaveImageDialog {
             let mover = null;
             let closed = false;
             let timer = null;
+            let resizeFrame = null;
             let generation = 0;
             let previewUrl = null;
             let currentBlob = null;
@@ -229,8 +230,17 @@ class SaveImageDialog {
                 else fitPreview();
             };
             const resizeObserver = new ResizeObserver(() => {
-                if (autoFit) fitPreview();
-                else layoutPreview();
+                // Writing stage dimensions from inside ResizeObserver can resize
+                // the observed viewport again in the same delivery cycle. Defer
+                // and coalesce the layout write to avoid the browser's
+                // "undelivered notifications" loop warning.
+                if (resizeFrame !== null) return;
+                resizeFrame = requestAnimationFrame(() => {
+                    resizeFrame = null;
+                    if (closed) return;
+                    if (autoFit) fitPreview();
+                    else layoutPreview();
+                });
             });
             resizeObserver.observe(previewFrame);
             const clampQuality = value => Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
@@ -303,6 +313,7 @@ class SaveImageDialog {
                 closed = true;
                 ++generation;
                 if (timer !== null) clearTimeout(timer);
+                if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
                 document.removeEventListener("keydown", onKeyDown, true);
                 resizeObserver.disconnect();
                 if (mover !== null) mover.destroy();
