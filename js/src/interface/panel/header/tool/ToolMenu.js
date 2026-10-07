@@ -20,7 +20,12 @@ class ToolMenu extends StripPanel {
         };
         window.addEventListener("paintdotjs:fonts-changed", () => {
             if (this.app.getActiveTool()?.getType() === ToolType.TEXT) {
-                this.renderOptions(this.app.getActiveTool());
+                const openDropdown = ToolOptionDropdown.active;
+                if (openDropdown?.options?.fontPreview) {
+                    openDropdown.replaceValues(FontManager.getTextToolChoices());
+                } else {
+                    this.renderOptions(this.app.getActiveTool());
+                }
             }
         });
         this.app.on("app:active_tool_updated", tool => this.renderOptions(tool));
@@ -53,6 +58,11 @@ class ToolMenu extends StripPanel {
             325, 350, 375, 400, 425, 450, 475, 500, 550, 600,
             650, 700, 750, 800, 850, 900, 950, 1000, 1100, 1200,
             1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000
+        ];
+        const fontSizes = [
+            8, 9, 10, 11, 12, 14, 16, 18, 20, 22,
+            24, 26, 28, 36, 48, 72, 84, 96, 108, 144,
+            192, 216, 288
         ];
         const brushSize = (sectionLabel = "Brush size:") => (
             size(sectionLabel, "width", 1, 2000, 1, brushSizes)
@@ -377,7 +387,7 @@ class ToolMenu extends StripPanel {
                         values: FontManager.getTextToolChoices(), width: 140,
                         menuWidth: 380, fontPreview: true
                     },
-                    size("", "fontSize", 1, 500, 1),
+                    size("", "fontSize", 1, 2000, 1, fontSizes),
                     iconChoice("", "fontUnit", [
                         ["points", "Points (image DPI)", "enum_font_size_metric_points.png"],
                         ["pixels", "Pixels", "enum_font_size_metric_fixed96_dpi.png"]
@@ -442,6 +452,7 @@ class ToolMenu extends StripPanel {
             } else if (definition.kind === "size") {
                 control = document.createElement("div");
                 control.className = "tool-size-control";
+                const sizeName = definition.label || (definition.key === "fontSize" ? "Font size" : "Size");
 
                 const input = document.createElement("input");
                 input.type = definition.presets === null ? "number" : "text";
@@ -461,7 +472,7 @@ class ToolMenu extends StripPanel {
                     }
                 };
                 input.onchange = () => change(input.value || definition.min);
-                control.appendChild(this.createImageButton("minus_button_icon.png", "Decrease " + definition.label,
+                control.appendChild(this.createImageButton("minus_button_icon.png", "Decrease " + sizeName,
                     () => change(Number(type.getSetting(definition.key)) - definition.step)));
                 if (definition.presets === null) {
                     input.min = definition.min;
@@ -475,7 +486,7 @@ class ToolMenu extends StripPanel {
                     const arrow = document.createElement("button");
                     arrow.type = "button";
                     arrow.className = "tool-size-arrow";
-                    arrow.title = "Choose " + definition.label.toLowerCase();
+                    arrow.title = "Choose " + sizeName.toLowerCase();
                     arrow.setAttribute("aria-label", arrow.title);
                     arrow.setAttribute("aria-expanded", "false");
                     arrow.onclick = event => {
@@ -497,7 +508,7 @@ class ToolMenu extends StripPanel {
                     combo.appendChild(arrow);
                     control.appendChild(combo);
                 }
-                control.appendChild(this.createImageButton("plus_button_icon.png", "Increase " + definition.label,
+                control.appendChild(this.createImageButton("plus_button_icon.png", "Increase " + sizeName,
                     () => change(Number(type.getSetting(definition.key)) + definition.step)));
             } else if (definition.kind === "slider") {
                 control = document.createElement("div");
@@ -664,6 +675,18 @@ class ToolMenu extends StripPanel {
         if (activeTool !== null && activeTool.getType() === type
             && typeof activeTool.onSettingChanged === "function") {
             activeTool.onSettingChanged(key, value);
+        }
+        if (key === "fontFamily") {
+            FontManager.ensureLoaded(value).then(face => {
+                if (face === null) return;
+                const currentTool = this.app.getActiveTool();
+                if (currentTool !== null && currentTool.getType() === type
+                    && type.getSetting(key) === value
+                    && typeof currentTool.onSettingChanged === "function") {
+                    currentTool.onSettingChanged(key, value);
+                    this.app.fire("app:tool_setting_changed", type, key, value);
+                }
+            }).catch(error => console.warn(`Could not load selected font`, error));
         }
         if (key === "selectionMode" || key === "shape") this.renderOptions(activeTool);
     }

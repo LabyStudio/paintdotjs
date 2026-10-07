@@ -1,9 +1,10 @@
 class DialogMover {
 
-    constructor(dialog, handle, boundsElement) {
+    constructor(dialog, handle, boundsElement, persistenceId = null) {
         this.dialog = dialog;
         this.handle = handle;
         this.boundsElement = boundsElement;
+        this.persistenceId = persistenceId;
         this.offsetX = 0;
         this.offsetY = 0;
         this.dragging = false;
@@ -16,6 +17,14 @@ class DialogMover {
         this.handle.classList.add("movable-dialog-handle");
         this.handle.addEventListener("mousedown", this.onMouseDown);
         window.addEventListener("resize", this.onResize);
+
+        if (this.persistenceId !== null && typeof AppSettingsStore !== "undefined") {
+            const state = AppSettingsStore.get("dialogs." + this.persistenceId, null);
+            if (Number.isFinite(state?.left) && Number.isFinite(state?.top)) {
+                this.dialog.style.position = "fixed";
+                this.setPosition(state.left, state.top);
+            }
+        }
     }
 
     start(event) {
@@ -64,6 +73,14 @@ class DialogMover {
     }
 
     stop() {
+        if (this.dragging && this.persistenceId !== null
+            && typeof AppSettingsStore !== "undefined") {
+            const bounds = this.dialog.getBoundingClientRect();
+            AppSettingsStore.set("dialogs." + this.persistenceId, {
+                left: Math.round(bounds.left),
+                top: Math.round(bounds.top)
+            });
+        }
         this.dragging = false;
         document.removeEventListener("mousemove", this.onMouseMove, true);
         document.removeEventListener("mouseup", this.onMouseUp, true);

@@ -34,7 +34,7 @@ class EffectsMenu extends DropMenuItem {
             const last = BitmapEffectAction.getLastEffect();
             return last === null ? "effect_icon.png" : last.definition.icon;
         };
-        this.repeatSeparator = new HorizontalSeparator();
+        this.repeatSeparator = new VerticalSeparator();
 
         this.updateEntriesOn(
             "app:update_active_document",

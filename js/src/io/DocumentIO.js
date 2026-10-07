@@ -241,7 +241,51 @@ class DocumentIO {
         }
     }
 
-    static openFilePicker() {
+    static async openFilePicker() {
+        if (typeof window.showOpenFilePicker === "function") {
+            try {
+                let handles;
+                try {
+                    handles = await window.showOpenFilePicker({
+                        multiple: true,
+                        types: [{
+                            description: "Images",
+                            accept: {
+                                "image/png": [".png"],
+                                "image/jpeg": [".jpg", ".jpeg"],
+                                "image/webp": [".webp"],
+                                "image/gif": [".gif"],
+                                "image/bmp": [".bmp"],
+                                "image/avif": [".avif"],
+                                "image/tiff": [".tif", ".tiff"],
+                                "application/octet-stream": [
+                                    ".pdn", ".jxl", ".heic", ".heif", ".dds",
+                                    ".tga", ".jxr", ".wdp", ".wmp"
+                                ]
+                            }
+                        }]
+                    });
+                } catch (error) {
+                    // Some Chromium versions reject uncommon but valid extensions.
+                    if (!(error instanceof TypeError)) throw error;
+                    handles = await window.showOpenFilePicker({multiple: true});
+                }
+                const files = [];
+                for (const handle of handles) {
+                    const file = await handle.getFile();
+                    this.openedFileHandles.set(file, handle);
+                    files.push(file);
+                }
+                await this.openFiles(files);
+                return;
+            } catch (error) {
+                if (error.name === "AbortError") return;
+                // Fall back to the broadly supported input picker if the File
+                // System Access API is unavailable in this browser context.
+                if (error.name !== "SecurityError" && error.name !== "NotAllowedError") throw error;
+            }
+        }
+
         const input = document.createElement("input");
         input.type = "file";
         input.accept = "image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif,image/heic,image/tiff," +
@@ -411,7 +455,11 @@ class DocumentIO {
         layer.getSurface().clear();
         layer.getSurface().context.drawImage(image, 0, 0);
         layer.properties.name = file.name.replace(/\.[^.]+$/, "") || i18n("layer.backgroundLayer.defaultName");
-        workspace.setFileInfo(file.name, null, this.getLocalFilePath(file));
+        workspace.setFileInfo(
+            file.name,
+            this.openedFileHandles.get(file) || null,
+            this.getLocalFilePath(file)
+        );
         workspace.setDirty(false);
         workspace.getDocument().invalidate();
         workspace.fitViewport();
@@ -497,10 +545,16 @@ class DocumentIO {
             ? "Untitled" : workspace.getFriendlyName().replace(/\.[^.]+$/, "");
         const baseName = friendlyName + format.extension;
         const extensions = format.extensions || [format.extension];
+        const hasExpectedExtension = name => extensions.some(extension =>
+            String(name || "").toLowerCase().endsWith(extension));
         let handle = !saveAs ? workspace.fileHandle : null;
-        if (handle !== null && !extensions.some(extension =>
-            String(handle.name || "").toLowerCase().endsWith(extension))) handle = null;
-        if (handle === null && typeof window.showSaveFilePicker === "function") {
+        if (handle !== null && !hasExpectedExtension(handle.name)) handle = null;
+        let localFilePath = !saveAs && handle === null
+            && typeof window.desktopFileActions?.writeFile === "function"
+            && hasExpectedExtension(workspace.getFilePath())
+            ? workspace.getFilePath()
+            : null;
+        if (handle === null && localFilePath === null && typeof window.showSaveFilePicker === "function") {
             try {
                 try {
                     handle = await window.showSaveFilePicker({
@@ -560,6 +614,15 @@ class DocumentIO {
                 // Browsers deliberately hide the local path.
             }
             workspace.setFileInfo(handle.name, handle, filePath, format.id, options);
+        } else if (localFilePath !== null) {
+            await window.desktopFileActions.writeFile(localFilePath, await blob.arrayBuffer());
+            workspace.setFileInfo(
+                workspace.fileName || baseName,
+                null,
+                localFilePath,
+                format.id,
+                options
+            );
         } else {
             this.downloadBlob(blob, baseName);
             workspace.setFileInfo(baseName, null, null, format.id, options);
@@ -625,7 +688,12 @@ class DocumentIO {
 
     static async openPdn(file) {
         const data = await this.readPdn(file);
-        return this.createWorkspaceFromPdnData(data, file.name, this.getLocalFilePath(file));
+        return this.createWorkspaceFromPdnData(
+            data,
+            file.name,
+            this.getLocalFilePath(file),
+            this.openedFileHandles.get(file) || null
+        );
     }
 
     static async readPdn(file) {
@@ -662,7 +730,7 @@ class DocumentIO {
         };
     }
 
-    static async createWorkspaceFromPdnData(data, fileName, filePath = null) {
+    static async createWorkspaceFromPdnData(data, fileName, filePath = null, fileHandle = null) {
         const width = Math.max(1, Math.min(32768, Math.round(Number(data.width) || 0)));
         const height = Math.max(1, Math.min(32768, Math.round(Number(data.height) || 0)));
         if (width !== Number(data.width) || height !== Number(data.height)) {
@@ -690,7 +758,7 @@ class DocumentIO {
             // layer that belongs to the other document.
             workspace.setDocumentAndActiveLayer(documentModel, activeLayer);
             this.app.fire("document:layers_changed", workspace);
-            workspace.setFileInfo(fileName, null, filePath);
+            workspace.setFileInfo(fileName, fileHandle, filePath);
             workspace.getHistory().clearAll();
             workspace.setDirty(false);
             documentModel.invalidate();
@@ -1548,6 +1616,7 @@ DocumentIO.app = null;
 DocumentIO.internalClipboard = null;
 DocumentIO.internalClipboardInfo = null;
 DocumentIO.internalSelectionPath = null;
+DocumentIO.openedFileHandles = new WeakMap();
 DocumentIO.webCloseDialogScheduled = false;
 DocumentIO.webCloseDialogOpen = false;
 DocumentIO.allowWebCloseUntil = 0;

@@ -272,6 +272,10 @@ class Tool {
         return false;
     }
 
+    onModifierKeysChanged() {
+
+    }
+
     onMouseDown(mouseX, mouseY, button, input = null) {
         return false;
     }

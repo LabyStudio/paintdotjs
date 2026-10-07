@@ -41,6 +41,8 @@ class NewFileDialog {
             aspectLabel.className = "new-file-aspect";
             const aspect = document.createElement("input");
             aspect.type = "checkbox";
+            aspect.checked = typeof AppSettingsStore !== "undefined"
+                && AppSettingsStore.get("workspace.newFileMaintainAspectRatio", false) === true;
             aspectLabel.append(aspect, document.createTextNode("Maintain aspect ratio"));
 
             const pixelSection = this.section("Pixel size");
@@ -142,6 +144,9 @@ class NewFileDialog {
             };
             dialog.onsubmit = event => {
                 event.preventDefault();
+                if (typeof AppSettingsStore !== "undefined") {
+                    AppSettingsStore.set("workspace.newFileMaintainAspectRatio", aspect.checked);
+                }
                 finish({
                     width: clampDimension(width.input.value),
                     height: clampDimension(height.input.value),

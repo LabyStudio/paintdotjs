@@ -4,6 +4,16 @@ class DropEntry extends ActionItem {
         super(id, callback);
     }
 
+    initialize(parent) {
+        super.initialize(parent);
+        this.getElement().addEventListener("mouseenter", () => {
+            if (!Array.isArray(this.parent?.entries)) return;
+            for (const sibling of this.parent.entries) {
+                if (sibling !== this && sibling instanceof SubmenuDropEntry) sibling.close();
+            }
+        });
+    }
+
     onPress(event) {
         if (!this.isEnabled() || this.pressable === null) return;
 

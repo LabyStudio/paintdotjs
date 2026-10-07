@@ -25,35 +25,58 @@ class EllipseSelectTool extends SelectionTool {
     createShape(tracePoints) {
         let a = tracePoints[0];
         let b = tracePoints[tracePoints.length - 1];
-        let dir = new Point(b.x - a.x, b.y - a.y);
-        let len = Math.sqrt(dir.x * dir.x + dir.y * dir.y);
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const length = Math.hypot(dx, dy);
 
-        let rectF;
+        let bounds;
 
         if (this.app.isShiftKeyDown()) {
-            let center = new Point((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
-            let radius = len / 2;
-            rectF = Rectangle.truncate(Utility.rectangleFromCenter(center, radius));
+            // Paint.NET uses the two pointer positions as opposite ends of a
+            // diameter. Keep the fractional center/radius; rounding here moves
+            // the circle away from both the press and release positions.
+            const centerX = (a.x + b.x) / 2;
+            const centerY = (a.y + b.y) / 2;
+            const radius = length / 2;
+            bounds = new Rectangle(
+                centerX - radius,
+                centerY - radius,
+                radius * 2,
+                radius * 2
+            );
         } else {
-            rectF = Utility.pointsToRectangle(a, b);
+            // FromPixelPoints includes both integer pixels, so dragging from
+            // x=10 to x=20 produces the same 11-pixel bounds as Paint.NET.
+            bounds = Utility.pointsToRectangle(a, b);
         }
 
-        let rect = Utility.roundRectangle(rectF);
-        let path = new GraphicsPath();
-        path.addEllipse(rect);
+        return this.flattenEllipse(bounds, 0.01);
+    }
 
-        // Avoid asymmetrical circles where the left or right side of the ellipse has a pixel jutting out
-        let m = new Matrix();
-        m.reset();
-        m.translate(-0.5, -0.5, MatrixOrder.APPEND);
-        path.transform(m);
+    flattenEllipse(bounds, tolerance) {
+        if (bounds.getWidth() <= 0 || bounds.getHeight() <= 0) return [];
 
-        path.flatten(Utility.identityMatrix, 0.1);
+        const radiusX = bounds.getWidth() / 2;
+        const radiusY = bounds.getHeight() / 2;
+        const centerX = bounds.getLeft() + radiusX;
+        const centerY = bounds.getTop() + radiusY;
+        const maxRadius = Math.max(radiusX, radiusY);
 
-        let pointsF = path.getPathPoints();
-        path.dispose();
-
-        return pointsF;
+        // Choose enough straight segments that their maximum deviation from
+        // the true ellipse is at most the same 0.01px flattening tolerance v5
+        // requests from Direct2D.
+        const cosine = Utility.clamp(1 - tolerance / maxRadius, -1, 1);
+        const requiredSegments = Math.ceil(Math.PI / Math.acos(cosine));
+        const segments = Math.max(16, Math.ceil(requiredSegments / 4) * 4);
+        const points = new Array(segments + 1);
+        for (let i = 0; i <= segments; ++i) {
+            const angle = i * Math.PI * 2 / segments;
+            points[i] = new Point(
+                centerX + radiusX * Math.cos(angle),
+                centerY + radiusY * Math.sin(angle)
+            );
+        }
+        return points;
     }
 
     getCursorImgUp() {

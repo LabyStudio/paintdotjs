@@ -13,6 +13,10 @@ class TextTool extends DrawingTool {
         this.originStart = null;
         this.viewportSyncFrame = null;
         this.blockMiddlePasteUntil = 0;
+        this.colorsForm = null;
+        this.colorsChangedListener = () => {
+            if (this.pending) this.renderPreview();
+        };
         this.viewportChangedListener = documentView => {
             if (documentView === this.getDocumentWorkspace()) this.syncEditorToViewport();
         };
@@ -25,12 +29,27 @@ class TextTool extends DrawingTool {
 
     onActivate() {
         super.onActivate();
+        FontManager.ensureLoaded(this.getSetting("fontFamily", "Segoe UI")).then(face => {
+            if (face !== null && this.isActive() && this.pending) {
+                this.updateEditorStyle();
+                this.renderPreview();
+            }
+        }).catch(error => console.warn("Could not load the selected text font", error));
+        this.colorsForm = FormRegistry.get("colorsForm");
+        if (this.colorsForm?.changed !== undefined) {
+            this.colorsForm.changed.add(this.colorsChangedListener);
+        }
         this.app.on("document:update_viewport", this.viewportChangedListener);
         this.app.on("app:resize", this.resizeListener);
         this.app.setCursorImg("text_tool_cursor");
     }
 
     onDeactivate() {
+        const colorsForm = this.colorsForm;
+        this.colorsForm = null;
+        if (typeof colorsForm?.changed?.remove === "function") {
+            colorsForm.changed.remove(this.colorsChangedListener);
+        }
         this.app.off("document:update_viewport", this.viewportChangedListener);
         this.app.off("app:resize", this.resizeListener);
         if (this.viewportSyncFrame !== null) {
@@ -148,29 +167,7 @@ class TextTool extends DrawingTool {
         editor.onkeyup = () => this.updateCaret();
         editor.onfocus = () => this.updateCaret();
         editor.onblur = () => this.updateCaret();
-        editor.onkeydown = event => {
-            const undoAction = typeof ActionRegistry === "undefined"
-                ? null : ActionRegistry.get("menu.edit.undo");
-            if ((event.ctrlKey || event.metaKey)
-                && undoAction !== null && undoAction.matchesShortcutEvent(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-                // Text remains an editable preview until it is finished. Make
-                // it a history entry first so the same shortcut can undo it.
-                this.commitPending();
-                undoAction.runPerformAction();
-            } else if (event.key === "Escape") {
-                event.preventDefault();
-                event.stopPropagation();
-                this.commitPending();
-            } else if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-                event.preventDefault();
-                event.stopPropagation();
-                this.commitPending();
-            } else {
-                event.stopPropagation();
-            }
-        };
+        editor.onkeydown = event => this.onEditorKeyDown(event);
         // The textarea is the text editor, not another click on the canvas.
         // Keep its pointer events from bubbling to AppView, which previously
         // committed/restarted the text and made typing require a double click.
@@ -234,6 +231,47 @@ class TextTool extends DrawingTool {
         this.app.getEditorElement().appendChild(caret);
         this.caretElement = caret;
         this.updateEditorStyle();
+    }
+
+    onEditorKeyDown(event) {
+        const undoAction = typeof ActionRegistry === "undefined"
+            ? null : ActionRegistry.get("menu.edit.undo");
+        if ((event.ctrlKey || event.metaKey)
+            && undoAction !== null && undoAction.matchesShortcutEvent(event)) {
+            event.preventDefault();
+            event.stopPropagation();
+            // Text remains an editable preview until it is finished. Make it a
+            // history entry first so the same shortcut can undo it.
+            this.commitPending();
+            undoAction.runPerformAction();
+            return;
+        }
+        if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            this.commitPending();
+            return;
+        }
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault();
+            event.stopPropagation();
+            this.commitPending();
+            return;
+        }
+
+        const normalizedKey = String(event.key).toLowerCase();
+        const commandModifier = event.ctrlKey || event.metaKey || event.altKey;
+        const altGraph = typeof event.getModifierState === "function"
+            && event.getModifierState("AltGraph");
+        const nativeTextShortcut = !event.altKey && !event.shiftKey
+            && (event.ctrlKey || event.metaKey)
+            && ["a", "c", "x", "v"].includes(normalizedKey);
+        const functionKey = /^f(?:[1-9]|1[0-2])$/.test(normalizedKey);
+        if (!altGraph && !nativeTextShortcut && (commandModifier || functionKey)
+            && ActionRegistry.dispatch(event)) {
+            event.preventDefault();
+        }
+        event.stopPropagation();
     }
 
     destroyEditor() {

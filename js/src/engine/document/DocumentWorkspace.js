@@ -11,8 +11,11 @@ class DocumentWorkspace extends DocumentView {
         this.dirty = false;
         this.activeLayer = null;
         this.history = new HistoryStack(app, this);
-        this.gridVisible = false;
-        this.rulersVisible = false;
+        this.gridVisible = typeof AppSettingsStore !== "undefined"
+            && AppSettingsStore.get("workspace.showPixelGrid", false) === true;
+        this.rulersVisible = typeof AppSettingsStore !== "undefined"
+            && AppSettingsStore.get("workspace.showRulers", false) === true;
+        this.gridRenderer.setVisible(this.gridVisible);
         this.history.executed.add(() => this.setDirty(true));
         this.selection = new Selection();
         this.selection.changed.add(() => {

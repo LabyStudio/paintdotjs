@@ -172,7 +172,13 @@ class EffectConfigDialog {
                 range.onchange = () => notify(true);
                 number.oninput = () => { set(number.value); notify(); };
                 number.onchange = () => notify(true);
-                controls.append(range, NumberInput.wrap(number));
+                const resetValue = () => { set(control.defaultValue); notify(true); };
+                EffectConfigDialog.enableSliderThumbReset(range, resetValue);
+                controls.append(
+                    range,
+                    NumberInput.wrap(number),
+                    EffectConfigDialog.createResetButton(resetValue)
+                );
                 row.append(label, controls);
                 content.appendChild(row);
                 setters.set(control.key, set);
@@ -191,18 +197,7 @@ class EffectConfigDialog {
                 notify(true);
             };
             preview.append(previewInput, document.createTextNode("Preview"));
-            const reset = document.createElement("button");
-            reset.type = "button";
-            reset.textContent = "Reset";
-            reset.onclick = () => {
-                for (const control of options.controls) {
-                    values[control.key] = control.defaultValue;
-                    setters.get(control.key)(control.defaultValue);
-                }
-                notify(true);
-            };
             if (specialized === null) left.appendChild(preview);
-            if (specialized === null || specialized.showReset !== false) left.appendChild(reset);
             if (specialized !== null && specialized.leftButtons) {
                 for (const button of specialized.leftButtons) left.prepend(button);
             }
@@ -259,6 +254,58 @@ class EffectConfigDialog {
         return options.controls.find(control => control.key === key);
     }
 
+    static createResetButton(onReset) {
+        const reset = document.createElement("button");
+        reset.type = "button";
+        reset.className = "effect-row-reset";
+        reset.title = "Reset";
+        reset.setAttribute("aria-label", "Reset");
+        const icon = document.createElement("img");
+        icon.src = "assets/icons/reset_icon.png";
+        icon.alt = "";
+        reset.appendChild(icon);
+        reset.onclick = onReset;
+        return reset;
+    }
+
+    static enableSliderThumbReset(range, onReset, thumbWidth = 14) {
+        const lastThumbPointerDown = new Map();
+        range.addEventListener("pointerdown", event => {
+            if ((event.button !== MouseButton.LEFT && event.button !== MouseButton.RIGHT)
+                || !EffectConfigDialog.isPointerOverSliderThumb(range, event, thumbWidth)) {
+                lastThumbPointerDown.delete(event.button);
+                return;
+            }
+
+            const now = performance.now();
+            const previous = lastThumbPointerDown.get(event.button) || 0;
+            if (now - previous <= 500) {
+                event.preventDefault();
+                lastThumbPointerDown.delete(event.button);
+                onReset();
+            } else {
+                lastThumbPointerDown.set(event.button, now);
+            }
+        });
+        range.addEventListener("pointercancel", () => lastThumbPointerDown.clear());
+        range.addEventListener("contextmenu", event => {
+            if (EffectConfigDialog.isPointerOverSliderThumb(range, event, thumbWidth)) {
+                event.preventDefault();
+            }
+        });
+    }
+
+    static isPointerOverSliderThumb(range, event, thumbWidth) {
+        const bounds = range.getBoundingClientRect();
+        const min = Number(range.min) || 0;
+        const max = Number(range.max) || 100;
+        const value = Number(range.value);
+        const ratio = max === min ? 0 : (value - min) / (max - min);
+        const center = bounds.left + thumbWidth / 2
+            + Utility.clamp(ratio, 0, 1) * Math.max(0, bounds.width - thumbWidth);
+        return Math.abs(event.clientX - center) <= thumbWidth / 2 + 2;
+    }
+
     static createSpecializedSlider(control, values, notify, options = {}) {
         const row = document.createElement("div");
         row.className = "effect-special-slider " + (options.className || "");
@@ -299,16 +346,12 @@ class EffectConfigDialog {
         range.onchange = () => notify(true);
         number.oninput = () => { set(number.value); notify(); };
         number.onchange = () => notify(true);
+        const resetValue = () => { set(control.defaultValue); notify(true); };
+        this.enableSliderThumbReset(range, resetValue);
         const numberBox = NumberInput.wrap(number);
         line.append(range, numberBox);
         if (options.reset !== false) {
-            const reset = document.createElement("button");
-            reset.type = "button";
-            reset.className = "effect-row-reset";
-            reset.title = "Reset";
-            reset.textContent = "↶";
-            reset.onclick = () => { set(control.defaultValue); notify(true); };
-            line.appendChild(reset);
+            line.appendChild(this.createResetButton(resetValue));
         }
         row.appendChild(line);
         set(values[control.key]);

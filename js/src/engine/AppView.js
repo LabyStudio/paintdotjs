@@ -29,11 +29,14 @@ class AppView {
         this.cursorState = {type: "css", value: "default"};
         this.temporaryPanCursorState = null;
 
-        this.gridVisible = false;
-        this.rulersVisible = false;
+        this.gridVisible = typeof AppSettingsStore !== "undefined"
+            && AppSettingsStore.get("workspace.showPixelGrid", false) === true;
+        this.rulersVisible = typeof AppSettingsStore !== "undefined"
+            && AppSettingsStore.get("workspace.showRulers", false) === true;
         this.rulerRenderSignature = null;
         this.lastViewWidth = null;
         this.lastViewHeight = null;
+        this.renderDirty = true;
 
         this.horizontalRuler = document.createElement("canvas");
         this.horizontalRuler.className = "editor-ruler horizontal";
@@ -268,15 +271,20 @@ class AppView {
         });
 
         window.addEventListener('keydown', event => {
+            let modifierChanged = false;
             if (event.key === "Control") {
+                modifierChanged = !this.controlKeyDown;
                 this.controlKeyDown = true;
             }
             if (event.key === "Shift") {
+                modifierChanged = modifierChanged || !this.shiftKeyDown;
                 this.shiftKeyDown = true;
             }
             if (event.key === "Alt") {
+                modifierChanged = modifierChanged || !this.altKeyDown;
                 this.altKeyDown = true;
             }
+            if (modifierChanged) this.onModifierKeysChanged();
 
             // Keep native editing and clipboard shortcuts inside text controls and
             // for selected page text. Otherwise Ctrl+C would copy the canvas
@@ -318,15 +326,20 @@ class AppView {
         });
 
         window.addEventListener('keyup', event => {
+            let modifierChanged = false;
             if (event.key === "Control") {
+                modifierChanged = this.controlKeyDown;
                 this.controlKeyDown = false;
             }
             if (event.key === "Shift") {
+                modifierChanged = modifierChanged || this.shiftKeyDown;
                 this.shiftKeyDown = false;
             }
             if (event.key === "Alt") {
+                modifierChanged = modifierChanged || this.altKeyDown;
                 this.altKeyDown = false;
             }
+            if (modifierChanged) this.onModifierKeysChanged();
         });
     }
 
@@ -392,16 +405,26 @@ class AppView {
     }
 
     render() {
-        requestAnimationFrame(time => {
-            this.render();
-        });
+        requestAnimationFrame(() => this.render());
 
-        let documentWorkspace = this.getActiveDocumentWorkspace();
+        const documentWorkspace = this.getActiveDocumentWorkspace();
+        const selectionRenderer = documentWorkspace?.getSelectionRenderer?.();
+        const animationActive = selectionRenderer?.isAnimationActive?.() === true;
+        if (!this.renderDirty && !animationActive) return;
+
+        // Clear this before painting so an invalidation raised during the draw
+        // is retained for the following frame.
+        this.renderDirty = false;
+
         if (documentWorkspace !== null) {
             let renderBounds = documentWorkspace.getRenderBounds();
             documentWorkspace.render(this.canvas, renderBounds);
         }
         this.renderRulers(documentWorkspace);
+    }
+
+    invalidateRender() {
+        this.renderDirty = true;
     }
 
     setCursor(cursor) {
@@ -417,38 +440,37 @@ class AppView {
         this.cursorState = {type: "image", value: name};
         const request = ++this.cursorRequest;
         const cached = this.cursorImages.get(name);
-        if (typeof cached === "string") {
-            this.editor.style.cursor = this.cursorCss(cached, name);
+        if (cached !== undefined && !(cached instanceof Promise)) {
+            this.editor.style.cursor = this.cursorCss(cached.url, cached.hotspot);
             return;
         }
 
-        // The extracted Paint.NET cursor resources contain two opaque red
-        // size-marker pixels. Browsers display those markers, unlike Windows'
-        // native cursor loader, so remove them once and cache the clean bitmap.
+        // Extracted Paint.NET cursors contain an extra metadata row and column.
+        // Their two red edge pixels encode the native x/y hotspot. Decode and
+        // crop that metadata before handing the image to the browser.
         if (cached instanceof Promise) {
-            cached.then(url => {
-                if (request === this.cursorRequest) this.editor.style.cursor = this.cursorCss(url, name);
+            cached.then(cursor => {
+                if (request === this.cursorRequest) {
+                    this.editor.style.cursor = this.cursorCss(cursor.url, cursor.hotspot);
+                }
             });
             return;
         }
 
         const source = "assets/cursors/" + name + ".png";
-        const loading = this.cleanCursorImage(source).catch(() => source);
+        const fallbackHotspot = /^hand_/.test(name) ? [15, 15] : [16, 16];
+        const loading = this.cleanCursorImage(source)
+            .catch(() => ({url: source, hotspot: fallbackHotspot}));
         this.cursorImages.set(name, loading);
-        loading.then(url => {
-            this.cursorImages.set(name, url);
-            if (request === this.cursorRequest) this.editor.style.cursor = this.cursorCss(url, name);
+        loading.then(cursor => {
+            this.cursorImages.set(name, cursor);
+            if (request === this.cursorRequest) {
+                this.editor.style.cursor = this.cursorCss(cursor.url, cursor.hotspot);
+            }
         });
     }
 
-    cursorCss(url, name = null) {
-        // Cursor resources have individual native hotspots. Selection cursors
-        // use the crosshair at the center of their 33x33 bitmap. Pointing them
-        // at the generic brush hotspot offsets the visible target by 6 screen
-        // pixels, which can become several document pixels when zoomed out.
-        const centered = name === "text_tool_cursor"
-            || /^(rectangle_select|lasso_select|ellipse_select|magic_wand)_tool_/.test(name || "");
-        const hotspot = centered ? [16, 16] : [10, 10];
+    cursorCss(url, hotspot) {
         return `url('${url}') ${hotspot[0]} ${hotspot[1]}, auto`;
     }
 
@@ -462,18 +484,35 @@ class AppView {
                 const context = canvas.getContext("2d");
                 context.drawImage(image, 0, 0);
                 const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+                let hotspotX = null;
+                let hotspotY = null;
 
                 for (let offset = 0; offset < pixels.data.length; offset += 4) {
                     if (pixels.data[offset] === 255
                         && pixels.data[offset + 1] === 0
                         && pixels.data[offset + 2] === 0
                         && pixels.data[offset + 3] !== 0) {
+                        const pixel = offset / 4;
+                        const x = pixel % canvas.width;
+                        const y = Math.floor(pixel / canvas.width);
+                        if (x === canvas.width - 1) hotspotY = y;
+                        if (y === canvas.height - 1) hotspotX = x;
                         pixels.data[offset + 3] = 0;
                     }
                 }
 
                 context.putImageData(pixels, 0, 0);
-                resolve(canvas.toDataURL("image/png"));
+                const hasMetadata = hotspotX !== null && hotspotY !== null;
+                const cleanCanvas = document.createElement("canvas");
+                cleanCanvas.width = canvas.width - (hasMetadata ? 1 : 0);
+                cleanCanvas.height = canvas.height - (hasMetadata ? 1 : 0);
+                cleanCanvas.getContext("2d").drawImage(canvas, 0, 0);
+                resolve({
+                    url: cleanCanvas.toDataURL("image/png"),
+                    hotspot: hasMetadata
+                        ? [hotspotX, hotspotY]
+                        : [Math.floor(cleanCanvas.width / 2), Math.floor(cleanCanvas.height / 2)]
+                });
             };
             image.onerror = reject;
             image.src = source;
@@ -679,6 +718,10 @@ class AppView {
         return false;
     }
 
+    onModifierKeysChanged() {
+
+    }
+
     onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, input = null) {
         return false;
     }
@@ -749,13 +792,11 @@ class AppView {
     }
 
     isGridVisible() {
-        const workspace = this.getActiveDocumentWorkspace();
-        return workspace !== null && workspace.isGridVisible();
+        return this.getActiveDocumentWorkspace() !== null && this.gridVisible;
     }
 
     isRulersVisible() {
-        const workspace = this.getActiveDocumentWorkspace();
-        return workspace !== null && workspace.isRulersVisible();
+        return this.getActiveDocumentWorkspace() !== null && this.rulersVisible;
     }
 
     isControlKeyDown() {
@@ -773,7 +814,12 @@ class AppView {
     setGridVisible(visible) {
         const activeDocumentWorkspace = this.getActiveDocumentWorkspace();
         if (activeDocumentWorkspace === null) return;
+        visible = !!visible;
+        this.gridVisible = visible;
         activeDocumentWorkspace.setGridVisible(visible);
+        if (typeof AppSettingsStore !== "undefined") {
+            AppSettingsStore.set("workspace.showPixelGrid", visible);
+        }
 
         this.fire("app:grid_visibility_changed", visible);
     }
@@ -781,13 +827,17 @@ class AppView {
     setRulersVisible(visible) {
         const activeDocumentWorkspace = this.getActiveDocumentWorkspace();
         if (activeDocumentWorkspace === null) return;
+        visible = !!visible;
+        this.rulersVisible = visible;
         activeDocumentWorkspace.setRulersVisible(visible);
+        if (typeof AppSettingsStore !== "undefined") {
+            AppSettingsStore.set("workspace.showRulers", visible);
+        }
         this.syncRulerVisibility();
-        this.fire("app:rulers_visibility_changed", !!visible);
+        this.fire("app:rulers_visibility_changed", visible);
     }
 
     syncRulerVisibility() {
-        this.rulersVisible = this.isRulersVisible();
         this.rulerRenderSignature = null;
         this.editor.classList.toggle("rulers-visible", this.rulersVisible);
         this.horizontalRuler.classList.toggle("visible", this.rulersVisible);
@@ -885,6 +935,11 @@ class AppView {
     }
 
     fire(event, ...args) {
+        // Canvas renderers are fed by application events (document changes,
+        // tool input, viewport movement, settings, etc.). Marking the next
+        // frame here coalesces any number of changes into one redraw instead
+        // of repainting the full viewport continuously while the app is idle.
+        this.invalidateRender();
         if (typeof this.listeners[event] === "undefined") {
             return;
         }

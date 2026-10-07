@@ -1,7 +1,11 @@
 class WebWindow extends AbstractWindow {
 
-    constructor() {
+    constructor(persistenceId = null) {
         super();
+
+        this.persistenceId = persistenceId;
+        this.persistenceEnabled = false;
+        this.persistenceTimer = null;
 
         this.overlay = document.getElementById("windowOverlay");
         this.view = document.getElementById("view");
@@ -117,9 +121,55 @@ class WebWindow extends AbstractWindow {
             this.resizeDirection = null;
             this.resizeStart = null;
             document.body.classList.remove("window-resizing");
+            this.saveState(true);
         });
 
         super.create();
+        this.saveState(true);
+    }
+
+    restoreState() {
+        if (this.persistenceId === null || typeof AppSettingsStore === "undefined") return true;
+        const state = AppSettingsStore.get("windows." + this.persistenceId, null);
+        if (state === null || typeof state !== "object") return true;
+
+        if (Number.isFinite(state.width) && state.width > 0) this.width = state.width;
+        if (Number.isFinite(state.height) && state.height > 0) this.height = state.height;
+        if (Number.isFinite(state.anchorX)) this.anchorX = state.anchorX;
+        if (Number.isFinite(state.anchorY)) this.anchorY = state.anchorY;
+        this.applyAnchor();
+        return state.visible !== false;
+    }
+
+    enablePersistence() {
+        this.persistenceEnabled = true;
+    }
+
+    notifyOpenState() {
+        this.app.fire("app:window_open_state_changed", this, this.open);
+    }
+
+    saveState(immediate = false) {
+        if (!this.persistenceEnabled || this.persistenceId === null
+            || typeof AppSettingsStore === "undefined") return;
+        if (!immediate) {
+            clearTimeout(this.persistenceTimer);
+            this.persistenceTimer = setTimeout(() => {
+                this.persistenceTimer = null;
+                this.saveState(true);
+            }, 100);
+            return;
+        }
+        clearTimeout(this.persistenceTimer);
+        this.persistenceTimer = null;
+        const previous = AppSettingsStore.get("windows." + this.persistenceId, {});
+        AppSettingsStore.set("windows." + this.persistenceId, Object.assign({}, previous, {
+            visible: this.open,
+            width: this.width,
+            height: this.height,
+            anchorX: this.anchorX,
+            anchorY: this.anchorY
+        }));
     }
 
     static ensureFocusTracking() {
@@ -257,6 +307,7 @@ class WebWindow extends AbstractWindow {
             this.windowElement.style.height = height + "px";
             this.updateImageOverlap();
         }
+        this.saveState();
     }
 
     setPosition(x, y) {
@@ -276,6 +327,7 @@ class WebWindow extends AbstractWindow {
             this.windowElement.style.top = y + "px";
             this.updateImageOverlap();
         }
+        this.saveState();
     }
 
     updateImageOverlap() {
@@ -367,6 +419,7 @@ class WebWindow extends AbstractWindow {
         this.windowElement = null;
 
         super.close();
+        this.saveState(true);
     }
 
     getWidth() {

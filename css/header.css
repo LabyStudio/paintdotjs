@@ -14,6 +14,14 @@ header {
     /* Keep the border in the box model so the toolbar geometry stays stable.
        Match the following toolbar row so no title-bar seam is visible. */
     border-bottom: 1px solid var(--color-menu-background);
+    /* Electron can use every unused part of this row as native title-bar
+       chrome. Interactive children opt out below. */
+    -webkit-app-region: drag;
+}
+
+#mainMenu,
+#settingsMenu {
+    -webkit-app-region: no-drag;
 }
 
 /* ------------ Header ------------ */
@@ -577,6 +585,50 @@ header {
     border-top: 4px solid var(--pdn-text, var(--color-menu-item-text));
 }
 
+/* Field dropdowns mirror the native Windows combo box used by Paint.NET.
+   Its arrow is a separate button with a thin chevron, rather than the solid
+   triangle used by tool-strip dropdowns. */
+#toolMenu .tool-dropdown-field .tool-dropdown-arrow {
+    flex-basis: 20px;
+    box-sizing: border-box;
+    margin: -1px -1px -1px auto;
+    background: var(--pdn-arrow-background);
+    border: 1px solid transparent;
+    border-left-color: var(--pdn-control-border);
+}
+
+#toolMenu .tool-dropdown-field .tool-dropdown-arrow:after {
+    left: 50%;
+    top: 45%;
+    width: 6px;
+    height: 6px;
+    border: 0;
+    border-right: 1.5px solid var(--pdn-combo-arrow-foreground);
+    border-bottom: 1.5px solid var(--pdn-combo-arrow-foreground);
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+#toolMenu .tool-dropdown-field:hover {
+    background: var(--pdn-control-background);
+    border-color: var(--color-menu-item-selected-border);
+}
+
+#toolMenu .tool-dropdown-field .tool-dropdown-arrow:hover,
+#toolMenu .tool-dropdown-field[aria-expanded="true"] .tool-dropdown-arrow {
+    background: var(--pdn-combo-arrow-hover-background);
+    border-color: var(--pdn-combo-arrow-hover-border);
+}
+
+#toolMenu .tool-dropdown-field .tool-dropdown-arrow:hover:after,
+#toolMenu .tool-dropdown-field[aria-expanded="true"] .tool-dropdown-arrow:after {
+    border-right-color: var(--pdn-combo-arrow-hover-foreground);
+    border-bottom-color: var(--pdn-combo-arrow-hover-foreground);
+}
+
+#toolMenu .tool-dropdown-field:active .tool-dropdown-arrow {
+    background: var(--pdn-combo-arrow-pressed-background);
+}
+
 #toolMenu .tool-option input[type="number"] {
     width: 75px;
     height: 24px;
@@ -612,8 +664,9 @@ header {
 }
 
 #toolMenu .tool-size-combo .tool-size-input {
+    flex: 1 1 auto;
     min-width: 0;
-    width: 36px;
+    width: auto;
     height: 22px;
     padding: 1px 3px;
     color: var(--pdn-text);
@@ -626,22 +679,47 @@ header {
 
 #toolMenu .tool-size-arrow {
     position: relative;
-    flex: 0 0 17px;
-    width: 17px;
-    height: 22px;
+    flex: 0 0 20px;
+    width: 20px;
+    height: 24px;
+    margin: -1px -1px -1px 0;
     padding: 0;
     background: var(--pdn-arrow-background);
-    border: 0;
+    border: 1px solid transparent;
+    border-left-color: var(--pdn-control-border);
+    box-sizing: border-box;
 }
 
 #toolMenu .tool-size-arrow:after {
     position: absolute;
     content: "";
-    left: 5px;
-    top: 9px;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 4px solid var(--pdn-arrow-foreground);
+    left: 50%;
+    top: 45%;
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid var(--pdn-combo-arrow-foreground);
+    border-bottom: 1.5px solid var(--pdn-combo-arrow-foreground);
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+#toolMenu .tool-size-arrow:hover,
+#toolMenu .tool-size-arrow[aria-expanded="true"] {
+    background: var(--pdn-combo-arrow-hover-background);
+    border-color: var(--pdn-combo-arrow-hover-border);
+}
+
+#toolMenu .tool-size-arrow:hover:after,
+#toolMenu .tool-size-arrow[aria-expanded="true"]:after {
+    border-right-color: var(--pdn-combo-arrow-hover-foreground);
+    border-bottom-color: var(--pdn-combo-arrow-hover-foreground);
+}
+
+#toolMenu .tool-size-arrow:active {
+    background: var(--pdn-combo-arrow-pressed-background);
+}
+
+#toolMenu .tool-option[data-option-key="fontSize"] .tool-size-combo {
+    width: 75px;
 }
 
 .tool-size-dropdown-menu {
@@ -655,15 +733,15 @@ header {
 
 .tool-dropdown-menu.tool-size-dropdown-menu button {
     justify-content: flex-start;
-    height: 18px;
-    min-height: 18px;
-    padding: 0 3px;
-    line-height: 17px;
-    font-size: 12px;
+    height: 24px;
+    min-height: 24px;
+    padding: 0 5px;
+    line-height: 22px;
+    font-size: 15px;
 }
 
 .tool-dropdown-menu.tool-size-dropdown-menu button[active] {
-    background: var(--color-menu-item-selected);
+    background: transparent;
     border-color: var(--color-menu-item-selected-border);
 }
 
@@ -755,9 +833,15 @@ header {
 }
 
 #toolMenu .tool-image-button:hover,
-#toolMenu .tool-dropdown:hover {
+#toolMenu .tool-dropdown-toolbar:hover {
     background: var(--color-menu-item-hover);
     border-color: var(--color-menu-item-border);
+}
+
+#toolMenu .tool-dropdown-field[aria-expanded="true"] {
+    color: var(--pdn-text);
+    background: var(--pdn-control-background);
+    border-color: var(--color-menu-item-selected-border);
 }
 
 #toolMenu .tool-image-button img,
@@ -971,6 +1055,10 @@ header {
     padding: 0 6px;
 }
 
+.tool-dropdown-menu-text {
+    border-color: var(--color-menu-item-selected-border);
+}
+
 .tool-font-dropdown-menu {
     width: min(380px, calc(100vw - 12px));
     max-height: min(520px, calc(100vh - 130px));
@@ -1010,7 +1098,8 @@ header {
 .tool-dropdown-menu-text button:hover,
 .tool-dropdown-menu-text button[active],
 .tool-font-dropdown-menu button:focus {
-    background: var(--color-menu-item-selected);
+    background: transparent;
+    border-color: var(--color-menu-item-selected-border);
     outline: none;
 }
 

@@ -3,12 +3,22 @@ class ColorsForm extends Form {
     constructor() {
         super("colorsForm");
 
-        this.mainColor = Color.BLACK;
-        this.secondaryColor = Color.WHITE;
+        const savedPrimaryColor = typeof AppSettingsStore === "undefined"
+            ? Color.BLACK.toPacked()
+            : Number(AppSettingsStore.get("tools.primaryColor", Color.BLACK.toPacked()));
+        const savedSecondaryColor = typeof AppSettingsStore === "undefined"
+            ? Color.WHITE.toPacked()
+            : Number(AppSettingsStore.get("tools.secondaryColor", Color.WHITE.toPacked()));
+        this.mainColor = Number.isInteger(savedPrimaryColor)
+            ? Color.fromPacked(savedPrimaryColor) : Color.BLACK.copy();
+        this.secondaryColor = Number.isInteger(savedSecondaryColor)
+            ? Color.fromPacked(savedSecondaryColor) : Color.WHITE.copy();
         this.selectedIsPrimary = true;
         this.changed = new EventHandler();
 
-        this.expanded = true; // TODO false
+        const savedWindowState = typeof AppSettingsStore === "undefined"
+            ? null : AppSettingsStore.get("windows.colorsForm", null);
+        this.expanded = savedWindowState?.expanded === true;
 
         // Paint.NET 5's exact 96-color default palette (packed AARRGGBB).
         this.palette = [
@@ -745,6 +755,9 @@ class ColorsForm extends Form {
         }
 
         this.mainColor = color;
+        if (typeof AppSettingsStore !== "undefined") {
+            AppSettingsStore.set("tools.primaryColor", color.toPacked());
+        }
         this.updateElements(initiator);
         this.changed.fire(this, "primary", color.copy());
     }
@@ -758,6 +771,9 @@ class ColorsForm extends Form {
         }
 
         this.secondaryColor = color;
+        if (typeof AppSettingsStore !== "undefined") {
+            AppSettingsStore.set("tools.secondaryColor", color.toPacked());
+        }
         this.updateElements(initiator);
         this.changed.fire(this, "secondary", color.copy());
     }
@@ -788,7 +804,13 @@ class ColorsForm extends Form {
     }
 
     setExpanded(expanded) {
-        this.expanded = expanded;
+        this.expanded = !!expanded;
+        if (typeof AppSettingsStore !== "undefined") {
+            const state = AppSettingsStore.get("windows.colorsForm", {});
+            AppSettingsStore.set("windows.colorsForm", Object.assign({}, state, {
+                expanded: this.expanded
+            }));
+        }
 
         this.updateWindowSize();
         this.updateElements("expand");

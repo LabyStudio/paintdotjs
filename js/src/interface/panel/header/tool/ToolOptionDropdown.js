@@ -15,6 +15,7 @@ class ToolOptionDropdown {
         this.fontTypeaheadTime = 0;
         this.fontTypeaheadTimer = null;
         this.pendingFontJumpValue = null;
+        this.fontPreviewObserver = null;
         this.fontTypeaheadListener = event => this.onFontTypeahead(event);
         this.documentClickListener = () => this.close();
 
@@ -69,6 +70,21 @@ class ToolOptionDropdown {
         return this.options.values.find(entry => entry[0] === this.value) || this.options.values[0];
     }
 
+    replaceValues(values) {
+        this.options.values = values;
+        if (!this.options.values.some(entry => entry[0] === this.value)) {
+            this.value = this.options.values[0]?.[0] ?? null;
+        }
+        this.update();
+        if (this.menu !== null && this.options.fontPreview) {
+            ++this.fontRenderToken;
+            this.fontPreviewObserver?.disconnect();
+            this.fontPreviewObserver = null;
+            this.menu.replaceChildren();
+            this.buildFontPicker();
+        }
+    }
+
     getIconSource(entry) {
         if (this.options.shapeGrid) return ToolOptionDropdown.getShapeIconSource(entry[0]);
         const iconName = entry[2];
@@ -78,6 +94,7 @@ class ToolOptionDropdown {
 
     update() {
         const entry = this.getSelectedEntry();
+        if (entry === undefined) return;
         const iconSource = this.getIconSource(entry);
         this.valueIcon.hidden = !iconSource || !!this.options.leadingIcon;
         if (!this.valueIcon.hidden) this.valueIcon.src = iconSource;
@@ -162,8 +179,14 @@ class ToolOptionDropdown {
         if (this.options.fontPreview) {
             const preview = document.createElement("span");
             preview.className = "tool-font-dropdown-preview";
-            preview.style.fontFamily = `'${String(entry[0]).replace(/'/g, "\\'")}', sans-serif`;
             preview.textContent = "The quick brown fox";
+            if (FontManager.isCustomFont(entry[0])) {
+                preview.dataset.fontFamily = entry[0];
+                preview.dataset.fontName = entry[1];
+                this.fontPreviewObserver?.observe(preview);
+            } else {
+                preview.style.fontFamily = `'${String(entry[0]).replace(/'/g, "\\'")}', sans-serif`;
+            }
             button.appendChild(preview);
         }
         button.onclick = event => {
@@ -180,6 +203,20 @@ class ToolOptionDropdown {
         this.menu.appendChild(results);
         this.fontEntryButtons = new Map();
         this.pendingFontJumpValue = this.value;
+        this.fontPreviewObserver = new IntersectionObserver(entries => {
+            for (const observed of entries) {
+                if (!observed.isIntersecting) continue;
+                const preview = observed.target;
+                this.fontPreviewObserver?.unobserve(preview);
+                FontManager.ensureLoaded(preview.dataset.fontFamily).then(face => {
+                    if (face !== null && preview.isConnected) {
+                        preview.style.fontFamily = `'${face.family.replace(/'/g, "\\'")}', sans-serif`;
+                    }
+                }).catch(error => {
+                    console.warn(`Could not load font preview "${preview.dataset.fontName}"`, error);
+                });
+            }
+        }, {root: results, rootMargin: "100px"});
 
         const token = ++this.fontRenderToken;
         let index = 0;
@@ -285,6 +322,11 @@ class ToolOptionDropdown {
             button.toggleAttribute("active", value === this.value);
         }
         this.options.onChange(entry[0]);
+        if (this.options.fontPreview) {
+            void FontManager.ensureLoaded(entry[0]).catch(error => {
+                console.warn(`Could not load selected font "${entry[1]}"`, error);
+            });
+        }
     }
 
     findFontTypeaheadMatch(prefix) {
@@ -381,6 +423,8 @@ class ToolOptionDropdown {
 
     close() {
         ++this.fontRenderToken;
+        this.fontPreviewObserver?.disconnect();
+        this.fontPreviewObserver = null;
         document.removeEventListener("keydown", this.fontTypeaheadListener, true);
         clearTimeout(this.fontTypeaheadTimer);
         this.fontTypeaheadTimer = null;

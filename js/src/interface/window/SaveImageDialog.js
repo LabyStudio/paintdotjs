@@ -148,9 +148,15 @@ class SaveImageDialog {
 
             const initialFormat = this.find(options.initialFormat || "png");
             const initialOptions = {...(options.initialOptions || {})};
+            const savedOptions = typeof AppSettingsStore === "undefined"
+                ? {} : AppSettingsStore.get("fileTypes.saveOptions", {});
+            const persistedOptions = savedOptions !== null && typeof savedOptions === "object"
+                ? savedOptions : {};
             const qualities = new Map(this.FORMATS.filter(format => format.quality !== undefined)
                 .map(format => [format.id, format.id === initialFormat.id
-                    ? Number(initialOptions.quality ?? format.quality) : format.quality]));
+                    ? Number(initialOptions.quality ?? persistedOptions[format.id]?.quality
+                        ?? format.quality)
+                    : Number(persistedOptions[format.id]?.quality ?? format.quality)]));
             let mover = null;
             let closed = false;
             let timer = null;
@@ -363,16 +369,24 @@ class SaveImageDialog {
                 }
                 await renderPromise;
                 if (currentBlob === null || closed) return;
-                finish({format: formatSelect.value, options: selectedOptions(), blob: currentBlob});
+                const selected = selectedOptions();
+                if (typeof AppSettingsStore !== "undefined") {
+                    const saved = AppSettingsStore.get("fileTypes.saveOptions", {});
+                    AppSettingsStore.set("fileTypes.saveOptions", Object.assign({}, saved, {
+                        [formatSelect.value]: selected
+                    }));
+                }
+                finish({format: formatSelect.value, options: selected, blob: currentBlob});
             };
 
             dialog.append(titleBar, content, footer);
             backdrop.appendChild(dialog);
             document.body.appendChild(backdrop);
-            mover = new DialogMover(dialog, titleBar, backdrop);
+            mover = new DialogMover(dialog, titleBar, backdrop, "saveConfiguration");
             document.addEventListener("keydown", onKeyDown, true);
             formatSelect.value = initialFormat.id;
-            chroma.value = initialOptions.subsampling || "4:2:0";
+            chroma.value = initialOptions.subsampling
+                || persistedOptions.jpeg?.subsampling || "4:2:0";
             refreshControls();
             renderPromise = render();
         });

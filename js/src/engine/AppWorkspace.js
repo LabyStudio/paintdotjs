@@ -4,10 +4,16 @@ class AppWorkspace extends AppView {
         super();
 
         this.documentWorkspaces = [];
+        this.initialWorkspace = null;
         this.activeDocumentWorkspace = null;
         this.activeTool = null;
         this.previousToolType = null;
-        this.measurementUnit = "pixel";
+        const savedMeasurementUnit = typeof AppSettingsStore === "undefined"
+            ? "pixel"
+            : AppSettingsStore.get("workspace.measurementUnit", "pixel");
+        this.measurementUnit = ["pixel", "inch", "centimeter"].includes(savedMeasurementUnit)
+            ? savedMeasurementUnit
+            : "pixel";
         this.measurementNumberFormatter = new Intl.NumberFormat(Language.code, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
@@ -26,9 +32,17 @@ class AppWorkspace extends AppView {
         }
     }
 
-    createBlankDocumentInNewWorkspace(width, height, resolution = 96) {
+    createBlankDocumentInNewWorkspace(width, height, resolution = 96, isInitial = false) {
+        const initialWorkspace = this.initialWorkspace
+            || this.documentWorkspaces.find(candidate => candidate.isInitialWorkspace === true)
+            || null;
+        if (!isInitial && this.isInitialWorkspaceUntouched(initialWorkspace)) {
+            this.closeDocumentWorkspace(initialWorkspace, false);
+        }
+
         // Create document workspace
         let documentWorkspace = new DocumentWorkspace(this);
+        documentWorkspace.isInitialWorkspace = isInitial;
 
         // Create document with initial size
         let document = new Document(width, height, resolution);
@@ -62,7 +76,26 @@ class AppWorkspace extends AppView {
 
         this.fire("app:create_document", documentWorkspace);
 
+        if (isInitial) this.initialWorkspace = documentWorkspace;
+
         return documentWorkspace;
+    }
+
+    isInitialWorkspaceUntouched(workspace = this.initialWorkspace) {
+        if (workspace === null || !this.documentWorkspaces.includes(workspace)
+            || workspace.isDirty()) return false;
+        // A tool preview (notably editable text) has not reached history yet,
+        // but it is still user work and must not be discarded as an untouched
+        // startup image.
+        if (workspace === this.activeDocumentWorkspace
+            && this.activeTool?.bitmapTransaction !== null) return false;
+
+        const history = workspace.getHistory();
+        const undo = history.getUndoStack();
+        const redo = history.getRedoStack();
+        return redo.length === 0
+            && (undo.length === 0
+                || (undo.length === 1 && undo[0] instanceof NullHistoryMemento));
     }
 
     closeDocumentWorkspace(documentWorkspace, confirmUnsaved = true) {
@@ -76,6 +109,8 @@ class AppWorkspace extends AppView {
 
         const index = this.documentWorkspaces.indexOf(documentWorkspace);
         const wasActive = this.activeDocumentWorkspace === documentWorkspace;
+        if (this.initialWorkspace === documentWorkspace) this.initialWorkspace = null;
+        documentWorkspace.isInitialWorkspace = false;
         this.documentWorkspaces.splice(index, 1);
         if (wasActive) {
             const next = this.documentWorkspaces[Math.min(index, this.documentWorkspaces.length - 1)] || null;
@@ -97,6 +132,10 @@ class AppWorkspace extends AppView {
         }
 
         this.activeDocumentWorkspace = documentWorkspace;
+        if (documentWorkspace !== null) {
+            documentWorkspace.setGridVisible(this.gridVisible);
+            documentWorkspace.setRulersVisible(this.rulersVisible);
+        }
         this.syncRulerVisibility();
         this.updateTitle();
         this.updateCanvasBounds(false);
@@ -145,6 +184,13 @@ class AppWorkspace extends AppView {
         }
 
         return super.onDocumentKeyPress(key, documentWorkspace);
+    }
+
+    onModifierKeysChanged() {
+        if (this.activeTool !== null) {
+            this.activeTool.onModifierKeysChanged();
+        }
+        super.onModifierKeysChanged();
     }
 
     onDocumentMouseDown(mouseX, mouseY, button, documentWorkspace, input = null) {
@@ -214,7 +260,12 @@ class AppWorkspace extends AppView {
     }
 
     setMeasurementUnit(unit) {
+        if (!["pixel", "inch", "centimeter"].includes(unit)) return;
         this.measurementUnit = unit;
+        if (typeof AppSettingsStore !== "undefined") {
+            AppSettingsStore.set("workspace.measurementUnit", unit);
+            if (unit !== "pixel") AppSettingsStore.set("workspace.lastNonPixelUnit", unit);
+        }
         this.fire("app:update_measurement_unit", unit);
         this.fire("document:mousemove", this.getLastMouseX(), this.getLastMouseY());
     }

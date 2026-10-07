@@ -103,7 +103,10 @@ class SelectionRenderer extends SurfaceBoxRenderer {
             context.closePath();
 
             if (options.fill) {
-                context.fill();
+                // Paint.NET's GeometryList uses alternate filling. With the
+                // even-odd rule, a lasso crossing over itself toggles the
+                // overlapped region instead of filling it twice.
+                context.fill("evenodd");
             } else {
                 context.stroke();
             }
@@ -134,6 +137,14 @@ class SelectionRenderer extends SurfaceBoxRenderer {
 
     setRenderingQuality(renderingQuality) {
         this.renderingQuality = renderingQuality === "aliased" ? "aliased" : "high";
+    }
+
+    isAnimationActive() {
+        return this.isVisible()
+            && this.selectionOutline
+            && this.outlineAnimation
+            && this.selectedPath !== null
+            && !this.selectedPath.isEmpty();
     }
 
     resetOutlineWhiteOpacity() {

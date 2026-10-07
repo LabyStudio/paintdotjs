@@ -12,6 +12,9 @@ window.desktopFileActions = {
         return image.isEmpty() ? null : image.getSize();
     },
     getPathForFile: file => localFilePaths.get(file) || webUtils.getPathForFile(file),
+    writeFile: async (filePath, data) => {
+        await fs.promises.writeFile(filePath, Buffer.from(data));
+    },
     showItemInFolder: filePath => shell.showItemInFolder(filePath)
 };
 

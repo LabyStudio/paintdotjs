@@ -1,4 +1,4 @@
-const {app, autoUpdater: nativeAutoUpdater, BrowserWindow, Menu, ipcMain, net, protocol} = require('electron');
+const {app, autoUpdater: nativeAutoUpdater, BrowserWindow, Menu, ipcMain, net, protocol, screen} = require('electron');
 const {setupTitlebar} = require('custom-electron-titlebar/main');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -18,6 +18,83 @@ const pendingFiles = [];
 let closeDialogReady = false;
 let closeDialogPending = false;
 let quittingForUpdate = false;
+let saveWindowStateTimer = null;
+
+const defaultWindowBounds = {width: 1080, height: 720};
+const minimumWindowBounds = {width: 640, height: 480};
+
+function windowStatePath() {
+    return path.join(app.getPath('userData'), 'window-state.json');
+}
+
+function readWindowState() {
+    try {
+        const state = JSON.parse(fs.readFileSync(windowStatePath(), 'utf8'));
+        const bounds = state?.bounds;
+        if (!bounds || !['x', 'y', 'width', 'height'].every(key => Number.isFinite(bounds[key]))) return null;
+        if (bounds.width <= 0 || bounds.height <= 0) return null;
+        return {
+            bounds: Object.fromEntries(
+                ['x', 'y', 'width', 'height'].map(key => [key, Math.round(bounds[key])])
+            ),
+            maximized: state.maximized === true
+        };
+    } catch (_) {
+        return null;
+    }
+}
+
+function intersectionArea(first, second) {
+    const width = Math.max(0, Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x));
+    const height = Math.max(0, Math.min(first.y + first.height, second.y + second.height) - Math.max(first.y, second.y));
+    return width * height;
+}
+
+function restoreWindowBounds(savedBounds) {
+    if (!savedBounds) return null;
+
+    const displays = screen.getAllDisplays();
+    let display = screen.getPrimaryDisplay();
+    let greatestIntersection = 0;
+    for (const candidate of displays) {
+        const intersection = intersectionArea(savedBounds, candidate.workArea);
+        if (intersection > greatestIntersection) {
+            display = candidate;
+            greatestIntersection = intersection;
+        }
+    }
+
+    const workArea = display.workArea;
+    const width = Math.min(Math.max(savedBounds.width, minimumWindowBounds.width), workArea.width);
+    const height = Math.min(Math.max(savedBounds.height, minimumWindowBounds.height), workArea.height);
+    return {
+        x: Math.min(Math.max(savedBounds.x, workArea.x), workArea.x + workArea.width - width),
+        y: Math.min(Math.max(savedBounds.y, workArea.y), workArea.y + workArea.height - height),
+        width,
+        height
+    };
+}
+
+function writeWindowState(window) {
+    if (!window || window.isDestroyed()) return;
+    try {
+        fs.mkdirSync(path.dirname(windowStatePath()), {recursive: true});
+        fs.writeFileSync(windowStatePath(), JSON.stringify({
+            bounds: window.getNormalBounds(),
+            maximized: window.isMaximized()
+        }));
+    } catch (error) {
+        console.warn('Could not save window state:', error);
+    }
+}
+
+function scheduleWindowStateSave(window) {
+    clearTimeout(saveWindowStateTimer);
+    saveWindowStateTimer = setTimeout(() => {
+        saveWindowStateTimer = null;
+        writeWindowState(window);
+    }, 250);
+}
 
 // electron-updater must be allowed to close every window synchronously before
 // its installer replaces the app. The regular close guard is asynchronous and
@@ -113,6 +190,8 @@ async function registerAppProtocol() {
 function createWindow() {
     closeDialogReady = false;
     closeDialogPending = false;
+    const savedWindowState = readWindowState();
+    const restoredBounds = restoreWindowBounds(savedWindowState?.bounds);
     mainWindow = new BrowserWindow({
         icon: app.isPackaged
             ? path.join(process.resourcesPath, 'desktop', 'icon.png')
@@ -121,10 +200,10 @@ function createWindow() {
         show: false,
         frame: false,
         titleBarStyle: 'hidden',
-        width: 1080,
-        height: 720,
-        minWidth: 640,
-        minHeight: 480,
+        ...defaultWindowBounds,
+        ...(restoredBounds || {}),
+        minWidth: minimumWindowBounds.width,
+        minHeight: minimumWindowBounds.height,
         webPreferences: {
             webgl: true,
             webSecurity: true,
@@ -137,12 +216,28 @@ function createWindow() {
     Menu.setApplicationMenu(null);
     const startupQuery = pendingFiles.length ? '?skipWelcome=1' : '';
     void mainWindow.loadURL(`paintjs://app/index.html${startupQuery}`);
-    mainWindow.once('ready-to-show', () => mainWindow.show());
+    mainWindow.once('ready-to-show', () => {
+        if (savedWindowState?.maximized) mainWindow.maximize();
+        mainWindow.show();
+    });
     mainWindow.webContents.on('did-finish-load', () => setImmediate(deliverPendingFiles));
-    mainWindow.on('maximize', () => mainWindow.webContents.send('window-maximize', true));
-    mainWindow.on('unmaximize', () => mainWindow.webContents.send('window-maximize', false));
-    mainWindow.on('closed', () => { mainWindow = null; });
+    mainWindow.on('move', () => scheduleWindowStateSave(mainWindow));
+    mainWindow.on('resize', () => scheduleWindowStateSave(mainWindow));
+    mainWindow.on('maximize', () => {
+        mainWindow.webContents.send('window-maximize', true);
+        scheduleWindowStateSave(mainWindow);
+    });
+    mainWindow.on('unmaximize', () => {
+        mainWindow.webContents.send('window-maximize', false);
+        scheduleWindowStateSave(mainWindow);
+    });
+    mainWindow.on('closed', () => {
+        clearTimeout(saveWindowStateTimer);
+        saveWindowStateTimer = null;
+        mainWindow = null;
+    });
     mainWindow.on('close', event => {
+        writeWindowState(mainWindow);
         if (quittingForUpdate) return;
         if (!closeDialogReady) return;
         event.preventDefault();
@@ -173,7 +268,10 @@ ipcMain.on('desktop:close-dialog-ready', event => {
 ipcMain.on('desktop:close-response', (event, shouldClose) => {
     if (mainWindow === null || event.sender !== mainWindow.webContents) return;
     closeDialogPending = false;
-    if (shouldClose) mainWindow.destroy();
+    if (shouldClose) {
+        writeWindowState(mainWindow);
+        mainWindow.destroy();
+    }
 });
 ipcMain.handle('desktop:check-for-updates', () => updater.checkForUpdates());
 ipcMain.on('desktop:install-update', () => updater.installUpdate());

@@ -9,11 +9,15 @@ class LassoSelectTool extends SelectionTool {
     }
 
     createShape(inputTracePoints) {
-        let inputTracePointsF = super.createShape(inputTracePoints);
+        // Do not append the closing point to the live pointer trace: rendering
+        // happens repeatedly while dragging and v5 keeps that trace open.
+        let inputTracePointsF = super.createShape(inputTracePoints).slice();
 
-        if (this.combineMode !== CombineMode.REPLACE
-            && inputTracePointsF.length > 2
-            && inputTracePointsF[0] !== inputTracePointsF[inputTracePointsF.length - 1]) {
+        // GeometryList treats the trace as a closed polygon in Paint.NET.
+        // GraphicsPath.addLines() does not, so close it explicitly for every
+        // combine mode before previewing or clipping it.
+        if (inputTracePointsF.length > 2
+            && !inputTracePointsF[0].equals(inputTracePointsF[inputTracePointsF.length - 1])) {
             inputTracePointsF.push(inputTracePointsF[0]);
         }
 

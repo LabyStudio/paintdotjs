@@ -52,6 +52,11 @@
     --pdn-text: var(--color-menu-item-text);
     --pdn-arrow-background: var(--color-button);
     --pdn-arrow-foreground: var(--color-button-text);
+    --pdn-combo-arrow-foreground: #a1a1a1;
+    --pdn-combo-arrow-hover-background: #cce8ff;
+    --pdn-combo-arrow-hover-border: #0078d7;
+    --pdn-combo-arrow-hover-foreground: #0067c0;
+    --pdn-combo-arrow-pressed-background: #99d1ff;
     --pdn-scrollbar-track: #101010;
     --pdn-scrollbar-thumb: #777777;
     --pdn-slider-background: #cfcfcf;

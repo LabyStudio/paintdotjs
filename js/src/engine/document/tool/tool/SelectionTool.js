@@ -16,6 +16,7 @@ class SelectionTool extends Tool {
 
         this.undoAction = null;
         this.combineMode = null;
+        this.oldSelectionBounds = null;
 
         this.tracePoints = [];
         this.lastXY = null;
@@ -29,9 +30,11 @@ class SelectionTool extends Tool {
 
         this.updateCursor();
 
-        this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(true);
-        this.getDocumentWorkspace().getSelectionRenderer().setRenderingQuality(
-            this.getSetting("renderingQuality", "high"));
+        const selectionRenderer = this.getDocumentWorkspace().getSelectionRenderer();
+        selectionRenderer.setSelectionTinting(true);
+        if (typeof selectionRenderer.setRenderingQuality === "function") {
+            selectionRenderer.setRenderingQuality(this.getSetting("renderingQuality", "high"));
+        }
 
         let surfaceBox = this.getSurfaceBox();
 
@@ -39,26 +42,34 @@ class SelectionTool extends Tool {
         this.newSelectionRenderer = new SelectionRenderer(surfaceBox, this.newSelection);
         this.newSelectionRenderer.setSelectionTinting(false);
         this.newSelectionRenderer.setOutlineAnimation(true);
-        this.newSelectionRenderer.setRenderingQuality(this.getSetting("renderingQuality", "high"));
+        if (typeof this.newSelectionRenderer.setRenderingQuality === "function") {
+            this.newSelectionRenderer.setRenderingQuality(this.getSetting("renderingQuality", "high"));
+        }
         this.newSelectionRenderer.setVisible(false);
         surfaceBox.addRenderer(this.newSelectionRenderer);
     }
 
     onDeactivate() {
-        super.onDeactivate();
+        if (this.tracking) this.done();
 
         this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(false);
 
         this.getSurfaceBox().removeRenderer(this.newSelectionRenderer);
         this.newSelection = null;
         this.newSelectionRenderer = null;
+        this.oldSelectionBounds = null;
+        super.onDeactivate();
     }
 
     onSettingChanged(key) {
         if (key === "renderingQuality") {
             const quality = this.getSetting("renderingQuality", "high");
-            this.getDocumentWorkspace().getSelectionRenderer().setRenderingQuality(quality);
-            if (this.newSelectionRenderer !== null) {
+            const selectionRenderer = this.getDocumentWorkspace().getSelectionRenderer();
+            if (typeof selectionRenderer.setRenderingQuality === "function") {
+                selectionRenderer.setRenderingQuality(quality);
+            }
+            if (this.newSelectionRenderer !== null
+                && typeof this.newSelectionRenderer.setRenderingQuality === "function") {
                 this.newSelectionRenderer.setRenderingQuality(quality);
             }
         }
@@ -68,6 +79,8 @@ class SelectionTool extends Tool {
         if (this.tracking) {
             this.moveOriginMode = true;
             this.lastXY = new Point(mouseX, mouseY);
+            this.updateCursor();
+            return true;
         } else if (button === MouseButton.LEFT || button === MouseButton.RIGHT) {
             this.tracking = true;
             this.hasMoved = false;
@@ -80,6 +93,7 @@ class SelectionTool extends Tool {
 
             let selection = this.getSelection();
             this.wasNotEmpty = !selection.isEmpty();
+            this.oldSelectionBounds = selection.getBounds();
 
             if (this.app.isControlKeyDown() && button === MouseButton.LEFT) {
                 this.combineMode = CombineMode.UNION;
@@ -124,6 +138,8 @@ class SelectionTool extends Tool {
             }
 
             this.newSelectionRenderer.setVisible(true);
+            this.updateCursor();
+            return true;
         }
 
         return super.onMouseDown(mouseX, mouseY, button);
@@ -143,7 +159,7 @@ class SelectionTool extends Tool {
         return true;
     }
 
-    onMouseMove(mouseX, mouseY) {
+    onMouseMove(mouseX, mouseY, input = null) {
         if (this.moveOriginMode) {
             let delta = new Size(mouseX - this.lastXY.x, mouseY - this.lastXY.y);
 
@@ -158,20 +174,32 @@ class SelectionTool extends Tool {
             this.lastXY = new Point(mouseX, mouseY);
             this.render();
         } else if (this.tracking) {
-            let mouseXY = new Point(mouseX, mouseY);
-
-            if (!mouseXY.equals(this.tracePoints[this.tracePoints.length - 1])) {
-                this.tracePoints.push(mouseXY);
+            const samples = input !== null && Array.isArray(input.samples)
+                ? input.samples
+                : [];
+            for (const sample of samples) {
+                this.appendTracePoint(sample.x, sample.y);
             }
+            this.appendTracePoint(mouseX, mouseY);
 
             this.hasMoved = true;
             this.render();
         }
 
-        return super.onMouseMove(mouseX, mouseY);
+        this.updateCursor();
+        return this.tracking || super.onMouseMove(mouseX, mouseY, input);
     }
 
-    onMouseUp(mouseX, mouseY, button) {
+    appendTracePoint(x, y) {
+        const point = new Point(Math.floor(x), Math.floor(y));
+        if (!point.equals(this.tracePoints[this.tracePoints.length - 1])) {
+            this.tracePoints.push(point);
+        }
+    }
+
+    onMouseUp(mouseX, mouseY, button, input = null) {
+        const wasTracking = this.tracking;
+        if (wasTracking) this.onMouseMove(mouseX, mouseY, input);
         if (this.moveOriginMode) {
             this.moveOriginMode = false;
         } else {
@@ -180,31 +208,38 @@ class SelectionTool extends Tool {
 
         this.updateCursor();
 
-        return super.onMouseUp(mouseX, mouseY, button);
+        return wasTracking || super.onMouseUp(mouseX, mouseY, button, input);
     }
 
     done() {
         if (this.tracking) {
             let polygon = this.createSelectionPolygon();
 
-            this.hasMoved = this.hasMoved && (polygon.length > 0);
+            this.hasMoved = this.hasMoved && (polygon.length > 1);
 
-            let tooQuick = Date.now() - this.startTime < 50;
-            let clipped = (polygon.length === 0);
-
-            let noEffect = false;
+            let tooQuick = Date.now() - this.startTime <= 50;
+            const polygonBounds = this.getPolygonBounds(polygon);
+            let clipped = polygon.length < 3 || polygonBounds.isEmpty();
+            const intersectsOldSelection = this.oldSelectionBounds !== null
+                && !Rectangle.intersect(this.oldSelectionBounds, polygonBounds).isEmpty();
 
             let whatToDo;
 
             if (this.append) {
-                if (!this.hasMoved || clipped || noEffect) {
+                if (this.combineMode === CombineMode.INTERSECT && clipped) {
+                    whatToDo = SelectionTool.CLEAR;
+                } else if (!this.hasMoved || clipped) {
+                    whatToDo = SelectionTool.RESET;
+                } else if (this.combineMode === CombineMode.INTERSECT && !intersectsOldSelection) {
+                    whatToDo = SelectionTool.CLEAR;
+                } else if (this.combineMode === CombineMode.EXCLUDE && !intersectsOldSelection) {
                     whatToDo = SelectionTool.RESET;
                 } else {
                     whatToDo = SelectionTool.EMIT;
                 }
             } else {
                 if ((this.hasMoved || !this.mustMoveForEmit())
-                    && (!tooQuick || !this.mustMoveForEmit()) && !clipped && !noEffect) {
+                    && (!tooQuick || !this.mustMoveForEmit()) && !clipped) {
                     whatToDo = SelectionTool.EMIT;
                 } else {
                     whatToDo = SelectionTool.CLEAR;
@@ -238,9 +273,27 @@ class SelectionTool extends Tool {
             this.newSelectionRenderer.setVisible(false);
 
             this.tracking = false;
+            this.moveOriginMode = false;
+            this.undoAction = null;
+            this.oldSelectionBounds = null;
 
             this.getDocumentWorkspace().getSelectionRenderer().setSelectionOutline(true);
         }
+    }
+
+    getPolygonBounds(polygon) {
+        if (polygon.length === 0) return Rectangle.empty();
+        let minX = polygon[0].x;
+        let minY = polygon[0].y;
+        let maxX = minX;
+        let maxY = minY;
+        for (let i = 1; i < polygon.length; ++i) {
+            minX = Math.min(minX, polygon[i].x);
+            minY = Math.min(minY, polygon[i].y);
+            maxX = Math.max(maxX, polygon[i].x);
+            maxY = Math.max(maxY, polygon[i].y);
+        }
+        return Rectangle.absolute(minX, minY, maxX, maxY);
     }
 
     render() {
@@ -258,7 +311,20 @@ class SelectionTool extends Tool {
     }
 
     updateCursor() {
-        this.app.setCursorImg(this.getCursorImgUp());
+        if (this.tracking) {
+            this.app.setCursorImg(this.getCursorImgDown());
+        } else if (this.app.isControlKeyDown()) {
+            this.app.setCursorImg(this.getCursorImgUpPlus());
+        } else if (this.app.isAltKeyDown()) {
+            this.app.setCursorImg(this.getCursorImgUpMinus());
+        } else {
+            this.app.setCursorImg(this.getCursorImgUp());
+        }
+    }
+
+    onModifierKeysChanged() {
+        if (this.tracking) this.render();
+        this.updateCursor();
     }
 
     createSelectionPolygon() {

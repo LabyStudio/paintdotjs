@@ -769,6 +769,14 @@ body.window-resizing * {
     gap: 8px;
 }
 
+.settings-page-fonts {
+    overflow: hidden;
+}
+
+.settings-font-clear {
+    margin-left: auto;
+}
+
 .settings-font-drop-zone {
     box-sizing: border-box;
     width: 100%;
@@ -848,9 +856,13 @@ body.window-resizing * {
 
 .settings-font-list {
     width: 100%;
+    min-height: 0;
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     gap: 7px;
+    padding-right: 4px;
+    overflow-y: auto;
 }
 
 .settings-font-empty {
@@ -866,6 +878,8 @@ body.window-resizing * {
     padding: 8px;
     background: var(--color-number-input-background);
     border: 1px solid var(--color-window-border);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 58px;
 }
 
 .settings-font-details {
@@ -1702,9 +1716,9 @@ html.effect-rendering * {
 
 .effect-config-row > div {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 72px;
+    grid-template-columns: minmax(0, 1fr) 72px 24px;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     min-height: 28px;
 }
 
@@ -2449,12 +2463,16 @@ html.effect-rendering * {
     height: 24px;
     min-height: 24px !important;
     padding: 0 !important;
-    color: #087eca;
     background: var(--color-button);
     border: 1px solid var(--color-button-outline);
-    font-size: 19px;
-    font-weight: 700;
-    line-height: 20px;
+}
+
+.effect-row-reset img {
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    object-fit: contain;
 }
 
 .effect-special-slider-line .pdn-number-input,

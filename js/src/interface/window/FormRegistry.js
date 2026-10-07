@@ -18,11 +18,17 @@ class FormRegistry {
             // TODO create window on operating system
         }
 
-        let window = new WebWindow();
+        let window = new WebWindow(form.id);
         form.initialize(window);
         form.initializeDefault(window);
+        const shouldOpen = window.restoreState();
+        window.enablePersistence();
         form.postInitialize();
-        window.create();
+        if (shouldOpen) {
+            window.create();
+        } else {
+            window.notifyOpenState();
+        }
     }
 
     static unregister(id) {

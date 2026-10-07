@@ -20,7 +20,21 @@ class AppSettingsStore {
             borderColor: "#808080",
             checkerboardBrightness: 75
         },
-        tools: {defaultTool: "paintBrushTool"},
+        tools: {
+            defaultTool: "paintBrushTool",
+            primaryColor: -16777216,
+            secondaryColor: -1
+        },
+        workspace: {
+            measurementUnit: "pixel",
+            lastNonPixelUnit: "inch",
+            newFileMaintainAspectRatio: false,
+            showPixelGrid: false,
+            showRulers: false
+        },
+        windows: {},
+        dialogs: {},
+        fileTypes: {saveOptions: {}},
         pen: {pointerInput: true},
         graphics: {hardwareAcceleration: true, renderingDevice: "auto"},
         colorManagement: {advancedColor: false},
@@ -70,7 +84,7 @@ class AppSettingsStore {
             // Continue with the in-memory value when persistence is unavailable.
         }
 
-        this.apply();
+        if (path.startsWith("ui.") || path.startsWith("canvas.")) this.apply();
         if ((path.startsWith("canvas.") || path === "ui.colorScheme")
             && window.app !== undefined) {
             const workspace = window.app.getActiveDocumentWorkspace?.();
@@ -163,12 +177,15 @@ class SettingsDialog {
         this.shortcutList = null;
         this.fontList = null;
         this.fontAddButton = null;
+        this.fontClearButton = null;
         this.fontDropZone = null;
         this.fontImportPanel = null;
         this.fontImportLabel = null;
         this.fontImportBar = null;
         this.fontImportState = null;
         this.fontImporting = false;
+        this.fontRenderToken = 0;
+        this.fontPreviewObserver = null;
         this.changedListener = () => this.renderShortcutRows();
         this.fontsChangedListener = () => {
             if (this.backdrop !== null && this.activeSection === "fonts") this.renderFontRows();
@@ -286,6 +303,7 @@ class SettingsDialog {
     selectSection(section) {
         if (this.page === null) return;
         if (!this.sections.some(([id]) => id === section)) section = "ui";
+        this.stopFontRendering();
         this.activeSection = section;
         for (const button of this.dialog.querySelectorAll(".settings-navigation button")) {
             button.classList.toggle("active", button.dataset.section === section);
@@ -758,7 +776,13 @@ class SettingsDialog {
         add.textContent = "Add fonts…";
         add.onclick = () => input.click();
         this.fontAddButton = add;
-        controls.append(add, input);
+        const clear = document.createElement("button");
+        clear.type = "button";
+        clear.className = "settings-action-button settings-font-clear";
+        clear.textContent = "Clear all";
+        clear.onclick = () => this.clearAllFonts();
+        this.fontClearButton = clear;
+        controls.append(add, clear, input);
         this.page.appendChild(controls);
 
         const dropZone = document.createElement("div");
@@ -857,6 +881,10 @@ class SettingsDialog {
     updateFontImportProgress() {
         const state = this.fontImportState;
         if (this.fontAddButton !== null) this.fontAddButton.disabled = this.fontImporting;
+        if (this.fontClearButton !== null) {
+            this.fontClearButton.disabled = this.fontImporting
+                || FontManager.isInitializing() || FontManager.getFonts().length === 0;
+        }
         if (this.fontDropZone !== null) {
             this.fontDropZone.classList.toggle("busy", this.fontImporting);
             this.fontDropZone.setAttribute("aria-busy", String(this.fontImporting));
@@ -874,49 +902,129 @@ class SettingsDialog {
 
     renderFontRows() {
         if (this.fontList === null || !this.fontList.isConnected) return;
+        this.stopFontRendering();
         this.fontList.innerHTML = "";
         const fonts = FontManager.getFonts();
+        if (this.fontClearButton !== null) {
+            this.fontClearButton.disabled = this.fontImporting
+                || FontManager.isInitializing() || fonts.length === 0;
+        }
         if (fonts.length === 0) {
             const empty = document.createElement("div");
             empty.className = "settings-empty-list settings-font-empty";
-            empty.textContent = "No custom fonts have been added.";
+            empty.textContent = FontManager.isInitializing()
+                ? "Loading installed fonts…"
+                : "No custom fonts have been added.";
             this.fontList.appendChild(empty);
             return;
         }
 
-        for (const font of fonts) {
-            const row = document.createElement("article");
-            row.className = "settings-font-row";
-            const details = document.createElement("div");
-            details.className = "settings-font-details";
-            const name = document.createElement("strong");
-            name.textContent = font.name;
-            const metadata = document.createElement("span");
-            metadata.textContent = `${font.fileName} · ${this.formatFileSize(font.size)}`;
-            details.append(name, metadata);
+        const token = ++this.fontRenderToken;
+        this.fontPreviewObserver = new IntersectionObserver(entries => {
+            for (const entry of entries) {
+                if (!entry.isIntersecting) continue;
+                const preview = entry.target;
+                this.fontPreviewObserver?.unobserve(preview);
+                FontManager.ensureLoaded(preview.dataset.fontId).then(face => {
+                    if (face !== null && preview.isConnected && token === this.fontRenderToken) {
+                        preview.style.fontFamily = `'${face.family.replace(/'/g, "\\'")}', sans-serif`;
+                    }
+                }).catch(error => {
+                    console.warn(`Could not load font preview "${preview.dataset.fontName}"`, error);
+                });
+            }
+        }, {root: this.page, rootMargin: "160px"});
 
-            const preview = document.createElement("div");
-            preview.className = "settings-font-preview";
-            preview.style.fontFamily = `'${font.family}', sans-serif`;
-            preview.textContent = "The quick brown fox jumps over the lazy dog 0123456789";
+        let index = 0;
+        const appendChunk = () => {
+            if (token !== this.fontRenderToken || this.fontList === null
+                || !this.fontList.isConnected) return;
+            const fragment = document.createDocumentFragment();
+            const end = Math.min(index + 20, fonts.length);
+            for (; index < end; ++index) fragment.appendChild(this.createFontRow(fonts[index]));
+            this.fontList.appendChild(fragment);
+            if (index < fonts.length) requestAnimationFrame(appendChunk);
+        };
+        appendChunk();
+    }
 
-            const remove = document.createElement("button");
-            remove.type = "button";
-            remove.className = "settings-font-remove";
-            remove.textContent = "Remove";
-            remove.onclick = async () => {
-                remove.disabled = true;
-                try {
-                    await FontManager.removeFont(font.id);
-                    this.setStatus(`Removed ${font.name}.`);
-                } catch (error) {
-                    remove.disabled = false;
-                    this.setStatus(`Could not remove ${font.name}.`);
-                    alert(`Could not remove "${font.name}": ${error.message}`);
+    createFontRow(font) {
+        const row = document.createElement("article");
+        row.className = "settings-font-row";
+        const details = document.createElement("div");
+        details.className = "settings-font-details";
+        const name = document.createElement("strong");
+        name.textContent = font.name;
+        const metadata = document.createElement("span");
+        metadata.textContent = `${font.fileName} · ${this.formatFileSize(font.size)}`;
+        details.append(name, metadata);
+
+        const preview = document.createElement("div");
+        preview.className = "settings-font-preview";
+        preview.dataset.fontId = font.id;
+        preview.dataset.fontName = font.name;
+        preview.textContent = "The quick brown fox jumps over the lazy dog 0123456789";
+        this.fontPreviewObserver?.observe(preview);
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "settings-font-remove";
+        remove.textContent = "Remove";
+        remove.onclick = async () => {
+            remove.disabled = true;
+            try {
+                await FontManager.removeFont(font.id);
+                this.setStatus(`Removed ${font.name}.`);
+            } catch (error) {
+                remove.disabled = false;
+                this.setStatus(`Could not remove ${font.name}.`);
+                alert(`Could not remove "${font.name}": ${error.message}`);
+            }
+        };
+        row.append(details, preview, remove);
+        return row;
+    }
+
+    stopFontRendering() {
+        ++this.fontRenderToken;
+        this.fontPreviewObserver?.disconnect();
+        this.fontPreviewObserver = null;
+    }
+
+    async clearAllFonts() {
+        const count = FontManager.getFonts().length;
+        if (count === 0 || this.fontImporting || FontManager.isInitializing()) return;
+        const choice = await TaskDialog.show({
+            title: "Clear Installed Fonts",
+            icon: "assets/icons/warning_icon.png",
+            message: `Remove all ${count} custom fonts from paint.js? This cannot be undone.`,
+            cancelValue: "cancel",
+            choices: [
+                {
+                    value: "clear",
+                    title: "Clear All Fonts",
+                    description: "Delete every custom font stored by paint.js.",
+                    icon: "assets/icons/trash_can.png"
+                },
+                {
+                    value: "cancel",
+                    title: "Cancel",
+                    description: "Keep the installed fonts.",
+                    icon: "assets/icons/cancel_icon.png"
                 }
-            };
-            row.append(details, preview, remove);
-            this.fontList.appendChild(row);
+            ]
+        });
+        if (choice !== "clear") return;
+
+        this.fontClearButton.disabled = true;
+        this.setStatus(`Removing ${count} fonts…`);
+        try {
+            const removed = await FontManager.removeAllFonts();
+            this.setStatus(`Removed ${removed} custom fonts.`);
+        } catch (error) {
+            console.error("Could not clear custom fonts", error);
+            this.setStatus("Could not clear the custom fonts.");
+            this.fontClearButton.disabled = false;
         }
     }
 
@@ -1053,6 +1161,7 @@ class SettingsDialog {
 
     close() {
         if (this.backdrop === null) return;
+        this.stopFontRendering();
         ActionRegistry.removeChangedListener(this.changedListener);
         if (this.dialogMover !== null) this.dialogMover.destroy();
         this.backdrop.remove();
@@ -1064,6 +1173,7 @@ class SettingsDialog {
         this.shortcutList = null;
         this.fontList = null;
         this.fontAddButton = null;
+        this.fontClearButton = null;
         this.fontDropZone = null;
         this.fontImportPanel = null;
         this.fontImportLabel = null;
