@@ -1,5 +1,7 @@
 class BitmapEffectEngine {
 
+    static gaussianNoiseTable = null;
+
     static DEFINITIONS = Object.freeze({
         autoLevel: this.instant("autoLevel", "auto_level.png", (r, g, b, a, _, state) => [
             this.stretch(r, state.min[0], state.max[0]),
@@ -214,7 +216,8 @@ class BitmapEffectEngine {
             this.range("radius", "Radius", 0, 200, 2),
             this.range("gamma", "Gamma boost", -.99, 2, 0, .01),
             this.range("quality", "Quality", 1, 4, 2)
-        ], (source, width, height, values) => this.gaussianBlur(source, width, height, values.radius, values.gamma)),
+        ], (source, width, height, values) => this.gaussianBlur(
+            source, width, height, values.radius, values.gamma, values.quality)),
         bokehEffect: this.configurableSpatial("bokehEffect", "bokeh_effect_icon.png", [
             this.range("radius", "Radius", 0, 200, 25),
             this.range("gamma", "Gamma boost", -.99, 2, 0, .01),
@@ -505,7 +508,9 @@ class BitmapEffectEngine {
     }
 
     static maskResult(source, rendered, width, height, selection) {
-        const mask = this.createSelectionMask(width, height, selection);
+        const mask = selection instanceof Uint8Array
+            ? selection
+            : this.createSelectionMask(width, height, selection);
         if (mask === null) return rendered;
         const output = new ImageData(new Uint8ClampedArray(source.data), width, height);
         for (let pixel = 0, offset = 0; pixel < mask.length; ++pixel, offset += 4) {
@@ -531,8 +536,12 @@ class BitmapEffectEngine {
         path.dispose();
         const rgba = context.getImageData(0, 0, width, height).data;
         const mask = new Uint8Array(width * height);
-        for (let offset = 3, pixel = 0; offset < rgba.length; offset += 4, ++pixel) mask[pixel] = rgba[offset];
-        return mask;
+        let fullySelected = true;
+        for (let offset = 3, pixel = 0; offset < rgba.length; offset += 4, ++pixel) {
+            mask[pixel] = rgba[offset];
+            if (rgba[offset] !== 255) fullySelected = false;
+        }
+        return fullySelected ? null : mask;
     }
 
     static channelExtents(data) {
@@ -568,15 +577,30 @@ class BitmapEffectEngine {
         return points[points.length - 1][1];
     }
 
-    static randomState() {
-        let state = 0x6d2b79f5;
-        return {next: () => {
+    static randomState(seed = 0) {
+        let state = this.hash32(Number(seed) | 0);
+        const nextUint32 = () => {
             state += 0x6d2b79f5;
             let value = state;
             value = Math.imul(value ^ value >>> 15, value | 1);
             value ^= value + Math.imul(value ^ value >>> 7, value | 61);
-            return ((value ^ value >>> 14) >>> 0) / 4294967296;
-        }};
+            return (value ^ value >>> 14) >>> 0;
+        };
+        return {nextUint32, next: () => nextUint32() / 4294967296};
+    }
+
+    static getGaussianNoiseTable() {
+        if (this.gaussianNoiseTable !== null) return this.gaussianNoiseTable;
+        const table = new Float32Array(65536);
+        const random = this.randomState(0x4e4f4953);
+        for (let index = 0; index < table.length; index += 2) {
+            const magnitude = Math.sqrt(-2 * Math.log(Math.max(Number.EPSILON, random.next())));
+            const angle = Math.PI * 2 * random.next();
+            table[index] = magnitude * Math.cos(angle);
+            table[index + 1] = magnitude * Math.sin(angle);
+        }
+        this.gaussianNoiseTable = table;
+        return table;
     }
 
     static sample(data, width, height, x, y, channel) {
@@ -597,12 +621,30 @@ class BitmapEffectEngine {
 
     static mapImage(source, width, height, mapper) {
         const output = new ImageData(width, height);
+        const sourceData = source.data;
+        const outputData = output.data;
+        const mapped = [0, 0];
         for (let y = 0; y < height; ++y) {
             for (let x = 0; x < width; ++x) {
-                const [sx, sy] = mapper(x, y);
+                mapper(x, y, mapped);
+                const sx = mapped[0], sy = mapped[1];
                 const offset = (y * width + x) * 4;
+                const x0 = Math.floor(sx), y0 = Math.floor(sy);
+                const tx = sx - x0, ty = sy - y0;
+                const left = Math.max(0, Math.min(width - 1, x0));
+                const right = Math.max(0, Math.min(width - 1, x0 + 1));
+                const top = Math.max(0, Math.min(height - 1, y0));
+                const bottom = Math.max(0, Math.min(height - 1, y0 + 1));
+                const topLeft = (top * width + left) * 4;
+                const topRight = (top * width + right) * 4;
+                const bottomLeft = (bottom * width + left) * 4;
+                const bottomRight = (bottom * width + right) * 4;
                 for (let channel = 0; channel < 4; ++channel) {
-                    output.data[offset + channel] = this.sampleLinear(source.data, width, height, sx, sy, channel);
+                    const topValue = sourceData[topLeft + channel]
+                        + (sourceData[topRight + channel] - sourceData[topLeft + channel]) * tx;
+                    const bottomValue = sourceData[bottomLeft + channel]
+                        + (sourceData[bottomRight + channel] - sourceData[bottomLeft + channel]) * tx;
+                    outputData[offset + channel] = topValue + (bottomValue - topValue) * ty;
                 }
             }
         }
@@ -673,41 +715,97 @@ class BitmapEffectEngine {
         return result;
     }
 
-    static gaussianBlur(source, width, height, radius, gamma = 0) {
+    static gaussianBoxRadii(sigma, passes) {
+        // A sequence of box blurs converges on a Gaussian. Choose the two odd
+        // box widths whose combined variance most closely matches sigma. This
+        // keeps rendering O(width * height * passes), regardless of radius.
+        const idealWidth = Math.sqrt(12 * sigma * sigma / passes + 1);
+        let lowerWidth = Math.floor(idealWidth);
+        if (lowerWidth % 2 === 0) --lowerWidth;
+        lowerWidth = Math.max(1, lowerWidth);
+        const upperWidth = lowerWidth + 2;
+        const lowerPasses = Utility.clamp(Math.round(
+            (12 * sigma * sigma - passes * lowerWidth * lowerWidth
+                - 4 * passes * lowerWidth - 3 * passes)
+            / (-4 * lowerWidth - 4)
+        ), 0, passes);
+        return Array.from({length: passes}, (_, index) =>
+            ((index < lowerPasses ? lowerWidth : upperWidth) - 1) / 2);
+    }
+
+    static nativeGaussianBlur(source, width, height, sigma) {
+        if (typeof document === "undefined") return null;
+        const sourceCanvas = document.createElement("canvas");
+        const sourceContext = sourceCanvas.getContext("2d", {alpha: true});
+        const outputCanvas = document.createElement("canvas");
+        const outputContext = outputCanvas.getContext("2d", {alpha: true});
+        if (sourceContext === null || outputContext === null
+            || !("filter" in outputContext)) return null;
+
+        // Canvas filters are implemented by Chromium's native graphics stack
+        // and are substantially faster than moving millions of samples through
+        // JavaScript. Extend the edge pixels into the filter margin so the
+        // result matches the CPU renderer's clamped-edge behavior.
+        const padding = Math.ceil(sigma * 3);
+        const paddedWidth = width + padding * 2;
+        const paddedHeight = height + padding * 2;
+        sourceCanvas.width = paddedWidth;
+        sourceCanvas.height = paddedHeight;
+        outputCanvas.width = width;
+        outputCanvas.height = height;
+
+        const imageCanvas = document.createElement("canvas");
+        imageCanvas.width = width;
+        imageCanvas.height = height;
+        const imageContext = imageCanvas.getContext("2d", {alpha: true});
+        if (imageContext === null) return null;
+        imageContext.putImageData(source, 0, 0);
+        sourceContext.drawImage(imageCanvas, padding, padding);
+        if (padding > 0) {
+            sourceContext.drawImage(imageCanvas, 0, 0, 1, height,
+                0, padding, padding, height);
+            sourceContext.drawImage(imageCanvas, width - 1, 0, 1, height,
+                padding + width, padding, padding, height);
+            sourceContext.drawImage(imageCanvas, 0, 0, width, 1,
+                padding, 0, width, padding);
+            sourceContext.drawImage(imageCanvas, 0, height - 1, width, 1,
+                padding, padding + height, width, padding);
+            sourceContext.drawImage(imageCanvas, 0, 0, 1, 1,
+                0, 0, padding, padding);
+            sourceContext.drawImage(imageCanvas, width - 1, 0, 1, 1,
+                padding + width, 0, padding, padding);
+            sourceContext.drawImage(imageCanvas, 0, height - 1, 1, 1,
+                0, padding + height, padding, padding);
+            sourceContext.drawImage(imageCanvas, width - 1, height - 1, 1, 1,
+                padding + width, padding + height, padding, padding);
+        }
+
+        outputContext.filter = `blur(${sigma}px)`;
+        if (outputContext.filter === "none") return null;
+        outputContext.drawImage(sourceCanvas, -padding, -padding);
+        outputContext.filter = "none";
+        return outputContext.getImageData(0, 0, width, height);
+    }
+
+    static gaussianBlur(source, width, height, radius, gamma = 0, quality = 2) {
         const sigma = Math.max(0, Number(radius)) / 3;
         if (sigma < .01) return new ImageData(new Uint8ClampedArray(source.data), width, height);
         return this.withGamma(source, width, height, gamma, input => {
-            const kernelRadius = Math.ceil(sigma * 3);
-            const kernel = new Float64Array(kernelRadius * 2 + 1);
-            let kernelTotal = 0;
-            for (let i = -kernelRadius; i <= kernelRadius; ++i) {
-                const weight = Math.exp(-(i * i) / (2 * sigma * sigma));
-                kernel[i + kernelRadius] = weight;
-                kernelTotal += weight;
+            let nativeResult = null;
+            try {
+                nativeResult = this.nativeGaussianBlur(input, width, height, sigma);
+            } catch (_) {
+                // Oversized canvases or constrained devices can reject the
+                // native surface allocation. The bounded CPU path still works.
             }
-            for (let i = 0; i < kernel.length; ++i) kernel[i] /= kernelTotal;
-            const horizontal = new Float32Array(input.data.length);
-            const output = new ImageData(width, height);
-            for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
-                const destination = (y * width + x) * 4;
-                for (let channel = 0; channel < 4; ++channel) {
-                    let total = 0;
-                    for (let k = -kernelRadius; k <= kernelRadius; ++k) {
-                        total += this.sample(input.data, width, height, x + k, y, channel) * kernel[k + kernelRadius];
-                    }
-                    horizontal[destination + channel] = total;
-                }
-            }
-            for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
-                const destination = (y * width + x) * 4;
-                for (let channel = 0; channel < 4; ++channel) {
-                    let total = 0;
-                    for (let k = -kernelRadius; k <= kernelRadius; ++k) {
-                        const sy = Math.max(0, Math.min(height - 1, y + k));
-                        total += horizontal[(sy * width + x) * 4 + channel] * kernel[k + kernelRadius];
-                    }
-                    output.data[destination + channel] = total;
-                }
+            if (nativeResult !== null) return nativeResult;
+            // Quality 1..4 maps to 2..5 passes. Even the fast setting is a
+            // much closer Gaussian approximation than one box, while higher
+            // settings smooth the small residual box profile at modest cost.
+            const passes = Utility.clamp(Math.round(Number(quality)) || 2, 1, 4) + 1;
+            let output = input;
+            for (const boxRadius of this.gaussianBoxRadii(sigma, passes)) {
+                output = this.boxBlur(output, width, height, boxRadius);
             }
             return output;
         });
@@ -723,21 +821,56 @@ class BitmapEffectEngine {
         if (!radius) return new ImageData(new Uint8ClampedArray(source.data), width, height);
         return this.withGamma(source, width, height, gamma, input => {
             const output = new ImageData(width, height);
-            const rows = [];
-            for (let dy = -radius; dy <= radius; ++dy) {
-                rows.push([dy, Math.floor(Math.sqrt(radius * radius - dy * dy))]);
+            const inputData = input.data;
+            const outputData = output.data;
+            const diameter = radius * 2 + 1;
+            const halfWidths = new Int32Array(diameter);
+            let count = 0;
+            for (let row = 0; row < diameter; ++row) {
+                const dy = row - radius;
+                const halfWidth = Math.floor(Math.sqrt(radius * radius - dy * dy));
+                halfWidths[row] = halfWidth;
+                count += halfWidth * 2 + 1;
             }
-            for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
-                const totals = [0, 0, 0, 0];
-                let count = 0;
-                for (const [dy, halfWidth] of rows) for (let dx = -halfWidth; dx <= halfWidth; ++dx) {
-                    for (let channel = 0; channel < 4; ++channel) {
-                        totals[channel] += this.sample(input.data, width, height, x + dx, y + dy, channel);
+            const rowOffsets = new Int32Array(diameter);
+            for (let y = 0; y < height; ++y) {
+                let totalR = 0, totalG = 0, totalB = 0, totalA = 0;
+                // Build the disc at the left edge once. Moving one pixel to the
+                // right then only removes and adds one sample per disc row.
+                for (let row = 0; row < diameter; ++row) {
+                    const sy = Math.max(0, Math.min(height - 1, y + row - radius));
+                    const rowOffset = sy * width * 4;
+                    rowOffsets[row] = rowOffset;
+                    const halfWidth = halfWidths[row];
+                    for (let dx = -halfWidth; dx <= halfWidth; ++dx) {
+                        const sx = Math.max(0, Math.min(width - 1, dx));
+                        const sampleOffset = rowOffset + sx * 4;
+                        totalR += inputData[sampleOffset];
+                        totalG += inputData[sampleOffset + 1];
+                        totalB += inputData[sampleOffset + 2];
+                        totalA += inputData[sampleOffset + 3];
                     }
-                    ++count;
                 }
-                const offset = (y * width + x) * 4;
-                for (let channel = 0; channel < 4; ++channel) output.data[offset + channel] = totals[channel] / count;
+                for (let x = 0; x < width; ++x) {
+                    const offset = (y * width + x) * 4;
+                    outputData[offset] = totalR / count;
+                    outputData[offset + 1] = totalG / count;
+                    outputData[offset + 2] = totalB / count;
+                    outputData[offset + 3] = totalA / count;
+                    if (x + 1 >= width) continue;
+                    for (let row = 0; row < diameter; ++row) {
+                        const halfWidth = halfWidths[row];
+                        const removeX = Math.max(0, x - halfWidth);
+                        const addX = Math.min(width - 1, x + halfWidth + 1);
+                        const rowOffset = rowOffsets[row];
+                        const removeOffset = rowOffset + removeX * 4;
+                        const addOffset = rowOffset + addX * 4;
+                        totalR += inputData[addOffset] - inputData[removeOffset];
+                        totalG += inputData[addOffset + 1] - inputData[removeOffset + 1];
+                        totalB += inputData[addOffset + 2] - inputData[removeOffset + 2];
+                        totalA += inputData[addOffset + 3] - inputData[removeOffset + 3];
+                    }
+                }
             }
             return output;
         });
@@ -747,21 +880,45 @@ class BitmapEffectEngine {
         radius = Math.max(0, Math.round(radius));
         if (!radius) return new ImageData(new Uint8ClampedArray(source.data), width, height);
         const output = new ImageData(width, height);
-        const histogram = new Uint32Array(256);
+        const histograms = new Uint32Array(256 * 4);
         const targetRatio = this.clamp01(percentile / 100);
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
-            const offset = (y * width + x) * 4;
-            for (let channel = 0; channel < 4; ++channel) {
-                histogram.fill(0);
-                let count = 0;
-                for (let dy = -radius; dy <= radius; ++dy) for (let dx = -radius; dx <= radius; ++dx) {
-                    ++histogram[this.sample(source.data, width, height, x + dx, y + dy, channel)];
-                    ++count;
+        const diameter = radius * 2 + 1;
+        const count = diameter * diameter;
+        const target = Math.floor((count - 1) * targetRatio);
+        for (let y = 0; y < height; ++y) {
+            histograms.fill(0);
+            for (let dy = -radius; dy <= radius; ++dy) {
+                const sy = Math.max(0, Math.min(height - 1, y + dy));
+                for (let dx = -radius; dx <= radius; ++dx) {
+                    const sx = Math.max(0, Math.min(width - 1, dx));
+                    const sampleOffset = (sy * width + sx) * 4;
+                    for (let channel = 0; channel < 4; ++channel) {
+                        ++histograms[channel * 256 + source.data[sampleOffset + channel]];
+                    }
                 }
-                const target = Math.floor((count - 1) * targetRatio);
-                let total = 0, value = 0;
-                while (value < 255 && total + histogram[value] <= target) total += histogram[value++];
-                output.data[offset + channel] = value;
+            }
+            for (let x = 0; x < width; ++x) {
+                const offset = (y * width + x) * 4;
+                for (let channel = 0; channel < 4; ++channel) {
+                    const histogramOffset = channel * 256;
+                    let total = 0, value = 0;
+                    while (value < 255 && total + histograms[histogramOffset + value] <= target) {
+                        total += histograms[histogramOffset + value++];
+                    }
+                    output.data[offset + channel] = value;
+                }
+                if (x + 1 >= width) continue;
+                const removeX = Math.max(0, x - radius);
+                const addX = Math.min(width - 1, x + radius + 1);
+                for (let dy = -radius; dy <= radius; ++dy) {
+                    const sy = Math.max(0, Math.min(height - 1, y + dy));
+                    const removeOffset = (sy * width + removeX) * 4;
+                    const addOffset = (sy * width + addX) * 4;
+                    for (let channel = 0; channel < 4; ++channel) {
+                        --histograms[channel * 256 + source.data[removeOffset + channel]];
+                        ++histograms[channel * 256 + source.data[addOffset + channel]];
+                    }
+                }
             }
         }
         return output;
@@ -773,19 +930,30 @@ class BitmapEffectEngine {
         const output = new ImageData(width, height);
         for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
             const offset = (y * width + x) * 4;
-            for (let channel = 0; channel < 4; ++channel) {
-                const center = source.data[offset + channel];
-                let total = 0, weightTotal = 0;
-                for (let dy = -radius; dy <= radius; ++dy) for (let dx = -radius; dx <= radius; ++dx) {
-                    const sample = this.sample(source.data, width, height, x + dx, y + dy, channel);
+            const centers = [source.data[offset], source.data[offset + 1],
+                source.data[offset + 2], source.data[offset + 3]];
+            const totals = [0, 0, 0, 0];
+            const weightTotals = [0, 0, 0, 0];
+            for (let dy = -radius; dy <= radius; ++dy) {
+                const sy = Math.max(0, Math.min(height - 1, y + dy));
+                for (let dx = -radius; dx <= radius; ++dx) {
+                    const sx = Math.max(0, Math.min(width - 1, x + dx));
+                    const sampleOffset = (sy * width + sx) * 4;
+                    for (let channel = 0; channel < 4; ++channel) {
+                        const sample = source.data[sampleOffset + channel];
+                        const center = centers[channel];
                     const difference = Math.abs(sample - center);
                     if (difference <= threshold) {
                         const weight = 1 - difference / Math.max(1, threshold);
-                        total += sample * weight;
-                        weightTotal += weight;
+                            totals[channel] += sample * weight;
+                            weightTotals[channel] += weight;
+                        }
                     }
                 }
-                output.data[offset + channel] = weightTotal ? total / weightTotal : center;
+            }
+            for (let channel = 0; channel < 4; ++channel) {
+                output.data[offset + channel] = weightTotals[channel]
+                    ? totals[channel] / weightTotals[channel] : centers[channel];
             }
         }
         return output;
@@ -812,14 +980,21 @@ class BitmapEffectEngine {
         const radius = Math.floor(size / 2);
         for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
             const destination = (y * width + x) * 4;
-            for (let channel = 0; channel < 3; ++channel) {
-                let total = 0;
-                for (let ky = 0; ky < size; ++ky) for (let kx = 0; kx < size; ++kx) {
-                    total += this.sample(source.data, width, height, x + kx - radius, y + ky - radius, channel)
-                        * kernel[ky * size + kx];
+            const totals = [0, 0, 0];
+            for (let ky = 0; ky < size; ++ky) {
+                const sy = Math.max(0, Math.min(height - 1, y + ky - radius));
+                for (let kx = 0; kx < size; ++kx) {
+                    const sx = Math.max(0, Math.min(width - 1, x + kx - radius));
+                    const sampleOffset = (sy * width + sx) * 4;
+                    const weight = kernel[ky * size + kx];
+                    totals[0] += source.data[sampleOffset] * weight;
+                    totals[1] += source.data[sampleOffset + 1] * weight;
+                    totals[2] += source.data[sampleOffset + 2] * weight;
                 }
-                output.data[destination + channel] = total + bias;
             }
+            output.data[destination] = totals[0] + bias;
+            output.data[destination + 1] = totals[1] + bias;
+            output.data[destination + 2] = totals[2] + bias;
             output.data[destination + 3] = source.data[destination + 3];
         }
         return output;
@@ -829,9 +1004,10 @@ class BitmapEffectEngine {
         const centerX = (width - 1) / 2;
         const centerY = (height - 1) / 2;
         const radius = Math.hypot(centerX, centerY);
-        return this.mapImage(source, width, height, (x, y) => {
+        return this.mapImage(source, width, height, (x, y, output) => {
             const mapped = mapper(x - centerX, y - centerY, radius, amount);
-            return [mapped[0] + centerX, mapped[1] + centerY];
+            output[0] = mapped[0] + centerX;
+            output[1] = mapped[1] + centerY;
         });
     }
 
@@ -851,12 +1027,12 @@ class BitmapEffectEngine {
             }
             return sum / normalization;
         };
-        return this.mapImage(source, width, height, (x, y) => {
+        return this.mapImage(source, width, height, (x, y, output) => {
             const rx = x * cosine - y * sine, ry = x * sine + y * cosine;
             const dx = noiseAt(rx + .5, ry) - noiseAt(rx - .5, ry);
             const dy = noiseAt(rx, ry + .5) - noiseAt(rx, ry - .5);
-            return [x + (dx * cosine + dy * sine) * refraction,
-                y + (-dx * sine + dy * cosine) * refraction];
+            output[0] = x + (dx * cosine + dy * sine) * refraction;
+            output[1] = y + (-dx * sine + dy * cosine) * refraction;
         });
     }
 
@@ -963,7 +1139,7 @@ class BitmapEffectEngine {
     static crystalize(source, width, height, values) {
         const cell = Math.max(2, values.cell);
         const seed = values.seed | 0;
-        return this.mapImage(source, width, height, (x, y) => {
+        return this.mapImage(source, width, height, (x, y, output) => {
             const cx = Math.floor(x / cell), cy = Math.floor(y / cell);
             let bestDistance = Infinity, bestX = x, bestY = y;
             for (let oy = -1; oy <= 1; ++oy) for (let ox = -1; ox <= 1; ++ox) {
@@ -977,25 +1153,31 @@ class BitmapEffectEngine {
                     bestY = fy;
                 }
             }
-            return [bestX, bestY];
+            output[0] = bestX;
+            output[1] = bestY;
         });
     }
 
     static directionalBlur(source, width, height, distance, angle) {
         const output = new ImageData(width, height);
         const radians = angle * Math.PI / 180;
+        const cosine = Math.cos(radians);
+        const sine = Math.sin(radians);
         const samples = Math.min(31, Math.max(2, Math.round(distance) + 1));
         for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
             const offset = (y * width + x) * 4;
-            for (let channel = 0; channel < 4; ++channel) {
-                let total = 0;
-                for (let sample = 0; sample < samples; ++sample) {
-                    const delta = (sample / (samples - 1) - .5) * distance;
-                    total += this.sample(source.data, width, height,
-                        x + Math.cos(radians) * delta, y + Math.sin(radians) * delta, channel);
-                }
-                output.data[offset + channel] = total / samples;
+            const totals = [0, 0, 0, 0];
+            for (let sample = 0; sample < samples; ++sample) {
+                const delta = (sample / (samples - 1) - .5) * distance;
+                const sx = Math.max(0, Math.min(width - 1, Math.round(x + cosine * delta)));
+                const sy = Math.max(0, Math.min(height - 1, Math.round(y + sine * delta)));
+                const sampleOffset = (sy * width + sx) * 4;
+                totals[0] += source.data[sampleOffset];
+                totals[1] += source.data[sampleOffset + 1];
+                totals[2] += source.data[sampleOffset + 2];
+                totals[3] += source.data[sampleOffset + 3];
             }
+            for (let channel = 0; channel < 4; ++channel) output.data[offset + channel] = totals[channel] / samples;
         }
         return output;
     }
@@ -1005,11 +1187,17 @@ class BitmapEffectEngine {
         const centerY = height / 2 + values.centerY / 200 * height;
         const radians = values.angle * Math.PI / 180;
         const samples = 12;
-        return this.averageMapped(source, width, height, (x, y, sample) => {
+        const cosines = new Float64Array(samples);
+        const sines = new Float64Array(samples);
+        for (let sample = 0; sample < samples; ++sample) {
             const angle = radians * (sample / (samples - 1) - .5);
+            cosines[sample] = Math.cos(angle);
+            sines[sample] = Math.sin(angle);
+        }
+        return this.averageMapped(source, width, height, (x, y, sample, output) => {
             const dx = x - centerX, dy = y - centerY;
-            return [centerX + dx * Math.cos(angle) - dy * Math.sin(angle),
-                centerY + dx * Math.sin(angle) + dy * Math.cos(angle)];
+            output[0] = centerX + dx * cosines[sample] - dy * sines[sample];
+            output[1] = centerY + dx * sines[sample] + dy * cosines[sample];
         }, samples);
     }
 
@@ -1017,24 +1205,31 @@ class BitmapEffectEngine {
         const centerX = width / 2 + values.centerX / 200 * width;
         const centerY = height / 2 + values.centerY / 200 * height;
         const samples = 12;
-        return this.averageMapped(source, width, height, (x, y, sample) => {
-            const scale = 1 + values.amount / 100 * sample / (samples - 1);
-            return [centerX + (x - centerX) / scale, centerY + (y - centerY) / scale];
+        const scales = Array.from({length: samples}, (_, sample) =>
+            1 / (1 + values.amount / 100 * sample / (samples - 1)));
+        return this.averageMapped(source, width, height, (x, y, sample, output) => {
+            output[0] = centerX + (x - centerX) * scales[sample];
+            output[1] = centerY + (y - centerY) * scales[sample];
         }, samples);
     }
 
     static averageMapped(source, width, height, mapper, samples) {
         const output = new ImageData(width, height);
+        const mapped = [0, 0];
         for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
             const offset = (y * width + x) * 4;
-            for (let channel = 0; channel < 4; ++channel) {
-                let total = 0;
-                for (let sample = 0; sample < samples; ++sample) {
-                    const [sx, sy] = mapper(x, y, sample);
-                    total += this.sample(source.data, width, height, sx, sy, channel);
-                }
-                output.data[offset + channel] = total / samples;
+            const totals = [0, 0, 0, 0];
+            for (let sample = 0; sample < samples; ++sample) {
+                mapper(x, y, sample, mapped);
+                const sx = Math.max(0, Math.min(width - 1, Math.round(mapped[0])));
+                const sy = Math.max(0, Math.min(height - 1, Math.round(mapped[1])));
+                const sampleOffset = (sy * width + sx) * 4;
+                totals[0] += source.data[sampleOffset];
+                totals[1] += source.data[sampleOffset + 1];
+                totals[2] += source.data[sampleOffset + 2];
+                totals[3] += source.data[sampleOffset + 3];
             }
+            for (let channel = 0; channel < 4; ++channel) output.data[offset + channel] = totals[channel] / samples;
         }
         return output;
     }
@@ -1042,16 +1237,20 @@ class BitmapEffectEngine {
     static fragment(source, width, height, values) {
         const samples = Math.min(16, values.fragments);
         const radians = values.rotation * Math.PI / 180;
-        return this.averageMapped(source, width, height, (x, y, sample) => {
+        const offsets = Array.from({length: samples}, (_, sample) => {
             const angle = radians + sample * Math.PI * 2 / samples;
-            return [x + Math.cos(angle) * values.distance, y + Math.sin(angle) * values.distance];
+            return [Math.cos(angle) * values.distance, Math.sin(angle) * values.distance];
+        });
+        return this.averageMapped(source, width, height, (x, y, sample, output) => {
+            output[0] = x + offsets[sample][0];
+            output[1] = y + offsets[sample][1];
         }, samples);
     }
 
     static tile(source, width, height, values) {
         const radians = values.rotation * Math.PI / 180;
         const cosine = Math.cos(radians), sine = Math.sin(radians), size = values.tile;
-        return this.mapImage(source, width, height, (x, y) => {
+        return this.mapImage(source, width, height, (x, y, output) => {
             let rx = x * cosine - y * sine;
             let ry = x * sine + y * cosine;
             const fold = coordinate => {
@@ -1062,7 +1261,8 @@ class BitmapEffectEngine {
             const bend = values.curvature / 200;
             rx += Math.sin(ry * Math.PI / size) * size * bend;
             ry += Math.sin(rx * Math.PI / size) * size * bend;
-            return [fold(rx), fold(ry)];
+            output[0] = fold(rx);
+            output[1] = fold(ry);
         });
     }
 
@@ -1072,11 +1272,12 @@ class BitmapEffectEngine {
         const exponent = Math.max(.01, values.diffusion);
         const minPow = Math.pow(minimum, exponent), maxPow = Math.pow(maximum, exponent);
         const samples = Math.max(1, values.smoothness | 0);
-        return this.averageMapped(source, width, height, (x, y, sample) => {
+        return this.averageMapped(source, width, height, (x, y, sample, output) => {
             const angle = this.coordinateRandom(values.seed, x, y, sample * 2) * Math.PI * 2;
             const randomRadius = this.coordinateRandom(values.seed, x, y, sample * 2 + 1);
             const radius = Math.pow(minPow + randomRadius * (maxPow - minPow), 1 / exponent);
-            return [x + Math.cos(angle) * radius, y + Math.sin(angle) * radius];
+            output[0] = x + Math.cos(angle) * radius;
+            output[1] = y + Math.sin(angle) * radius;
         }, samples);
     }
 
@@ -1084,20 +1285,33 @@ class BitmapEffectEngine {
         const output = new ImageData(new Uint8ClampedArray(source.data), width, height);
         const deviation = values.intensity * 1.275;
         const saturation = values.saturation / 100;
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
-            if (this.coordinateRandom(values.seed, x, y, 0) * 100 > values.coverage) continue;
-            const noise = [];
-            for (let channel = 0; channel < 3; ++channel) {
-                const u1 = Math.max(Number.EPSILON, this.coordinateRandom(values.seed, x, y, channel * 2 + 1));
-                const u2 = this.coordinateRandom(values.seed, x, y, channel * 2 + 2);
-                noise[channel] = Math.sqrt(-2 * Math.log(u1)) * Math.cos(Math.PI * 2 * u2);
-            }
-            const luminance = noise[0] * .299 + noise[1] * .587 + noise[2] * .114;
-            const offset = (y * width + x) * 4;
-            for (let channel = 0; channel < 3; ++channel) {
-                output.data[offset + channel] = source.data[offset + channel]
-                    + (luminance + (noise[channel] - luminance) * saturation) * deviation;
-            }
+        const coverage = Utility.clamp(Number(values.coverage), 0, 100) / 100;
+        if (deviation <= 0 || coverage <= 0) return output;
+
+        // The effect visits every pixel in a fixed order, so a seeded stream is
+        // deterministic without recalculating seven coordinate hashes per
+        // pixel. A reusable Box-Muller table preserves the normal distribution
+        // without evaluating logarithms and trigonometry for every pixel.
+        const random = this.randomState(values.seed);
+        const gaussian = this.getGaussianNoiseTable();
+        const sourceData = source.data;
+        const outputData = output.data;
+        const fullCoverage = coverage >= 1;
+        const coverageThreshold = coverage * 4294967296;
+        for (let offset = 0; offset < sourceData.length; offset += 4) {
+            if (!fullCoverage && random.nextUint32() >= coverageThreshold) continue;
+
+            const redNoise = gaussian[random.nextUint32() & 0xffff];
+            const greenNoise = gaussian[random.nextUint32() & 0xffff];
+            const blueNoise = gaussian[random.nextUint32() & 0xffff];
+            const luminance = redNoise * .299 + greenNoise * .587 + blueNoise * .114;
+
+            outputData[offset] = sourceData[offset]
+                + (luminance + (redNoise - luminance) * saturation) * deviation;
+            outputData[offset + 1] = sourceData[offset + 1]
+                + (luminance + (greenNoise - luminance) * saturation) * deviation;
+            outputData[offset + 2] = sourceData[offset + 2]
+                + (luminance + (blueNoise - luminance) * saturation) * deviation;
         }
         return output;
     }
@@ -1142,9 +1356,10 @@ class BitmapEffectEngine {
     static rotate(source, width, height, angle) {
         const centerX = (width - 1) / 2, centerY = (height - 1) / 2;
         const radians = -angle * Math.PI / 180, cosine = Math.cos(radians), sine = Math.sin(radians);
-        return this.mapImage(source, width, height, (x, y) => {
+        return this.mapImage(source, width, height, (x, y, output) => {
             const dx = x - centerX, dy = y - centerY;
-            return [centerX + dx * cosine - dy * sine, centerY + dx * sine + dy * cosine];
+            output[0] = centerX + dx * cosine - dy * sine;
+            output[1] = centerY + dx * sine + dy * cosine;
         });
     }
 
@@ -1168,26 +1383,75 @@ class BitmapEffectEngine {
         const radius = Math.max(1, Math.ceil(values.brush));
         const bins = Math.max(4, Math.min(256, Math.round(values.granularity * 252 + 4)));
         const output = new ImageData(width, height);
+        const sourceData = source.data;
+        const outputData = output.data;
+        const pixelBins = new Uint16Array(width * height);
+        for (let pixel = 0, offset = 0; pixel < pixelBins.length; ++pixel, offset += 4) {
+            const intensity = (sourceData[offset] + sourceData[offset + 1]
+                + sourceData[offset + 2]) / (3 * 256);
+            pixelBins[pixel] = Math.min(bins - 1, Math.floor(intensity * bins));
+        }
+
+        const halfWidths = new Int32Array(radius * 2 + 1);
+        const circleLimit = ((radius * 2 + 1) ** 2 + 2) / 4;
+        for (let dy = -radius; dy <= radius; ++dy) {
+            halfWidths[dy + radius] = values.kernel === "circle"
+                ? Math.floor(Math.sqrt(Math.max(0, circleLimit - dy * dy)))
+                : radius;
+        }
         const counts = new Uint32Array(bins);
         const sums = new Float64Array(bins * 4);
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
             counts.fill(0);
             sums.fill(0);
-            for (let dy = -radius; dy <= radius; ++dy) for (let dx = -radius; dx <= radius; ++dx) {
-                if (values.kernel === "circle" && dx * dx + dy * dy > ((radius * 2 + 1) ** 2 + 2) / 4) continue;
-                const sx = Math.max(0, Math.min(width - 1, x + dx));
+            for (let dy = -radius; dy <= radius; ++dy) {
                 const sy = Math.max(0, Math.min(height - 1, y + dy));
-                const offset = (sy * width + sx) * 4;
-                const intensity = (source.data[offset] + source.data[offset + 1] + source.data[offset + 2]) / (3 * 256);
-                const bin = Math.min(bins - 1, Math.floor(intensity * bins));
-                ++counts[bin];
-                for (let channel = 0; channel < 4; ++channel) sums[bin * 4 + channel] += source.data[offset + channel];
+                const halfWidth = halfWidths[dy + radius];
+                for (let dx = -halfWidth; dx <= halfWidth; ++dx) {
+                    const sx = Math.max(0, Math.min(width - 1, dx));
+                    const pixel = sy * width + sx;
+                    const offset = pixel * 4;
+                    const bin = pixelBins[pixel];
+                    ++counts[bin];
+                    sums[bin * 4] += sourceData[offset];
+                    sums[bin * 4 + 1] += sourceData[offset + 1];
+                    sums[bin * 4 + 2] += sourceData[offset + 2];
+                    sums[bin * 4 + 3] += sourceData[offset + 3];
+                }
             }
-            let mode = 0;
-            for (let bin = 1; bin < bins; ++bin) if (counts[bin] > counts[mode]) mode = bin;
-            const destination = (y * width + x) * 4;
-            for (let channel = 0; channel < 4; ++channel) {
-                output.data[destination + channel] = sums[mode * 4 + channel] / Math.max(1, counts[mode]);
+            for (let x = 0; x < width; ++x) {
+                let mode = 0;
+                for (let bin = 1; bin < bins; ++bin) if (counts[bin] > counts[mode]) mode = bin;
+                const destination = (y * width + x) * 4;
+                const count = Math.max(1, counts[mode]);
+                outputData[destination] = sums[mode * 4] / count;
+                outputData[destination + 1] = sums[mode * 4 + 1] / count;
+                outputData[destination + 2] = sums[mode * 4 + 2] / count;
+                outputData[destination + 3] = sums[mode * 4 + 3] / count;
+
+                if (x + 1 >= width) continue;
+                for (let dy = -radius; dy <= radius; ++dy) {
+                    const sy = Math.max(0, Math.min(height - 1, y + dy));
+                    const halfWidth = halfWidths[dy + radius];
+                    const removeX = Math.max(0, x - halfWidth);
+                    const addX = Math.min(width - 1, x + halfWidth + 1);
+                    const removePixel = sy * width + removeX;
+                    const addPixel = sy * width + addX;
+                    const removeOffset = removePixel * 4;
+                    const addOffset = addPixel * 4;
+                    const removeBin = pixelBins[removePixel];
+                    const addBin = pixelBins[addPixel];
+                    --counts[removeBin];
+                    ++counts[addBin];
+                    sums[removeBin * 4] -= sourceData[removeOffset];
+                    sums[removeBin * 4 + 1] -= sourceData[removeOffset + 1];
+                    sums[removeBin * 4 + 2] -= sourceData[removeOffset + 2];
+                    sums[removeBin * 4 + 3] -= sourceData[removeOffset + 3];
+                    sums[addBin * 4] += sourceData[addOffset];
+                    sums[addBin * 4 + 1] += sourceData[addOffset + 1];
+                    sums[addBin * 4 + 2] += sourceData[addOffset + 2];
+                    sums[addBin * 4 + 3] += sourceData[addOffset + 3];
+                }
             }
         }
         return output;
@@ -1267,14 +1531,20 @@ class BitmapEffectEngine {
         const radiusY = Math.floor(((values.linked ? values.width : values.height) - 1) / 2);
         for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
             const offset = (y * width + x) * 4;
-            for (let channel = 0; channel < 4; ++channel) {
-                let result = values.mode === "dilate" ? 0 : 255;
-                for (let dy = -radiusY; dy <= radiusY; ++dy) for (let dx = -radiusX; dx <= radiusX; ++dx) {
-                    const value = this.sample(source.data, width, height, x + dx, y + dy, channel);
-                    result = values.mode === "dilate" ? Math.max(result, value) : Math.min(result, value);
+            const results = values.mode === "dilate" ? [0, 0, 0, 0] : [255, 255, 255, 255];
+            for (let dy = -radiusY; dy <= radiusY; ++dy) {
+                const sy = Math.max(0, Math.min(height - 1, y + dy));
+                for (let dx = -radiusX; dx <= radiusX; ++dx) {
+                    const sx = Math.max(0, Math.min(width - 1, x + dx));
+                    const sampleOffset = (sy * width + sx) * 4;
+                    for (let channel = 0; channel < 4; ++channel) {
+                        results[channel] = values.mode === "dilate"
+                            ? Math.max(results[channel], source.data[sampleOffset + channel])
+                            : Math.min(results[channel], source.data[sampleOffset + channel]);
+                    }
                 }
-                output.data[offset + channel] = result;
             }
+            for (let channel = 0; channel < 4; ++channel) output.data[offset + channel] = results[channel];
         }
         return output;
     }
@@ -1290,20 +1560,92 @@ class BitmapEffectEngine {
 
     static clouds(_source, width, height, values) {
         const output = new ImageData(width, height);
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
-            let noise = 0, amplitude = 1, divisor = Math.floor(values.scale);
-            const dx = 2 * x - width, dy = 2 * y - height;
-            for (let octave = 0; octave < 12 && amplitude > .03 && divisor > 0; ++octave) {
-                noise += this.perlin(dx / divisor, dy / divisor, values.seed + octave) * amplitude;
-                divisor >>= 1;
-                amplitude *= values.roughness;
-            }
-            const color = this.clamp01((noise + 1) / 2) * 255;
-            const offset = (y * width + x) * 4;
+        const noise = new Float64Array(width * height);
+        let amplitude = 1;
+        let divisor = Math.floor(values.scale);
+        for (let octave = 0; octave < 12 && amplitude > .03 && divisor > 0; ++octave) {
+            this.accumulatePerlinOctave(noise, width, height, divisor,
+                values.seed + octave, amplitude);
+            divisor >>= 1;
+            amplitude *= values.roughness;
+        }
+        for (let pixel = 0, offset = 0; pixel < noise.length; ++pixel, offset += 4) {
+            const color = this.clamp01((noise[pixel] + 1) / 2) * 255;
             output.data[offset] = output.data[offset + 1] = output.data[offset + 2] = color;
             output.data[offset + 3] = 255;
         }
         return output;
+    }
+
+    static accumulatePerlinOctave(output, width, height, divisor, seed, amplitude) {
+        // All pixels in an octave reuse a comparatively small lattice of
+        // gradient vectors. Precompute those gradients once instead of hashing
+        // and evaluating sin/cos four times per pixel.
+        const xCells = new Int32Array(width);
+        const xFractions = new Float64Array(width);
+        const xFades = new Float64Array(width);
+        const yCells = new Int32Array(height);
+        const yFractions = new Float64Array(height);
+        const yFades = new Float64Array(height);
+        let minCellX = Infinity, maxCellX = -Infinity;
+        let minCellY = Infinity, maxCellY = -Infinity;
+        const fade = value => value * value * value * (value * (value * 6 - 15) + 10);
+        for (let x = 0; x < width; ++x) {
+            const coordinate = (2 * x - width) / divisor;
+            const cell = Math.floor(coordinate);
+            const fraction = coordinate - cell;
+            xCells[x] = cell;
+            xFractions[x] = fraction;
+            xFades[x] = fade(fraction);
+            minCellX = Math.min(minCellX, cell);
+            maxCellX = Math.max(maxCellX, cell);
+        }
+        for (let y = 0; y < height; ++y) {
+            const coordinate = (2 * y - height) / divisor;
+            const cell = Math.floor(coordinate);
+            const fraction = coordinate - cell;
+            yCells[y] = cell;
+            yFractions[y] = fraction;
+            yFades[y] = fade(fraction);
+            minCellY = Math.min(minCellY, cell);
+            maxCellY = Math.max(maxCellY, cell);
+        }
+
+        const latticeWidth = maxCellX - minCellX + 2;
+        const latticeHeight = maxCellY - minCellY + 2;
+        const gradientX = new Float64Array(latticeWidth * latticeHeight);
+        const gradientY = new Float64Array(latticeWidth * latticeHeight);
+        for (let gy = 0; gy < latticeHeight; ++gy) for (let gx = 0; gx < latticeWidth; ++gx) {
+            const cellX = minCellX + gx;
+            const cellY = minCellY + gy;
+            const hash = this.hash32((cellX & 0xffff)
+                ^ Math.imul(cellY & 0xffff, 0x45d9f3b) ^ seed);
+            const angle = hash / 4294967296 * Math.PI * 2;
+            const index = gy * latticeWidth + gx;
+            gradientX[index] = Math.cos(angle);
+            gradientY[index] = Math.sin(angle);
+        }
+
+        const rootTwo = 1.41421356237;
+        for (let y = 0, pixel = 0; y < height; ++y) {
+            const gy = yCells[y] - minCellY;
+            const ty = yFractions[y];
+            const v = yFades[y];
+            for (let x = 0; x < width; ++x, ++pixel) {
+                const gx = xCells[x] - minCellX;
+                const tx = xFractions[x];
+                const u = xFades[x];
+                const topLeft = gy * latticeWidth + gx;
+                const topRight = topLeft + 1;
+                const bottomLeft = topLeft + latticeWidth;
+                const bottomRight = bottomLeft + 1;
+                const top = (gradientX[topLeft] * tx + gradientY[topLeft] * ty) * (1 - u)
+                    + (gradientX[topRight] * (tx - 1) + gradientY[topRight] * ty) * u;
+                const bottom = (gradientX[bottomLeft] * tx + gradientY[bottomLeft] * (ty - 1)) * (1 - u)
+                    + (gradientX[bottomRight] * (tx - 1) + gradientY[bottomRight] * (ty - 1)) * u;
+                output[pixel] += (top * (1 - v) + bottom * v) * rootTwo * amplitude;
+            }
+        }
     }
 
     static perlin(x, y, seed) {

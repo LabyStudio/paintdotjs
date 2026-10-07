@@ -1520,6 +1520,13 @@ body.window-resizing * {
     width: min(390px, calc(100vw - 32px));
 }
 
+.app-dialog-backdrop.effect-preview-rendering,
+.app-dialog-backdrop.effect-preview-rendering *,
+html.effect-rendering,
+html.effect-rendering * {
+    cursor: progress !important;
+}
+
 .effect-config-content {
     display: flex;
     min-height: 70px;

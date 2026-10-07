@@ -36,11 +36,58 @@ class EffectConfigDialog {
             const setters = new Map();
             let previewEnabled = true;
             let previewFrame = null;
-            const notify = () => {
+            let previewTimer = null;
+            let previewDelay = 0;
+            let previewGeneration = 0;
+            const cancelScheduledPreview = () => {
+                ++previewGeneration;
                 if (previewFrame !== null) cancelAnimationFrame(previewFrame);
+                if (previewTimer !== null) clearTimeout(previewTimer);
+                previewFrame = null;
+                previewTimer = null;
+                backdrop.classList.remove("effect-preview-rendering");
+                dialog.removeAttribute("aria-busy");
+            };
+            const notify = (immediate = false) => {
+                cancelScheduledPreview();
+                const generation = previewGeneration;
                 previewFrame = requestAnimationFrame(() => {
+                    if (generation !== previewGeneration) return;
                     previewFrame = null;
-                    options.onPreview(previewEnabled ? {...values} : null);
+                    backdrop.classList.add("effect-preview-rendering");
+                    dialog.setAttribute("aria-busy", "true");
+                    // Run after the frame is painted so opening or manipulating
+                    // a dialog never waits behind a long synchronous effect.
+                    previewTimer = setTimeout(() => {
+                        if (generation !== previewGeneration) return;
+                        previewTimer = null;
+                        const start = performance.now();
+                        const complete = () => {
+                            if (generation !== previewGeneration) return;
+                            const elapsed = performance.now() - start;
+                            // Slow effects get a longer coalescing window. This
+                            // prevents stale slider positions from forming a render
+                            // queue while lightweight effects continue to feel live.
+                            previewDelay = Math.min(250, Math.max(16, elapsed / 2));
+                            backdrop.classList.remove("effect-preview-rendering");
+                            dialog.removeAttribute("aria-busy");
+                        };
+                        try {
+                            const result = options.onPreview(previewEnabled ? {...values} : null);
+                            if (result !== null && typeof result === "object"
+                                && typeof result.then === "function") {
+                                result.then(complete, error => {
+                                    console.error("Effect preview failed", error);
+                                    complete();
+                                });
+                            } else {
+                                complete();
+                            }
+                        } catch (error) {
+                            console.error("Effect preview failed", error);
+                            complete();
+                        }
+                    }, immediate ? 0 : previewDelay);
                 });
             };
 
@@ -66,7 +113,7 @@ class EffectConfigDialog {
                     select.value = values[control.key];
                     select.onchange = () => {
                         values[control.key] = select.value;
-                        notify();
+                        notify(true);
                     };
                     row.append(label, select);
                     content.appendChild(row);
@@ -89,7 +136,7 @@ class EffectConfigDialog {
                     input.checked = values[control.key];
                     input.onchange = () => {
                         values[control.key] = input.checked;
-                        notify();
+                        notify(true);
                     };
                     label.append(input, document.createTextNode(control.label));
                     content.appendChild(label);
@@ -122,7 +169,9 @@ class EffectConfigDialog {
                 };
                 set(values[control.key]);
                 range.oninput = () => { set(range.value); notify(); };
+                range.onchange = () => notify(true);
                 number.oninput = () => { set(number.value); notify(); };
+                number.onchange = () => notify(true);
                 controls.append(range, number);
                 row.append(label, controls);
                 content.appendChild(row);
@@ -139,7 +188,7 @@ class EffectConfigDialog {
             previewInput.checked = true;
             previewInput.onchange = () => {
                 previewEnabled = previewInput.checked;
-                notify();
+                notify(true);
             };
             preview.append(previewInput, document.createTextNode("Preview"));
             const reset = document.createElement("button");
@@ -150,7 +199,7 @@ class EffectConfigDialog {
                     values[control.key] = control.defaultValue;
                     setters.get(control.key)(control.defaultValue);
                 }
-                notify();
+                notify(true);
             };
             if (specialized === null) left.appendChild(preview);
             if (specialized === null || specialized.showReset !== false) left.appendChild(reset);
@@ -172,7 +221,7 @@ class EffectConfigDialog {
             const finish = result => {
                 if (closed) return;
                 closed = true;
-                if (previewFrame !== null) cancelAnimationFrame(previewFrame);
+                cancelScheduledPreview();
                 document.removeEventListener("keydown", onKeyDown, true);
                 if (mover !== null) mover.destroy();
                 backdrop.remove();
@@ -192,7 +241,7 @@ class EffectConfigDialog {
             document.body.appendChild(backdrop);
             mover = new DialogMover(dialog, titleBar, backdrop);
             document.addEventListener("keydown", onKeyDown, true);
-            notify();
+            notify(true);
         });
     }
 
@@ -247,7 +296,9 @@ class EffectConfigDialog {
             set(value);
             notify();
         };
+        range.onchange = () => notify(true);
         number.oninput = () => { set(number.value); notify(); };
+        number.onchange = () => notify(true);
         const numberBox = this.createNumberStepper(number, delta => {
             set(Number(number.value) + delta * control.step);
             notify();
@@ -259,7 +310,7 @@ class EffectConfigDialog {
             reset.className = "effect-row-reset";
             reset.title = "Reset";
             reset.textContent = "↶";
-            reset.onclick = () => { set(control.defaultValue); notify(); };
+            reset.onclick = () => { set(control.defaultValue); notify(true); };
             line.appendChild(reset);
         }
         row.appendChild(line);
@@ -301,7 +352,7 @@ class EffectConfigDialog {
             values[control.key] = value;
             select.value = value;
         };
-        select.onchange = () => { set(select.value); notify(); };
+        select.onchange = () => { set(select.value); notify(true); };
         row.appendChild(select);
         set(values[control.key]);
         return {element: row, setValue: set};
@@ -877,6 +928,7 @@ class EffectConfigDialog {
             update(event);
             dragging = -1;
             if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId);
+            notify(true);
         };
         return {element, redraw};
     }
@@ -894,6 +946,7 @@ class EffectConfigDialog {
             if (onSet !== null) onSet();
         };
         input.oninput = () => { set(input.value); notify(); };
+        input.onchange = () => notify(true);
         set(values[control.key]);
         const element = this.createNumberStepper(input, delta => {
             set(Number(input.value) + delta * control.step);
