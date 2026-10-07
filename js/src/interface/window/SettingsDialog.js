@@ -1,6 +1,7 @@
 class AppSettingsStore {
 
     static storageKey = "paintdotjs.settings.v1";
+    static checkerboardDefaultMigrationKey = "paintdotjs.checkerboard-default-v5";
     static systemColorSchemeQuery = null;
 
     static defaults = {
@@ -8,7 +9,7 @@ class AppSettingsStore {
             animations: true,
             translucentWindows: true,
             overscroll: true,
-            autoScrollWhileDrawing: false,
+            autoScrollWhileDrawing: true,
             autoSelectVisibleLayer: false,
             colorScheme: "default",
             language: "auto"
@@ -17,7 +18,7 @@ class AppSettingsStore {
             dropShadow: true,
             customBorder: false,
             borderColor: "#808080",
-            checkerboardBrightness: 100
+            checkerboardBrightness: 75
         },
         tools: {defaultTool: "paintBrushTool"},
         pen: {pointerInput: true},
@@ -32,6 +33,16 @@ class AppSettingsStore {
         let saved = {};
         try {
             saved = JSON.parse(localStorage.getItem(this.storageKey) || "{}");
+
+            // Paint.NET 5 uses 75% for the checkerboard. Migrate the old port's
+            // 100% default once, while still allowing 100% to be chosen later.
+            if (localStorage.getItem(this.checkerboardDefaultMigrationKey) !== "1") {
+                if (saved.canvas?.checkerboardBrightness === 100) {
+                    saved.canvas.checkerboardBrightness = 75;
+                    localStorage.setItem(this.storageKey, JSON.stringify(saved));
+                }
+                localStorage.setItem(this.checkerboardDefaultMigrationKey, "1");
+            }
         } catch (_) {
             // Storage is optional in restricted browser contexts.
         }
@@ -80,13 +91,33 @@ class AppSettingsStore {
         root.dataset.colorSchemePreference = colorSchemePreference;
         root.dataset.colorScheme = this.resolveColorScheme(colorSchemePreference);
         root.style.setProperty("--custom-canvas-border", this.get("canvas.borderColor", "#808080"));
-        root.style.setProperty("--checkerboard-brightness",
-            String(this.get("canvas.checkerboardBrightness", 100) / 100));
+        const checkerboardBrightness = Math.max(0.25, Math.min(1,
+            Number(this.get("canvas.checkerboardBrightness", 75)) / 100));
+        root.style.setProperty("--checkerboard-brightness", String(checkerboardBrightness));
+        root.style.setProperty("--image-transparency",
+            `url("${this.createCheckerboardDataUrl(checkerboardBrightness)}")`);
 
         const view = document.getElementById("view");
         if (view !== null) {
             view.style.overscrollBehavior = this.get("ui.overscroll", true) ? "auto" : "none";
         }
+    }
+
+    static createCheckerboardDataUrl(brightness) {
+        const light = Math.round(255 * brightness);
+        const dark = Math.round(191 * brightness);
+        const canvas = document.createElement("canvas");
+        canvas.width = 8;
+        canvas.height = 8;
+        const context = canvas.getContext("2d");
+
+        context.fillStyle = `rgb(${dark}, ${dark}, ${dark})`;
+        context.fillRect(0, 0, 4, 4);
+        context.fillRect(4, 4, 4, 4);
+        context.fillStyle = `rgb(${light}, ${light}, ${light})`;
+        context.fillRect(4, 0, 4, 4);
+        context.fillRect(0, 4, 4, 4);
+        return canvas.toDataURL("image/png");
     }
 
     static resolveColorScheme(preference) {
@@ -135,9 +166,8 @@ class SettingsDialog {
             ["graphics", "Graphics", "settings_graphics_24.png"],
             ["colorManagement", "Color Management", "settings_color_management_24.png"],
             ["updates", "Updates", "settings_updates_24.png"],
-            ["plugins", "Plugin Errors", "settings_plugins_24.png", false],
-            ["diagnostics", "Diagnostics", "settings_diagnostics_24.png"],
-            ["keyboard", "Keyboard", "menu_utilities_settings_icon.png"]
+            ["plugins", "Plugin Errors", "settings_plugins_24.png"],
+            ["diagnostics", "Diagnostics", "settings_diagnostics_24.png"]
         ];
     }
 
@@ -245,6 +275,7 @@ class SettingsDialog {
 
         this.search = null;
         this.shortcutList = null;
+        this.page.className = "settings-page settings-page-" + section;
         this.page.innerHTML = "";
         const render = this["render" + section[0].toUpperCase() + section.slice(1)];
         render.call(this);
@@ -371,45 +402,161 @@ class SettingsDialog {
     }
 
     renderCanvas() {
-        this.addHeading("Canvas");
-        this.addCheckbox("canvas.dropShadow", "Draw a drop shadow around the image");
-        const customBorder = this.addCheckbox("canvas.customBorder", "Use a custom color for the image border");
+        this.addCheckbox("canvas.dropShadow", "Draw a shadow around the canvas");
+        const customBorder = this.addCheckbox("canvas.customBorder", "Use a custom color for the canvas border");
 
-        const colorRow = document.createElement("label");
-        colorRow.className = "settings-field-row settings-color-row";
-        const colorLabel = document.createElement("span");
-        colorLabel.textContent = "Border color:";
+        const colorEditor = document.createElement("div");
+        colorEditor.className = "settings-canvas-color-editor";
+
         const color = document.createElement("input");
         color.type = "color";
+        color.className = "settings-canvas-color-swatch";
+        color.title = "Canvas border color";
         color.value = AppSettingsStore.get("canvas.borderColor", "#808080");
-        color.disabled = !customBorder.checked;
-        colorRow.classList.toggle("disabled", color.disabled);
-        color.oninput = () => AppSettingsStore.set("canvas.borderColor", color.value);
+        colorEditor.appendChild(color);
+
+        const wheel = document.createElement("div");
+        wheel.className = "settings-canvas-color-wheel";
+        wheel.title = "Choose hue and saturation";
+        const wheelCursor = document.createElement("span");
+        wheel.appendChild(wheelCursor);
+        colorEditor.appendChild(wheel);
+
+        const verticalControls = document.createElement("div");
+        verticalControls.className = "settings-canvas-color-bars";
+        const valueBar = document.createElement("input");
+        valueBar.type = "range";
+        valueBar.min = "0";
+        valueBar.max = "255";
+        valueBar.value = "128";
+        valueBar.title = "Brightness";
+        const neutralBar = document.createElement("div");
+        neutralBar.className = "settings-canvas-neutral-bar";
+        verticalControls.append(valueBar, neutralBar);
+        colorEditor.appendChild(verticalControls);
+
+        const rgbPanel = document.createElement("div");
+        rgbPanel.className = "settings-canvas-rgb";
+        const rgbInputs = {};
+        for (const [channel, label] of [["red", "R:"], ["green", "G:"], ["blue", "B:"]]) {
+            const row = document.createElement("label");
+            const text = document.createElement("span");
+            text.textContent = label;
+            const input = document.createElement("input");
+            input.type = "number";
+            input.min = "0";
+            input.max = "255";
+            input.step = "1";
+            rgbInputs[channel] = input;
+            row.append(text, input);
+            rgbPanel.appendChild(row);
+        }
+        const resetColor = document.createElement("button");
+        resetColor.type = "button";
+        resetColor.className = "settings-inline-reset";
+        resetColor.title = "Reset";
+        const resetColorIcon = document.createElement("img");
+        resetColorIcon.src = "assets/icons/reset_icon.png";
+        resetColorIcon.alt = "Reset";
+        resetColor.appendChild(resetColorIcon);
+        rgbPanel.appendChild(resetColor);
+        colorEditor.appendChild(rgbPanel);
+        this.page.appendChild(colorEditor);
+
+        const readColor = () => Color.fromHex(color.value);
+        const updateColorControls = (hex, save = true) => {
+            color.value = hex.substring(0, 7);
+            const selected = readColor();
+            rgbInputs.red.value = selected.getRed();
+            rgbInputs.green.value = selected.getGreen();
+            rgbInputs.blue.value = selected.getBlue();
+            valueBar.value = String(Math.round(selected.getLightness() * 255));
+            wheel.style.setProperty("--settings-wheel-hue", String(selected.getHue() * 360));
+            const angle = selected.getHue() * Math.PI * 2;
+            const distance = selected.getSaturation() * 48;
+            wheelCursor.style.left = `calc(50% + ${Math.cos(angle) * distance}px)`;
+            wheelCursor.style.top = `calc(50% + ${Math.sin(angle) * distance}px)`;
+            if (save) AppSettingsStore.set("canvas.borderColor", color.value);
+        };
+        const updateFromRgb = () => {
+            const clampChannel = channel => Math.max(0, Math.min(255, Number(rgbInputs[channel].value) || 0));
+            const selected = Color.fromRGB(clampChannel("red"), clampChannel("green"), clampChannel("blue"));
+            updateColorControls(selected.toHex(), true);
+        };
+        color.oninput = () => updateColorControls(color.value, true);
+        for (const input of Object.values(rgbInputs)) input.oninput = updateFromRgb;
+        valueBar.oninput = () => {
+            const selected = readColor();
+            updateColorControls(Color.fromHSL(selected.getHue(), selected.getSaturation(),
+                Number(valueBar.value) / 255).toHex(), true);
+        };
+        wheel.onpointerdown = event => {
+            if (!customBorder.checked) return;
+            const bounds = wheel.getBoundingClientRect();
+            const x = event.clientX - bounds.left - bounds.width / 2;
+            const y = event.clientY - bounds.top - bounds.height / 2;
+            const saturation = Math.min(1, Math.hypot(x, y) / (bounds.width / 2));
+            let hue = Math.atan2(y, x) / (Math.PI * 2);
+            if (hue < 0) hue += 1;
+            const current = readColor();
+            updateColorControls(Color.fromHSL(hue, saturation, current.getLightness()).toHex(), true);
+        };
+        resetColor.onclick = () => updateColorControls("#808080", true);
+        updateColorControls(color.value, false);
+
+        const updateColorEditorState = () => {
+            const disabled = !customBorder.checked;
+            colorEditor.classList.toggle("disabled", disabled);
+            colorEditor.setAttribute("aria-disabled", String(disabled));
+            color.disabled = disabled;
+            valueBar.disabled = disabled;
+            resetColor.disabled = disabled;
+            for (const input of Object.values(rgbInputs)) input.disabled = disabled;
+        };
         customBorder.onchange = () => {
             AppSettingsStore.set("canvas.customBorder", customBorder.checked);
-            color.disabled = !customBorder.checked;
-            colorRow.classList.toggle("disabled", color.disabled);
+            updateColorEditorState();
         };
-        colorRow.append(colorLabel, color);
-        this.page.appendChild(colorRow);
+        updateColorEditorState();
 
-        const brightnessRow = document.createElement("label");
-        brightnessRow.className = "settings-slider-row";
+        const brightnessGroup = document.createElement("div");
+        brightnessGroup.className = "settings-canvas-brightness";
         const brightnessLabel = document.createElement("span");
-        brightnessLabel.textContent = "Transparency checkerboard brightness:";
+        brightnessLabel.textContent = "Transparency Checkerboard Brightness";
+        brightnessGroup.appendChild(brightnessLabel);
+        const brightnessRow = document.createElement("div");
         const range = document.createElement("input");
         range.type = "range";
-        range.min = "35";
-        range.max = "100";
-        range.value = String(AppSettingsStore.get("canvas.checkerboardBrightness", 100));
-        const output = document.createElement("output");
-        output.textContent = range.value + "%";
-        range.oninput = () => {
-            output.textContent = range.value + "%";
-            AppSettingsStore.set("canvas.checkerboardBrightness", Number(range.value));
+        range.min = "0.25";
+        range.max = "1";
+        range.step = "0.01";
+        range.value = String(AppSettingsStore.get("canvas.checkerboardBrightness", 75) / 100);
+        const output = document.createElement("input");
+        output.type = "number";
+        output.min = "0.25";
+        output.max = "1";
+        output.step = "0.01";
+        output.value = Number(range.value).toFixed(2);
+        const resetBrightness = document.createElement("button");
+        resetBrightness.type = "button";
+        resetBrightness.className = "settings-inline-reset";
+        resetBrightness.title = "Reset";
+        const resetBrightnessIcon = document.createElement("img");
+        resetBrightnessIcon.src = "assets/icons/reset_icon.png";
+        resetBrightnessIcon.alt = "Reset";
+        resetBrightness.appendChild(resetBrightnessIcon);
+        const setBrightness = value => {
+            const normalized = Math.max(0.25, Math.min(1, Number(value) || 0.75));
+            range.value = String(normalized);
+            output.value = normalized.toFixed(2);
+            AppSettingsStore.set("canvas.checkerboardBrightness", Math.round(normalized * 100));
         };
-        brightnessRow.append(brightnessLabel, range, output);
-        this.page.appendChild(brightnessRow);
+        range.oninput = () => setBrightness(range.value);
+        output.onchange = () => setBrightness(output.value);
+        resetBrightness.onclick = () => setBrightness(0.75);
+        brightnessRow.append(range, output, resetBrightness);
+        brightnessGroup.appendChild(brightnessRow);
+        this.page.appendChild(brightnessGroup);
     }
 
     renderTools() {
@@ -468,10 +615,14 @@ class SettingsDialog {
 
     renderUpdates() {
         this.addHeading("Updates");
-        this.addCheckbox("updates.automatic", "Automatically check for updates", {disabled: true});
+        this.addCheckbox("updates.automatic", "Automatically check for updates", {
+            disabled: true,
+            note: isApp ? "Desktop releases check automatically shortly after startup." :
+                "The installed web app checks automatically while it is open."
+        });
         this.addCheckbox("updates.prerelease", "Also check for pre-release versions", {
             disabled: true,
-            note: "Automatic update checks are not implemented yet."
+            note: "Pre-release update channels are not enabled."
         });
         let checkButton = null;
         checkButton = this.addButton("Check now", () => this.checkForUpdates(checkButton));
@@ -482,7 +633,26 @@ class SettingsDialog {
 
     async checkForUpdates(button) {
         if (isApp) {
-            window.open("https://github.com/LabyStudio/paintdotjs/releases", "_blank", "noopener");
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = "Checking...";
+            this.setStatus("Checking GitHub Releases for a newer desktop version...");
+            try {
+                const result = await window.desktopUpdater.check();
+                if (!result.supported) {
+                    this.setStatus("Updates for this installation are managed by your package manager.");
+                } else if (result.version && result.version !== window.PDJVERSION) {
+                    this.setStatus(`Downloading paint.js ${result.version} in the background...`);
+                } else {
+                    this.setStatus("You are using the latest version of paint.js.");
+                }
+            } catch (error) {
+                console.error("Could not check for desktop updates", error);
+                this.setStatus("The update check failed. Please try again later.");
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
             return;
         }
 

@@ -30,6 +30,8 @@ class SelectionTool extends Tool {
         this.updateCursor();
 
         this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(true);
+        this.getDocumentWorkspace().getSelectionRenderer().setRenderingQuality(
+            this.getSetting("renderingQuality", "high"));
 
         let surfaceBox = this.getSurfaceBox();
 
@@ -37,6 +39,7 @@ class SelectionTool extends Tool {
         this.newSelectionRenderer = new SelectionRenderer(surfaceBox, this.newSelection);
         this.newSelectionRenderer.setSelectionTinting(false);
         this.newSelectionRenderer.setOutlineAnimation(true);
+        this.newSelectionRenderer.setRenderingQuality(this.getSetting("renderingQuality", "high"));
         this.newSelectionRenderer.setVisible(false);
         surfaceBox.addRenderer(this.newSelectionRenderer);
     }
@@ -49,6 +52,16 @@ class SelectionTool extends Tool {
         this.getSurfaceBox().removeRenderer(this.newSelectionRenderer);
         this.newSelection = null;
         this.newSelectionRenderer = null;
+    }
+
+    onSettingChanged(key) {
+        if (key === "renderingQuality") {
+            const quality = this.getSetting("renderingQuality", "high");
+            this.getDocumentWorkspace().getSelectionRenderer().setRenderingQuality(quality);
+            if (this.newSelectionRenderer !== null) {
+                this.newSelectionRenderer.setRenderingQuality(quality);
+            }
+        }
     }
 
     onMouseDown(mouseX, mouseY, button) {

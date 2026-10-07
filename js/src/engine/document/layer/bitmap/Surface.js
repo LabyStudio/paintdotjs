@@ -118,8 +118,8 @@ class Surface {
 
     renderCheckerboard(x, y, width, height) {
         const brightness = typeof AppSettingsStore === "undefined"
-            ? 1
-            : AppSettingsStore.get("canvas.checkerboardBrightness", 100) / 100;
+            ? 0.75
+            : AppSettingsStore.get("canvas.checkerboardBrightness", 75) / 100;
         if (this.checkerboard === null || brightness !== this.checkerboardBrightness) {
             this.checkerboard = ImageUtil.createTransparentPattern(this.context, 5, brightness);
             this.checkerboardBrightness = brightness;

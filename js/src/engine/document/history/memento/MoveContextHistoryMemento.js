@@ -1,11 +1,17 @@
 class MoveContextHistoryMemento extends ToolHistoryMemento {
 
-    constructor(documentWorkspace, context, name, image) {
+    constructor(documentWorkspace, context, name, image, captureScratchSurface = false) {
         super(documentWorkspace, name, image);
 
         this.data = new OurHistoryMementoData(context);
         this.layerIndex = documentWorkspace.getActiveLayerIndex();
         this.liftedPixelsRef = null;
+        this.captureScratchSurface = captureScratchSurface;
+        const moveTool = this.app.getActiveTool();
+        this.scratchSurface = captureScratchSurface && context.lifted
+            && moveTool instanceof MoveTool && moveTool.scratchSurface !== null
+            ? moveTool.scratchSurface.clone()
+            : null;
     }
 
     onToolUndo() {
@@ -18,7 +24,8 @@ class MoveContextHistoryMemento extends ToolHistoryMemento {
             this.documentWorkspace,
             moveTool.context,
             this.name,
-            this.image
+            this.image,
+            this.captureScratchSurface
         )
         let ohad = this.data;
         let newContext = ohad.context;
@@ -35,6 +42,10 @@ class MoveContextHistoryMemento extends ToolHistoryMemento {
 
         moveTool.context.dispose();
         moveTool.context = newContext;
+
+        if (this.scratchSurface !== null) {
+            moveTool.scratchSurface.copySurface(this.scratchSurface);
+        }
 
         moveTool.destroyNubs();
 

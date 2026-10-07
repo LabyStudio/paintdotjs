@@ -56,6 +56,58 @@
     overflow-y: auto;
 }
 
+.window.window-resizable .content {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.window-resize-handle {
+    position: absolute;
+    z-index: 20;
+    touch-action: none;
+}
+
+.window-resize-n,
+.window-resize-s {
+    left: 7px;
+    right: 7px;
+    height: 7px;
+    cursor: ns-resize;
+}
+
+.window-resize-n { top: -4px; }
+.window-resize-s { bottom: -4px; }
+
+.window-resize-e,
+.window-resize-w {
+    top: 7px;
+    bottom: 7px;
+    width: 7px;
+    cursor: ew-resize;
+}
+
+.window-resize-e { right: -4px; }
+.window-resize-w { left: -4px; }
+
+.window-resize-ne,
+.window-resize-se,
+.window-resize-sw,
+.window-resize-nw {
+    width: 11px;
+    height: 11px;
+}
+
+.window-resize-ne { top: -4px; right: -4px; cursor: nesw-resize; }
+.window-resize-se { right: -4px; bottom: -4px; cursor: nwse-resize; }
+.window-resize-sw { bottom: -4px; left: -4px; cursor: nesw-resize; }
+.window-resize-nw { top: -4px; left: -4px; cursor: nwse-resize; }
+
+body.window-resizing,
+body.window-resizing * {
+    user-select: none !important;
+}
+
 /* ----------------- Error form ----------------- */
 
 .error-form {
@@ -536,7 +588,12 @@
 }
 
 .settings-dialog-title {
+    height: 39px;
     padding-left: 8px;
+}
+
+.settings-dialog-title .app-dialog-close {
+    height: 38px;
 }
 
 .settings-dialog-content {
@@ -818,6 +875,206 @@
     margin-top: 9px;
 }
 
+/* Canvas settings mirror Paint.NET's compact editor rather than using the
+   browser's generic color and percentage controls. */
+.settings-page-canvas {
+    padding: 11px 10px;
+    overflow-x: hidden;
+}
+
+.settings-page-canvas .settings-checkbox {
+    min-height: 27px;
+}
+
+.settings-canvas-color-editor {
+    width: min(495px, calc(100% - 136px));
+    height: 128px;
+    display: grid;
+    grid-template-columns: 34px 126px 52px minmax(82px, 1fr);
+    gap: 9px;
+    align-items: start;
+    margin: 3px 0 8px 136px;
+    transition: filter 100ms ease, opacity 100ms ease;
+}
+
+.settings-canvas-color-editor.disabled {
+    filter: grayscale(1);
+    opacity: .72;
+}
+
+.settings-canvas-color-swatch {
+    box-sizing: border-box;
+    width: 34px;
+    height: 34px;
+    margin-top: 2px;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+    border: 2px solid var(--pdn-control-border);
+}
+
+.settings-canvas-color-swatch::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.settings-canvas-color-swatch::-webkit-color-swatch {
+    border: 0;
+}
+
+.settings-canvas-color-wheel {
+    --settings-wheel-hue: 0;
+    position: relative;
+    box-sizing: border-box;
+    width: 126px;
+    height: 126px;
+    cursor: crosshair;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, #fff 0, rgba(255, 255, 255, .82) 15%, rgba(255, 255, 255, 0) 68%),
+        conic-gradient(from 0deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35);
+}
+
+.settings-canvas-color-editor.disabled .settings-canvas-color-wheel {
+    cursor: default;
+    pointer-events: none;
+}
+
+.settings-canvas-color-wheel > span {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    box-sizing: border-box;
+    width: 7px;
+    height: 7px;
+    border: 1px solid white;
+    border-radius: 50%;
+    outline: 1px solid rgba(0, 0, 0, .45);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.settings-canvas-color-bars {
+    height: 126px;
+    display: flex;
+    gap: 11px;
+    align-items: stretch;
+}
+
+.settings-canvas-color-bars input[type="range"] {
+    width: 18px;
+    height: 120px;
+    min-height: 0;
+    margin: 2px 0 0;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    background: linear-gradient(to bottom, #fff, #050505);
+}
+
+.settings-canvas-color-bars input[type="range"]::-webkit-slider-runnable-track {
+    width: 14px;
+    height: 120px;
+    background: linear-gradient(to bottom, transparent, transparent);
+    border: 1px solid var(--pdn-control-border);
+    box-shadow: none;
+}
+
+.settings-canvas-color-bars input[type="range"]::-webkit-slider-thumb {
+    width: 20px;
+    height: 8px;
+    clip-path: none;
+    transform: translateX(-4px);
+    background: transparent;
+    border: 1px solid white;
+    outline: 1px solid #333;
+}
+
+.settings-canvas-neutral-bar {
+    box-sizing: border-box;
+    width: 15px;
+    height: 120px;
+    margin-top: 2px;
+    background: linear-gradient(to bottom, #fff, #777);
+    border: 1px solid var(--pdn-control-border);
+}
+
+.settings-canvas-rgb {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    justify-items: end;
+}
+
+.settings-canvas-rgb label {
+    display: grid;
+    grid-template-columns: 18px 62px;
+    gap: 4px;
+    align-items: center;
+    color: var(--color-muted-text);
+}
+
+.settings-canvas-rgb input[type="number"] {
+    box-sizing: border-box;
+    width: 62px;
+    height: 27px;
+    padding: 2px 5px;
+    font-size: 14px;
+}
+
+.settings-inline-reset {
+    box-sizing: border-box;
+    width: 61px;
+    min-width: 0 !important;
+    height: 29px;
+    min-height: 0 !important;
+    padding: 3px !important;
+}
+
+.settings-inline-reset img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+.settings-canvas-rgb .settings-inline-reset {
+    margin-top: 1px;
+}
+
+.settings-canvas-brightness {
+    width: 100%;
+    display: grid;
+    gap: 3px;
+}
+
+.settings-canvas-brightness > span {
+    font-size: 14px;
+}
+
+.settings-canvas-brightness > div {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) 88px 25px;
+    gap: 11px;
+    align-items: center;
+    padding-left: 8px;
+}
+
+.settings-canvas-brightness input[type="range"] {
+    width: 100%;
+}
+
+.settings-canvas-brightness input[type="number"] {
+    box-sizing: border-box;
+    width: 88px;
+    height: 27px;
+    padding: 2px 5px;
+    font-size: 14px;
+}
+
+.settings-canvas-brightness .settings-inline-reset {
+    width: 25px;
+    height: 25px;
+}
+
 @media (max-width: 660px) {
     .settings-dialog-content {
         grid-template-columns: 150px 1fr;
@@ -829,6 +1086,17 @@
         grid-template-columns: 1fr;
         gap: 3px;
         margin-bottom: 8px;
+    }
+
+    .settings-canvas-color-editor {
+        width: 100%;
+        grid-template-columns: 34px 110px 42px minmax(82px, 1fr);
+        margin-left: 0;
+    }
+
+    .settings-canvas-color-wheel {
+        width: 110px;
+        height: 110px;
     }
 }
 

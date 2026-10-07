@@ -10,6 +10,13 @@ class DocumentIO {
             event.preventDefault();
             event.returnValue = "";
         });
+        // Browser image elements are draggable by default. App icons can then
+        // arrive at the document drop handler as file payloads and accidentally
+        // open the icon itself. External file drags do not originate here, so
+        // cancelling native drags for UI images keeps normal file import intact.
+        document.addEventListener("dragstart", event => {
+            if (event.target instanceof HTMLImageElement) event.preventDefault();
+        });
         document.addEventListener("dragover", event => {
             if (event.dataTransfer !== null && Array.from(event.dataTransfer.types).includes("Files")) {
                 event.preventDefault();
@@ -740,16 +747,33 @@ class DocumentIO {
             expand = choice === "expand";
         }
         this.finishActiveTool(false);
+        const preserveOverflow = !expand
+            && (image.width > documentModel.getWidth() || image.height > documentModel.getHeight());
+        let history;
         if (expand) {
-            this.resizeCanvas(workspace, Math.max(image.width, documentModel.getWidth()), Math.max(image.height, documentModel.getHeight()));
+            // The canvas resize and the pasted pixels are one operation. Capture the
+            // complete pre-paste document so undo restores both its pixels and size.
+            history = new DocumentStateHistoryMemento(
+                "Paste",
+                "assets/icons/menu_edit_paste_icon.png",
+                workspace
+            );
+            this.resizeCanvas(
+                workspace,
+                Math.max(image.width, documentModel.getWidth()),
+                Math.max(image.height, documentModel.getHeight()),
+                false
+            );
         }
         const activeLayer = workspace.getActiveLayer();
-        const history = new BitmapHistoryMemento(
-            "Paste",
-            "assets/icons/menu_edit_paste_icon.png",
-            workspace,
-            workspace.getActiveLayerIndex()
-        );
+        if (!expand) {
+            history = new BitmapHistoryMemento(
+                "Paste",
+                "assets/icons/menu_edit_paste_icon.png",
+                workspace,
+                workspace.getActiveLayerIndex()
+            );
+        }
         activeLayer.getSurface().context.drawImage(image, 0, 0);
         workspace.getHistory().pushNewMemento(history);
         activeLayer.invalidate();
@@ -758,12 +782,16 @@ class DocumentIO {
         selection.reset();
         selection.setContinuation(new Rectangle(
             0, 0,
-            Math.min(image.width, workspace.getDocument().getWidth()),
-            Math.min(image.height, workspace.getDocument().getHeight())
+            preserveOverflow ? image.width : Math.min(image.width, workspace.getDocument().getWidth()),
+            preserveOverflow ? image.height : Math.min(image.height, workspace.getDocument().getHeight())
         ), CombineMode.REPLACE);
         selection.commitContinuation();
         selection.pop();
         this.app.setActiveToolFromType(ToolType.MOVE);
+        if (preserveOverflow) {
+            const moveTool = this.app.getActiveTool();
+            if (moveTool instanceof MoveTool) moveTool.setPendingPaste(image);
+        }
         workspace.setDirty(true);
         if (typeof image.close === "function") image.close();
         return true;
@@ -942,7 +970,7 @@ class DocumentIO {
         return Math.max(0.01, Number(documentModel.getResolution?.() ?? documentModel.resolution) || 96);
     }
 
-    static resizeCanvas(workspace, width, height) {
+    static resizeCanvas(workspace, width, height, clearHistory = true) {
         const oldDocument = workspace.getDocument();
         const activeIndex = workspace.getActiveLayerIndex();
         const activeTool = this.app.getActiveTool();
@@ -958,7 +986,7 @@ class DocumentIO {
         }
         workspace.setActiveLayerIndex(Math.min(activeIndex, replacement.getLayers().getLayerCount() - 1));
         workspace.getSelection().reset();
-        workspace.getHistory().clearAll();
+        if (clearHistory) workspace.getHistory().clearAll();
         replacement.invalidate();
         workspace.fitViewport();
         this.app.fire("document:update_size", width, height);

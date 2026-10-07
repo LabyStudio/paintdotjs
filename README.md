@@ -110,8 +110,7 @@ paint.js is usable but is not yet a complete replacement for Paint.NET. Known ga
 - Native `.pdn` support currently covers bitmap layers and their basic properties. It does not preserve
   Paint.NET history, selections, plugin data, or every newer PDN feature, and saving is limited to 64 layers.
 - Animated and multi-page formats are imported and exported as a single static image.
-- Automatic update checks, manual GPU/device selection, and direct advanced-color management are not
-  implemented.
+- Manual GPU/device selection and direct advanced-color management are not implemented.
 - Very large documents, large-radius effects, and complex selections may still be slow or memory-intensive.
 - Some browser security features require HTTPS or localhost, including parts of the clipboard,
   file-system, and PWA functionality.
@@ -120,41 +119,39 @@ paint.js is usable but is not yet a complete replacement for Paint.NET. Known ga
 
 ### Requirements
 
-- Node.js and npm
-- Python 3 for downloading the Paint.NET assets and, optionally, serving the web build locally
+- Node.js 22 or newer and npm
 - A Chromium-based browser for the web version
 
-### 1. Download the assets
-
-paint.js uses interface assets from **Paint.NET 5.1.12**. They cannot be distributed in this
-repository, so download them before running the app:
-
-```bash
-python3 scripts/download_assets.py
-```
-
-The extractor also installs all translations shipped with Paint.NET. To use an existing portable
-installation, or to refresh translations without touching image assets, run:
-
-```bash
-python3 scripts/download_assets.py \
-  --source /path/to/paint.net.portable.x64 \
-  --languages-only
-```
-
-### 2. Install dependencies
+### 1. Install dependencies
 
 ```bash
 npm ci
 ```
 
-### 3. Run the Electron desktop app
+### 2. Run the Electron desktop app
 
 ```bash
 npm run app
 ```
 
-### 4. Build and run the web app
+The first `npm run app`, `npm run web`, or `npm run web-watch` automatically downloads the configured
+Paint.NET portable archive, verifies its pinned checksum, and extracts the required artwork and
+translations. The archive is cached below `.tmp/paintdotnet`; no Python setup or manual asset command
+is needed. Change `paintdotjs.paintDotNetVersion` in `package.json`; the next asset check downloads
+that release, records its archive checksum, and regenerates the asset manifest automatically
+when intentionally moving to a newer upstream asset version.
+
+To explicitly verify or prepare the assets, run:
+
+```bash
+npm run check-assets
+```
+
+Packaged desktop builds do not contain Paint.NET artwork or translations. On first launch, paint.js
+downloads the official Paint.NET portable archive and extracts the required resources into the user's
+application-data directory. AUR builds perform the same extraction during `makepkg`.
+
+### 3. Build and run the web app
 
 Build the JavaScript bundle and offline service worker:
 
@@ -165,7 +162,7 @@ npm run web
 Serve the repository root over HTTP, then open <http://127.0.0.1:8773/>:
 
 ```bash
-python3 -m http.server 8773
+npx http-server . -p 8773
 ```
 
 Do not open `index.html` directly from the filesystem: browser security restrictions will prevent
@@ -190,9 +187,6 @@ npm run pages     # build the GitHub Pages output
 npm run dist      # package the Electron application
 npm run pwa       # regenerate only the service worker
 ```
-
-Contributions and focused bug reports are welcome, especially for performance, cross-browser
-compatibility, file-format edge cases, and the unimplemented commands listed above.
 
 ## License
 

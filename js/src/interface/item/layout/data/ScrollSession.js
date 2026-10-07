@@ -5,11 +5,11 @@ class ScrollSession extends Debounced {
         this.scrollPosition = 0;
         this.itemPositionCache = new Map();
         this.draggingItem = null;
-        this.lastClientY = 0;
+        this.lastPointerCoordinate = 0;
         this.dragOwner = null;
         this.dragPointerId = null;
         this.dragGrabOffset = 0;
-        this.dragStartClientY = 0;
+        this.dragStartPointerCoordinate = 0;
         this.dragSwapPending = false;
         this.dragMoveHandler = null;
         this.dragEndHandler = null;
@@ -32,26 +32,26 @@ class ScrollSession extends Debounced {
         return this.draggingItem;
     }
 
-    setLastClientY(clientY) {
-        this.lastClientY = clientY;
+    setLastPointerCoordinate(coordinate) {
+        this.lastPointerCoordinate = coordinate;
     }
 
-    getLastClientY() {
-        return this.lastClientY;
+    getLastPointerCoordinate() {
+        return this.lastPointerCoordinate;
     }
 
     setDragOwner(owner) {
         this.dragOwner = owner;
     }
 
-    beginPointerDrag(owner, pointerId, grabOffset, clientY) {
+    beginPointerDrag(owner, pointerId, grabOffset, pointerCoordinate) {
         this.endPointerDrag();
         this.dragOwner = owner;
         this.dragPointerId = pointerId;
         this.dragGrabOffset = grabOffset;
-        this.dragStartClientY = clientY;
+        this.dragStartPointerCoordinate = pointerCoordinate;
         this.dragSwapPending = false;
-        this.lastClientY = clientY;
+        this.lastPointerCoordinate = pointerCoordinate;
         this.dragMoveHandler = event => {
             if (event.pointerId === this.dragPointerId) this.dragOwner?.continuePointerDrag(event);
         };

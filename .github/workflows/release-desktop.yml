@@ -1,0 +1,197 @@
+name: Release desktop apps
+
+on:
+  push:
+    branches: [master]
+    paths: [package.json]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-release
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.version.outputs.release }}
+      version: ${{ steps.version.outputs.version }}
+      paintdotnet: ${{ steps.version.outputs.paintdotnet }}
+      paintdotnet_sha256: ${{ steps.version.outputs.paintdotnet_sha256 }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - id: version
+        name: Detect a version bump
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const {execFileSync} = require('child_process');
+          const current = require('./package.json');
+          let previousVersion = null;
+          try {
+            previousVersion = JSON.parse(execFileSync('git', ['show', 'HEAD^:package.json'], {encoding: 'utf8'})).version;
+          } catch (_) {}
+          const manual = process.env.GITHUB_EVENT_NAME === 'workflow_dispatch';
+          const release = manual || current.version !== previousVersion;
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,
+            `release=${release}\nversion=${current.version}\npaintdotnet=${current.paintdotjs.paintDotNetVersion}\n` +
+            `paintdotnet_sha256=${current.paintdotjs.paintDotNetSha256}\n`);
+          NODE
+      - name: Ensure the version is unreleased
+        if: steps.version.outputs.release == 'true'
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v${{ steps.version.outputs.version }}"; then
+            echo "v${{ steps.version.outputs.version }} already exists" >&2
+            exit 1
+          fi
+
+  linux:
+    needs: version
+    if: needs.version.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run desktop:build
+      - run: npx electron-builder --linux AppImage --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-linux
+          path: |
+            dist/*.AppImage
+            dist/*.blockmap
+            dist/latest-linux.yml
+          if-no-files-found: error
+
+  macos:
+    needs: version
+    if: needs.version.outputs.release == 'true'
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      CSC_LINK: ${{ secrets.MACOS_CERTIFICATE }}
+      CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+      APPLE_API_KEY_ID: ${{ vars.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+    steps:
+      - name: Validate signing secrets
+        env:
+          APPLE_API_KEY_VALUE: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          test -n "$CSC_LINK" && test -n "$CSC_KEY_PASSWORD" && test -n "$APPLE_API_KEY_ID" \
+            && test -n "$APPLE_API_ISSUER" && test -n "$APPLE_TEAM_ID" \
+            && test -n "$APPLE_API_KEY_VALUE"
+      - name: Write App Store Connect API key
+        env:
+          APPLE_API_KEY_VALUE: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey.p8"
+          if printf '%s' "$APPLE_API_KEY_VALUE" | grep -q -- '-----BEGIN'; then
+            printf '%s\n' "$APPLE_API_KEY_VALUE" > "$API_KEY_PATH"
+          else
+            printf '%s' "$APPLE_API_KEY_VALUE" | base64 --decode > "$API_KEY_PATH"
+          fi
+          openssl pkey -in "$API_KEY_PATH" -noout
+          echo "APPLE_API_KEY=$API_KEY_PATH" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run desktop:build
+      - run: npx electron-builder --mac dmg zip --universal --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-macos
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.blockmap
+            dist/latest-mac.yml
+          if-no-files-found: error
+
+  release:
+    needs: [version, linux, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: desktop-*
+          path: release-artifacts
+          merge-multiple: true
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ needs.version.outputs.version }}" release-artifacts/* \
+            --target "$GITHUB_SHA" \
+            --title "paint.js ${{ needs.version.outputs.version }}" \
+            --generate-notes
+
+  aur:
+    needs: [version, release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+    steps:
+      - name: Validate AUR secret
+        run: test -n "$AUR_SSH_PRIVATE_KEY"
+      - uses: actions/checkout@v6
+      - name: Render package metadata
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          PAINTDOTNET_VERSION: ${{ needs.version.outputs.paintdotnet }}
+          PAINTDOTNET_SHA256: ${{ needs.version.outputs.paintdotnet_sha256 }}
+        run: |
+          curl -fL --retry 5 --retry-all-errors "https://github.com/LabyStudio/paintdotjs/releases/download/v${VERSION}/paintdotjs-${VERSION}-linux-x86_64.AppImage" -o paintdotjs.AppImage
+          curl -fL --retry 5 --retry-all-errors "https://github.com/LabyStudio/paintdotjs/archive/refs/tags/v${VERSION}.tar.gz" -o source.tar.gz
+          export APPIMAGE_SHA256=$(sha256sum paintdotjs.AppImage | cut -d' ' -f1)
+          export SOURCE_SHA256=$(sha256sum source.tar.gz | cut -d' ' -f1)
+          node <<'NODE'
+          const fs = require('fs');
+          const replacements = {
+            VERSION: process.env.VERSION,
+            PAINTDOTNET_VERSION: process.env.PAINTDOTNET_VERSION,
+            APPIMAGE_SHA256: process.env.APPIMAGE_SHA256,
+            SOURCE_SHA256: process.env.SOURCE_SHA256,
+            PAINTDOTNET_SHA256: process.env.PAINTDOTNET_SHA256
+          };
+          for (const [source, target] of [['aur/PKGBUILD.template', 'PKGBUILD'], ['aur/.SRCINFO.template', '.SRCINFO']]) {
+            let value = fs.readFileSync(source, 'utf8');
+            for (const [key, replacement] of Object.entries(replacements)) {
+              value = value.replaceAll(`@${key}@`, replacement);
+            }
+            fs.writeFileSync(target, value);
+          }
+          NODE
+      - name: Publish AUR package
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H aur.archlinux.org >> ~/.ssh/known_hosts
+          git clone ssh://aur@aur.archlinux.org/paintdotjs-bin.git aur-package
+          cp PKGBUILD .SRCINFO aur-package/
+          cd aur-package
+          git config user.name 'paint.js release bot'
+          git config user.email 'release@paintjs.net'
+          git add PKGBUILD .SRCINFO
+          git commit -m "Update to ${VERSION}"
+          git push

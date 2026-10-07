@@ -31,13 +31,13 @@
         title.textContent = 'Required assets are missing';
 
         const explanation = document.createElement('p');
-        explanation.textContent = 'This paint.js checkout has not downloaded the Paint.NET assets yet.';
+        explanation.textContent = 'This paint.js checkout has not prepared the Paint.NET assets yet.';
 
         const instruction = document.createElement('p');
         instruction.textContent = 'Run this command from the project directory, then reload the page:';
 
         const command = document.createElement('code');
-        command.textContent = 'python3 scripts/download_assets.py';
+        command.textContent = 'npm run check-assets';
 
         const note = document.createElement('p');
         note.className = 'missing-assets-note';

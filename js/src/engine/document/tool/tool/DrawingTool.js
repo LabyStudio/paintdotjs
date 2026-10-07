@@ -22,6 +22,10 @@ class DrawingTool extends Tool {
         return Number(this.getSetting("width", this.width));
     }
 
+    usesContinuousPointerCoordinates() {
+        return this.sampledStroke;
+    }
+
     onActivate() {
         super.onActivate();
         this.app.setCursor("crosshair");
@@ -171,11 +175,16 @@ class DrawingTool extends Tool {
         const surface = this.getActiveLayer().getSurface();
         const context = this.strokeSurface === null ? surface.context : this.strokeSurface.context;
         const width = this.getWidth();
+        const hardness = this.getSetting("antialias", true)
+            ? Utility.clamp(Number(this.getSetting("hardness", 100)), 0, 100) / 100
+            : 1;
+        const maxStampWidth = width * Math.max(fromPressure, toPressure);
+        const stampExtent = this.getBrushStampExtent(maxStampWidth, hardness);
         const segmentBounds = Rectangle.absolute(
             Math.min(from.x, to.x), Math.min(from.y, to.y),
             Math.max(from.x, to.x) + 1, Math.max(from.y, to.y) + 1
         );
-        segmentBounds.inflate(Math.ceil(width / 2) + 1, Math.ceil(width / 2) + 1);
+        segmentBounds.inflate(Math.ceil(stampExtent) + 1, Math.ceil(stampExtent) + 1);
         this.saveRegion(null, segmentBounds);
         context.save();
         context.globalCompositeOperation = "source-over";
@@ -195,20 +204,19 @@ class DrawingTool extends Tool {
         context.lineWidth = width * ((fromPressure + toPressure) / 2);
         context.lineCap = "round";
         context.lineJoin = "round";
-        const hardness = this.getSetting("antialias", true)
-            ? Utility.clamp(Number(this.getSetting("hardness", 100)), 0, 100) / 100
-            : 1;
         const spacing = Math.max(0.5, width * Number(this.getSetting("spacing", 15)) / 100);
         const variablePressure = Math.abs(fromPressure - toPressure) > 0.01;
+        const coordinateOffset = this.usesContinuousPointerCoordinates() ? 0 : 0.5;
         if (hardness >= 0.999 && spacing <= Math.max(1, width * 0.25)
             && !variablePressure) {
             context.beginPath();
-            context.moveTo(from.x + 0.5, from.y + 0.5);
-            context.lineTo(to.x + 0.5, to.y + 0.5);
+            context.moveTo(from.x + coordinateOffset, from.y + coordinateOffset);
+            context.lineTo(to.x + coordinateOffset, to.y + coordinateOffset);
             context.stroke();
             if (from.equals(to)) {
                 context.beginPath();
-                context.arc(from.x + 0.5, from.y + 0.5, width * fromPressure / 2, 0, Math.PI * 2);
+                context.arc(from.x + coordinateOffset, from.y + coordinateOffset,
+                    width * fromPressure / 2, 0, Math.PI * 2);
                 context.fill();
             }
         } else {
@@ -239,24 +247,32 @@ class DrawingTool extends Tool {
             }
             for (const offset of offsets) {
                 const t = distance === 0 ? 0 : offset / distance;
-                const px = from.x + (to.x - from.x) * t + 0.5;
-                const py = from.y + (to.y - from.y) * t + 0.5;
+                const px = from.x + (to.x - from.x) * t + coordinateOffset;
+                const py = from.y + (to.y - from.y) * t + coordinateOffset;
                 const stampWidth = width * (fromPressure + (toPressure - fromPressure) * t);
                 const radius = stampWidth / 2;
-                const opaque = `rgba(${color.red},${color.green},${color.blue},${color.alpha / 255})`;
-                const transparent = `rgba(${color.red},${color.green},${color.blue},0)`;
                 if (hardness < 0.999) {
-                    const gradient = context.createRadialGradient(px, py, 0, px, py, radius);
-                    gradient.addColorStop(0, opaque);
-                    gradient.addColorStop(Math.max(0, hardness), opaque);
-                    gradient.addColorStop(1, transparent);
+                    const profile = this.getBrushStampProfile(radius, hardness);
+                    const gradient = context.createRadialGradient(
+                        px, py, 0, px, py, profile.extentRadius);
+                    const steps = 16;
+                    for (let step = 0; step <= steps; ++step) {
+                        const distance = profile.extentRadius * step / steps;
+                        const alpha = step === steps
+                            ? 0
+                            : this.getBrushProfileAlpha(distance, profile);
+                        gradient.addColorStop(step / steps,
+                            `rgba(${color.red},${color.green},${color.blue},${alpha * color.alpha / 255})`);
+                    }
                     context.fillStyle = gradient;
+                    context.beginPath();
+                    context.arc(px, py, profile.extentRadius, 0, Math.PI * 2);
                 } else {
                     context.fillStyle = this.createFillStyle(context, color,
                         coverageBackground);
+                    context.beginPath();
+                    context.arc(px, py, radius, 0, Math.PI * 2);
                 }
-                context.beginPath();
-                context.arc(px, py, radius, 0, Math.PI * 2);
                 context.fill();
             }
         }
@@ -272,6 +288,52 @@ class DrawingTool extends Tool {
         } else {
             this.getActiveLayer().invalidate(Rectangle.intersect(segmentBounds, surface.getBounds()));
         }
+    }
+
+    getBrushStampExtent(stampWidth, hardness) {
+        const radius = Math.max(0.5, stampWidth / 2);
+        if (hardness >= 0.999) return radius;
+        return this.getBrushStampProfile(radius, hardness).extentRadius;
+    }
+
+    getBrushStampProfile(radius, hardness) {
+        // Paint.NET 5's BasicSampledBrushRenderer uses a hard shape whose
+        // diameter interpolates from 59.4375% to 100%, then applies a Gaussian
+        // blur whose radius interpolates from the full brush radius to zero.
+        const coreRadius = radius * (0.594375 + 0.405625 * hardness);
+        const blurRadius = radius * (1 - hardness);
+        const sigma = Math.max(0.0001, blurRadius / 3);
+        return {
+            coreRadius,
+            sigma,
+            extentRadius: coreRadius + blurRadius,
+            centerAlpha: this.gaussianEdgeAlpha(0, coreRadius, sigma)
+        };
+    }
+
+    getBrushProfileAlpha(distance, profile) {
+        return Utility.clamp(
+            this.gaussianEdgeAlpha(distance, profile.coreRadius, profile.sigma)
+                / profile.centerAlpha,
+            0,
+            1
+        );
+    }
+
+    gaussianEdgeAlpha(distance, coreRadius, sigma) {
+        return 0.5 * (1 - this.approximateErf(
+            (distance - coreRadius) / (Math.SQRT2 * sigma)
+        ));
+    }
+
+    approximateErf(value) {
+        // Abramowitz and Stegun 7.1.26; accurate enough for an 8-bit mask.
+        const sign = value < 0 ? -1 : 1;
+        const x = Math.abs(value);
+        const t = 1 / (1 + 0.3275911 * x);
+        const polynomial = (((((1.061405429 * t - 1.453152027) * t)
+            + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t;
+        return sign * (1 - polynomial * Math.exp(-x * x));
     }
 
     clipToSelection(context) {

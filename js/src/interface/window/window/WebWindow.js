@@ -18,6 +18,12 @@ class WebWindow extends AbstractWindow {
         this.dragging = false;
         this.dragStartX = 0;
         this.dragStartY = 0;
+        this.resizable = false;
+        this.resizing = false;
+        this.resizeDirection = null;
+        this.resizeStart = null;
+        this.minWidth = 120;
+        this.minHeight = 90;
 
         this.x = 0;
         this.y = 0;
@@ -73,6 +79,8 @@ class WebWindow extends AbstractWindow {
                 this.contentElement.appendChild(this.content);
             }
             this.windowElement.appendChild(this.contentElement);
+
+            if (this.resizable) this.createResizeHandles();
         }
         this.overlay.appendChild(this.windowElement);
         WebWindow.focus(this.windowElement);
@@ -88,7 +96,12 @@ class WebWindow extends AbstractWindow {
             event.stopPropagation();
         });
         document.addEventListener("mousemove", (event) => {
-            if (this.dragging) {
+            if (this.resizing) {
+                this.resizeToPointer(event.clientX, event.clientY);
+
+                event.preventDefault();
+                event.stopPropagation();
+            } else if (this.dragging) {
                 let x = event.clientX - this.dragStartX;
                 let y = event.clientY - this.dragStartY;
 
@@ -100,6 +113,10 @@ class WebWindow extends AbstractWindow {
         });
         document.addEventListener("mouseup", () => {
             this.dragging = false;
+            this.resizing = false;
+            this.resizeDirection = null;
+            this.resizeStart = null;
+            document.body.classList.remove("window-resizing");
         });
 
         super.create();
@@ -142,7 +159,96 @@ class WebWindow extends AbstractWindow {
         }
     }
 
+    setResizable(resizable, minWidth = 120, minHeight = 90) {
+        this.resizable = !!resizable;
+        this.minWidth = minWidth;
+        this.minHeight = minHeight;
+        if (this.windowElement !== null) {
+            this.windowElement.classList.toggle("window-resizable", this.resizable);
+            for (const handle of this.windowElement.querySelectorAll(".window-resize-handle")) {
+                handle.remove();
+            }
+            if (this.resizable) this.createResizeHandles();
+        }
+    }
+
+    createResizeHandles() {
+        if (this.windowElement === null) return;
+        this.windowElement.classList.add("window-resizable");
+        for (const direction of ["n", "e", "s", "w", "ne", "se", "sw", "nw"]) {
+            const handle = document.createElement("div");
+            handle.className = "window-resize-handle window-resize-" + direction;
+            handle.addEventListener("mousedown", event => {
+                if (event.button !== 0) return;
+                this.dragging = false;
+                this.resizing = true;
+                this.resizeDirection = direction;
+                this.resizeStart = {
+                    clientX: event.clientX,
+                    clientY: event.clientY,
+                    x: this.x,
+                    y: this.y,
+                    width: this.width,
+                    height: this.height
+                };
+                document.body.classList.add("window-resizing");
+                WebWindow.focus(this.windowElement);
+                event.preventDefault();
+                event.stopPropagation();
+            });
+            this.windowElement.appendChild(handle);
+        }
+    }
+
+    resizeToPointer(clientX, clientY) {
+        if (!this.resizing || this.resizeStart === null) return;
+        const start = this.resizeStart;
+        const direction = this.resizeDirection;
+        const deltaX = clientX - start.clientX;
+        const deltaY = clientY - start.clientY;
+        let x = start.x;
+        let y = start.y;
+        let width = start.width;
+        let height = start.height;
+
+        if (direction.includes("e")) width = start.width + deltaX;
+        if (direction.includes("s")) height = start.height + deltaY;
+        if (direction.includes("w")) {
+            width = start.width - deltaX;
+            x = start.x + deltaX;
+        }
+        if (direction.includes("n")) {
+            height = start.height - deltaY;
+            y = start.y + deltaY;
+        }
+
+        width = Math.max(this.minWidth, width);
+        height = Math.max(this.minHeight, height);
+        if (direction.includes("w")) x = start.x + start.width - width;
+        if (direction.includes("n")) y = start.y + start.height - height;
+
+        const overlayWidth = this.overlay.clientWidth;
+        const overlayHeight = this.overlay.clientHeight;
+        if (x < 0) {
+            width += x;
+            x = 0;
+        }
+        if (y < 0) {
+            height += y;
+            y = 0;
+        }
+        width = Math.max(this.minWidth, Math.min(width, overlayWidth - x));
+        height = Math.max(this.minHeight, Math.min(height, overlayHeight - y));
+
+        this.setSize(Math.round(width), Math.round(height));
+        this.setPosition(Math.round(x), Math.round(y));
+    }
+
     setSize(width, height) {
+        if (this.resizable) {
+            width = Math.max(this.minWidth, width);
+            height = Math.max(this.minHeight, height);
+        }
         this.width = width;
         this.height = height;
 

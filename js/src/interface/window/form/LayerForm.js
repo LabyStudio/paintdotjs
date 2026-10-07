@@ -32,6 +32,7 @@ class LayerForm extends Form {
     }
 
     initializeDefault(window) {
+        window.setResizable(true, 180, 120);
         window.setSize(200, 276);
         window.setAnchor(1, 1);
     }

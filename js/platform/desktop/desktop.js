@@ -1,11 +1,89 @@
 const {CustomTitlebar, TitlebarColor} = require('custom-electron-titlebar')
 const {ipcRenderer, clipboard, shell, webUtils} = require('electron');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const localFilePaths = new WeakMap();
 
 window.desktopFileActions = {
     copyText: text => clipboard.writeText(text),
-    getPathForFile: file => webUtils.getPathForFile(file),
+    getPathForFile: file => localFilePaths.get(file) || webUtils.getPathForFile(file),
     showItemInFolder: filePath => shell.showItemInFolder(filePath)
 };
+
+const waitForApplication = () => new Promise(resolve => {
+    const poll = () => {
+        if (window.app && typeof DocumentIO !== 'undefined') resolve();
+        else setTimeout(poll, 25);
+    };
+    poll();
+});
+
+const openLocalFiles = async filenames => {
+    await waitForApplication();
+    const files = [];
+    for (const filename of filenames) {
+        try {
+            const data = await fs.promises.readFile(filename);
+            const file = new Blob([data]);
+            Object.defineProperties(file, {
+                name: {value: path.basename(filename)},
+                lastModified: {value: (await fs.promises.stat(filename)).mtimeMs}
+            });
+            localFilePaths.set(file, filename);
+            files.push(file);
+        } catch (error) {
+            console.error(`Could not read ${filename}`, error);
+        }
+    }
+    if (files.length) await DocumentIO.openFiles(files);
+};
+
+ipcRenderer.on('desktop:open-files', (_event, filenames) => void openLocalFiles(filenames));
+
+let updatePromptOpen = false;
+const showDownloadedUpdate = async version => {
+    if (updatePromptOpen) return;
+    updatePromptOpen = true;
+    try {
+        await waitForApplication();
+        const choice = await TaskDialog.show({
+            title: 'paint.js update ready',
+            icon: 'assets/icons/update_prompt_task_dialog_form_icon.png',
+            message: `paint.js ${version} has been downloaded. Restart to install it?`,
+            cancelValue: 'later',
+            choices: [{
+                value: 'restart',
+                title: 'Save All and Restart',
+                description: 'Save changed images, install the update, and reopen paint.js.',
+                icon: 'assets/icons/update_prompt_task_dialog_install_now.png'
+            }, {
+                value: 'later',
+                title: 'Install When I Exit',
+                description: 'The update will be installed after paint.js closes.',
+                icon: 'assets/icons/update_prompt_task_dialog_install_at_exit.png'
+            }]
+        });
+        if (choice === 'restart' && (!app.hasUnsavedDocuments() || await DocumentIO.saveAll())) {
+            ipcRenderer.send('desktop:install-update');
+        }
+    } finally {
+        updatePromptOpen = false;
+    }
+};
+
+window.desktopUpdater = {
+    state: 'idle',
+    detail: null,
+    check: () => ipcRenderer.invoke('desktop:check-for-updates'),
+    onStateChanged: null
+};
+ipcRenderer.on('desktop:update-state', (_event, update) => {
+    window.desktopUpdater.state = update.state;
+    window.desktopUpdater.detail = update.detail;
+    window.desktopUpdater.onStateChanged?.(update);
+    if (update.state === 'downloaded') void showDownloadedUpdate(update.detail);
+});
 
 const desktopTitlebar = new CustomTitlebar({
     backgroundColor: TitlebarColor.fromHex('#0D0D0D'),

@@ -15,7 +15,9 @@ class MagicWandTool extends Tool {
     onActivate() {
         super.onActivate();
         this.app.setCursorImg("magic_wand_tool_cursor");
-        this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(true);
+        const selectionRenderer = this.getDocumentWorkspace().getSelectionRenderer();
+        selectionRenderer.setSelectionTinting(true);
+        selectionRenderer.setRenderingQuality(this.getSetting("renderingQuality", "high"));
     }
 
     onDeactivate() {

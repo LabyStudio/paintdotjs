@@ -11,6 +11,10 @@ class AppView {
 
         this.lastMouseX = 0;
         this.lastMouseY = 0;
+        this.pointerDown = false;
+        this.autoScrollPointer = null;
+        this.autoScrollFrame = null;
+        this.lastAutoScrollTime = 0;
 
         this.controlKeyDown = false;
         this.shiftKeyDown = false;
@@ -120,6 +124,18 @@ class AppView {
             };
         };
 
+        const rememberAutoScrollPointer = event => {
+            const point = getPointerPosition(event);
+            this.autoScrollPointer = {
+                clientX: event.clientX,
+                clientY: event.clientY,
+                x: point.x,
+                y: point.y,
+                pressure: point.pressure,
+                pointerType: point.pointerType
+            };
+        };
+
         // Pointer events retain pen pressure and the browser's coalesced input
         // samples. Paint.NET 5's brush pipeline consumes the same information
         // instead of reducing every device to a stream of mouse coordinates.
@@ -128,6 +144,9 @@ class AppView {
                 const point = getPointerPosition(event);
                 let x = point.x;
                 let y = point.y;
+                this.pointerDown = true;
+                rememberAutoScrollPointer(event);
+                this.startAutoScroll();
                 this.fire("document:mousedown", x, y, event.button);
                 if (typeof this.editor.setPointerCapture === "function") {
                     this.editor.setPointerCapture(event.pointerId);
@@ -140,21 +159,7 @@ class AppView {
 
         this.editor.addEventListener('pointermove', event => {
             try {
-                const autoScroll = typeof AppSettingsStore === "undefined"
-                    || AppSettingsStore.get("ui.autoScrollWhileDrawing", true);
-                const activeTool = this.getActiveTool();
-                if (autoScroll && activeTool !== null && activeTool.isActive()) {
-                    const bounds = this.editor.getBoundingClientRect();
-                    const edge = 24;
-                    const speed = 12;
-                    const deltaX = event.clientX < bounds.left + edge
-                        ? -speed
-                        : (event.clientX > bounds.right - edge ? speed : 0);
-                    const deltaY = event.clientY < bounds.top + edge
-                        ? -speed
-                        : (event.clientY > bounds.bottom - edge ? speed : 0);
-                    if (deltaX !== 0 || deltaY !== 0) this.view.scrollBy(deltaX, deltaY);
-                }
+                rememberAutoScrollPointer(event);
 
                 const point = getPointerPosition(event);
                 let x = point.x;
@@ -170,6 +175,7 @@ class AppView {
 
         this.editor.addEventListener('pointerup', event => {
             try {
+                rememberAutoScrollPointer(event);
                 const point = getPointerPosition(event);
                 let x = point.x;
                 let y = point.y;
@@ -177,9 +183,16 @@ class AppView {
                 this.onMouseUp(x, y, event.button, getPointerInput(event));
             } catch (e) {
                 this.handleError(e);
+            } finally {
+                this.stopAutoScroll();
             }
 
             event.preventDefault();
+        });
+
+        this.editor.addEventListener('pointercancel', () => this.stopAutoScroll());
+        this.editor.addEventListener('lostpointercapture', () => {
+            if (this.pointerDown) this.stopAutoScroll();
         });
 
         // Disable smooth scrolling
@@ -404,6 +417,89 @@ class AppView {
         this.fire("app:resize", width, height);
     }
 
+    startAutoScroll() {
+        this.lastAutoScrollTime = performance.now();
+        if (this.autoScrollFrame !== null) return;
+        this.autoScrollFrame = requestAnimationFrame(time => this.runAutoScrollFrame(time));
+    }
+
+    stopAutoScroll() {
+        this.pointerDown = false;
+        this.autoScrollPointer = null;
+        if (this.autoScrollFrame !== null) cancelAnimationFrame(this.autoScrollFrame);
+        this.autoScrollFrame = null;
+    }
+
+    runAutoScrollFrame(time) {
+        this.autoScrollFrame = null;
+        if (!this.pointerDown || this.autoScrollPointer === null) return;
+
+        const elapsedSeconds = Math.min(Math.max((time - this.lastAutoScrollTime) / 1000, 0), 0.1);
+        this.lastAutoScrollTime = time;
+        this.autoScrollIfNecessary(elapsedSeconds);
+        this.autoScrollFrame = requestAnimationFrame(nextTime => this.runAutoScrollFrame(nextTime));
+    }
+
+    autoScrollIfNecessary(elapsedSeconds) {
+        const enabled = typeof AppSettingsStore === "undefined"
+            || AppSettingsStore.get("ui.autoScrollWhileDrawing", true);
+        const documentWorkspace = this.getActiveDocumentWorkspace();
+        const activeTool = this.getActiveTool();
+        if (!enabled || elapsedSeconds <= 0 || documentWorkspace === null
+            || documentWorkspace.isZoomToWindow() || activeTool === null
+            || !activeTool.isActive() || this.panTool.isTracking()) return false;
+
+        const pointer = this.autoScrollPointer;
+        const viewportBounds = this.view.getBoundingClientRect();
+        const centerX = (viewportBounds.left + viewportBounds.right) / 2;
+        const centerY = (viewportBounds.top + viewportBounds.bottom) / 2;
+        // Paint.NET projects the pointer 2% farther from the viewport center.
+        // This starts scrolling just before the pointer reaches an edge.
+        const projectedX = centerX + (pointer.clientX - centerX) * 1.02;
+        const projectedY = centerY + (pointer.clientY - centerY) * 1.02;
+        const directionX = projectedX < viewportBounds.left
+            ? -1
+            : (projectedX > viewportBounds.right ? 1 : 0);
+        const directionY = projectedY < viewportBounds.top
+            ? -1
+            : (projectedY > viewportBounds.bottom ? 1 : 0);
+        if (directionX === 0 && directionY === 0) return false;
+
+        const speed = 2000;
+        let deltaX = directionX * speed * elapsedSeconds;
+        let deltaY = directionY * speed * elapsedSeconds;
+        const maxScrollX = Math.max(0, this.view.scrollWidth - this.view.clientWidth);
+        const maxScrollY = Math.max(0, this.view.scrollHeight - this.view.clientHeight);
+        deltaX = Utility.clamp(deltaX, -this.getViewX(), maxScrollX - this.getViewX());
+        deltaY = Utility.clamp(deltaY, -this.getViewY(), maxScrollY - this.getViewY());
+        if (deltaX === 0 && deltaY === 0) return false;
+
+        const oldX = this.getViewX();
+        const oldY = this.getViewY();
+        this.view.scrollBy(deltaX, deltaY);
+        const newX = this.getViewX();
+        const newY = this.getViewY();
+        if (newX === oldX && newY === oldY) return false;
+
+        // Synchronize the document transform before re-emitting the stationary
+        // pointer. Its document coordinate changes as the viewport moves.
+        documentWorkspace.setViewPosition(newX, newY);
+        const input = {
+            pressure: pointer.pressure,
+            pointerType: pointer.pointerType,
+            samples: [{
+                x: pointer.x,
+                y: pointer.y,
+                pressure: pointer.pressure,
+                pointerType: pointer.pointerType,
+                timeStamp: performance.now()
+            }]
+        };
+        this.fire("document:mousemove", pointer.x, pointer.y);
+        this.onMouseMove(pointer.x, pointer.y, input);
+        return true;
+    }
+
     onKeyPress(key) {
         let documentWorkspace = this.getActiveDocumentWorkspace();
         if (documentWorkspace !== null) {
@@ -490,9 +586,14 @@ class AppView {
 
     toDocumentPointerInput(documentWorkspace, input) {
         if (input === null || input === undefined) return null;
+        const tool = typeof this.getActiveTool === "function" ? this.getActiveTool() : null;
+        const continuous = tool !== null
+            && typeof tool.usesContinuousPointerCoordinates === "function"
+            && tool.usesContinuousPointerCoordinates();
         return Object.assign({}, input, {
             samples: (input.samples || []).map(sample => {
-                const point = documentWorkspace.toDocumentPosition(new Point(sample.x, sample.y));
+                const point = documentWorkspace.toDocumentPosition(
+                    new Point(sample.x, sample.y), continuous);
                 return Object.assign({}, sample, {x: point.x, y: point.y});
             })
         });

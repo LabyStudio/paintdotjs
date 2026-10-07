@@ -74,7 +74,13 @@ header {
     align-items: stretch;
     padding: 0;
     margin: 0;
+    cursor: grab;
+    touch-action: none;
     -webkit-app-region: no-drag;
+}
+
+#documentStrip #documentsList .scroll-content .scroll-item.dragging-item {
+    cursor: grabbing;
 }
 
 #documentStrip #documentsList .scroll-content .scroll-item .header {
@@ -82,6 +88,7 @@ header {
     left: 0;
     top: 0;
     right: 0;
+    z-index: 1;
     display: flex;
     height: 16px;
     justify-content: space-between;
@@ -107,6 +114,7 @@ header {
 
 #documentStrip #documentsList .scroll-content .scroll-item .thumbnail {
     position: absolute;
+    z-index: 0;
     left: 50%;
     bottom: 4px;
     margin: 0;

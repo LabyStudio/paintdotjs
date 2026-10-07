@@ -8,6 +8,8 @@ class MoveSelectionTool extends MoveToolBase {
 
     onActivate() {
         this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(true);
+        this.getDocumentWorkspace().getSelectionRenderer().setRenderingQuality(
+            this.getSetting("renderingQuality", "high"));
 
         this.context.offset = new Point(0, 0);
         this.context.liftedBounds = this.getSelection().getBounds();
@@ -29,6 +31,13 @@ class MoveSelectionTool extends MoveToolBase {
         this.destroyNubs();
 
         super.onDeactivate();
+    }
+
+    onSettingChanged(key) {
+        if (key === "renderingQuality") {
+            this.getDocumentWorkspace().getSelectionRenderer().setRenderingQuality(
+                this.getSetting("renderingQuality", "high"));
+        }
     }
 
     onExecutingHistoryMemento() {

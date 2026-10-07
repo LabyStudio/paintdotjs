@@ -32,19 +32,22 @@ class ScrollList extends Item {
             }
             this.timeLastScrolled = Date.now();
 
-            // Check if it would hit the top or bottom and then return
-            let wouldHitTop = this.element.scrollTop + event.deltaY * this.scrollSpeed < 0;
-            let wouldHitBottom = this.element.scrollTop + this.element.clientHeight
-                + event.deltaY * this.scrollSpeed > this.element.scrollHeight;
-            if (wouldHitTop || wouldHitBottom) {
+            const delta = (event.deltaY !== 0 ? event.deltaY : event.deltaX) * this.scrollSpeed;
+            const position = this.getScrollPosition();
+            const viewportSize = this.orientation === ScrollOrientation.HORIZONTAL
+                ? this.element.clientWidth
+                : this.element.clientHeight;
+            const contentSize = this.orientation === ScrollOrientation.HORIZONTAL
+                ? this.element.scrollWidth
+                : this.element.scrollHeight;
+            if (position + delta < 0 || position + viewportSize + delta > contentSize) {
                 return;
             }
 
             event.preventDefault();
-            scroll.scrollBy({
-                top: event.deltaY * this.scrollSpeed,
-                behavior: 'smooth'
-            });
+            scroll.scrollBy(this.orientation === ScrollOrientation.HORIZONTAL
+                ? {left: delta, behavior: 'smooth'}
+                : {top: delta, behavior: 'smooth'});
         });
         {
             // Content
@@ -82,7 +85,9 @@ class ScrollList extends Item {
         this.scrollSession.setDragOwner(this);
         this.scrollSession.dragSwapPending = false;
         const draggingItem = this.getCurrentDraggingItem();
-        if (draggingItem !== null) this.updateDraggingVisual(draggingItem, this.scrollSession.getLastClientY());
+        if (draggingItem !== null) {
+            this.updateDraggingVisual(draggingItem, this.scrollSession.getLastPointerCoordinate());
+        }
 
         for (let item of this.items) {
             const element = item.getElement();
@@ -102,9 +107,11 @@ class ScrollList extends Item {
     startPointerDrag(item, event) {
         if (this.itemSwapper === null) return;
         const bounds = item.getElement().getBoundingClientRect();
+        const coordinate = this.getPointerCoordinate(event);
+        const itemStart = this.orientation === ScrollOrientation.HORIZONTAL ? bounds.left : bounds.top;
         this.scrollSession.setDraggingItem(item);
-        this.scrollSession.beginPointerDrag(this, event.pointerId, event.clientY - bounds.top, event.clientY);
-        this.updateDraggingVisual(item, event.clientY);
+        this.scrollSession.beginPointerDrag(this, event.pointerId, coordinate - itemStart, coordinate);
+        this.updateDraggingVisual(item, coordinate);
         if (this.selectedItem !== item) this.setSelected(item);
         event.preventDefault();
     }
@@ -114,23 +121,30 @@ class ScrollList extends Item {
         if (item === null) return this.stopPointerDrag();
         if ((event.buttons & 1) === 0) return this.stopPointerDrag();
 
-        const previousY = this.scrollSession.getLastClientY();
-        this.scrollSession.setLastClientY(event.clientY);
-        this.updateDraggingVisual(item, event.clientY);
-        this.autoScrollDuringDrag(event.clientY);
-        if (Math.abs(event.clientY - this.scrollSession.dragStartClientY) < 4) return;
+        const coordinate = this.getPointerCoordinate(event);
+        const previousCoordinate = this.scrollSession.getLastPointerCoordinate();
+        this.scrollSession.setLastPointerCoordinate(coordinate);
+        this.updateDraggingVisual(item, coordinate);
+        this.autoScrollDuringDrag(coordinate);
+        if (Math.abs(coordinate - this.scrollSession.dragStartPointerCoordinate) < 4) return;
         if (this.scrollSession.dragSwapPending) return;
 
         const index = this.items.indexOf(item);
         let target = null;
-        if (event.clientY < previousY && index > 0) {
+        if (coordinate < previousCoordinate && index > 0) {
             const previous = this.items[index - 1];
             const bounds = previous.getElement().getBoundingClientRect();
-            if (event.clientY < bounds.top + bounds.height / 2) target = previous;
-        } else if (event.clientY > previousY && index < this.items.length - 1) {
+            const middle = this.orientation === ScrollOrientation.HORIZONTAL
+                ? bounds.left + bounds.width / 2
+                : bounds.top + bounds.height / 2;
+            if (coordinate < middle) target = previous;
+        } else if (coordinate > previousCoordinate && index < this.items.length - 1) {
             const next = this.items[index + 1];
             const bounds = next.getElement().getBoundingClientRect();
-            if (event.clientY > bounds.top + bounds.height / 2) target = next;
+            const middle = this.orientation === ScrollOrientation.HORIZONTAL
+                ? bounds.left + bounds.width / 2
+                : bounds.top + bounds.height / 2;
+            if (coordinate > middle) target = next;
         }
         if (target !== null) {
             this.scrollSession.dragSwapPending = true;
@@ -139,26 +153,40 @@ class ScrollList extends Item {
         event.preventDefault();
     }
 
-    updateDraggingVisual(item, clientY) {
+    getPointerCoordinate(event) {
+        return this.orientation === ScrollOrientation.HORIZONTAL ? event.clientX : event.clientY;
+    }
+
+    updateDraggingVisual(item, coordinate) {
         const element = item.getElement();
         item.setClassName("dragging-item", true);
         element.style.zIndex = "3";
         element.style.transition = "none";
         element.style.transform = "";
-        const top = element.getBoundingClientRect().top;
-        element.style.transform = "translateY(" +
-            (clientY - top - this.scrollSession.dragGrabOffset) + "px)";
+        const bounds = element.getBoundingClientRect();
+        const start = this.orientation === ScrollOrientation.HORIZONTAL ? bounds.left : bounds.top;
+        const offset = coordinate - start - this.scrollSession.dragGrabOffset;
+        element.style.transform = this.orientation === ScrollOrientation.HORIZONTAL
+            ? "translateX(" + offset + "px)"
+            : "translateY(" + offset + "px)";
     }
 
-    autoScrollDuringDrag(clientY) {
+    autoScrollDuringDrag(coordinate) {
         const bounds = this.element.getBoundingClientRect();
-        const edge = Math.min(32, bounds.height / 4);
+        const start = this.orientation === ScrollOrientation.HORIZONTAL ? bounds.left : bounds.top;
+        const end = this.orientation === ScrollOrientation.HORIZONTAL ? bounds.right : bounds.bottom;
+        const size = this.orientation === ScrollOrientation.HORIZONTAL ? bounds.width : bounds.height;
+        const edge = Math.min(32, size / 4);
         let amount = 0;
-        if (clientY < bounds.top + edge) amount = -Math.min(14, (bounds.top + edge - clientY) * 0.45);
-        if (clientY > bounds.bottom - edge) amount = Math.min(14, (clientY - bounds.bottom + edge) * 0.45);
+        if (coordinate < start + edge) amount = -Math.min(14, (start + edge - coordinate) * 0.45);
+        if (coordinate > end - edge) amount = Math.min(14, (coordinate - end + edge) * 0.45);
         if (amount === 0) return;
-        this.element.scrollTop += amount;
-        this.scrollSession.setScrollPosition(this.element.scrollTop);
+        if (this.orientation === ScrollOrientation.HORIZONTAL) {
+            this.element.scrollLeft += amount;
+        } else {
+            this.element.scrollTop += amount;
+        }
+        this.scrollSession.setScrollPosition(this.getScrollPosition());
     }
 
     stopPointerDrag() {
@@ -176,7 +204,11 @@ class ScrollList extends Item {
 
     postInitialize() {
         // Set the scroll position again in case it has changed
-        this.element.scrollTop = this.scrollSession.getScrollPosition();
+        if (this.orientation === ScrollOrientation.HORIZONTAL) {
+            this.element.scrollLeft = this.scrollSession.getScrollPosition();
+        } else {
+            this.element.scrollTop = this.scrollSession.getScrollPosition();
+        }
 
         // Animate the changes of the item positions
         for (let item of this.items) {
@@ -186,7 +218,9 @@ class ScrollList extends Item {
             }
 
             let key = item.getKey(); // Use key because the instance of the item may change
-            let currentItemPosition = item.element.offsetTop;
+            let currentItemPosition = this.orientation === ScrollOrientation.HORIZONTAL
+                ? item.element.offsetLeft
+                : item.element.offsetTop;
 
             // Check if the item position has changed
             let prevItemPosition = this.scrollSession.getItemPosition(key);
@@ -203,10 +237,11 @@ class ScrollList extends Item {
                 // Animate the item to its new position
                 if (!isDraggingItem) {
                     item.element.style.position = "relative";
-                    item.element.animate([
-                        {top: -diff + "px"},
-                        {top: 0}
-                    ], {
+                    const from = this.orientation === ScrollOrientation.HORIZONTAL
+                        ? {left: -diff + "px"}
+                        : {top: -diff + "px"};
+                    const to = this.orientation === ScrollOrientation.HORIZONTAL ? {left: 0} : {top: 0};
+                    item.element.animate([from, to], {
                         duration: 140,
                         easing: "cubic-bezier(.2,.8,.2,1)"
                     });
@@ -258,14 +293,21 @@ class ScrollList extends Item {
     }
 
     getScrollPosition() {
-        return this.element === null ? this.scrollSession.getScrollPosition() : this.element.scrollTop;
+        if (this.element === null) return this.scrollSession.getScrollPosition();
+        return this.orientation === ScrollOrientation.HORIZONTAL
+            ? this.element.scrollLeft
+            : this.element.scrollTop;
     }
 
     setScrollPosition(scrollPosition) {
         this.scrollSession.setScrollPosition(scrollPosition);
 
         if (this.isInitialized()) {
-            this.element.scrollTop = scrollPosition;
+            if (this.orientation === ScrollOrientation.HORIZONTAL) {
+                this.element.scrollLeft = scrollPosition;
+            } else {
+                this.element.scrollTop = scrollPosition;
+            }
         }
     }
 
@@ -293,11 +335,12 @@ class ScrollList extends Item {
                     return;
                 }
 
-                let position = itemByKey.element.offsetTop - this.element.clientHeight / 2 + itemByKey.element.clientHeight / 2;
-                this.element.scrollTo({
-                    top: position,
-                    behavior: 'smooth'
-                });
+                const position = this.orientation === ScrollOrientation.HORIZONTAL
+                    ? itemByKey.element.offsetLeft - this.element.clientWidth / 2 + itemByKey.element.clientWidth / 2
+                    : itemByKey.element.offsetTop - this.element.clientHeight / 2 + itemByKey.element.clientHeight / 2;
+                this.element.scrollTo(this.orientation === ScrollOrientation.HORIZONTAL
+                    ? {left: position, behavior: 'smooth'}
+                    : {top: position, behavior: 'smooth'});
             });
         }
     }
@@ -307,12 +350,18 @@ class ScrollList extends Item {
         let itemBounds = item.element.getBoundingClientRect();
         let viewBounds = this.element.getBoundingClientRect();
 
-        let relItemTopY = itemBounds.top - listBounds.top;
-        let relItemBottomY = itemBounds.bottom - listBounds.top;
+        const itemStart = this.orientation === ScrollOrientation.HORIZONTAL
+            ? itemBounds.left - listBounds.left
+            : itemBounds.top - listBounds.top;
+        const itemEnd = this.orientation === ScrollOrientation.HORIZONTAL
+            ? itemBounds.right - listBounds.left
+            : itemBounds.bottom - listBounds.top;
+        const viewportSize = this.orientation === ScrollOrientation.HORIZONTAL
+            ? viewBounds.width
+            : viewBounds.height;
+        const scrollPosition = this.scrollSession.getScrollPosition();
 
-        let scrollPosition = this.scrollSession.getScrollPosition();
-
-        return relItemTopY >= scrollPosition && relItemBottomY <= scrollPosition + viewBounds.height;
+        return itemStart >= scrollPosition && itemEnd <= scrollPosition + viewportSize;
     }
 
     scrollToBottom() {

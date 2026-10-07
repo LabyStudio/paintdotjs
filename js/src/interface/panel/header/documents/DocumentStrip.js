@@ -56,6 +56,24 @@ class DocumentStrip extends Panel {
                 this.app.setActiveDocumentWorkspace(documentWorkspace);
             }
         });
+        this.documentsListItem.setItemSwapper((item1, item2) => {
+            const index1 = this.documentsListItem.items.indexOf(item1);
+            const index2 = this.documentsListItem.items.indexOf(item2);
+            if (index1 < 0 || index2 < 0) return;
+
+            const documentWorkspaces = this.app.getDocumentWorkspaces();
+            const workspace1 = item1.getDocumentWorkspace();
+            const workspace2 = item2.getDocumentWorkspace();
+            const workspaceIndex1 = documentWorkspaces.indexOf(workspace1);
+            const workspaceIndex2 = documentWorkspaces.indexOf(workspace2);
+            if (workspaceIndex1 < 0 || workspaceIndex2 < 0) return;
+
+            [this.documentsListItem.items[index1], this.documentsListItem.items[index2]] =
+                [this.documentsListItem.items[index2], this.documentsListItem.items[index1]];
+            [documentWorkspaces[workspaceIndex1], documentWorkspaces[workspaceIndex2]] =
+                [documentWorkspaces[workspaceIndex2], documentWorkspaces[workspaceIndex1]];
+            this.documentsListItem.reinitialize();
+        });
         {
             let documentWorkspaces = this.app.getDocumentWorkspaces();
             for (let documentWorkspace of documentWorkspaces) {
@@ -68,6 +86,7 @@ class DocumentStrip extends Panel {
             }
         }
         this.documentsListItem.appendTo(this.element, this);
+        this.documentsListItem.postInitialize();
     }
 
     createDocumentItem(documentWorkspace) {

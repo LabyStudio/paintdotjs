@@ -12,6 +12,7 @@ class SelectionRenderer extends SurfaceBoxRenderer {
         this.selectionTinting = true;
         this.selectionOutline = true;
         this.outlineAnimation = true;
+        this.renderingQuality = "high";
 
         this.whiteOpacity = 255;
     }
@@ -65,6 +66,9 @@ class SelectionRenderer extends SurfaceBoxRenderer {
         context.strokeStyle = options.color || "black";
         context.fillStyle = options.color || "black";
         context.lineWidth = options.lineWidth || 1;
+        const aliased = this.renderingQuality === "aliased";
+        context.imageSmoothingEnabled = !aliased;
+        context.lineJoin = aliased ? "miter" : "round";
 
         if (options.dashPattern) {
             context.setLineDash(options.dashPattern);
@@ -81,6 +85,14 @@ class SelectionRenderer extends SurfaceBoxRenderer {
                 let point = vertices[i];
                 let x = point.x * scaleX + renderBounds.getX();
                 let y = point.y * scaleY + renderBounds.getY();
+
+                // Selection quality controls the displayed selection edge.
+                // Pixel-center snapping gives the aliased mode a stable,
+                // one-pixel contour; high quality retains fractional coverage.
+                if (aliased && !options.fill) {
+                    x = Math.floor(x) + 0.5;
+                    y = Math.floor(y) + 0.5;
+                }
 
                 if (i === 0) {
                     context.moveTo(x, y);
@@ -118,6 +130,10 @@ class SelectionRenderer extends SurfaceBoxRenderer {
 
     setOutlineAnimation(outlineAnimation) {
         this.outlineAnimation = outlineAnimation;
+    }
+
+    setRenderingQuality(renderingQuality) {
+        this.renderingQuality = renderingQuality === "aliased" ? "aliased" : "high";
     }
 
     resetOutlineWhiteOpacity() {

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=paint.js
+Comment=Edit raster and layered Paint.NET images
+Exec=paintdotjs %F
+Icon=paintdotjs
+Terminal=false
+Type=Application
+Categories=Graphics;2DGraphics;RasterGraphics;
+MimeType=application/x-paintdotnet;image/png;image/jpeg;image/webp;image/gif;image/bmp;image/tiff;image/jxl;image/avif;image/heic;image/heif;image/vnd-ms.dds;image/x-tga;image/vnd.ms-photo;
+StartupWMClass=paint.js
+Keywords=paint;image;editor;graphics;

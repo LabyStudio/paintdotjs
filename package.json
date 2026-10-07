@@ -1,8 +1,19 @@
 {
   "name": "paintdotjs",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "description": "paint.js is an open source general-purpose raster graphics editor program, developed with javascript.",
   "main": "js/platform/desktop/main.js",
+  "desktopName": "paintdotjs.desktop",
+  "license": "MIT",
+  "homepage": "https://paintjs.net/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LabyStudio/paintdotjs.git"
+  },
+  "paintdotjs": {
+    "paintDotNetVersion": "5.1.12",
+    "paintDotNetSha256": "d5ae7043f2fb9d365b48dfe243a2aca1c74924de99b04b6445916c95354aefa3"
+  },
   "scripts": {
     "check-assets": "node ./scripts/check_assets.js",
     "preweb": "npm run check-assets",
@@ -12,8 +23,11 @@
     "web-watch": "webpack --config webpack.config.js --watch",
     "preapp": "npm run check-assets",
     "app": "electron .",
-    "predist": "npm run check-assets",
-    "dist": "electron-builder",
+    "desktop:build": "webpack --config webpack.config.js",
+    "dist": "npm run desktop:build && electron-builder",
+    "dist:linux": "npm run desktop:build && electron-builder --linux AppImage",
+    "dist:mac": "npm run desktop:build && electron-builder --mac dmg zip --universal",
+    "assets:manifest": "node ./scripts/check_assets.js --refresh-manifest",
     "gen-imports": "node ./scripts/generate_imports.js",
     "pwa": "node ./scripts/generate_pwa.js",
     "prepublish": "npm run web"
@@ -28,9 +42,12 @@
     "paintnet"
   ],
   "author": "LabyStudio",
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
-    "electron": "29.0.1",
-    "electron-builder": "^24.12.0",
+    "electron": "44.5.1",
+    "electron-builder": "^26.15.3",
     "webpack": "^5.74.0",
     "webpack-cli": "^5.1.4",
     "workbox-build": "^6.5.3"
@@ -39,7 +56,211 @@
     "@imagemagick/magick-wasm": "^0.0.44",
     "buffer": "^6.0.3",
     "custom-electron-titlebar": "^4.2.8",
+    "electron-updater": "^6.8.9",
     "jpegxr": "^0.3.0",
-    "ms-nrbf-js": "^0.1.0"
+    "ms-nrbf-js": "^0.1.0",
+    "yauzl": "^3.2.0"
+  },
+  "build": {
+    "appId": "net.paintjs.desktop",
+    "productName": "paint.js",
+    "executableName": "paintdotjs",
+    "artifactName": "paintdotjs-${version}-${os}-${arch}.${ext}",
+    "asar": true,
+    "files": [
+      "**/*",
+      "!assets/**/*",
+      "!pages-dist/**/*",
+      "!dist/**/*",
+      "!run/**/*",
+      "!.tmp/**/*",
+      "!scripts/__pycache__/**/*",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "desktop-resources/asset-manifest.json",
+        "to": "desktop/asset-manifest.json"
+      },
+      {
+        "from": "desktop-resources/icon.png",
+        "to": "desktop/icon.png"
+      },
+      {
+        "from": "assets/font",
+        "to": "assets/font"
+      },
+      {
+        "from": "assets/pdn",
+        "to": "assets/pdn"
+      },
+      {
+        "from": "assets/codecs",
+        "to": "assets/codecs"
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "LabyStudio",
+        "repo": "paintdotjs",
+        "releaseType": "release"
+      }
+    ],
+    "fileAssociations": [
+      {
+        "ext": "pdn",
+        "name": "Paint.NET image",
+        "description": "Layered paint.js image",
+        "mimeType": "application/x-paintdotnet",
+        "role": "Editor",
+        "rank": "Owner"
+      },
+      {
+        "ext": "png",
+        "name": "PNG image",
+        "mimeType": "image/png",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "jpg",
+        "name": "JPEG image",
+        "mimeType": "image/jpeg",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "jpeg",
+        "name": "JPEG image",
+        "mimeType": "image/jpeg",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "webp",
+        "name": "WebP image",
+        "mimeType": "image/webp",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "gif",
+        "name": "GIF image",
+        "mimeType": "image/gif",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "bmp",
+        "name": "Bitmap image",
+        "mimeType": "image/bmp",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "tif",
+        "name": "TIFF image",
+        "mimeType": "image/tiff",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "tiff",
+        "name": "TIFF image",
+        "mimeType": "image/tiff",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "jxl",
+        "name": "JPEG XL image",
+        "mimeType": "image/jxl",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "avif",
+        "name": "AVIF image",
+        "mimeType": "image/avif",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "heic",
+        "name": "HEIC image",
+        "mimeType": "image/heic",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "heif",
+        "name": "HEIF image",
+        "mimeType": "image/heif",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "dds",
+        "name": "DirectDraw surface",
+        "mimeType": "image/vnd-ms.dds",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "tga",
+        "name": "Targa image",
+        "mimeType": "image/x-tga",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "jxr",
+        "name": "JPEG XR image",
+        "mimeType": "image/vnd.ms-photo",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "wdp",
+        "name": "JPEG XR image",
+        "mimeType": "image/vnd.ms-photo",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "wmp",
+        "name": "JPEG XR image",
+        "mimeType": "image/vnd.ms-photo",
+        "role": "Editor",
+        "rank": "Alternate"
+      }
+    ],
+    "mac": {
+      "icon": "desktop-resources/icon.png",
+      "category": "public.app-category.graphics-design",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "desktop-resources/entitlements.mac.plist",
+      "entitlementsInherit": "desktop-resources/entitlements.mac.plist",
+      "notarize": true,
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "dmg": {
+      "sign": false
+    },
+    "linux": {
+      "icon": "desktop-resources/icon.png",
+      "category": "Graphics",
+      "target": [
+        "AppImage"
+      ],
+      "syncDesktopName": true,
+      "synopsis": "Raster image editor",
+      "description": "A desktop port of Paint.NET for Linux and macOS"
+    }
   }
 }

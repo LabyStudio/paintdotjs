@@ -1,0 +1,962 @@
+{
+  "paintDotNetVersion": "5.1.12",
+  "icons": {
+    "png": "baa4a3b5ca3864742a800344d53417eb905222c690d996430590caddda09e353",
+    "ico": "9c6063ea5b8a118f1aeab0c201f5bc7fa5d630dcfd80d0c8bf3efe67bfde6953"
+  },
+  "files": {
+    "be120adddc03f4f72bb446e9a97ad993afb2c55c1413a7d634df5e32a1f3831f": [
+      "cursors/clone_stamp_tool_cursor.png"
+    ],
+    "b16498dabe99cd853a97a2fe69d61f58862e2ace645e371861b435cf336ec0fc": [
+      "cursors/clone_stamp_tool_set_source_cursor.png"
+    ],
+    "c537ee4727a305aef8ac8b89611dfe6593f5eac73c3027dc565e9bd169bf1362": [
+      "cursors/clone_stamp_tool_set_source_mouse_down_cursor.png"
+    ],
+    "0b4bfd48b5bdab87dc8ed6fb9c74963d0e146e55a9cd0a61150ea48249e431aa": [
+      "cursors/color_picker_tool_sample_image_cursor.png"
+    ],
+    "afbb596340ea088c49e187efe2d81ec10cbc70d1ac01d5649152d533465a4ee5": [
+      "cursors/color_picker_tool_sample_layer_cursor.png"
+    ],
+    "a5f614b04c9028ffdf248bf32d01bf094a0b64312f006003c61b033933062b90": [
+      "cursors/ellipse_select_tool_cursor.png"
+    ],
+    "0af30eed020ba7248f86e2bbfbcf75f972abbea132ba8db2b5883400e4c1d328": [
+      "cursors/ellipse_select_tool_minus_cursor.png"
+    ],
+    "d80e6274d934d9a44ed10f1989aa97a32703a1663db0a8a1ebea35d2766c6f8e": [
+      "cursors/ellipse_select_tool_mouse_down_cursor.png",
+      "cursors/gradient_tool_mouse_down_cursor.png",
+      "cursors/lasso_select_tool_mouse_down_cursor.png",
+      "cursors/rectangle_select_tool_mouse_down_cursor.png",
+      "cursors/shapes_tool_mouse_down_cursor.png"
+    ],
+    "673cf77f4dde2eef07df1b15cda17a7725aed25ad2e368928cc5a00545b322ba": [
+      "cursors/ellipse_select_tool_plus_cursor.png"
+    ],
+    "7d2dd797cc5e70dd860ea35b901cbe65638a8a577a210ecb7406e81256bf907d": [
+      "cursors/eraser_tool_cursor.png"
+    ],
+    "2f1a677f802692fc3022230bd4500594b9e6b217a9d45d1a74a910c778607850": [
+      "cursors/gradient_tool_cursor.png",
+      "cursors/lasso_select_tool_cursor.png",
+      "cursors/paint_brush_tool_cursor.png",
+      "cursors/shapes_tool_cursor.png"
+    ],
+    "76e776034e7698223cd539560e98793f432e125cd28719dbcb273893c23ea067": [
+      "cursors/hand_closed_cursor.png"
+    ],
+    "d4bc9a4e69ab8949520e51cec730c0dba4aa42348d15e1fb04c7e5ed9947a37f": [
+      "cursors/hand_open_cursor.png"
+    ],
+    "5fd10fe083ce31a7ca46aad553903c8f1cade4d258a8d2841cdfca42ed5a5592": [
+      "cursors/hand_open_invalid_cursor.png"
+    ],
+    "af02ef4b44929c6770ad1fdb4d6d08b20131df17c06557159a7d88076cf1736b": [
+      "cursors/lasso_select_tool_minus_cursor.png"
+    ],
+    "fb95bcb24ed77c4eb22035daae9de8c9ee53bb8861c1a9dd0d169f4b0f3173c8": [
+      "cursors/lasso_select_tool_plus_cursor.png"
+    ],
+    "40333f4ca89c0f0c5c0f5cf3025e07ba83fe28f27456d334e5cf230d559c2993": [
+      "cursors/magic_wand_tool_cursor.png"
+    ],
+    "a736c2598544947bf4ae535cda957771c120d2ba4dc5d8e03ae73a25af38011c": [
+      "cursors/magic_wand_tool_minus_cursor.png"
+    ],
+    "5ca2f627caed89799959b43a049d20df4c918e554e60bf73380c78c51ab044c8": [
+      "cursors/magic_wand_tool_plus_cursor.png"
+    ],
+    "2b92fe9903d45b49ae22e8e0d4664829ea2d9aa1799baf19cf6798459a1bf081": [
+      "cursors/paint_bucket_tool_cursor.png"
+    ],
+    "6ebf5548fa9a519c67d083c3584ab49612bbda422de2146be309e96f263d74a7": [
+      "cursors/pencil_tool_cursor.png"
+    ],
+    "b5597731dbab3cb4dffb22a8813d19e061eaf9407a6e43af6afdf1bf442d58d4": [
+      "cursors/recolor_tool_cursor.png"
+    ],
+    "dd63f1c1b547f63f1a1de4680090ab2c1b199afe2fa795e2df1477d47ae3591e": [
+      "cursors/rectangle_select_tool_cursor.png"
+    ],
+    "e5fbe01e5ceae2bc9e6803c21b9c9ef00109c77f0019ebe01a900c9db94d004a": [
+      "cursors/rectangle_select_tool_minus_cursor.png"
+    ],
+    "5d51b60ae47d834dd48af36f8645b782ed91a79fab20b9565e6922ff87600676": [
+      "cursors/rectangle_select_tool_plus_cursor.png"
+    ],
+    "9b93a02970bf979efe0ed08978495f6047aae8c218b059e69442cdbcae6fa352": [
+      "cursors/text_tool_cursor.png"
+    ],
+    "f7e6a1a61581d821204c9308f8fdc0d66a780752c80167544275e7dbaa5a9421": [
+      "cursors/zoom_tool_cursor.png"
+    ],
+    "6334316ffff663be7cccddbef47807dc66175ec5fbec2d2f6710f95536381fe1": [
+      "cursors/zoom_tool_minus_cursor.png"
+    ],
+    "19a370fce81f53c4bb38e634d5b49cc7c2b9f97ebdfbd27334e8b7d25d60830f": [
+      "cursors/zoom_tool_plus_cursor.png"
+    ],
+    "5db818828619399baef03565c72ead1d917e64df17b2ebd11d46af869f3a8501": [
+      "icons/add_noise_effect.png"
+    ],
+    "e9a84acc64b248655db18d677fa157b239dd75ff30d89cdd731bbc7314b92a7f": [
+      "icons/alpha_blending_false.png"
+    ],
+    "f914480061bc9ae94e9398a98f33f444406855cb75658332c487f0d53e5fe4b2": [
+      "icons/alpha_blending_true.png"
+    ],
+    "46e7e1ad2069551fd5b2c44433285c97927955486348054a6aceec005f630e30": [
+      "icons/anti_aliasing_false.png"
+    ],
+    "e197a401c8b7bf1a3bb77a37e7e1c2a69979ac32a03e7e7f105dd27acd67f6ca": [
+      "icons/anti_aliasing_true.png"
+    ],
+    "10a21529d7c529619a1f69567108ddc7cb192df198e3e9acaaf9717af417848d": [
+      "icons/auto_level.png"
+    ],
+    "649995d17d1e97aaaa0bfb2206725c2524e7efbbd74818f268ff05bb95c14919": [
+      "icons/black_and_white_icon.png"
+    ],
+    "da5166771073f2ec5993d3c3f8f4d9a783528a0375f8a4bff8c4a3d501c621b5": [
+      "icons/blank_icon.png"
+    ],
+    "62aadfa97d66f4e68d0d4a751fbb990e9ddc4b9e06683d17a164f2b283f92d64": [
+      "icons/blur_effect.png"
+    ],
+    "3d30a7e42927998dc8f88c7dac3bc145e8d33f4a51daee72400aea0c9e95d6cb": [
+      "icons/bokeh_effect_icon.png"
+    ],
+    "ffb8f5b5d4e8699cf16887a97eb72a7d09d942abf491921623448f3dbf58ef3e": [
+      "icons/brightness_and_contrast_adjustment.png"
+    ],
+    "3249a132bca4b26cb5d245eff159e7bf04fa5cdb1c8612b6ab6b161346045062": [
+      "icons/bug_warning.png"
+    ],
+    "44f60aa212fb957622c12d2868ee15cc16cc15bd0a17b150a4ee56819c7089fb": [
+      "icons/bulge_effect.png"
+    ],
+    "914e0f3cc3a227e011a02b02a9f97b8f98893ee7c8a6c24665f518d728f0bea0": [
+      "icons/cancel_icon.png",
+      "icons/menu_file_open_recent_clear_list_icon.png"
+    ],
+    "b3943097d7bb81ac10454fcef0c4a67e278e3bf34d7c0620c49a98cede71697c": [
+      "icons/clone_stamp_tool_icon.png"
+    ],
+    "6733265179ee2cb107d17cd95c9465d7794af406eea6201964a5044f4550e388": [
+      "icons/clouds_effect.png"
+    ],
+    "3de3f34d55805a47ff64ea2cb7995f360623b5fd7a2b2ad0c0b006d1ba49fe9d": [
+      "icons/color_add_overlay.png"
+    ],
+    "b0030026f61fefb6dd33d377f82579f788a002238b3d965bc8e0e09b1f2ec01e": [
+      "icons/color_picker_tool_icon.png",
+      "icons/enum_color_picker_click_behavior_no_tool_switch.png"
+    ],
+    "ffc34dd87de1ea798143c8cb8cb60c06b5e7f574eef7830123e15ad83e27fb03": [
+      "icons/crash_log_dialog_restart_button.png"
+    ],
+    "b0331eb38c64290b2631a43803d593e01bf0f082e61d080d9da9e010328eaa3c": [
+      "icons/crash_log_dialog_show_details_button_collapse.png"
+    ],
+    "73c14509dcd141f90c8883605b607a43f644fb66fd37e9154bfa2ee696a4d769": [
+      "icons/crash_log_dialog_show_details_button_expand.png"
+    ],
+    "6cf4b070c07cd6078de8179cbccb07e3345d3825439f6e8494cf951742bdce5b": [
+      "icons/crystalize_effect_icon.png"
+    ],
+    "c322b82d85e1b7030cd28cb0c429356a2be63eeb2afb01ac7954ff42edbaee31": [
+      "icons/cursor_x_y_icon.png"
+    ],
+    "21bb4e47c13c9a9deb41d3789a4911ff9a03d464fe735b1fb446cb35fa65258e": [
+      "icons/curves_effect.png"
+    ],
+    "0e1e12ab3f638247fcbb104896666c8bdaa98e0bf42eaf7d2a31d37474259e4f": [
+      "icons/dents_effect_icon.png"
+    ],
+    "10149a18d296693091e9af640ea85b1c9a4b10c4a5b208130e1eb346917fc22c": [
+      "icons/desaturate_effect.png"
+    ],
+    "e9afb841cc6c98ee96bc7f7ba452b82f7b63085e66da407f0e7d1d28b574b3e7": [
+      "icons/drag_drop_open_or_import_form_icon.png"
+    ],
+    "56e41ab8f4cd13f1d913d408c54b00dbb80d9a594a4e16508161f860379ebab7": [
+      "icons/drop_shadow_effect.png"
+    ],
+    "88550037fe3ccfadcdf21e7e82e4787c85930ff2c218fa224582fc37bcc4a86d": [
+      "icons/edge_detect_effect.png"
+    ],
+    "5b3d40b8c7a887be9450da1aa2180367ac855bbc744aca352caa77bf3a37215b": [
+      "icons/ellipse_select_tool_icon.png"
+    ],
+    "1727f836bfb4150820e4ffc62a4b1efa1b37fa43ad12313c6d3282b5c45488a9": [
+      "icons/emboss_effect.png"
+    ],
+    "0b7695e55ca46d1ac02efd34b460bc9f2bc284059aa214056dcd6e6a60df3808": [
+      "icons/enum_color_picker_click_behavior_switch_to_last_tool.png"
+    ],
+    "24b361a665a5e5914b1a82664e6ca245c660012ff4a6c64baf0d912bd992b1dc": [
+      "icons/enum_color_picker_click_behavior_switch_to_pencil_tool.png",
+      "icons/pencil_tool_icon.png"
+    ],
+    "a3f60d1f1d17e1960bd997fa83003d40959e6a0b4fb05c759da3010d2a8ab1be": [
+      "icons/enum_curve_type_bezier.png"
+    ],
+    "d4023f7af209e1f7cc6333310ad3d9cc0c3f2d564209a64a1baa8f130f875c32": [
+      "icons/enum_curve_type_spline.png"
+    ],
+    "ca77ca5bbaf2fcbf315b282c5ad9bd23857dcded82f590a0c328b228e7cdabe6": [
+      "icons/enum_curve_type_straight.png"
+    ],
+    "f46bb02b2e94d8260b9d15510be03d4aa974707d7bb14692c22b9f3e981b7bd5": [
+      "icons/enum_dash_style_dash_dot_dot.png"
+    ],
+    "834308e3f03d8f3681abffd211e1a56a193cd6f89e69afbd7dcdba131a4cef6e": [
+      "icons/enum_dash_style_dash_dot.png"
+    ],
+    "5f32736998697a0b0146de740bdddf4eb1493b7fa99aebbe0e30d5298bd34427": [
+      "icons/enum_dash_style_dash.png"
+    ],
+    "1d59b47bc8713752b069ca2189694c62e4b6ba35d13c88da4ea0b43a5d714813": [
+      "icons/enum_dash_style_dot.png"
+    ],
+    "a8d4f115875afc6874bd98450ef1121bd6fbf4748780d24faea67be51499208f": [
+      "icons/enum_dash_style_solid.png"
+    ],
+    "90173e269d801eb2de543ea5bf44826ed4aa90cb835679b7d3f1648746047ef2": [
+      "icons/enum_flood_mode_global.png"
+    ],
+    "19a6375c631806fd5a8a2f8d8880281304548c3386c34d374e6cff0c0b383a8f": [
+      "icons/enum_flood_mode_local.png"
+    ],
+    "6130b9b9d50d6e8fb2f24c0da8eeac784587570ed448e7514a6c99a67155732f": [
+      "icons/enum_font_size_metric_fixed96_dpi_dark.png"
+    ],
+    "e7da370c8f5259eba2c0b75b3c969f01b7f9548643b1691a08a1c418d9914230": [
+      "icons/enum_font_size_metric_fixed96_dpi.png"
+    ],
+    "82ead4a2917e40f6b72c05d07c63565e45b5083e1dc210489fb50e9200e5763e": [
+      "icons/enum_font_size_metric_points_dark.png"
+    ],
+    "a136b8670389890746533e1f5520dce48a2b0997163408a35d79436ccf7c700e": [
+      "icons/enum_font_size_metric_points.png"
+    ],
+    "43e6172212c76615c1286f0567148312bd733523c2789925eae20e41a1be36fb": [
+      "icons/enum_gradient_repeat_type_no_repeat.png"
+    ],
+    "9de537e87a4900998fd73b3c1af086ae33e4ec5ab6478cac1bf20aab436f09a0": [
+      "icons/enum_gradient_repeat_type_repeat_reflected.png"
+    ],
+    "9526ffbf506b2f7c0b88a2f43a541144573c3a54a51350560a24518cac192f47": [
+      "icons/enum_gradient_repeat_type_repeat_wrapped.png"
+    ],
+    "b0a3ca87e265411cedf336e4e7c34cb549b3a24b21dc9b1fa9a96e14205b6c29": [
+      "icons/enum_gradient_type_conical.png"
+    ],
+    "a6269e4161a0e900b309336797444cd2f7a30a8702377f2a1b7b4362299daa9d": [
+      "icons/enum_gradient_type_linear_clamped.png"
+    ],
+    "9f02c6499861b8d43a06d48a8cca967f147de37d24f073d699ef3b45193fcda3": [
+      "icons/enum_gradient_type_linear_diamond.png"
+    ],
+    "f0f2a7b01e89a77599111fbc11d4c155c0c04fe9c328aaeef36e47253f96d09c": [
+      "icons/enum_gradient_type_linear_reflected.png"
+    ],
+    "c06396e6eb80904df2506f61222719600edec65415aead9293169a9da794bcf2": [
+      "icons/enum_gradient_type_radial.png"
+    ],
+    "cdcc3267157e503057d5a304ec4942763fb64113067d381082c1e7c38b128814": [
+      "icons/enum_gradient_type_spiral_counter_clockwise.png"
+    ],
+    "f07186317b8cadc96a6b72e7f1df3bc74acbc0f39734b685f32113c3448d1d87": [
+      "icons/enum_gradient_type_spiral.png"
+    ],
+    "74e977a9345855d486f20b955b6dafaa374429cbea449bc44604a7fce74c15eb": [
+      "icons/enum_input_path_smoothing_disabled.png"
+    ],
+    "48b52b9c153de01d8e6c672c091e9d020672779df025d1d813e988a819178035": [
+      "icons/enum_input_path_smoothing_enabled.png"
+    ],
+    "3e0a819489cfedf47be05d6e677d1710a97addad05b1a5a323d71872c754db48": [
+      "icons/enum_line_curve_cap_arrow_end.png"
+    ],
+    "20682ebe1fdf617e05ccc5f96ac7676f7b13d0075f2879d1f1783ef3de4904fd": [
+      "icons/enum_line_curve_cap_arrow_filled_end.png"
+    ],
+    "63001fe8aba3595fb44981cf3f5b83328775c4c8cb9155968385fa53c8e89c88": [
+      "icons/enum_line_curve_cap_arrow_filled_start.png"
+    ],
+    "29b4efc217e9b84decce52778a409b7d42fcdcd547287c1726e0491f3b309f0e": [
+      "icons/enum_line_curve_cap_arrow_start.png"
+    ],
+    "7da91d43f0778f71fb20cc1b9e06215bc78a2b1c55bd426ada45904ef5e13402": [
+      "icons/enum_line_curve_cap_flat_end.png"
+    ],
+    "b457f7f78adcca68b9b1a78ea1f1e8ec2160586778f8f7a37a126cbe8649a183": [
+      "icons/enum_line_curve_cap_flat_start.png"
+    ],
+    "49bf2fc46b5e4cb5d36cdcaca1c3853b84722d1bc611fa6384bbff42c890dffc": [
+      "icons/enum_line_curve_cap_rounded_end.png"
+    ],
+    "2c5e87518b2fe65fc05a680fccad26f4c5d5c08344dec23c1292ec8ab351d160": [
+      "icons/enum_line_curve_cap_rounded_start.png"
+    ],
+    "0d3643f2a983ffe89ca095055e3f36207a6d5fd1dfcd72680cd3e5a461a4a5dd": [
+      "icons/enum_pixel_sample_mode_average11x11.png"
+    ],
+    "cd5389261b1b373ccc6ae6ead919dafdc8565110dab7851fdb867b1faa9d1838": [
+      "icons/enum_pixel_sample_mode_average31x31.png"
+    ],
+    "ba94fe155518f064e1478cc94a297edf2487dd0c0d66e663814c46987a897f0c": [
+      "icons/enum_pixel_sample_mode_average3x3.png"
+    ],
+    "4872ee095e582584ef2dffd66cea49647abb41ed91d9910bda483b0a30a683da": [
+      "icons/enum_pixel_sample_mode_average51x51.png"
+    ],
+    "483e41591c0c6dba081a95f3db4221ee9e1d9173162676548b0822e5f2ad4f40": [
+      "icons/enum_pixel_sample_mode_average5x5.png"
+    ],
+    "5c822848e94c033b3684dd60da1744c2d1ca9c132ee0a6d1333dd9ad24e140ae": [
+      "icons/enum_pixel_sample_mode_point_sample.png"
+    ],
+    "17f23f76a763cff06efbdf0272215360d82b14de8bf84814bf55a92b1dafaff8": [
+      "icons/enum_recolor_tool_sampling_mode_once.png"
+    ],
+    "4159bbe7a409e9d9f5edbbf3dc8fea302fdc7b621b4c13e887cfb9b5276f4aeb": [
+      "icons/enum_recolor_tool_sampling_mode_secondary_color.png"
+    ],
+    "177c1b3492f993d634bcbfdad369998a640b0cdc5c793ce1778c9dbbed5865fc": [
+      "icons/enum_selection_combine_mode_exclude.png"
+    ],
+    "8eafdd7f401251c98f6eeaa96d8a6718b4fab48363337f5b565abd897f42b840": [
+      "icons/enum_selection_combine_mode_intersect.png"
+    ],
+    "1b5d23faf686b3072df5579d30c3d7d82ae29fc3f81c6570fe9258185ece8254": [
+      "icons/enum_selection_combine_mode_replace.png"
+    ],
+    "40327447e29908f24c979bbe3fd1dd50daee5ce679d440936c2c44e2551488c4": [
+      "icons/enum_selection_combine_mode_union.png"
+    ],
+    "576275b618034cdf6517e259deb62e1c34fffeca4300f770bf0857e02736c24f": [
+      "icons/enum_selection_combine_mode_xor.png"
+    ],
+    "021ce471828ab4bcfa68d42440c033a8764f1bc1391dd9375459e844f4dd98c3": [
+      "icons/enum_selection_draw_mode_fixed_ratio.png"
+    ],
+    "c83c16ce8beb8723ea2038c4ede28614484ce31ec5e2081795d6d26294321773": [
+      "icons/enum_selection_draw_mode_fixed_size.png"
+    ],
+    "53c3816dff5906c490816daded5005f253a388a1d08d70158072ba0782815274": [
+      "icons/enum_selection_draw_mode_normal.png"
+    ],
+    "cb38ffc7aed1ab5870b28c5318f8c054a9e4d8b7c700b6b07866cf8ade861450": [
+      "icons/enum_selection_rendering_quality_aliased.png"
+    ],
+    "09026b37fcd0b89fa450871a498ee664ba2c7ada8814e457d3a4d5d8bb488cce": [
+      "icons/enum_selection_rendering_quality_high_quality_antialiased.png"
+    ],
+    "06412242b17a2da331b404e766864cbb69f1881cf8f9bc2910c32ceb1def901f": [
+      "icons/enum_shape_draw_type_both_dark.png"
+    ],
+    "645692b6bab340a27d26b2ef627f25498416fe771b9b01a9bbfffd03fe011ef1": [
+      "icons/enum_shape_draw_type_both.png"
+    ],
+    "e44e611cb9154ba6316dd40693dcd07a7b965d1ef5a8158aead10b8cc9a5f471": [
+      "icons/enum_shape_draw_type_interior.png"
+    ],
+    "795527e772462735616f9410772f48887fe935250975ff8eb47cfaa003f9ba52": [
+      "icons/enum_shape_draw_type_outline_dark.png"
+    ],
+    "1ba364f8e8583f048bb47ca8267b5e290817efb356c5b096037a9c220daf11dc": [
+      "icons/enum_shape_draw_type_outline.png"
+    ],
+    "db0d9464ed949fbd64c8ab050444ed463359e7df3aa6946fc732962bf538ba29": [
+      "icons/enum_text_alignment_center_dark.png"
+    ],
+    "a4155c822299b7ca604e6e4098394cab7575ef5dc9a8212963818b7b8adb24f3": [
+      "icons/enum_text_alignment_center.png"
+    ],
+    "d34ddc0feca8296be476636250f787323326abebe97071afd105b6832f8a422f": [
+      "icons/enum_text_alignment_left_dark.png"
+    ],
+    "802a4ff8af9a7a81afc6b409b8ab08c8fc6fd6ae598b0e147cdff554ca4f0e9c": [
+      "icons/enum_text_alignment_left.png"
+    ],
+    "dd81de8fad4417bd285f3fa30a99034b20cf3cdbc47404cc4ee75e44ddf27abc": [
+      "icons/enum_text_alignment_right_dark.png"
+    ],
+    "f4cd41401d04a735c53e14fdf602e660c5a731422e4c1041801f44a9017b0b2e": [
+      "icons/enum_text_alignment_right.png"
+    ],
+    "b9e11a040049ccc151d795ddbf8ec84f8005fb332529d3151d591fdee00a4856": [
+      "icons/enum_tolerance_alpha_mode_premultiplied.png"
+    ],
+    "166fff8f7ae87652e4294baf3b9f08abf2e1f8afd49e34f3f7fceccfb97fb853": [
+      "icons/enum_tolerance_alpha_mode_straight.png"
+    ],
+    "0604718d3f86840c9542b5bad62cbd9762a9914995bb597802aa3282e47c71eb": [
+      "icons/enum_tool_gamma_mode_companded.png"
+    ],
+    "5af6a5132bb40b8992105a1be91f7acf556949038cbaa3eb8a4eabab46e7056d": [
+      "icons/enum_tool_gamma_mode_linear.png"
+    ],
+    "cd22b34577af0b11d1c2ce91e1bfd04cfbc2f3963be4ad3a28017897af2765a8": [
+      "icons/eraser_tool_icon.png"
+    ],
+    "758a12f9958441b8959b92103b3d91c4dc8a0673820a775d750e808af66bc8d9": [
+      "icons/exposure_effect.png"
+    ],
+    "1a0cd344c02d920f3b246d48d303367bfdb169eb69e30819b6d812190436780f": [
+      "icons/fragment_effect_icon.png"
+    ],
+    "df0fdc889a7f713b9429ec670063e8369bc29d21cc30997b1cb4d2b362657dc5": [
+      "icons/frosted_glass_effect.png"
+    ],
+    "49aec3e4788b0caf88f16f995fee51d774e1566a4915fdf76e384f4128f1588b": [
+      "icons/glow_effect.png"
+    ],
+    "fe05d6e9c5e538e2d971aedd3a56135d54d2f67a82110da8da6d835e3e682038": [
+      "icons/gradient_is_alpha_only_false.png"
+    ],
+    "6eadf5c6a23467cffc0f91cfad4ecde4cbccf152ab64680c06c3ef6593c27651": [
+      "icons/gradient_is_alpha_only_true.png"
+    ],
+    "01c3c197be303966002ff2400180370344110e13c9e7e9a00e66897552fb3bdb": [
+      "icons/gradient_tool_icon.png"
+    ],
+    "6fb9bc8c44e00ac6ef198ac3d4ca0afc86b71e1a5a8dd8dcbb3b758fdb44fedf": [
+      "icons/highlights_and_shadows_effect.png"
+    ],
+    "41bed51751d993cea5d319cf8dd570a78f39088eac4bf713b40b5bbb6e80bdf0": [
+      "icons/hue_and_saturation_adjustment.png"
+    ],
+    "0461b270a917b7a4162a944d745d0024a2fa907424f499f2520db0357931d94a": [
+      "icons/image_size_icon.png"
+    ],
+    "2d92e4eaaee9ba864d6e1f0566da02ccd9288b21b2ea3da51140b321ae7f3fa4": [
+      "icons/ink_sketch_effect_icon.png"
+    ],
+    "27951e9649a5e0f251a4537ee15b087ec784643d00bf01b7718af0afba862aec": [
+      "icons/invert_alpha_effect.png"
+    ],
+    "3a03ffa764cbd77d5a9c0b2e7ed0a991758838552d5cf22f76b5c6b0f2286cf7": [
+      "icons/invert_colors_effect.png"
+    ],
+    "ea40f297f7446edf5764cd966273c177b38be99893fc8351ceedc79a2a0a858c": [
+      "icons/julia_fractal_effect_icon.png"
+    ],
+    "c18390a58a420d0318205e852821dba9a17adf8599631dc7714c20408bff2fd2": [
+      "icons/lasso_select_tool_icon.png"
+    ],
+    "85f1f6ca72c6b9f25a5f523f06546e7623d2e9d69955d31d434e7c6e65e0863c": [
+      "icons/levels_effect.png"
+    ],
+    "5cbc7df657e7e72586d16b1aaa563251ce887d878bb6bcdf71525ce3071a5d8b": [
+      "icons/line_tool_icon.png"
+    ],
+    "2abc368e866bb716331292ffe3f2b9f42847afff44599c80a5bae7abc4e2817c": [
+      "icons/magic_wand_tool_icon.png"
+    ],
+    "93ea6471ebc7b4be5b9a6a89b62686058697f50a7003eb032fb6c10f558006b2": [
+      "icons/mandelbrot_fractal_effect_icon.png"
+    ],
+    "39881c0a4dfe0619308ef33970d0b74424ad4fbe95c3fb808fc2884e524b9bde": [
+      "icons/median_effect_icon.png"
+    ],
+    "fefa2ed552e4894350051d9f2095af089fcc99553b5addf498341aefd97cdd68": [
+      "icons/menu_edit_copy_icon.png"
+    ],
+    "76bc1ebd8009eef3f1eb2f4934ecd2113e8e77cb302be02be79df90f35c59db6": [
+      "icons/menu_edit_copy_merged_icon.png"
+    ],
+    "bebaf23cb85853b0d0bc41f4ce0bde17d4c4dc1206d1f5dbfde998ff4d7f2d1d": [
+      "icons/menu_edit_copy_selection_icon.png"
+    ],
+    "28d8b044132e7bce11514f514bcea3e98339edba8dcf39ec67a7cd0dacf0a6e4": [
+      "icons/menu_edit_cut_icon.png"
+    ],
+    "a221b92148cd11be6a22ac9159028f7067cd7978fc35c26f3e1ca4785306f5aa": [
+      "icons/menu_edit_deselect_icon.png"
+    ],
+    "6d51603215d24bff8521881ce8a8cbcd273b6b3b566d47a2967c61a790f197e9": [
+      "icons/menu_edit_erase_selection_icon.png"
+    ],
+    "656af3bc201f556c7b2d568aa3d7948fbe7620c565fd718ee90b07a9ab8f696b": [
+      "icons/menu_edit_fill_selection_icon.png"
+    ],
+    "c8c0e88903ce724f2198b827dc8d7ffda853dac6dc22e0c76e84e2886af72fce": [
+      "icons/menu_edit_invert_selection_icon.png"
+    ],
+    "c43fa175cd5c06aca6b24273e66560fad30c68e63af243ae0535dcff38e6e645": [
+      "icons/menu_edit_paste_icon.png"
+    ],
+    "e9b246e6dc35d880cdc94ae82668f75f1582ee9fe88dfadc4d37ab196b674d2b": [
+      "icons/menu_edit_paste_in_to_new_image_icon.png"
+    ],
+    "b5e46926dc599a476597b536bb16f00b05e0835a215fdf1f88c8c62c3e0de0d7": [
+      "icons/menu_edit_paste_in_to_new_layer_icon.png"
+    ],
+    "8a7812dcbee61cb0842ea128cc0d6383e69084d82e2a83bfa1a9057c7a23fedb": [
+      "icons/menu_edit_paste_selection_exclude_icon.png"
+    ],
+    "0c99a0225179b9ba7bd2b583fee46dc547ad9cecea2611a5f5d050f11e659e27": [
+      "icons/menu_edit_paste_selection_intersect_icon.png"
+    ],
+    "d6b17d61a124c5bc59842eeae43fa86a9287af4d3ae81c487dc11a0f6f71363c": [
+      "icons/menu_edit_paste_selection_replace_icon.png"
+    ],
+    "b28ae78d0249e69cb0c5e6fd04a0e11b84e051a5648c3948e4dc44a7e44d9422": [
+      "icons/menu_edit_paste_selection_union_icon.png"
+    ],
+    "311502e11e98525bfae63de4c8de840e15a5a7947bab08f94984ec98260a41a8": [
+      "icons/menu_edit_paste_selection_xor_icon.png"
+    ],
+    "ed6eadb0c0500539420a4b46bfe7df229a46632c2ca71807c54808a66a484840": [
+      "icons/menu_edit_redo_icon.png"
+    ],
+    "e0439518504ba1adc7c13fd8b620d6f3b17e30e4ab85aabf548078f63df518eb": [
+      "icons/menu_edit_select_all_icon.png"
+    ],
+    "220e742c77138d7fc336d994ab8d860130ee9a15c954fde73d4cff11e54164a1": [
+      "icons/menu_edit_undo_icon.png"
+    ],
+    "b259cbb2b8d4b411d1e1a773547fb29fcdade258bd88102747a5258eb92cddfa": [
+      "icons/menu_file_acquire_from_scanner_icon.png"
+    ],
+    "ba41c8bfa5bf084421a66c893fc016f7686465f7d4eff21d73a3cc4ca7fdda31": [
+      "icons/menu_file_close_icon.png"
+    ],
+    "4091887674f98be4e9def6b4384362cc713a8186684e34444273fd8ae0a73f51": [
+      "icons/menu_file_exit_icon.png"
+    ],
+    "ab4462a3d853b95c0efd52262e271ac2221a38c45c4315c028e84a8e1ba9459b": [
+      "icons/menu_file_new_icon.png"
+    ],
+    "8c316c05ac5e8adc5f26ff0be666e6c3f000b37d458ac48f98108d522ff7af36": [
+      "icons/menu_file_open_icon.png"
+    ],
+    "f126058d305e954db6e4dbf113aeab9331ae460c44e264748ad12673e375656d": [
+      "icons/menu_file_print_icon.png"
+    ],
+    "cd312e08bdea4c5a95e9afb486c79adc3d00dc8a5660445c499e8b3fc7e67d43": [
+      "icons/menu_file_save_all_icon.png"
+    ],
+    "042f89480c19e74faedc54788a18a801efabc73127639677181e044a819aa2cb": [
+      "icons/menu_file_save_as_icon.png"
+    ],
+    "d5b7f1e98f75701152155a553f80d2bae776e8f494975e0671f7b6e250023d20": [
+      "icons/menu_file_save_icon.png"
+    ],
+    "009835b45f2c6ff4480002e8ef79da2703c5038edbf4800e8dceb1ba1917eaa6": [
+      "icons/menu_help_about_icon.png"
+    ],
+    "f35819212b4195f849330a0b26e65627ebda9f76f6a3373f7d5cf5468d018b0b": [
+      "icons/menu_help_donate_icon.png"
+    ],
+    "20f5a925f98b769c31e023ac9f739eb3f21117081c46f91b6f295116dee12cb5": [
+      "icons/menu_help_forum_icon.png"
+    ],
+    "6f3181dc2bac4ee14c0f7bf211f7c0f204f59cb871804adc07edff20feae7721": [
+      "icons/menu_help_help_topics_icon.png",
+      "icons/menu_help_icon.png"
+    ],
+    "d51d975b4c9d00a85de764f0c7bb32dc439987a0a64f79b339e5307ca70905b9": [
+      "icons/menu_help_pdn_search_icon.png"
+    ],
+    "78fce51ce1e17441039ad86a2d0ed025b2bfc517baa8d2be9befd3e6d138c276": [
+      "icons/menu_help_pdn_website_icon.png"
+    ],
+    "9fc5e263a0c41f20b988e04cdae3eb7dd607325c661d37003306895868fa50ed": [
+      "icons/menu_help_plugins_icon.png"
+    ],
+    "08121d38e18c20b73cc9c22192cb2c16c423bb3136185810df8328dae5c5df64": [
+      "icons/menu_help_send_feedback_icon.png"
+    ],
+    "c0f46ee80dfa57eb320fe51ecbda6f44ea159db85b8a2276d78099d379dcc2dd": [
+      "icons/menu_help_tutorials_icon.png"
+    ],
+    "79d3a5a7227dc36df1b205a265b1ecce425a2d67cd9779421783ffe9c95f3dca": [
+      "icons/menu_image_canvas_size_icon.png"
+    ],
+    "3a51082155074f23d8e4183f827ee224fd24ac786572cbf484e8bb346fb3dbec": [
+      "icons/menu_image_color_profile_icon.png",
+      "icons/menu_window_colors_icon.png"
+    ],
+    "9a923fe52727445d3cf725219059a27ed606dd79afc1f4f1dbc8ec9362c06f8b": [
+      "icons/menu_image_crop_icon.png"
+    ],
+    "c45789e534d2d3e5deb1bd9122c11a432f43fbc356604628d7e03e1da3a8dc57": [
+      "icons/menu_image_flatten_icon.png"
+    ],
+    "a76e60b6e650eeef374af30a132e8d89e910a60f95eef285e390cae85236393c": [
+      "icons/menu_image_flip_horizontal_icon.png",
+      "icons/menu_layers_flip_horizontal_icon.png"
+    ],
+    "98466190c1ebff91d229912b25c9b1b080f9d82d827ffdd9feb5e2dd4a6d727c": [
+      "icons/menu_image_flip_vertical_icon.png",
+      "icons/menu_layers_flip_vertical_icon.png"
+    ],
+    "a39ab082b8d766aaaa9b19407610f6e88d4baf43f1e7d8274bbe0efac0e24f60": [
+      "icons/menu_image_resize_icon.png"
+    ],
+    "cca91f32aa8eefa13c2aabc4dbc8ea7c74268a72e9dcbf2ae3de1fdbd6f1a705": [
+      "icons/menu_image_rotate180_icon.png",
+      "icons/menu_layers_rotate180_icon.png"
+    ],
+    "da512548c93c63aa237271655d47aecc5efa22847e667d6465346ef35e05cd22": [
+      "icons/menu_image_rotate90_c_c_w_icon.png"
+    ],
+    "28a53fc34f6a2bb01ef2d5aa9338d51055ba9fe42b9d6b0da55461a5f37d3454": [
+      "icons/menu_image_rotate90_c_w_icon.png"
+    ],
+    "fa5daf77f485d93d964804d7ffb6bec0874b058946c94e0764abb0c83cdf844d": [
+      "icons/menu_layers_add_new_layer_icon.png"
+    ],
+    "2168ea7134b40490db8847a65d853a6d652cdc06dd2321323ac0f672378f0dd6": [
+      "icons/menu_layers_delete_layer_icon.png"
+    ],
+    "9591161505be8991c661c25d03fe4b0da717032ba11dbec06cec41e37fbb3d0e": [
+      "icons/menu_layers_duplicate_layer_icon.png"
+    ],
+    "3478ff827e3c0de9d1623a2f0300aa99a469dd153533474bd16823477c151c52": [
+      "icons/menu_layers_go_to_bottom_layer_icon.png"
+    ],
+    "c1f9385aaa692de9f4a617a3d1ff8151a9862a55503c81a026a73567c50eba92": [
+      "icons/menu_layers_go_to_layer_above_icon.png"
+    ],
+    "b019a1cc2c51a4fe457c5a1c234d30f83c800e1eb54806455be061ec0833137c": [
+      "icons/menu_layers_go_to_layer_below_icon.png"
+    ],
+    "836b7cda4fbbac6cf9631fae596ef20cad4de9195afd58dde1a13e9311813f24": [
+      "icons/menu_layers_go_to_top_layer_icon.png"
+    ],
+    "bc4cf4a8fadaaa9768e810de36717a7467bdf3e691171a67d87ced01acd7a785": [
+      "icons/menu_layers_import_from_file_icon.png"
+    ],
+    "30d1e1a4a2235c979fac087dd0ffe039cfce1891cfbffaae27c860b9cddb4ae3": [
+      "icons/menu_layers_layer_properties_icon.png"
+    ],
+    "30e06be17f10db7ad5fc413a47f42ab7c1575944f4817a7d126ba18c104097b3": [
+      "icons/menu_layers_merge_layer_down_icon.png"
+    ],
+    "cf2ab703bda21c6b90168718700f44d128b1e1477080880d447a0840dd28ccf3": [
+      "icons/menu_layers_move_layer_down_icon.png"
+    ],
+    "ec475e59277a27a0fec9d8bdbac0e53b04d50a61a07f24d48206a81973a121b7": [
+      "icons/menu_layers_move_layer_to_bottom_icon.png"
+    ],
+    "fbc3f985f0f535530ac1deb954c674991eefe81c378dd2b50be604ee420e9f1d": [
+      "icons/menu_layers_move_layer_to_top_icon.png"
+    ],
+    "aea93bbb8462f382d575414ebf6977502182e9a1b08005afec26923592ad29ee": [
+      "icons/menu_layers_move_layer_up_icon.png"
+    ],
+    "52f5da30d6e99c74fe46e3bff38196cd491229ef87199b46dc4afd20fc1e7d23": [
+      "icons/menu_layers_rotate_zoom_icon.png"
+    ],
+    "5f881da9355653539d3c24498e0376902b5f302161981c01c67f49a8abdd1701": [
+      "icons/menu_layers_toggle_layer_visibility_icon.png"
+    ],
+    "051648046487e902783f2d7b127f8bc9bcc837e72c419b9e8258a9184b327d9c": [
+      "icons/menu_tab_copy_path_icon.png"
+    ],
+    "18b2b679b60adbb048cb5a80be57acd2675d26c57f8d70d49a707857d423e8b3": [
+      "icons/menu_utilities_language_icon.png"
+    ],
+    "b2a61127fdd56ad34f60b49507b1f937188ce49013113d1e5afbca41b6290f7b": [
+      "icons/menu_utilities_settings_icon.png"
+    ],
+    "55ee13bb84fa4a917fab8968364bb9d2a3f8bf1d3e80aa9b6e0c35894cce2874": [
+      "icons/menu_view_actual_size_icon.png"
+    ],
+    "b0f3f1cc45aa584df4b5a05a84dac565b987cbda820806efff354d67ce4236cf": [
+      "icons/menu_view_grid_icon.png"
+    ],
+    "6d52d932d08f0f9a4ed5bc93f12ae0168e57c87590d7967bfdf707b407109c51": [
+      "icons/menu_view_rulers_icon.png"
+    ],
+    "e68efd78e81d862b847e21cfb95e09dffd516625c3315aa530c6be46d4337f1d": [
+      "icons/menu_view_zoom_in_icon.png"
+    ],
+    "e7b67b4ae1636815c5753d3b6ff9f18b99e68d7090d277d402762c4c4f84f250": [
+      "icons/menu_view_zoom_out_icon.png"
+    ],
+    "cefb7a2c43e47f7a1bbf843ede49c0b6843d50c491cd05d50eb3575271e7f214": [
+      "icons/menu_view_zoom_to_selection_icon.png"
+    ],
+    "9165a54579ac6a99dde25fa0115f3bb02a199d0b449ed811911affdf828fe203": [
+      "icons/menu_view_zoom_to_window_icon.png"
+    ],
+    "de019a737deae667a9e9a4cd39700c7e173def550b439e4afe09458937abeeb9": [
+      "icons/menu_window_history_icon.png"
+    ],
+    "7a5de1fc0e692637eaccf7ad0035bca7623e43505d4cd273e51de210c4d88492": [
+      "icons/menu_window_layers_icon.png"
+    ],
+    "05754c80ae6981807fee37faa5919be6f7b48f003844b7b473071a8a865cbf31": [
+      "icons/minus_button_icon.png"
+    ],
+    "2678306c52207419bd7bba1eeefa641ac49d0bb0e663bb01e95797ffd8546b05": [
+      "icons/morphology_effect_icon.png"
+    ],
+    "2c637ac6b4d51cf403fab7399a6fafaab3323a5dd899bb9a2ec81a744808fab0": [
+      "icons/motion_blur_effect.png"
+    ],
+    "215e3bad5ba7189a6df34875f348d59bc8dbeef3adacf45d4e4cd94c4990b0e0": [
+      "icons/move_layer.png"
+    ],
+    "53d3aff9fa927ca0243f0eb3503939364ae3c43c6b00d7c3ef8f610de3e93384": [
+      "icons/move_selection_tool_icon_dark.png"
+    ],
+    "951d465f7c07ba88cd0f46be7f7d7b455af86330fa61ed80f5c763fea527d3f2": [
+      "icons/move_selection_tool_icon.png"
+    ],
+    "8d5c12f9cd57abe8157417d410a8562cc24fbd7b7f877731bd879af2ebc7b9aa": [
+      "icons/move_tool_icon_dark.png"
+    ],
+    "5f17d635797dba5ce79c6d3cabfd82863245929c867df0ce49f7936228d4b78e": [
+      "icons/move_tool_icon.png"
+    ],
+    "a9baf57a3be8318b4860c49e1984c2f8e8bcb19088eea265d82e4a9e0d75ac7b": [
+      "icons/oil_painting_effect.png"
+    ],
+    "02e8c6d23ae404411c7e9da5d6402e8beda31bbf4e6cb318bad41d770e2439d8": [
+      "icons/outline_effect_icon.png"
+    ],
+    "b68df624956d1ba884cddf35bed11869e849e7f49e1f75c5df65170602d85f2f": [
+      "icons/paint_brush_tool_icon.png"
+    ],
+    "c78eed6d28cdae9211132fbe440d7707e4aa6bc4054cdb94138614f373dc8984": [
+      "icons/paint_bucket_icon_dark.png"
+    ],
+    "e8d7995b134bfef4c216287834243ae43e6326d25ae70fe2f2662ba2a18239f2": [
+      "icons/paint_bucket_icon.png"
+    ],
+    "259ee66bc630d4c5e07d2e903b7c0aa8847865038baf2355045fc2046de744ed": [
+      "icons/paint_dot_net.png"
+    ],
+    "f82bef2963fffb3e1dfd8242a6f2bb7951f8f78f20460fb1ed8dca058981aa2f": [
+      "icons/pan_tool_icon.png"
+    ],
+    "939f45ae932cb7fb7b8215f3f558c1a1cbb34cff76fddd1ee468d08e69239504": [
+      "icons/pencil_sketch_effect_icon.png"
+    ],
+    "3f254fe792d7b5e7569c9201cc7a3a9623ec068cd8910378073e168d48958e86": [
+      "icons/pixelate_effect.png"
+    ],
+    "f913b7020120a4fcf2a4634b3f721e65ea767ad2870a90ec3d6562a2fbdd2e96": [
+      "icons/plugin_indicator.png"
+    ],
+    "32c64e93a1638ae443e29a62a65c0d8e51448b5dfec12c588421c5226915499e": [
+      "icons/plus_button_icon.png"
+    ],
+    "e7bbb46de2aaff050c742411db5e96d696d4c26fee2839f2df942d54a042660e": [
+      "icons/polar_inversion_effect.png"
+    ],
+    "fa60a64993a79fac3998e4de80818c626ab252b2ee92718d311cd93ca34c3d7f": [
+      "icons/posterize_effect_icon.png"
+    ],
+    "a96c7e12539cfb75227cbd74126c0a30049fe886fa8b4bd8778b8077c6290d3d": [
+      "icons/quantize_effect_icon.png"
+    ],
+    "936816a7e6df2a5299201251a4ae5cb58f3be03dad2e180a789f4de9779f070e": [
+      "icons/radial_blur_effect.png"
+    ],
+    "ab5e3abccd810e849050dc80683a69f25bf417f2863b790594fc17ce07cbed71": [
+      "icons/recoloring_tool_icon.png"
+    ],
+    "987d6a57a1ac1b225d36e9476fd7a1d9f06e320f4d0727a8bc54c2b9696aae7f": [
+      "icons/rectangle_select_tool_icon.png",
+      "icons/selection_icon.png"
+    ],
+    "f1fbd30e18241a2bc786558d276f0a63f3fe380eb4e46800b4a59d9dc0e9330e": [
+      "icons/red_eye_remove_effect.png"
+    ],
+    "bd90e342183dd89c277a9008bb5afb66ea17e2ab4f37369a224702f67a93c77c": [
+      "icons/reduce_noise_effect.png"
+    ],
+    "d2486de7c600bc17184d53f5337ba47aa23f0897fae12290b3019defabcb3d35": [
+      "icons/relief_effect.png"
+    ],
+    "192640c80ba2b93d01852fabe4296a66641570c9a11c3255381da5597c2ddf22": [
+      "icons/reset_icon.png"
+    ],
+    "bc7ed9bb1c7f86f5228a855f695b091624e3232caa7b015e28c1528996d0db4d": [
+      "icons/right_arrow_blue.png"
+    ],
+    "89f28019cd258ac0e9f4cf1e2e5846a3ca57e154f2f9fa010e92177ec04f6b70": [
+      "icons/sample_all_layers_false.png"
+    ],
+    "d2df7b6302de7fb80601c958926057360c5ec0bd8bb0b5a542503c520a535f89": [
+      "icons/sample_all_layers_true.png",
+      "images/anchor_chooser_control_anchor_image.png"
+    ],
+    "5a02dad7625f70cb94573fc3aee508f9aa1f86d775e042149b1088fbd5140c51": [
+      "icons/sepia_effect.png"
+    ],
+    "34fd0947442ffbc997b9d5b0cd8d59a0946a1898eaeac932beeea00c0c1972a1": [
+      "icons/settings_canvas_24.png"
+    ],
+    "4446e8b79d10880a900b2dc54896dc348fdc3c787ce5f7f945997445349f7fb0": [
+      "icons/settings_color_management_24.png"
+    ],
+    "c3d541053f0b600104205972ccb4d63c7def5c89fb181edf07b20603b381bbe2": [
+      "icons/settings_diagnostics_24.png"
+    ],
+    "ed0bb2c904da34c27e99d5a2ec235419133c9e86c0cbe5f0d44685becdc5f0d4": [
+      "icons/settings_effects_24.png"
+    ],
+    "7041850bff40e44675d481f5edbc47ea65141871daf1eeb01e378bd9f75b7a62": [
+      "icons/settings_graphics_24.png"
+    ],
+    "e7eb8db64c9b2cfb876b6664b0791d87d12edc19ec47987c7942cb042dfd8217": [
+      "icons/settings_pen_and_tablet_24.png"
+    ],
+    "23fae79bfc6f0dcbb8c0639216912f5cba9f59d55ffd243532c549a5646e54cc": [
+      "icons/settings_plugins_24.png"
+    ],
+    "9572a8b7b7a0fcfb5ebf73af290e9b3cc82f8da99d01de064de36ab92efb89ab": [
+      "icons/settings_tools_16.png"
+    ],
+    "38946a745214bbc70dd9732f8c0335f8933962d5ebbdde8d1844162d2ead34be": [
+      "icons/settings_tools_24.png"
+    ],
+    "aeea798fb182c81109928f06c5e7d8a1958d0b11bed43e6c7f6ab1f79b0b89e6": [
+      "icons/settings_u_i_24.png"
+    ],
+    "3137734463f07578f4c2e042b1f2b604555c5a2a2dda4e01b976b9ab4322f2e8": [
+      "icons/settings_updates_24.png"
+    ],
+    "a381a67f4d4d5b26e7de62de0956ad35f0e5216274f6892afd0da616839e6369": [
+      "icons/shapes_tool_icon_16.png"
+    ],
+    "f257d832b4255719532744d0ecb576ad238bc0104acad5e0674ae3477f4860ca": [
+      "icons/shapes_tool_icon.png"
+    ],
+    "d656fe739de4b702739af8f1167e098e87d4663e0bd9973ccd33c0e36da74ece": [
+      "icons/sharpen_effect.png"
+    ],
+    "b806c082606da24ac1806f1181e94c0e4b86989124bd8d14da2d1850075a2034": [
+      "icons/sketch_blur_effect_icon.png"
+    ],
+    "6f8b9457a1161a333978c4f5727cde8260705e50d94e3d4be9add1aa25cc3ba2": [
+      "icons/soften_portrait_effect_icon.png"
+    ],
+    "c5e4b67f2a76cf872797bc619cfbe280c9efb9d294e99b6c29d14218e4bbf65f": [
+      "icons/square_blur_effect.png"
+    ],
+    "42c13a448e3b91aaae9ae50ae94a42af4bdf5a5f630c0cb055e473a741493029": [
+      "icons/straighten_effect.png"
+    ],
+    "eafe004ad49f771e35eea3802ab65b0d738db60f5c9175ca258862eae69f3697": [
+      "icons/surface_blur_effect_icon.png"
+    ],
+    "73fb31ca66f4d5f6c5bed969dcf594364ab6d7b3511d1cf78873bdaed96f9c3f": [
+      "icons/swap_icon.png"
+    ],
+    "76d456ddfa9c3f9b66e6e1668503cc9fbffa566018b2e67f28149144d0490002": [
+      "icons/swatch_icon.png"
+    ],
+    "d8e794aa110a45f6e63382f81efdb561ac69eb4d0769bcd6fba9eff47efd3174": [
+      "icons/temperature_and_tint_effect.png"
+    ],
+    "135d83c729ca263a1786191f7cb4b35ebbdc533fbf8865e83f5dadbd5d5e8d90": [
+      "icons/text_tool_icon.png"
+    ],
+    "922d837916fd853670a013a65a4294ed182c4843ef09bc96af45e7baa83709e2": [
+      "icons/tile_effect.png"
+    ],
+    "2ca5fdbc8d8b5bf6d1e49e229a7cf58a55b5f768fe3ccb1697bd35e60da460cf": [
+      "icons/tool_config_strip_brush_enable_pressure_sensitivity_false.png"
+    ],
+    "47fb9d92826a358c32e034e74cfd153379281c692cf59e7337ada3fa8879f78a": [
+      "icons/tool_config_strip_brush_enable_pressure_sensitivity_true.png"
+    ],
+    "a3e207cc11bb36e8c4483b0f3d9242c702b70befd7e07dfa1861152f9496db70": [
+      "icons/tool_config_strip_commit_button.png"
+    ],
+    "bf6716607c06b1342524e77739b7d26546d3c51ae74c8a15b8a9c16e53f41b32": [
+      "icons/tool_config_strip_selection_draw_mode_swap_button.png"
+    ],
+    "259781d3b7ee7f2d3783d080232b0f61a570ec9fa115c12046ed0abf2a56c08c": [
+      "icons/tool_strip_checked.png"
+    ],
+    "a619d2dd4ac88f70e4076225f3faafd10435334405055a9e3d5833ff6acc5949": [
+      "icons/trash_can.png"
+    ],
+    "5533b04722f1a49ac4bad80b6f50361a3c3a303eaa43ec15d048f3aabac93466": [
+      "icons/turbulence_effect_icon.png"
+    ],
+    "dba2dd2fab459e7f4d5a34f872ba71537240f1224f8ce16db049b2476b165fca": [
+      "icons/twist_effect.png"
+    ],
+    "fc83eec7be10d661f742e011901f3e3d8df72f321931b1cde0e9d3be6bbcdee9": [
+      "icons/unfocus_effect_icon.png"
+    ],
+    "6f014775a32153df4e3519384592fe52a7b2bb73bca1307350dda8183d54cd89": [
+      "icons/update_prompt_task_dialog_form_icon.png"
+    ],
+    "34d1bfcda2175a076cde205d20ee045d67a068e4ea188897e055c9ff45f37809": [
+      "icons/update_prompt_task_dialog_install_at_exit.png"
+    ],
+    "164c48a2487c7334575ecfb0410414d359852ceead828a559bd9cddcbbbf6437": [
+      "icons/update_prompt_task_dialog_install_now.png"
+    ],
+    "94ff8ff796d41c52076194c831a1db65a38b5ac25dafade0c1634842d476ac21": [
+      "icons/vignette_effect_icon.png"
+    ],
+    "3a1609500966e964da275b042399c9525551431fc058fffc834221c81c070aec": [
+      "icons/warning_icon.png"
+    ],
+    "3b7c8ba6c66a18318b516eda07b2adade0d96ec38980948887f9985073824b03": [
+      "icons/zoom_blur_effect.png"
+    ],
+    "5e049d75e6ca43fefb4aca80159b3462c0ba794a1fe7f803b543aa07c7a92043": [
+      "icons/zoom_tool_icon.png"
+    ],
+    "d8029d294c81ef1f2d6d4b6e4b5b04ee64df7a04db0a36ca7f1ee2e997b61ca2": [
+      "images/animation_busy_spinner.png"
+    ],
+    "f003efe2a9da2fb884e14621bbf57cb47d394cb6791111785bb80e3ac93b72b2": [
+      "images/image_strip_close_button_disabled.png"
+    ],
+    "3b43f495930636c506826829041ddf3c9b7764b957f725c4f37b7ab72f2da994": [
+      "images/image_strip_close_button_hot.png"
+    ],
+    "c809bed164c719431e1d2cdc23bdb17aed873023d78a61b1351c87c3e3e5d105": [
+      "images/image_strip_close_button_normal.png"
+    ],
+    "4a26eec094bd9164751e1fdbf4d3fcdab060ac6aa5cec0e9772d5a590272129e": [
+      "images/image_strip_close_button_pressed.png"
+    ],
+    "3080c3e61ea47fc605a0c31b4991af7d738513d1306732f338c65ad1a6f7d8a8": [
+      "images/image_strip_dirty_overlay_11.png"
+    ],
+    "f81ce5c87034a7d7b20141c47fc21d4f7ea7732396e32c8d4b1d7aea9c903d66": [
+      "images/image_strip_scroll_left_arrow.png"
+    ],
+    "77300422cfd738a67ccdb48c4fe2f2735c2237a6fdf4e7503c81d0cea373ef0e": [
+      "images/image_strip_scroll_right_arrow.png"
+    ],
+    "6ef6f64f585eedc5aba741d4f506650d9bd0114ba1b9c6ab745faf03d74e53ed": [
+      "images/pay_pal_donate_dark.png"
+    ],
+    "9e85d9d68ab74a5abf4860360a577a9002788f5afe04d8860ea0f882588effb7": [
+      "images/pay_pal_donate.png"
+    ],
+    "35bba01588db0ad6646228e7000f9a1163bc545b4e58a078927168d27da5b40c": [
+      "images/pdn_banner_logo_dark.png"
+    ],
+    "2eb2797c161721d6dbd8933e2010bfe552af33bfe79b722a4f0b0496e683c6a6": [
+      "images/pdn_banner_logo.png"
+    ],
+    "d7bd240789e6b233f4975398c4ca78edd5353f86b6e92eebdc406b87dbdb8a22": [
+      "images/tool_bar_image_list_menu_open_button.png"
+    ],
+    "ad319d07a13ead4096cdc2bdc9f12af02315d96a11be48d13fc196393a5419de": [
+      "images/update_prompt_task_dialog_task_image.png"
+    ]
+  }
+}

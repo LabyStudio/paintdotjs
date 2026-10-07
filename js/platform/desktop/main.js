@@ -1,17 +1,95 @@
-// Modules to control application life and create native browser window
-const {app, BrowserWindow, Menu, ipcMain, dialog} = require('electron')
-const {setupTitlebar} = require("custom-electron-titlebar/main");
-const path = require('path')
+const {app, BrowserWindow, Menu, dialog, ipcMain, net, protocol} = require('electron');
+const {setupTitlebar} = require('custom-electron-titlebar/main');
+const fs = require('node:fs');
+const path = require('node:path');
+const {pathToFileURL} = require('node:url');
+const {ensureDesktopAssets} = require('./asset-manager');
+const updater = require('./updater');
 
+protocol.registerSchemesAsPrivileged([{
+    scheme: 'paintjs',
+    privileges: {standard: true, secure: true, supportFetchAPI: true, corsEnabled: true}
+}]);
 setupTitlebar();
 
+let mainWindow = null;
+let activeAssets = null;
+const pendingFiles = [];
+
+function commandLineFiles(argv) {
+    return argv
+        .filter(value => typeof value === 'string' && !value.startsWith('-'))
+        .map(value => path.resolve(value))
+        .filter(value => fs.existsSync(value) && fs.statSync(value).isFile());
+}
+
+function queueFiles(files) {
+    for (const filename of files) {
+        const resolved = path.resolve(filename);
+        if (!pendingFiles.includes(resolved)) pendingFiles.push(resolved);
+    }
+    deliverPendingFiles();
+}
+
+function deliverPendingFiles() {
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isLoading()) return;
+    if (pendingFiles.length) mainWindow.webContents.send('desktop:open-files', pendingFiles.splice(0));
+}
+
+app.on('open-file', (event, filename) => {
+    event.preventDefault();
+    queueFiles([filename]);
+});
+
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+    app.quit();
+} else {
+    app.on('second-instance', (_event, argv) => {
+        queueFiles(commandLineFiles(argv));
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+        }
+    });
+}
+
+function resolveAppRequest(requestUrl) {
+    const url = new URL(requestUrl);
+    let relative = decodeURIComponent(url.pathname).replace(/^\/+/, '');
+    if (!relative) relative = 'index.html';
+    const normalized = path.normalize(relative);
+    if (path.isAbsolute(normalized) || normalized.startsWith('..')) return null;
+
+    const candidates = [];
+    if (normalized === 'assets' || normalized.startsWith(`assets${path.sep}`)) {
+        const assetRelative = normalized.slice('assets'.length).replace(/^[/\\]+/, '');
+        if (activeAssets) candidates.push(path.join(activeAssets, assetRelative));
+        candidates.push(path.join(process.resourcesPath, 'assets', assetRelative));
+        candidates.push(path.join(app.getAppPath(), 'assets', assetRelative));
+    } else {
+        candidates.push(path.join(app.getAppPath(), normalized));
+    }
+    return candidates.find(candidate => fs.existsSync(candidate) && fs.statSync(candidate).isFile()) || null;
+}
+
+async function registerAppProtocol() {
+    await protocol.handle('paintjs', request => {
+        const filename = resolveAppRequest(request.url);
+        if (!filename) return new Response('Not found', {status: 404});
+        return net.fetch(pathToFileURL(filename).toString());
+    });
+}
+
 function createWindow() {
-    // Create the browser window.
-    const mainWindow = new BrowserWindow({
-        icon: './assets/icon.png',
+    mainWindow = new BrowserWindow({
+        icon: app.isPackaged
+            ? path.join(process.resourcesPath, 'desktop', 'icon.png')
+            : path.join(app.getAppPath(), 'desktop-resources', 'icon.png'),
         backgroundColor: '#21252b',
         show: false,
-        frame: false, // Use to Linux
+        frame: false,
         titleBarStyle: 'hidden',
         titleBarOverlay: true,
         width: 1080,
@@ -23,17 +101,18 @@ function createWindow() {
             webSecurity: true,
             nodeIntegration: true,
             contextIsolation: false,
-            enableRemoteModule: true,
             preload: path.join(__dirname, 'preload.js')
         }
-    })
+    });
 
-    Menu.getApplicationMenu().items = [];
+    Menu.setApplicationMenu(null);
+    const startupQuery = pendingFiles.length ? '?skipWelcome=1' : '';
+    void mainWindow.loadURL(`paintjs://app/index.html${startupQuery}`);
+    mainWindow.once('ready-to-show', () => mainWindow.show());
+    mainWindow.webContents.on('did-finish-load', () => setImmediate(deliverPendingFiles));
+    mainWindow.on('closed', () => { mainWindow = null; });
 
-    mainWindow.loadFile('index.html')
-    mainWindow.show()
-
-    mainWindow.webContents.on('before-input-event', (_, input) => {
+    mainWindow.webContents.on('before-input-event', (_event, input) => {
         if (input.type === 'keyDown' && input.key === 'F12') {
             mainWindow.webContents.isDevToolsOpened()
                 ? mainWindow.webContents.closeDevTools()
@@ -41,9 +120,6 @@ function createWindow() {
         }
     });
 
-    // Chromium's beforeunload prompt protects dirty documents in a browser,
-    // but Electron suppresses that prompt and emits will-prevent-unload. Show
-    // an explicit desktop confirmation and allow the close only when chosen.
     mainWindow.webContents.on('will-prevent-unload', event => {
         const choice = dialog.showMessageBoxSync(mainWindow, {
             type: 'warning',
@@ -57,31 +133,46 @@ function createWindow() {
         });
         if (choice === 0) event.preventDefault();
     });
+    updater.initializeUpdater(mainWindow);
+}
 
-    ipcMain.on('resize-window', (event, { width, height }) => {
-        if (mainWindow) {
-            mainWindow.setBounds({
-                x: mainWindow.getBounds().x,
-                y: mainWindow.getBounds().y,
-                width: Math.max(width, 100), // Minimum width
-                height: Math.max(height, 100), // Minimum height
+ipcMain.on('resize-window', (_event, {width, height}) => {
+    if (!mainWindow) return;
+    const bounds = mainWindow.getBounds();
+    mainWindow.setBounds({...bounds, width: Math.max(width, 100), height: Math.max(height, 100)});
+});
+ipcMain.handle('desktop:check-for-updates', () => updater.checkForUpdates());
+ipcMain.on('desktop:install-update', () => updater.installUpdate());
+
+async function prepareApplication() {
+    while (!activeAssets) {
+        try {
+            activeAssets = await ensureDesktopAssets();
+        } catch (error) {
+            const result = await dialog.showMessageBox({
+                type: 'error',
+                title: 'paint.js setup failed',
+                message: 'Required assets could not be installed.',
+                detail: error.message,
+                buttons: ['Retry', 'Quit'],
+                defaultId: 0,
+                cancelId: 1
             });
+            if (result.response === 1) return app.quit();
         }
+    }
+    await registerAppProtocol();
+    queueFiles(commandLineFiles(process.argv.slice(app.isPackaged ? 1 : 2)));
+    createWindow();
+}
+
+if (gotSingleInstanceLock) {
+    app.whenReady().then(prepareApplication);
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0 && activeAssets) createWindow();
     });
 }
 
-app.whenReady().then(() => {
-    createWindow();
-
-    app.on('activate', function () {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
-        }
-    })
-})
-
-app.on('window-all-closed', function () {
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
-})
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin' && activeAssets) app.quit();
+});

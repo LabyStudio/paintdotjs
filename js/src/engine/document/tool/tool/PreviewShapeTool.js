@@ -26,6 +26,10 @@ class PreviewShapeTool extends DrawingTool {
         this.gradientControlIndex = -1;
         this.colorsForm = null;
         this.colorsChangedListener = () => this.onColorsChanged();
+        this.restoredSettings = null;
+        this.restoredColors = null;
+        this.drawHistoryPushed = false;
+        this.editingStartState = null;
     }
 
     onActivate() {
@@ -62,6 +66,7 @@ class PreviewShapeTool extends DrawingTool {
                 this.originalStartPoint = this.startPoint.clone();
                 this.originalEndPoint = this.endPoint.clone();
                 this.originalTransform = this.shapeTransform.clone();
+                this.editingStartState = this.capturePendingState();
                 this.startAngle = Utility.getAngleOfTransform(this.shapeTransform);
                 this.angleDelta = 0;
                 if (this.usesBoundingBoxNubs()) {
@@ -81,6 +86,10 @@ class PreviewShapeTool extends DrawingTool {
         this.beginBitmapTransaction();
         this.tracking = true;
         this.pending = false;
+        this.drawHistoryPushed = false;
+        this.restoredSettings = null;
+        this.restoredColors = null;
+        this.editingStartState = null;
         this.interactionMode = null;
         this.button = button;
         this.startPoint = drawingPoint;
@@ -111,6 +120,7 @@ class PreviewShapeTool extends DrawingTool {
         if (!this.supportsPendingEdit()) return super.onMouseUp(x, y, button);
         if (!this.tracking || (this.interactionMode === null && button !== this.button)) return false;
         this.onMouseMove(x, y);
+        const editingStartState = this.interactionMode === null ? null : this.editingStartState;
         if (this.interactionMode === null && this.startPoint.equals(this.endPoint)) {
             this.cancelPending();
             return true;
@@ -118,6 +128,7 @@ class PreviewShapeTool extends DrawingTool {
         this.tracking = false;
         this.pending = true;
         this.interactionMode = null;
+        this.editingStartState = null;
         this.ensureCurveControlPoints();
         if (this.usesBoundingBoxNubs()) {
             MoveToolBase.prototype.positionNubs.call(this, MoveToolBaseMode.TRANSLATE);
@@ -126,6 +137,12 @@ class PreviewShapeTool extends DrawingTool {
         this.positionCurveNubs();
         this.positionGradientNubs();
         this.updateHoverCursor(new Point(x, y));
+        this.pushDrawHistoryMemento();
+        if (editingStartState !== null) {
+            this.historyStack.pushNewMemento(new ShapeEditHistoryMemento(
+                this.getDocumentWorkspace(), editingStartState, this.getName(), this.getImage()
+            ));
+        }
         return true;
     }
 
@@ -136,7 +153,14 @@ class PreviewShapeTool extends DrawingTool {
             return true;
         }
         if (key === "Escape") {
-            this.cancelPending();
+            if (this.pending && this.drawHistoryPushed) {
+                // Ending the drawing placed the editable shape in history.
+                // Walk back its edit entries and draw entry so Escape cannot
+                // leave a memento that expects a now-missing pending shape.
+                while (this.pending) this.historyStack.stepBackward();
+            } else {
+                this.cancelPending();
+            }
             return true;
         }
         return false;
@@ -158,6 +182,12 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     onColorsChanged() {
+        if (this.restoredColors !== null && this.colorsForm !== null) {
+            this.restoredColors = {
+                primary: this.colorsForm.mainColor.copy(),
+                secondary: this.colorsForm.secondaryColor.copy()
+            };
+        }
         if ((this.pending || this.tracking) && this.startPoint !== null && this.endPoint !== null) {
             this.renderPreview();
         }
@@ -167,7 +197,10 @@ class PreviewShapeTool extends DrawingTool {
         return true;
     }
 
-    onSettingChanged() {
+    onSettingChanged(key, value) {
+        if (this.restoredSettings !== null && key !== undefined) {
+            this.restoredSettings[key] = value;
+        }
         if ((this.pending || this.tracking) && this.startPoint !== null && this.endPoint !== null) {
             this.renderPreview();
             if (this.pending) {
@@ -178,6 +211,22 @@ class PreviewShapeTool extends DrawingTool {
                 this.positionGradientNubs();
             }
         }
+    }
+
+    getSetting(name, fallback = null) {
+        if (this.restoredSettings !== null
+            && Object.prototype.hasOwnProperty.call(this.restoredSettings, name)) {
+            return this.restoredSettings[name];
+        }
+        return super.getSetting(name, fallback);
+    }
+
+    getColor(button = MouseButton.LEFT) {
+        if (this.restoredColors !== null) {
+            return (button === MouseButton.RIGHT
+                ? this.restoredColors.secondary : this.restoredColors.primary).copy();
+        }
+        return super.getColor(button);
     }
 
     updateDrawingPoints(pointerEndPoint) {
@@ -381,11 +430,30 @@ class PreviewShapeTool extends DrawingTool {
         const dirtyBounds = Rectangle.intersect(Rectangle.union(previousBounds, nextBounds), surface.getBounds());
         surface.copyRegionFrom(this.scratchSurface, dirtyBounds);
 
-        const context = surface.context;
+        const destinationContext = surface.context;
         const width = this.getWidth();
+        const antialias = this.getSetting("antialias", true) !== false;
+        // Canvas2D exposes image smoothing for bitmap operations only; it has
+        // no switch for vector-path antialiasing. Render aliased 1px shapes
+        // into an isolated surface so their coverage can be reduced to whole
+        // pixels before the shape is composited onto the layer.
+        let aliasedCanvas = null;
+        let context = destinationContext;
+        if (!antialias && width === 1) {
+            aliasedCanvas = document.createElement("canvas");
+            aliasedCanvas.width = surface.width;
+            aliasedCanvas.height = surface.height;
+            context = aliasedCanvas.getContext("2d", {alpha: true});
+        }
         context.save();
+        // imageSmoothingEnabled does not disable path antialiasing, but it is
+        // still important for any bitmap-backed fill styles used by shapes.
+        // The 1px rectangle path below additionally uses pixel fills in
+        // aliased mode because Canvas2D has no vector-path AA switch.
+        context.imageSmoothingEnabled = antialias;
         this.clipToSelection(context);
-        context.globalCompositeOperation = this.getCompositeOperation();
+        context.globalCompositeOperation = aliasedCanvas === null
+            ? this.getCompositeOperation() : "source-over";
         const matrix = this.shapeTransform.getElements();
         context.transform(matrix[0][0], matrix[1][0], matrix[0][1], matrix[1][1], matrix[0][2], matrix[1][2]);
         context.strokeStyle = this.shape === "line"
@@ -396,7 +464,10 @@ class PreviewShapeTool extends DrawingTool {
         const startCap = this.getSetting("startCap", "round");
         const endCap = this.getSetting("endCap", "round");
         context.lineCap = this.shape === "line" && startCap === "round" && endCap === "round" ? "round" : "butt";
-        context.lineJoin = "round";
+        // Paint.NET's shape pen uses miter joins. Round joins add coverage
+        // around rectangle corners and make a 1px outline look wider than it
+        // is (especially when the browser antialiases the path).
+        context.lineJoin = "miter";
         const dash = this.getSetting("dash", "solid");
         const dashPatterns = {
             dash: [4, 2],
@@ -409,6 +480,10 @@ class PreviewShapeTool extends DrawingTool {
         }
         context.beginPath();
         let catalogPath = null;
+        const drawType = this.getSetting("drawType", this.getSetting("fillMode", "outline"));
+        let rectangleInterior = null;
+        let rectangleOutline = null;
+        let aliasedRectangle = false;
         if (this.shape === "line") {
             context.moveTo(this.startPoint.x + 0.5, this.startPoint.y + 0.5);
             const curveType = this.getSetting("curveType", "spline");
@@ -430,15 +505,54 @@ class PreviewShapeTool extends DrawingTool {
         } else {
             const shape = this.getSetting("shape", this.shape);
             const rect = Utility.pointsToRectangle(this.startPoint, this.endPoint);
-            if (typeof ShapeCatalog !== "undefined" && ShapeCatalog.has(shape)) {
+            if (shape === "rectangle") {
+                // Paint.NET constructs separate geometries for a rectangle's
+                // interior and outline. The outline is centered on a path
+                // inset by half the pen width; the interior is inset by the
+                // full width when both are requested. Using the outer path
+                // for both causes a 1px stroke to cover neighbouring pixels.
+                const hasOutline = ["outline", "both", "fillOutline"].includes(drawType);
+                const hasInterior = ["fill", "both", "fillOutline"].includes(drawType);
+                const outlineRect = hasOutline
+                    ? new Rectangle(
+                        rect.x + width / 2,
+                        rect.y + width / 2,
+                        Math.max(0, rect.width - width),
+                        Math.max(0, rect.height - width))
+                    : rect;
+                rectangleOutline = outlineRect;
+                aliasedRectangle = !antialias && width === 1 && this.shapeTransform.isIdentity();
+                if (hasInterior && hasOutline) {
+                    rectangleInterior = new Rectangle(
+                        rect.x + width,
+                        rect.y + width,
+                        Math.max(0, rect.width - width * 2),
+                        Math.max(0, rect.height - width * 2));
+                }
+                context.rect(outlineRect.x, outlineRect.y,
+                    outlineRect.width, outlineRect.height);
+            } else if (typeof ShapeCatalog !== "undefined" && ShapeCatalog.has(shape)) {
                 catalogPath = ShapeCatalog.createPath(shape, rect);
             } else if (shape === "ellipse") {
                 context.ellipse(rect.x + rect.width / 2, rect.y + rect.height / 2,
                     Math.max(0.5, rect.width / 2), Math.max(0.5, rect.height / 2), 0, 0, Math.PI * 2);
             } else if (shape === "roundedRectangle") {
+                // RoundedRectangleShape derives from RectangleShapeBase in
+                // Paint.NET, so its outline geometry is inset by half the
+                // pen width as well. Stroking the outer bounds directly makes
+                // a 1px rounded outline occupy two pixels at its sides.
+                const hasOutline = ["outline", "both", "fillOutline"].includes(drawType);
+                const roundedRect = hasOutline
+                    ? new Rectangle(
+                        rect.x + width / 2,
+                        rect.y + width / 2,
+                        Math.max(0, rect.width - width),
+                        Math.max(0, rect.height - width))
+                    : rect;
                 const radius = Utility.clamp(Number(this.getSetting("radius", 10)), 0,
-                    Math.min(rect.width, rect.height) / 2);
-                context.roundRect(rect.x, rect.y, rect.width, rect.height,
+                    Math.min(roundedRect.width, roundedRect.height) / 2);
+                context.roundRect(roundedRect.x, roundedRect.y,
+                    roundedRect.width, roundedRect.height,
                     radius);
             } else if (shape === "triangle") {
                 this.addNormalizedPath(context, rect, [[0.5, 0], [0, 1], [1, 1]]);
@@ -510,21 +624,76 @@ class PreviewShapeTool extends DrawingTool {
                 this.drawLineCap(context, this.endPoint, this.startPoint, endCap, width);
             }
         } else {
-            const drawType = this.getSetting("drawType", this.getSetting("fillMode", "outline"));
-            if (["fill", "both", "fillOutline"].includes(drawType)) {
+            if (aliasedRectangle) {
+                const left = Math.floor(this.startPoint.x);
+                const top = Math.floor(this.startPoint.y);
+                const right = Math.ceil(this.endPoint.x);
+                const bottom = Math.ceil(this.endPoint.y);
+                const fillButton = ["both", "fillOutline"].includes(drawType)
+                    ? (this.button === MouseButton.RIGHT ? MouseButton.LEFT : MouseButton.RIGHT)
+                    : this.button;
+                const hasInterior = ["fill", "both", "fillOutline"].includes(drawType);
+                const hasOutline = ["outline", "both", "fillOutline"].includes(drawType);
+
+                if (hasInterior) {
+                    context.fillStyle = this.createFillStyle(context, this.getColor(fillButton), this.getColor(this.button));
+                    const inset = hasOutline ? 1 : 0;
+                    context.fillRect(left + inset, top + inset,
+                        Math.max(0, right - left - inset * 2),
+                        Math.max(0, bottom - top - inset * 2));
+                }
+                if (hasOutline) {
+                    context.fillStyle = this.createFillStyle(context, this.getColor(this.button),
+                        this.getColor(this.button === MouseButton.LEFT ? MouseButton.RIGHT : MouseButton.LEFT));
+                    context.fillRect(left, top, right - left, 1);
+                    context.fillRect(left, Math.max(top, bottom - 1), right - left, 1);
+                    context.fillRect(left, top + 1, 1, Math.max(0, bottom - top - 2));
+                    context.fillRect(Math.max(left, right - 1), top + 1, 1, Math.max(0, bottom - top - 2));
+                }
+            } else if (["fill", "both", "fillOutline"].includes(drawType)) {
                 const fillButton = ["both", "fillOutline"].includes(drawType)
                     ? (this.button === MouseButton.RIGHT ? MouseButton.LEFT : MouseButton.RIGHT)
                     : this.button;
                 context.fillStyle = this.createFillStyle(context, this.getColor(fillButton), this.getColor(this.button));
-                if (catalogPath === null) context.fill();
+                if (rectangleInterior !== null) {
+                    context.save();
+                    context.beginPath();
+                    context.rect(rectangleInterior.x, rectangleInterior.y,
+                        rectangleInterior.width, rectangleInterior.height);
+                    context.fill();
+                    context.restore();
+                } else if (catalogPath === null) context.fill();
                 else context.fill(catalogPath, "evenodd");
             }
             if (["outline", "both", "fillOutline"].includes(drawType)) {
+                // Filling the separately inset interior replaced the current
+                // canvas path, so restore the outline geometry before stroking.
+                if (rectangleOutline !== null && rectangleInterior !== null) {
+                    context.beginPath();
+                    context.rect(rectangleOutline.x, rectangleOutline.y,
+                        rectangleOutline.width, rectangleOutline.height);
+                }
                 if (catalogPath === null) context.stroke();
                 else context.stroke(catalogPath);
             }
         }
         context.restore();
+        if (aliasedCanvas !== null) {
+            const x = dirtyBounds.getLeft();
+            const y = dirtyBounds.getTop();
+            const pixels = context.getImageData(x, y, dirtyBounds.getWidth(), dirtyBounds.getHeight());
+            // Convert antialiased path coverage into a bi-level mask. Keep
+            // the source color channels intact so hatch/pattern fills remain
+            // unchanged; only fractional coverage is removed.
+            for (let i = 3; i < pixels.data.length; i += 4) {
+                pixels.data[i] = pixels.data[i] >= 128 ? 255 : 0;
+            }
+            context.putImageData(pixels, x, y);
+            destinationContext.save();
+            destinationContext.globalCompositeOperation = this.getCompositeOperation();
+            destinationContext.drawImage(aliasedCanvas, 0, 0);
+            destinationContext.restore();
+        }
         this.lastPoint = this.endPoint.clone();
         this.changedBounds = nextBounds;
         this.markBitmapTransactionDirty(nextBounds);
@@ -702,6 +871,7 @@ class PreviewShapeTool extends DrawingTool {
             this.originalStartPoint = this.startPoint.clone();
             this.originalEndPoint = this.endPoint.clone();
             this.originalTransform = this.shapeTransform.clone();
+            this.editingStartState = this.capturePendingState();
             this.app.setCursorImg("hand_closed_cursor");
             return true;
         }
@@ -741,6 +911,7 @@ class PreviewShapeTool extends DrawingTool {
             this.originalStartPoint = this.startPoint.clone();
             this.originalEndPoint = this.endPoint.clone();
             this.originalTransform = this.shapeTransform.clone();
+            this.editingStartState = this.capturePendingState();
             this.app.setCursorImg("hand_closed_cursor");
             return true;
         }
@@ -759,6 +930,10 @@ class PreviewShapeTool extends DrawingTool {
             this.curveNubs = Array.from({length: 4}, () => new MoveNubRenderer(this.getSurfaceBox()));
             for (const nub of this.curveNubs) {
                 nub.setShape(MoveNubShape.CIRCLE);
+                // Line control points are small and can overlap the stroke.
+                // Give them a larger invisible target without changing their
+                // painted size.
+                nub.setHitTestPadding(14);
                 this.getSurfaceBox().addRenderer(nub);
             }
         }
@@ -873,12 +1048,23 @@ class PreviewShapeTool extends DrawingTool {
 
     commitPending() {
         if (!this.pending && !this.tracking) return false;
+        const state = this.capturePendingState();
         this.tracking = false;
         this.pending = false;
         this.interactionMode = null;
+        this.editingStartState = null;
         this.destroyNubs();
         this.markBitmapTransactionDirty(this.getClippedChangedBounds());
-        this.commitBitmapTransaction();
+        const bitmapMemento = this.takeBitmapTransactionMemento();
+        if (bitmapMemento !== null) {
+            this.historyStack.pushNewMemento(new ShapeCommitHistoryMemento(
+                this.getDocumentWorkspace(), state, bitmapMemento,
+                this.getName(), this.getImage(), true
+            ));
+        }
+        this.drawHistoryPushed = false;
+        this.restoredSettings = null;
+        this.restoredColors = null;
         this.app.setCursor("crosshair");
         return true;
     }
@@ -889,9 +1075,77 @@ class PreviewShapeTool extends DrawingTool {
         this.tracking = false;
         this.pending = false;
         this.interactionMode = null;
+        this.editingStartState = null;
         this.destroyNubs();
+        this.drawHistoryPushed = false;
+        this.restoredSettings = null;
+        this.restoredColors = null;
         this.app.setCursor("crosshair");
         return true;
+    }
+
+    pushDrawHistoryMemento() {
+        if (this.drawHistoryPushed) return;
+        this.historyStack.pushNewMemento(new ShapeDrawHistoryMemento(
+            this.getDocumentWorkspace(), this.getName(), this.getImage()
+        ));
+        this.drawHistoryPushed = true;
+    }
+
+    capturePendingState() {
+        const colors = this.colorsForm === null ? null : {
+            primary: this.colorsForm.mainColor.copy(),
+            secondary: this.colorsForm.secondaryColor.copy()
+        };
+        return {
+            startPoint: this.startPoint.clone(),
+            endPoint: this.endPoint.clone(),
+            pointerStartPoint: this.pointerStartPoint === null ? null : this.pointerStartPoint.clone(),
+            lastPoint: this.lastPoint === null ? null : this.lastPoint.clone(),
+            changedBounds: this.changedBounds === null ? null : this.changedBounds.clone(),
+            shapeTransform: this.shapeTransform.clone(),
+            curveControlPoints: this.curveControlPoints === null ? null
+                : this.curveControlPoints.map(point => point.clone()),
+            button: this.button,
+            settings: Object.assign({}, this.restoredSettings === null
+                ? this.type.settings : this.restoredSettings),
+            colors: this.restoredColors === null ? colors : {
+                primary: this.restoredColors.primary.copy(),
+                secondary: this.restoredColors.secondary.copy()
+            }
+        };
+    }
+
+    restorePendingState(state) {
+        if (this.bitmapTransaction !== null) this.cancelBitmapTransaction();
+        this.beginBitmapTransaction();
+        this.startPoint = state.startPoint.clone();
+        this.endPoint = state.endPoint.clone();
+        this.pointerStartPoint = state.pointerStartPoint === null ? null : state.pointerStartPoint.clone();
+        this.lastPoint = state.lastPoint === null ? null : state.lastPoint.clone();
+        this.shapeTransform = state.shapeTransform.clone();
+        this.curveControlPoints = state.curveControlPoints === null ? null
+            : state.curveControlPoints.map(point => point.clone());
+        this.button = state.button;
+        this.restoredSettings = Object.assign({}, state.settings);
+        this.restoredColors = state.colors === null ? null : {
+            primary: state.colors.primary.copy(),
+            secondary: state.colors.secondary.copy()
+        };
+        this.tracking = false;
+        this.pending = true;
+        this.interactionMode = null;
+        this.editingStartState = null;
+        this.drawHistoryPushed = true;
+        this.changedBounds = state.changedBounds === null ? this.getPreviewBounds() : state.changedBounds.clone();
+        this.renderPreview();
+        if (this.usesBoundingBoxNubs()) {
+            MoveToolBase.prototype.positionNubs.call(this, MoveToolBaseMode.TRANSLATE);
+            this.rotateNub.setVisible(false);
+        }
+        this.positionCurveNubs();
+        this.positionGradientNubs();
+        this.app.setCursor("crosshair");
     }
 
     drawLineCap(context, point, other, cap, width) {

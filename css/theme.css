@@ -79,7 +79,7 @@
     --color-item-redo-hover-background: #466079;
     --color-item-redo-hover-text: #FFFFFF;
 
-    --image-transparency: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIBAMAAAA2IaO4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAGUExURb+/v////5nD/3QAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAASSURBVBjTY2BgEBREJzBEGBgAFWgBEZPDxfIAAAAASUVORK5CYII=');
+    --image-transparency: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPjxwYXRoIGZpbGw9IiM4ZjhmOGYiIGQ9Ik0wIDBoNHY0SDB6bTQgNGg0djRINHoiLz48cGF0aCBmaWxsPSIjYmZiZmJmIiBkPSJNNCAwaDR2NEg0ek0wIDRoNHY0SDB6Ii8+PC9zdmc+');
 
     /* Actually we need Microsoft Sans Serif but Segoe UI is the closest we can get */
     --font-family: 'Segoe UI', sans-serif;

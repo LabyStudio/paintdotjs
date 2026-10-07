@@ -3,22 +3,49 @@ class ColorPickerTool extends Tool {
         super(type);
         this.tracking = false;
         this.button = MouseButton.LEFT;
+        this.pixelPreview = null;
     }
 
     onActivate() {
         super.onActivate();
+        this.pixelPreview = new BrushPreviewRenderer(this.getSurfaceBox());
+        this.pixelPreview.setVisible(false);
+        this.getSurfaceBox().addRenderer(this.pixelPreview);
         this.app.setCursorImg("color_picker_tool_sample_layer_cursor");
+    }
+
+    onDeactivate() {
+        if (this.pixelPreview !== null) {
+            this.getSurfaceBox().removeRenderer(this.pixelPreview);
+            this.pixelPreview.dispose();
+            this.pixelPreview = null;
+        }
+        this.tracking = false;
+        super.onDeactivate();
+    }
+
+    updatePixelPreview(x, y) {
+        if (this.pixelPreview === null) return;
+        const point = new Point(Math.floor(x), Math.floor(y));
+        const bounds = this.getActiveLayer().getBounds();
+        if (!bounds.contains(point)) {
+            this.pixelPreview.setVisible(false);
+            return;
+        }
+        this.pixelPreview.setPreview(point, 1, "square", 1);
     }
 
     onMouseDown(x, y, button) {
         if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
+        this.updatePixelPreview(x, y);
         this.tracking = true;
         this.button = button;
         return this.pickColor(x, y, button);
     }
 
     onMouseMove(x, y) {
-        if (!this.tracking) return false;
+        this.updatePixelPreview(x, y);
+        if (!this.tracking) return true;
         return this.pickColor(x, y, this.button);
     }
 

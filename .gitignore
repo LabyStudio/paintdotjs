@@ -1,4 +1,5 @@
 /dist/
+/dist-electron/
 /pages-dist/
 index.php
 electron-builder.env
@@ -12,6 +13,7 @@ service_worker.js
 /run/*
 !/run/test.png
 .tmp
+scripts/__pycache__/
 assets/*
 !assets/pdn/
 assets/pdn/*

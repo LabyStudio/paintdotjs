@@ -9,6 +9,7 @@ class MoveNubRenderer extends CanvasControl {
         this.transformAngle = 0;
         this.alpha = 255;
         this.size = new Size(5, 5);
+        this.hitTestPadding = 8;
     }
 
     render(destination, renderBounds) {
@@ -58,7 +59,7 @@ class MoveNubRenderer extends CanvasControl {
         const center = this.getTransformedLocation();
         const zoom = Math.max(0.0001, this.surfaceBox.getScaleFactorRatio());
         const paintedRadius = Math.min(this.size.getWidth(), this.size.getHeight()) - 1;
-        const radius = (paintedRadius + (pad ? 8 : 0)) / zoom;
+        const radius = (paintedRadius + (pad ? this.hitTestPadding : 0)) / zoom;
         const rect = new Rectangle(center.getX(), center.getY(), 0, 0);
         rect.inflate(radius, radius);
         return rect;
@@ -70,7 +71,7 @@ class MoveNubRenderer extends CanvasControl {
         const paintedRadius = Math.min(this.size.getWidth(), this.size.getHeight()) - 1;
         // Paint.NET 5's TransformControl uses 8 device-independent pixels of
         // hit-test padding around each painted handle.
-        const radius = (paintedRadius + (pad ? 8 : 0)) / zoom;
+        const radius = (paintedRadius + (pad ? this.hitTestPadding : 0)) / zoom;
         const dx = point.getX() - center.getX();
         const dy = point.getY() - center.getY();
         return dx * dx + dy * dy <= radius * radius;
@@ -84,6 +85,10 @@ class MoveNubRenderer extends CanvasControl {
         this.shape = shape;
 
         // TODO notify?
+    }
+
+    setHitTestPadding(padding) {
+        this.hitTestPadding = Math.max(0, Number(padding) || 0);
     }
 
     setTransform(transform) {

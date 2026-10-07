@@ -10,6 +10,7 @@ class MoveTool extends MoveToolBase {
         this.activeLayer = null;
         this.renderArgs = null;
         this.didPaste = false;
+        this.pendingPasteSurface = null;
         this.pendingMoveFrame = null;
         this.pendingMovePoint = null;
         this.processingMoveFrame = false;
@@ -58,14 +59,35 @@ class MoveTool extends MoveToolBase {
             this.renderArgs = null;
         }
 
+        if (this.pendingPasteSurface !== null) {
+            this.pendingPasteSurface.dispose();
+            this.pendingPasteSurface = null;
+        }
+
         this.tracking = false;
         this.destroyNubs();
 
         super.onDeactivate();
     }
 
+    setPendingPaste(image) {
+        if (this.pendingPasteSurface !== null) this.pendingPasteSurface.dispose();
+        this.pendingPasteSurface = Surface.create(image.width, image.height);
+        this.pendingPasteSurface.context.drawImage(image, 0, 0);
+    }
+
     drop() {
         this.restorePreview();
+
+        // Keep the floating-pixel transaction itself in the Finish history
+        // entry. Undoing Finish must restore this context before older move
+        // actions are allowed to run, just like Paint.NET's
+        // TransactedToolUndoCommitHistoryMemento restores MoveToolChanges.
+        let contextAction = new MoveContextHistoryMemento(
+            this.getDocumentWorkspace(), this.context,
+            this.getName(), this.getImage(), true
+        );
+        this.currentHistoryMementos.push(contextAction);
 
         let regionCopy = this.getSelection().createRegion();
         let simplifiedRegion = Utility.simplifyAndInflateRegion(regionCopy, Utility.defaultSimplificationFactor, 2);
@@ -133,7 +155,16 @@ class MoveTool extends MoveToolBase {
         // never accumulate while dragging or rotating.
         this.scratchSurface.copySurface(this.activeLayer.getSurface());
 
-        this.context.liftedPixels = new MaskedSurface(this.activeLayer.getSurface(), liftPath);
+        // A paste may extend beyond the document. Its visible preview is clipped by
+        // the layer canvas, but keep the original source until the floating pixels
+        // are committed so dragging can bring the overflow back into view.
+        if (this.pendingPasteSurface !== null) {
+            this.context.liftedPixels = new MaskedSurface(this.pendingPasteSurface, liftPath);
+            this.pendingPasteSurface.dispose();
+            this.pendingPasteSurface = null;
+        } else {
+            this.context.liftedPixels = new MaskedSurface(this.activeLayer.getSurface(), liftPath);
+        }
 
         let bitmapAction = new BitmapHistoryMemento(
             this.getName(),
@@ -415,7 +446,18 @@ class MoveTool extends MoveToolBase {
     onExecutingHistoryMemento() {
         this.dontDrop = true;
 
-        this.restorePreview();
+        if (this.context.lifted && this.activeLayer !== null
+            && this.scratchSurface !== null) {
+            // History can jump between transforms whose filtered render
+            // footprints are larger than the selection/preview rectangles.
+            // Restore the complete pre-lift image so no pixels from the newer
+            // floating position survive before the older context is rendered.
+            this.activeLayer.getSurface().copySurface(this.scratchSurface);
+            this.activeLayer.invalidate();
+            this.context.previewBounds = null;
+        } else {
+            this.restorePreview();
+        }
     }
 
     onExecutedHistoryMemento() {

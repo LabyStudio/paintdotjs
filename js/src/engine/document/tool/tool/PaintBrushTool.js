@@ -67,7 +67,8 @@ class PaintBrushTool extends DrawingTool {
             point,
             this.getWidth() * pressure,
             "circle",
-            pressed ? 0.5 : 1
+            pressed ? 0.5 : 1,
+            false
         );
     }
 

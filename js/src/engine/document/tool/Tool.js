@@ -433,24 +433,31 @@ class Tool {
     }
 
     commitBitmapTransaction(name = this.getName(), image = this.getImage()) {
-        if (this.bitmapTransaction === null) return false;
+        const memento = this.takeBitmapTransactionMemento(name, image);
+        if (memento === null) return false;
+        this.historyStack.pushNewMemento(memento);
+        return true;
+    }
+
+    takeBitmapTransactionMemento(name = this.getName(), image = this.getImage()) {
+        if (this.bitmapTransaction === null) return null;
         const transaction = this.bitmapTransaction;
         this.bitmapTransaction = null;
         if (transaction.dirtyBounds === null || transaction.dirtyBounds.isEmpty()) {
             this.resetSavedTileState();
-            return false;
+            return null;
         }
         const region = transaction.fullSnapshot || transaction.savedRectangles.length === 0
             ? Region.fromRectangle(transaction.dirtyBounds)
             : Region.fromRectangles(transaction.savedRectangles.map(rectangle => rectangle.clone()));
-        this.historyStack.pushNewMemento(new BitmapHistoryMemento(
+        const memento = new BitmapHistoryMemento(
             name, image, this.getDocumentWorkspace(), transaction.layerIndex,
             region, this.scratchSurface
-        ));
+        );
         region.dispose();
         for (const rectangle of transaction.savedRectangles) rectangle.dispose();
         this.resetSavedTileState();
-        return true;
+        return memento;
     }
 
     cancelBitmapTransaction() {
