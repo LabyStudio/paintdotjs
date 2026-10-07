@@ -1,6 +1,6 @@
 {
   "name": "paintdotjs",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "paint.js is an open source general-purpose raster graphics editor program, developed with javascript.",
   "main": "js/platform/desktop/main.js",
   "desktopName": "paintdotjs.desktop",
@@ -28,6 +28,7 @@
     "dist": "npm run desktop:build && electron-builder",
     "dist:linux": "npm run desktop:build && electron-builder --linux AppImage",
     "dist:mac": "npm run desktop:build && electron-builder --mac dmg zip --universal",
+    "install:local": "node ./scripts/install_local.js",
     "assets:manifest": "node ./scripts/check_assets.js --refresh-manifest",
     "gen-imports": "node ./scripts/generate_imports.js",
     "pwa": "npm run pages",

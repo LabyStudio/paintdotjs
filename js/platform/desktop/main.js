@@ -18,11 +18,27 @@ const pendingFiles = [];
 let closeDialogReady = false;
 let closeDialogPending = false;
 
+// Electron/AppImage command lines may contain both the original .AppImage and
+// its executable inside /tmp/.mount_*. Only paths with document extensions we
+// actually support should ever reach the renderer as files to open.
+const supportedDocumentExtensions = new Set([
+    '.pdn', '.png', '.jpg', '.jpeg', '.jpe', '.webp', '.gif', '.bmp',
+    '.tif', '.tiff', '.jxl', '.avif', '.heic', '.heif', '.dds', '.tga',
+    '.jxr', '.wdp', '.wmp', '.json'
+]);
+
 function commandLineFiles(argv) {
     return argv
         .filter(value => typeof value === 'string' && !value.startsWith('-'))
         .map(value => path.resolve(value))
-        .filter(value => fs.existsSync(value) && fs.statSync(value).isFile());
+        .filter(value => supportedDocumentExtensions.has(path.extname(value).toLowerCase()))
+        .filter(value => {
+            try {
+                return fs.statSync(value).isFile();
+            } catch (_) {
+                return false;
+            }
+        });
 }
 
 function queueFiles(files) {

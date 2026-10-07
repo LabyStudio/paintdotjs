@@ -21,6 +21,10 @@ class MeasurementUnitSelectorItem extends SelectorMenuItem {
         }
 
         this.setSelectedId(this.id + ".pixel");
+        this.app.on("app:update_measurement_unit", unit => {
+            const selectedId = this.id + "." + unit;
+            if (this.getSelectedId() !== selectedId) this.setSelectedId(selectedId);
+        });
     }
 
     onPress(event) {
@@ -29,6 +33,10 @@ class MeasurementUnitSelectorItem extends SelectorMenuItem {
             super.onPress(event);
         } else {
             this.selectNextEntry();
+            const selected = this.getSelectedEntry();
+            if (selected !== null) {
+                this.app.setMeasurementUnit(selected.id.slice(this.id.length + 1));
+            }
         }
     }
 

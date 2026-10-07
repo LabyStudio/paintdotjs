@@ -8,6 +8,10 @@ class AppWorkspace extends AppView {
         this.activeTool = null;
         this.previousToolType = null;
         this.measurementUnit = "pixel";
+        this.measurementNumberFormatter = new Intl.NumberFormat(Language.code, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
     }
 
     initialize() {
@@ -219,12 +223,13 @@ class AppWorkspace extends AppView {
     }
 
     toUnit(pixels) {
-        if (this.measurementUnit === "inch") {
-            return (pixels / 96).toFixed(2).replace(".", ",");
-        } else if (this.measurementUnit === "centimeter") {
-            return (pixels / 96 * 2.54).toFixed(2).replace(".", ",");
-        }
-        return pixels;
+        if (this.measurementUnit === "pixel") return pixels;
+
+        const documentModel = this.activeDocumentWorkspace?.getDocument();
+        const value = documentModel === undefined || documentModel === null
+            ? pixels
+            : documentModel.pixelToPhysical(pixels, this.measurementUnit);
+        return this.measurementNumberFormatter.format(value);
     }
 
 }

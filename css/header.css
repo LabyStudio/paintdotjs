@@ -4,6 +4,8 @@ header {
 }
 
 #titleBar {
+    display: flex;
+    align-items: flex-start;
     background-color: var(--color-title-bar);
     width: 100%;
     height: 37px;
@@ -23,6 +25,7 @@ header {
 
 /* ------------ Main Menu ------------ */
 #mainMenu {
+    flex: 0 0 auto;
     width: fit-content;
     height: 36px;
     box-sizing: border-box;
@@ -46,10 +49,13 @@ header {
 #documentStrip {
     --document-item-size: 72px;
 
-    position: absolute;
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    margin-left: 24px;
     top: calc(2px - var(--window-top));
-    left: 425px;
-    right: 200px;
+    left: auto;
+    right: auto;
     height: calc(var(--document-item-size) + var(--window-top));
     z-index: 200;
     -webkit-app-region: drag;
@@ -137,9 +143,11 @@ header {
 /* ------------ Settings Menu ------------ */
 
 #settingsMenu {
-    position: absolute;
+    position: relative;
+    flex: 0 0 196px;
+    justify-content: flex-start;
     top: 7px;
-    right: 0;
+    right: auto;
     margin: 0 2px;
     flex-direction: row-reverse;
     padding: 1px;

@@ -736,9 +736,10 @@ class AppView {
 
         const bounds = documentWorkspace.getRenderBounds();
         const zoom = documentWorkspace.getZoom();
+        const resolution = documentWorkspace.getDocument().getResolution();
         const signature = [
             this.getViewWidth(), this.getViewHeight(), bounds.x, bounds.y,
-            bounds.width, bounds.height, zoom, this.getMeasurementUnit()
+            bounds.width, bounds.height, zoom, this.getMeasurementUnit(), resolution
         ].join(":");
         if (signature === this.rulerRenderSignature) return;
         this.rulerRenderSignature = signature;

@@ -8,6 +8,14 @@ class CursorPositionItem extends LabelMenuItem {
         this.app.on("document:mousemove", (x, y) => {
             this.updateText(this.getText());
         });
+
+        this.app.on("app:update_active_document", () => {
+            this.updateText(this.getText());
+        });
+
+        this.app.on("app:update_measurement_unit", () => {
+            this.updateText(this.getText());
+        });
     }
 
     getText() {
