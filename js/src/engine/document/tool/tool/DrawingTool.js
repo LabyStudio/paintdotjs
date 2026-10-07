@@ -38,9 +38,12 @@ class DrawingTool extends Tool {
 
     onMouseDown(x, y, button, input = null) {
         if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
-        // Brush-family tools use Paint.NET's tiled save strategy: only tiles
-        // touched by the stroke are copied into the scratch surface.
-        this.beginBitmapTransaction(false);
+        // Sampled strokes are repeatedly rebuilt from their original pixels.
+        // Keep one immutable snapshot for the whole stroke. Lazily capturing
+        // 256px tiles can capture a tile after an earlier presentation has
+        // already modified it, and restoring that mixed snapshot later erases
+        // old pixels along an exact tile boundary.
+        this.beginBitmapTransaction(this.sampledStroke);
         this.tracking = true;
         this.button = button;
         this.lastPoint = new Point(x, y);
@@ -185,7 +188,12 @@ class DrawingTool extends Tool {
             Math.max(from.x, to.x) + 1, Math.max(from.y, to.y) + 1
         );
         segmentBounds.inflate(Math.ceil(stampExtent) + 1, Math.ceil(stampExtent) + 1);
-        this.saveRegion(null, segmentBounds);
+        // A sampled stroke already has a complete snapshot from mouse-down.
+        // Saving individual tiles again would overwrite that baseline with
+        // pixels from an intermediate presentation of the same stroke.
+        if (!this.bitmapTransaction.fullSnapshot) {
+            this.saveRegion(null, segmentBounds);
+        }
         context.save();
         context.globalCompositeOperation = "source-over";
         const strokeColor = this.getColor(this.button);
