@@ -71,11 +71,21 @@ footer {
 }
 
 #canvasSizeItem {
-    flex: 0 0 100px;
+    flex: 0 0 140px;
+    overflow: hidden;
 }
 
 #cursorPositionItem {
-    flex: 0 0 100px;
+    flex: 0 0 150px;
+    overflow: hidden;
+}
+
+#canvasSizeItem .label,
+#cursorPositionItem .label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 #footerMenu .selector {

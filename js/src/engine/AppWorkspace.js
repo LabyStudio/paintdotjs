@@ -216,6 +216,7 @@ class AppWorkspace extends AppView {
     setMeasurementUnit(unit) {
         this.measurementUnit = unit;
         this.fire("app:update_measurement_unit", unit);
+        this.fire("document:mousemove", this.getLastMouseX(), this.getLastMouseY());
     }
 
     getMeasurementUnit() {

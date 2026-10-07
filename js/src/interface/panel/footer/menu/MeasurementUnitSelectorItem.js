@@ -33,10 +33,6 @@ class MeasurementUnitSelectorItem extends SelectorMenuItem {
             super.onPress(event);
         } else {
             this.selectNextEntry();
-            const selected = this.getSelectedEntry();
-            if (selected !== null) {
-                this.app.setMeasurementUnit(selected.id.slice(this.id.length + 1));
-            }
         }
     }
 

@@ -49,7 +49,12 @@ class SelectorMenuItem extends DropMenuItem {
     selectNextEntry() {
         let index = this.entries.indexOf(this.getSelectedEntry());
         let nextIndex = (index + 1) % this.entries.length;
-        this.setSelectedId(this.entries[nextIndex].id);
+        const nextEntry = this.entries[nextIndex];
+        if (nextEntry.pressable !== null) {
+            nextEntry.pressable();
+        } else {
+            this.setSelectedId(nextEntry.id);
+        }
     }
 
     setSelectedId(id) {

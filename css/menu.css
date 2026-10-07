@@ -309,7 +309,8 @@
 
 /* Standard command menus use one shared metric set. Context menus may only
    override the minimum width, never entry padding, icons, or text alignment. */
-.command-drop-menu {
+.command-drop-menu,
+.drop-menu[data-owner-id="measurementUnit"] {
     --command-menu-entry-min-width: 208px;
     --drop-menu-icon-size: 20px;
     --drop-menu-icon-gutter: 30px;
@@ -322,7 +323,8 @@
     font-weight: 400;
 }
 
-.command-drop-menu::before {
+.command-drop-menu::before,
+.drop-menu[data-owner-id="measurementUnit"]::before {
     left: var(--drop-menu-icon-divider);
 }
 
@@ -340,6 +342,11 @@
 
 .command-drop-menu .vertical-separator {
     margin-left: var(--drop-menu-icon-divider);
+}
+
+.drop-menu[data-owner-id="measurementUnit"] .drop-entry {
+    min-width: 108px;
+    white-space: nowrap;
 }
 
 .document-context-menu {
