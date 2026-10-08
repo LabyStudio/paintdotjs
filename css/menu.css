@@ -6,6 +6,9 @@
 
 .cet-title {
     color: inherit !important;
+    font-family: var(--font-family) !important;
+    font-size: 14px !important;
+    font-weight: var(--font-weight) !important;
 }
 
 .cet-container {

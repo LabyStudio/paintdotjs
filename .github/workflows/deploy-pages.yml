@@ -52,6 +52,8 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Build website
+        env:
+          GOOGLE_ANALYTICS_ID: ${{ vars.GOOGLE_ANALYTICS_ID }}
         run: npm run pages
 
       - name: Configure GitHub Pages

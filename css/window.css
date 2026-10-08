@@ -2255,8 +2255,12 @@ html.effect-rendering * {
 }
 
 #colorsForm #sliderPanel .entry .text {
+    display: flex;
+    align-items: center;
     min-width: 25px;
     width: fit-content;
+    height: 25px;
+    line-height: 1;
     white-space: nowrap;
 }
 

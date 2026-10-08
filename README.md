@@ -9,9 +9,10 @@ MIT-compatible license, while the current interface and behavior follow Paint.NE
 
 ## Why?
 
-Paint.NET is arguably the best and simplest painting tool available on Windows. Since switching to
-Linux, it has been the program I miss the most and one that I used every day. The goal of this port is
-to bring that same experience to macOS, Linux, and the web.
+Paint.NET is one of the best image editors available on Windows, combining powerful features with a
+simple, intuitive interface. After switching to Linux, it became the application I missed most—one I
+had relied on every day. The goal of paint.js is to bring that familiar editing experience to Linux,
+macOS, and the web.
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE.md)
 

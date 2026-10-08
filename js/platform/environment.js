@@ -2,7 +2,8 @@ const isApp = typeof require !== 'undefined';
 const windowTop = () => document.getElementsByTagName("header")[0].getClientRects()[0].y;
 
 const setTitle = (string) => {
-    document.getElementById('title').innerHTML = string;
+    document.title = string;
+    window.updatePlatformTitle?.(string);
 }
 
 const loadScript = (path) => {

@@ -121,6 +121,7 @@ const desktopTitlebar = new CustomTitlebar({
     backgroundColor: TitlebarColor.fromHex('#0D0D0D'),
     menuPosition: 'bottom'
 });
+window.updatePlatformTitle = title => desktopTitlebar.updateTitle(title);
 
 /**
  * The Electron title bar lives outside paint.js' regular layout, so CSS

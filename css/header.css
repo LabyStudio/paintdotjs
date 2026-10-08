@@ -560,12 +560,16 @@ header {
 
 #toolMenu .tool-dropdown-split .tool-dropdown-arrow {
     flex-basis: 17px;
-    border-left: 1px solid var(--pdn-control-border);
+    border-left: 1px solid transparent;
     cursor: default;
 }
 
 #toolMenu .tool-dropdown-split .tool-dropdown-arrow:hover {
-    background: var(--color-menu-item-hover);
+    background-color: var(--color-menu-item-hover);
+    background-image: linear-gradient(var(--color-menu-item-border), var(--color-menu-item-border));
+    background-position: left center;
+    background-repeat: no-repeat;
+    background-size: 1px 14px;
 }
 
 #toolMenu .tool-dropdown-toolbar .tool-dropdown-arrow:after {

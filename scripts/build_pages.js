@@ -6,6 +6,8 @@ const root = path.resolve(__dirname, '..');
 const output = path.join(root, 'pages-dist');
 const requiredPaths = [
     'index.html',
+    'robots.txt',
+    'sitemap.xml',
     'build/web',
     'assets',
     'css',
@@ -63,13 +65,37 @@ async function build() {
     if (typeof minified.code !== 'string') throw new Error('Terser did not produce an application bundle');
     fs.writeFileSync(path.join(output, 'build/web/app.bundle.js'), minified.code + '\n');
 
-    const productionHtml = sourceHtml.replace(
+    let productionHtml = sourceHtml.replace(
         /<!-- Environment -->[\s\S]*?<script src="\.\/js\/platform\/boot_loader\.js"><\/script>/,
         '<!-- Production bundles -->\n' +
         '<script src="./build/web/bundle.js"></script>\n' +
         '<script src="./build/web/app.bundle.js"></script>'
     );
     if (productionHtml === sourceHtml) throw new Error('Could not replace debug scripts in production index.html');
+
+    const analyticsId = (process.env.GOOGLE_ANALYTICS_ID || '').trim();
+    if (analyticsId !== '') {
+        if (!/^G-[A-Z0-9]+$/.test(analyticsId)) {
+            throw new Error('GOOGLE_ANALYTICS_ID must be a valid GA4 measurement ID beginning with G-');
+        }
+
+        const analyticsSource = readSource('scripts/web_analytics.js')
+            .replace('__GOOGLE_ANALYTICS_ID__', JSON.stringify(analyticsId));
+        const analyticsBundle = await terser.minify(analyticsSource, {
+            compress: true,
+            mangle: true,
+            format: {comments: false}
+        });
+        if (typeof analyticsBundle.code !== 'string') {
+            throw new Error('Terser did not produce the Google Analytics loader');
+        }
+        productionHtml = productionHtml.replace(
+            '</head>',
+            `    <script>${analyticsBundle.code}</script>\n</head>`
+        );
+    } else {
+        console.warn('GOOGLE_ANALYTICS_ID is not set; the Pages build will not include Analytics.');
+    }
     fs.writeFileSync(path.join(output, 'index.html'), productionHtml);
 
     // GitHub Pages should serve files exactly as generated, including underscore paths.

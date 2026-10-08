@@ -252,14 +252,14 @@ input[type="range"]::-moz-range-thumb {
     /* Note: Also adjust canvas size in js */
     position: relative;
     width: 85px;
-    height: 22px;
+    height: 25px;
     cursor: pointer;
 }
 
 .color-slider .canvas {
     position: absolute;
     left: 0;
-    top: 0;
+    top: 7px;
     background-image: var(--image-transparency);
 }
 
@@ -278,10 +278,10 @@ input[type="range"]::-moz-range-thumb {
     left: 0;
     /* Match the original inline layout: the arrow sits below the color strip
        and points back up at the selected value. */
-    top: 14px;
+    top: 17px;
     width: 4px;
     height: 5px;
-    transform: translate(-50%, -80%);
+    transform: translateX(-50%);
     background-color: white;
     clip-path: polygon(50% 0, 100% 100%, 0 100%);
     padding: 2px 2px 1px 2px;

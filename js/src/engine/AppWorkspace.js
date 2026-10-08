@@ -152,14 +152,17 @@ class AppWorkspace extends AppView {
     }
 
     updateTitle() {
+        const appName = PdjInfo.productName() + " " + PdjInfo.version();
         if (this.activeDocumentWorkspace === null) {
-            setTitle(PdjInfo.productName());
+            setTitle(appName);
         } else {
-            let name = this.activeDocumentWorkspace.getFriendlyName();
+            const workspace = this.activeDocumentWorkspace;
+            const name = workspace.getFriendlyName();
 
             let title = i18n("mainForm.title.format")
                 .replace("{0}", name)
-                .replace("{1}", PdjInfo.productName() + " " + PdjInfo.version() + " " + (isApp ? "App" : "Web"));
+                .replace("{1}", appName);
+            if (workspace.isDirty()) title = "*" + title;
             setTitle(title);
         }
     }
