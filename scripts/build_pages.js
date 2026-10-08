@@ -1,11 +1,35 @@
+/*
+ * paint.js, an unofficial JavaScript port of Paint.NET 3.36.7
+ *
+ * Original Paint.NET source:
+ * Copyright (C) dotPDN LLC, Rick Brewster, and contributors.
+ *
+ * JavaScript port and port-specific changes:
+ * Copyright (C) 2024-present LabyStudio.
+ * https://github.com/LabyStudio
+ *
+ * The interface design and behavior target Paint.NET 5.1.12+.
+ * Licensed under LICENSE.md. See NOTICE.md for full attribution.
+ */
+
 const fs = require('fs');
 const path = require('path');
 const terser = require('terser');
 
 const root = path.resolve(__dirname, '..');
 const output = path.join(root, 'pages-dist');
+const attributionBanner = `/*!
+ * paint.js, an unofficial JavaScript port of Paint.NET 3.36.7
+ * Original Paint.NET source Copyright (C) dotPDN LLC, Rick Brewster, and contributors.
+ * JavaScript port and port-specific changes Copyright (C) 2024-present LabyStudio.
+ * https://github.com/LabyStudio
+ * Interface design and behavior target Paint.NET 5.1.12+.
+ * See LICENSE.md and NOTICE.md.
+ */`;
 const requiredPaths = [
     'index.html',
+    'LICENSE.md',
+    'NOTICE.md',
     'robots.txt',
     'sitemap.xml',
     'build/web',
@@ -60,7 +84,7 @@ async function build() {
     const minified = await terser.minify(productionSources.join('\n;\n'), {
         compress: true,
         mangle: true,
-        format: {comments: false}
+        format: {comments: false, preamble: attributionBanner}
     });
     if (typeof minified.code !== 'string') throw new Error('Terser did not produce an application bundle');
     fs.writeFileSync(path.join(output, 'build/web/app.bundle.js'), minified.code + '\n');

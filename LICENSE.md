@@ -1,10 +1,10 @@
 paint.js
 
-Copyright (C) 2025 LabyStudio
-
-Portions Copyright (C) dotPDN LLC, Rick Brewster, Chris Crosetto, Tom Jackson,
+Original Paint.NET portions Copyright (C) dotPDN LLC, Rick Brewster, Chris Crosetto, Tom Jackson,
 Michael Kelsey, Brandon Ortiz, Craig Taylor, Chris Trevino, and Luke Walker.
 Portions Copyright (C) Microsoft Corporation. All Rights Reserved.
+
+JavaScript port and port-specific changes Copyright (C) 2024-present LabyStudio.
 
 This software is licensed under the MIT License, with three (3) exceptions inherited from Paint.NET:
 
@@ -27,6 +27,9 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 associated documentation files (the "Software"), to deal in the Software without restriction,
 including the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, subject to the conditions above.
+
+The above copyright notice and this permission notice shall be included in all copies or substantial
+portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
 BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND

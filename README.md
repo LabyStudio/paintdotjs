@@ -5,14 +5,13 @@ raster graphics editor **Paint.NET** by [Rick Brewster](https://www.getpaint.net
 available for the web and as an Electron desktop application.
 
 Its core editing model is based on **Paint.NET 3.36.7**, the last version released under the original
-MIT-compatible license, while the current interface and behavior follow Paint.NET v5.1.12.
+MIT-compatible license, while the current interface and behavior follow Paint.NET v5.1.12+.
 
 ## Why?
 
-Paint.NET is one of the best image editors available on Windows, combining powerful features with a
-simple, intuitive interface. After switching to Linux, it became the application I missed most and
-one I had relied on every day. The goal of paint.js is to bring that familiar editing experience to
-Linux, macOS, and the web.
+Paint.NET is one of the best image editors available on Windows, combining powerful features with a simple, intuitive interface.
+After switching to Linux, it became the application I missed most and one I had relied on every day.
+I have been developing [paint.js](https://github.com/LabyStudio/paintdotjs) since February 2024, with the goal of bringing that familiar editing experience to Linux, macOS, and the web.
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE.md)
 
@@ -130,8 +129,9 @@ npm run app
 The repository does not redistribute Paint.NET's modern artwork and translations because they are
 not part of the MIT-compatible Paint.NET 3.36.7 source release on which this project is based. On the
 first build, paint.js fetches the required assets from the official Paint.NET download. This lets the
-interface follow Paint.NET v5.1.12 without redistributing those files in this repository.
+interface follow Paint.NET v5.1.12+ without redistributing those files in this repository.
 
 ## License
 
-paint.js is licensed under the [MIT License](LICENSE.md).
+paint.js is licensed under the [MIT License](LICENSE.md). See the
+[attribution notice](NOTICE.md) for details about Paint.NET and the JavaScript port.

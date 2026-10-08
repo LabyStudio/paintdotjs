@@ -455,11 +455,12 @@ body.window-resizing * {
     font-size: inherit;
 }
 
-.project-info-detail-note {
+.project-info-detail-contact {
     display: block;
     margin-top: 7px;
-    color: var(--color-muted-text);
     font-size: 8.25pt;
+    font-weight: 600;
+    text-align: left;
 }
 
 .project-info-highlight-credit {
@@ -477,11 +478,6 @@ body.window-resizing * {
 .project-info-summary-links {
     justify-content: space-between;
     padding-block: 7px;
-}
-
-.project-info-footer-contact {
-    margin-right: auto;
-    font-weight: 600;
 }
 
 @media (max-width: 560px) {
@@ -502,14 +498,12 @@ body.window-resizing * {
 
 .project-info-welcome .project-info-dialog-footer {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 12px;
 }
 
-.project-info-welcome-contact {
-    align-self: center;
-    justify-self: center;
-    font-weight: 600;
+.project-info-about .project-info-dialog-footer {
+    justify-content: flex-end;
 }
 
 .project-info-welcome .project-info-primary-button {
@@ -560,23 +554,6 @@ body.window-resizing * {
     .project-info-dialog-content {
         max-height: calc(100vh - 140px);
         overflow-y: auto;
-    }
-}
-
-@media (max-width: 560px) {
-    .project-info-welcome .project-info-dialog-footer {
-        grid-template-columns: 1fr auto;
-    }
-
-    .project-info-welcome-contact {
-        grid-column: 1;
-        grid-row: 2;
-        justify-self: start;
-    }
-
-    .project-info-welcome .project-info-primary-button {
-        grid-column: 2;
-        grid-row: 1 / 3;
     }
 }
 

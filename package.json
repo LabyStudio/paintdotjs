@@ -16,14 +16,16 @@
   },
   "scripts": {
     "check-assets": "node ./scripts/check_assets.js",
-    "preweb": "npm run check-assets",
+    "headers": "node ./scripts/sync_source_headers.js",
+    "check-headers": "node ./scripts/sync_source_headers.js --check",
+    "preweb": "npm run check-assets && npm run check-headers",
     "web": "webpack --config webpack.config.js",
     "pages": "npm run web && node ./scripts/build_pages.js && node ./scripts/generate_pwa.js",
-    "preweb-watch": "npm run check-assets",
+    "preweb-watch": "npm run check-assets && npm run check-headers",
     "web-watch": "webpack --config webpack.config.js --watch",
     "preapp": "npm run desktop:build",
     "app": "electron .",
-    "predesktop:build": "npm run check-assets",
+    "predesktop:build": "npm run check-assets && npm run check-headers",
     "desktop:build": "webpack --config webpack.config.js",
     "dist": "npm run desktop:build && electron-builder",
     "dist:linux": "npm run desktop:build && electron-builder --linux AppImage",
@@ -43,7 +45,10 @@
     "paint.net",
     "paintnet"
   ],
-  "author": "LabyStudio",
+  "author": {
+    "name": "LabyStudio",
+    "url": "https://github.com/LabyStudio"
+  },
   "engines": {
     "node": ">=22"
   },

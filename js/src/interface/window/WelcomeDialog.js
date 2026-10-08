@@ -1,3 +1,17 @@
+/*
+ * paint.js, an unofficial JavaScript port of Paint.NET 3.36.7
+ *
+ * Original Paint.NET source:
+ * Copyright (C) dotPDN LLC, Rick Brewster, and contributors.
+ *
+ * JavaScript port and port-specific changes:
+ * Copyright (C) 2024-present LabyStudio.
+ * https://github.com/LabyStudio
+ *
+ * The interface design and behavior target Paint.NET 5.1.12+.
+ * Licensed under LICENSE.md. See NOTICE.md for full attribution.
+ */
+
 class ProjectInfoDialog {
 
     constructor(welcome) {
@@ -84,10 +98,6 @@ class ProjectInfoDialog {
     }
 
     createProjectInformation() {
-        return this.welcome ? this.createWelcomeInformation() : this.createAboutInformation();
-    }
-
-    createWelcomeInformation() {
         const information = document.createElement("div");
         information.className = "project-info-copy project-info-summary-copy";
 
@@ -96,20 +106,25 @@ class ProjectInfoDialog {
         const version = document.createElement("strong");
         version.textContent = "Version " + PdjInfo.version();
         const tagline = document.createElement("span");
-        tagline.textContent = "Welcome to paint.js";
+        tagline.textContent = "An unofficial Paint.NET port for Linux, macOS, and the web";
         heading.append(version, tagline);
 
         const details = document.createElement("div");
         details.className = "project-info-summary-details";
         const project = document.createElement("section");
         const projectHeading = document.createElement("h3");
-        projectHeading.textContent = "An unofficial Paint.NET port for Linux, macOS, and the web";
+        projectHeading.textContent = "Why porting it to the web?";
         const projectCopy = document.createElement("p");
-        projectCopy.textContent = "Paint.NET is, in my opinion, the best and simplest paint editor. After switching to Linux, I missed using it every day, so I created paint.js as an unofficial port for Linux, macOS, and the web.";
-        const compatibility = document.createElement("span");
-        compatibility.className = "project-info-detail-note";
-        compatibility.textContent = "This experimental build is designed for Google Chrome on desktop computers. Some features may still be incomplete.";
-        project.append(projectHeading, projectCopy, compatibility);
+        projectCopy.append(
+            "Paint.NET is one of the best image editors available on Windows, combining powerful features with a simple, intuitive interface. After switching to Linux, it became the application I missed most and one I had relied on every day.",
+            document.createElement("br"),
+            document.createElement("br"),
+            "I have been developing paint.js since February 2024, with the goal of bringing that familiar editing experience to Linux, macOS, and the web."
+        );
+        const contact = this.createLink("contact@paintjs.net", "mailto:contact@paintjs.net");
+        contact.className = "project-info-detail-contact";
+
+        project.append(projectHeading, projectCopy, contact);
         details.append(project);
 
         const credits = document.createElement("p");
@@ -120,67 +135,23 @@ class ProjectInfoDialog {
             creditsLabel,
             "Paint.NET was created by ",
             this.createLink("Rick Brewster", "https://www.getpaint.net/"),
-            ". All credit for the original application, its design, concepts, and behavior belongs to Rick Brewster and the Paint.NET contributors. paint.js is unofficial and is not affiliated with or endorsed by Paint.NET."
+            ". All credit for the original application, its design, concepts, and behavior belongs to him and the Paint.NET contributors.",
+            document.createElement("br"),
+            document.createElement("br"),
+            "The port paint.js by ",
+            this.createLink("LabyStudio", "https://github.com/LabyStudio"),
+            " is unofficial and is not affiliated with or endorsed by Paint.NET."
         );
 
         const links = document.createElement("div");
         links.className = "project-info-links project-info-summary-links";
         links.append(
-            this.createLink("Paint.NET website", "https://www.getpaint.net/"),
-            this.createLink("Source code", "https://github.com/LabyStudio/paintdotjs"),
-            this.createLink("Report a problem", "https://github.com/LabyStudio/paintdotjs/issues")
-        );
-        information.append(heading, details, credits, links);
-        return information;
-    }
-
-    createAboutInformation() {
-        const information = document.createElement("div");
-        information.className = "project-info-copy project-info-summary-copy";
-
-        const heading = document.createElement("div");
-        heading.className = "project-info-summary-heading";
-        const version = document.createElement("strong");
-        version.textContent = "Version " + PdjInfo.version();
-        const tagline = document.createElement("span");
-        tagline.textContent = "Cross-platform Paint.NET port";
-        heading.append(version, tagline);
-
-        const details = document.createElement("div");
-        details.className = "project-info-summary-details";
-
-        const project = document.createElement("section");
-        const projectHeading = document.createElement("h3");
-        projectHeading.textContent = "About the port";
-        const projectCopy = document.createElement("p");
-        projectCopy.textContent = "Paint.NET is, in my opinion, the best and simplest paint editor. I created paint.js as an unofficial port after switching to Linux and missing it every day, bringing it to Linux, macOS, and the web.";
-        const compatibility = document.createElement("span");
-        compatibility.className = "project-info-detail-note";
-        compatibility.textContent = "Designed for desktop Chromium browsers.";
-        project.append(projectHeading, projectCopy, compatibility);
-
-        details.append(project);
-
-        const credits = document.createElement("p");
-        credits.className = "project-info-highlight-credit";
-        const creditsLabel = document.createElement("strong");
-        creditsLabel.textContent = "Credits: ";
-        credits.append(
-            creditsLabel,
-            "Paint.NET was created by ",
-            this.createLink("Rick Brewster", "https://www.getpaint.net/"),
-            ". All credit for the original application's design, concepts, and behavior belongs to Rick Brewster and the Paint.NET contributors. paint.js is unofficial and is not affiliated with or endorsed by Paint.NET."
-        );
-
-        const links = document.createElement("div");
-        links.className = "project-info-links project-info-summary-links";
-        links.append(
-            this.createLink("Paint.NET website", "https://www.getpaint.net/"),
+            this.createLink("Downloads", "https://github.com/LabyStudio/paintdotjs/releases"),
             this.createLink("Source code", "https://github.com/LabyStudio/paintdotjs"),
             this.createLink("Report a problem", "https://github.com/LabyStudio/paintdotjs/issues")
         );
 
-        information.append(heading, details, credits, links);
+        information.append(heading, credits, details, links);
         return information;
     }
 
@@ -193,13 +164,7 @@ class ProjectInfoDialog {
             this.dontShowAgain = document.createElement("input");
             this.dontShowAgain.type = "checkbox";
             preference.append(this.dontShowAgain, document.createTextNode("Don't show this again"));
-            const contact = this.createLink("contact@paintjs.net", "mailto:contact@paintjs.net");
-            contact.className = "project-info-welcome-contact";
-            footer.append(preference, contact);
-        } else {
-            const contact = this.createLink("contact@paintjs.net", "mailto:contact@paintjs.net");
-            contact.className = "project-info-footer-contact";
-            footer.appendChild(contact);
+            footer.appendChild(preference);
         }
 
         const button = document.createElement("button");
@@ -249,7 +214,7 @@ ProjectInfoDialog.instance = null;
 class WelcomeDialog {
 
     static open(force = false) {
-        if (ProjectInfoDialog.instance !== null || (!force && this.isDismissed())) return;
+        //if (ProjectInfoDialog.instance !== null || (!force && this.isDismissed())) return;
         ProjectInfoDialog.instance = new ProjectInfoDialog(true);
         ProjectInfoDialog.instance.show();
     }
