@@ -2030,9 +2030,9 @@ html.effect-rendering * {
 
 .image-size-anchor-chooser {
     display: grid;
-    grid-template-columns: repeat(3, 32px);
-    grid-template-rows: repeat(3, 32px);
-    gap: 3px;
+    grid-template-columns: repeat(3, 28px);
+    grid-template-rows: repeat(3, 28px);
+    gap: 0;
     width: max-content;
     margin: 0 0 5px 184px;
 }
@@ -2040,26 +2040,28 @@ html.effect-rendering * {
 .image-size-anchor-chooser button {
     box-sizing: border-box;
     min-width: 0;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     padding: 0;
     color: var(--color-button-text);
     background: var(--color-button);
     border: 1px solid var(--color-button-outline);
-    border-radius: 4px;
-    font-size: 21px;
-    font-weight: 700;
-    line-height: 28px;
+    border-radius: 0;
 }
 
 .image-size-anchor-chooser button:hover {
-    background: var(--color-menu-item-hover);
-    border-color: var(--color-menu-item-border);
+    color: var(--color-button-text);
+    background: linear-gradient(var(--color-slider-hover1), var(--color-slider-hover2));
+    border-color: var(--color-slider-hover-outline);
+}
+
+.image-size-anchor-chooser button:active {
+    background: linear-gradient(var(--color-slider-hover2), var(--color-slider-hover1));
 }
 
 .image-size-anchor-chooser button.selected {
-    background: var(--color-button);
-    border: 2px solid var(--color-menu-item-selected-border);
+    background: linear-gradient(var(--color-slider-hover2), var(--color-slider-hover1));
+    border-color: var(--color-slider-hover-outline);
 }
 
 .image-size-anchor-chooser button:empty {
@@ -2068,10 +2070,27 @@ html.effect-rendering * {
 
 .image-size-anchor-chooser button img {
     display: block;
-    width: 24px;
-    height: 24px;
-    margin: 2px;
+    width: 18px;
+    height: 18px;
+    margin: auto;
     object-fit: contain;
+}
+
+.image-size-anchor-arrow {
+    display: block;
+    width: 28px;
+    height: 28px;
+    color: currentColor;
+    pointer-events: none;
+}
+
+.image-size-anchor-arrow line {
+    stroke: currentColor;
+    stroke-width: 1.5;
+}
+
+.image-size-anchor-arrow polygon {
+    fill: currentColor;
 }
 
 .image-size-fill-row {

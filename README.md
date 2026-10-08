@@ -10,9 +10,9 @@ MIT-compatible license, while the current interface and behavior follow Paint.NE
 ## Why?
 
 Paint.NET is one of the best image editors available on Windows, combining powerful features with a
-simple, intuitive interface. After switching to Linux, it became the application I missed most—one I
-had relied on every day. The goal of paint.js is to bring that familiar editing experience to Linux,
-macOS, and the web.
+simple, intuitive interface. After switching to Linux, it became the application I missed most and
+one I had relied on every day. The goal of paint.js is to bring that familiar editing experience to
+Linux, macOS, and the web.
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE.md)
 

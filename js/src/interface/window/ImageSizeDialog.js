@@ -179,11 +179,40 @@ class ImageSizeDialog {
                     anchorButtons.set(value, button);
                     anchorChooser.appendChild(button);
                 }
-                const arrows = [
-                    ["↖", "↑", "↗"],
-                    ["←", "", "→"],
-                    ["↙", "↓", "↘"]
-                ];
+                const createAnchorArrow = (dx, dy) => {
+                    const namespace = "http://www.w3.org/2000/svg";
+                    const svg = document.createElementNS(namespace, "svg");
+                    svg.classList.add("image-size-anchor-arrow");
+                    svg.setAttribute("viewBox", "0 0 28 28");
+                    svg.setAttribute("aria-hidden", "true");
+
+                    const length = Math.hypot(dx, dy);
+                    const ux = dx / length;
+                    const uy = dy / length;
+                    const x1 = 14 - 7 * dx;
+                    const y1 = 14 - 7 * dy;
+                    const x2 = x1 + 14 * ux;
+                    const y2 = y1 + 14 * uy;
+                    const baseX = x2 - 6 * ux;
+                    const baseY = y2 - 6 * uy;
+                    const perpendicularX = -uy * 3;
+                    const perpendicularY = ux * 3;
+
+                    const line = document.createElementNS(namespace, "line");
+                    line.setAttribute("x1", String(x1));
+                    line.setAttribute("y1", String(y1));
+                    line.setAttribute("x2", String(x2));
+                    line.setAttribute("y2", String(y2));
+
+                    const head = document.createElementNS(namespace, "polygon");
+                    head.setAttribute("points", [
+                        `${x2},${y2}`,
+                        `${baseX + perpendicularX},${baseY + perpendicularY}`,
+                        `${baseX - perpendicularX},${baseY - perpendicularY}`
+                    ].join(" "));
+                    svg.append(line, head);
+                    return svg;
+                };
                 const updateAnchorChooser = () => {
                     const selectedButton = anchorButtons.get(anchor.value);
                     const selectedX = Number(selectedButton.dataset.x);
@@ -197,11 +226,11 @@ class ImageSizeDialog {
                         button.replaceChildren();
                         if (selected) {
                             const image = document.createElement("img");
-                            image.src = "assets/icons/menu_image_canvas_size_icon.png";
+                            image.src = "assets/images/anchor_chooser_control_anchor_image.png";
                             image.alt = "";
                             button.appendChild(image);
                         } else if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
-                            button.textContent = arrows[dy + 1][dx + 1];
+                            button.appendChild(createAnchorArrow(dx, dy));
                         }
                     }
                 };
