@@ -29,10 +29,14 @@ class TextTool extends DrawingTool {
         this.blockMiddlePasteUntil = 0;
         this.colorsForm = null;
         this.colorsChangedListener = () => {
-            if (this.pending) this.renderPreview();
+            if (this.pending) {
+                this.renderPreview();
+            }
         };
         this.viewportChangedListener = documentView => {
-            if (documentView === this.getDocumentWorkspace()) this.syncEditorToViewport();
+            if (documentView === this.getDocumentWorkspace()) {
+                this.syncEditorToViewport();
+            }
         };
         this.resizeListener = () => this.syncEditorToViewport();
     }
@@ -70,13 +74,17 @@ class TextTool extends DrawingTool {
             cancelAnimationFrame(this.viewportSyncFrame);
             this.viewportSyncFrame = null;
         }
-        if (this.pending) this.commitPending();
+        if (this.pending) {
+            this.commitPending();
+        }
         this.destroyEditor();
         super.onDeactivate();
     }
 
     onMouseDown(x, y, button) {
-        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
+        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) {
+            return false;
+        }
         const point = new Point(x, y);
         // Paint.NET moves active text with the right mouse button anywhere on
         // the canvas, or with the compass handle using the left button.
@@ -85,7 +93,9 @@ class TextTool extends DrawingTool {
             this.beginMove(point);
             return true;
         }
-        if (button !== MouseButton.LEFT) return false;
+        if (button !== MouseButton.LEFT) {
+            return false;
+        }
 
         // A click inside the active text changes the insertion point instead
         // of committing the text and creating a new object.
@@ -93,7 +103,9 @@ class TextTool extends DrawingTool {
             this.placeCaretAt(point);
             return true;
         }
-        if (this.pending) this.commitPending();
+        if (this.pending) {
+            this.commitPending();
+        }
         this.beginBitmapTransaction();
         this.pending = true;
         this.button = button;
@@ -111,12 +123,16 @@ class TextTool extends DrawingTool {
         this.tracking = true;
         this.dragStart = point;
         this.originStart = this.textOrigin.clone();
-        if (this.originNub !== null) this.originNub.setVisible(false);
+        if (this.originNub !== null) {
+            this.originNub.setVisible(false);
+        }
         this.app.setCursorImg("hand_closed_cursor");
     }
 
     onMouseMove(x, y) {
-        if (!this.tracking) return false;
+        if (!this.tracking) {
+            return false;
+        }
         this.textOrigin = new Point(
             this.originStart.x + Math.round(x - this.dragStart.x),
             this.originStart.y + Math.round(y - this.dragStart.y)
@@ -128,24 +144,34 @@ class TextTool extends DrawingTool {
     }
 
     onMouseUp(x, y) {
-        if (!this.tracking) return false;
+        if (!this.tracking) {
+            return false;
+        }
         this.onMouseMove(x, y);
         this.tracking = false;
         this.positionNub();
-        if (this.editor !== null) this.editor.focus();
+        if (this.editor !== null) {
+            this.editor.focus();
+        }
         this.app.setCursorImg("text_tool_cursor");
         return true;
     }
 
     onSettingChanged() {
-        if (!this.pending) return;
+        if (!this.pending) {
+            return;
+        }
         this.updateEditorStyle();
         this.renderPreview();
     }
 
     onKeyPress(key) {
-        if (!this.pending) return false;
-        if (key === "Escape") return this.commitPending();
+        if (!this.pending) {
+            return false;
+        }
+        if (key === "Escape") {
+            return this.commitPending();
+        }
         return false;
     }
 
@@ -205,7 +231,9 @@ class TextTool extends DrawingTool {
             }
         });
         const blockMiddleButton = event => {
-            if (event.button !== MouseButton.MIDDLE) return;
+            if (event.button !== MouseButton.MIDDLE) {
+                return;
+            }
             this.blockMiddlePasteUntil = Date.now() + 750;
             event.preventDefault();
             event.stopPropagation();
@@ -213,26 +241,34 @@ class TextTool extends DrawingTool {
         editor.addEventListener("mousedown", blockMiddleButton);
         editor.addEventListener("auxclick", blockMiddleButton);
         editor.addEventListener("paste", event => {
-            if (Date.now() >= this.blockMiddlePasteUntil) return;
+            if (Date.now() >= this.blockMiddlePasteUntil) {
+                return;
+            }
             event.preventDefault();
             event.stopPropagation();
         });
         editor.addEventListener("beforeinput", event => {
             if (event.inputType !== "insertFromPaste"
-                || Date.now() >= this.blockMiddlePasteUntil) return;
+                || Date.now() >= this.blockMiddlePasteUntil) {
+                return;
+            }
             event.preventDefault();
             event.stopPropagation();
         });
         editor.addEventListener("pointermove", event => {
             event.stopPropagation();
-            if (!this.tracking) return;
+            if (!this.tracking) {
+                return;
+            }
             event.preventDefault();
             const point = this.eventToDocumentPoint(event);
             this.onMouseMove(point.x, point.y);
         });
         editor.addEventListener("pointerup", event => {
             event.stopPropagation();
-            if (!this.tracking) return;
+            if (!this.tracking) {
+                return;
+            }
             event.preventDefault();
             const point = this.eventToDocumentPoint(event);
             this.onMouseUp(point.x, point.y, event.button);
@@ -293,7 +329,9 @@ class TextTool extends DrawingTool {
             this.editor.parentNode.removeChild(this.editor);
         }
         this.editor = null;
-        if (this.caretElement !== null) this.caretElement.remove();
+        if (this.caretElement !== null) {
+            this.caretElement.remove();
+        }
         this.caretElement = null;
     }
 
@@ -316,7 +354,9 @@ class TextTool extends DrawingTool {
     }
 
     updateEditorStyle() {
-        if (this.editor === null) return;
+        if (this.editor === null) {
+            return;
+        }
         const zoom = this.getDocumentWorkspace().getZoom();
         this.editor.style.font = this.getFontString();
         this.editor.style.fontSize = (this.getFontSize() * zoom) + "px";
@@ -328,13 +368,17 @@ class TextTool extends DrawingTool {
     }
 
     updateEditorDimensions() {
-        if (this.editor === null) return;
+        if (this.editor === null) {
+            return;
+        }
         const context = this.getActiveLayer().getSurface().context;
         const lines = this.editor.value.split("\n");
         context.save();
         context.font = this.getFontString();
         let width = 1;
-        for (const line of lines) width = Math.max(width, context.measureText(line || " ").width);
+        for (const line of lines) {
+            width = Math.max(width, context.measureText(line || " ").width);
+        }
         context.restore();
         const zoom = this.getDocumentWorkspace().getZoom();
         this.editor.style.width = Math.max(24, Math.ceil(width * zoom) + 8) + "px";
@@ -343,21 +387,31 @@ class TextTool extends DrawingTool {
     }
 
     syncEditorToViewport() {
-        if (!this.pending || this.editor === null) return;
+        if (!this.pending || this.editor === null) {
+            return;
+        }
         // Canvas and DOM overlays are painted independently. Hide the overlay
         // for the single frame in which its zoomed font metrics and position
         // are being updated, so an old-scale caret can never flash onscreen.
         this.editor.style.visibility = "hidden";
-        if (this.caretElement !== null) this.caretElement.style.visibility = "hidden";
+        if (this.caretElement !== null) {
+            this.caretElement.style.visibility = "hidden";
+        }
         this.updateEditorStyle();
-        if (this.viewportSyncFrame !== null) cancelAnimationFrame(this.viewportSyncFrame);
+        if (this.viewportSyncFrame !== null) {
+            cancelAnimationFrame(this.viewportSyncFrame);
+        }
         const editor = this.editor;
         const caret = this.caretElement;
         this.viewportSyncFrame = requestAnimationFrame(() => {
             this.viewportSyncFrame = null;
-            if (this.editor !== editor || !this.pending) return;
+            if (this.editor !== editor || !this.pending) {
+                return;
+            }
             editor.style.visibility = "";
-            if (caret !== null && this.caretElement === caret) caret.style.visibility = "";
+            if (caret !== null && this.caretElement === caret) {
+                caret.style.visibility = "";
+            }
             // Browser zoom controls (especially the footer range input) take
             // DOM focus away from the hidden textarea. Paint.NET keeps the
             // active text insertion point alive after changing zoom, so hand
@@ -380,7 +434,9 @@ class TextTool extends DrawingTool {
     }
 
     positionEditor() {
-        if (this.editor === null || this.textOrigin === null) return;
+        if (this.editor === null || this.textOrigin === null) {
+            return;
+        }
         const screen = this.getDocumentWorkspace().toScreenPosition(new Point(
             this.textOrigin.x,
             this.getTextTop()
@@ -393,7 +449,9 @@ class TextTool extends DrawingTool {
     }
 
     renderPreview() {
-        if (!this.pending || this.editor === null) return false;
+        if (!this.pending || this.editor === null) {
+            return false;
+        }
         const surface = this.getActiveLayer().getSurface();
         const context = surface.context;
         const text = this.editor.value;
@@ -423,7 +481,9 @@ class TextTool extends DrawingTool {
         let dirtyBounds = this.previewBounds === null
             ? nextBounds : Rectangle.union(this.previewBounds, nextBounds);
         dirtyBounds.intersect(surface.getBounds());
-        if (!dirtyBounds.isEmpty()) surface.copyRegionFromExact(this.scratchSurface, dirtyBounds);
+        if (!dirtyBounds.isEmpty()) {
+            surface.copyRegionFromExact(this.scratchSurface, dirtyBounds);
+        }
 
         if (text.length > 0) {
             context.save();
@@ -514,7 +574,9 @@ class TextTool extends DrawingTool {
     }
 
     updateCaret() {
-        if (this.editor === null || this.caretElement === null || this.textOrigin === null) return;
+        if (this.editor === null || this.caretElement === null || this.textOrigin === null) {
+            return;
+        }
         if (document.activeElement !== this.editor || !this.pending) {
             this.caretElement.hidden = true;
             return;
@@ -559,18 +621,26 @@ class TextTool extends DrawingTool {
     }
 
     focusEditor(position = null) {
-        if (this.editor === null) return;
+        if (this.editor === null) {
+            return;
+        }
         const editor = this.editor;
         requestAnimationFrame(() => {
-            if (this.editor !== editor) return;
+            if (this.editor !== editor) {
+                return;
+            }
             editor.focus({preventScroll: true});
-            if (position !== null) editor.setSelectionRange(position, position);
+            if (position !== null) {
+                editor.setSelectionRange(position, position);
+            }
             this.updateCaret();
         });
     }
 
     placeCaretAt(point) {
-        if (this.editor === null) return;
+        if (this.editor === null) {
+            return;
+        }
         const lines = this.editor.value.split("\n");
         const lineHeight = this.getLineHeight();
         const lineIndex = Utility.clamp(
@@ -596,25 +666,35 @@ class TextTool extends DrawingTool {
         }
         context.restore();
         let position = offset;
-        for (let i = 0; i < lineIndex; ++i) position += lines[i].length + 1;
+        for (let i = 0; i < lineIndex; ++i) {
+            position += lines[i].length + 1;
+        }
         this.focusEditor(position);
     }
 
     commitPending() {
-        if (!this.pending) return false;
+        if (!this.pending) {
+            return false;
+        }
         const hasText = this.editor !== null && this.editor.value.length > 0;
         this.pending = false;
         this.tracking = false;
         this.destroyEditor();
         this.destroyNub();
-        if (hasText) this.commitBitmapTransaction();
-        else this.cancelBitmapTransaction();
+        if (hasText) {
+            this.commitBitmapTransaction();
+        }
+        else {
+            this.cancelBitmapTransaction();
+        }
         this.app.setCursorImg("text_tool_cursor");
         return true;
     }
 
     cancelPending() {
-        if (!this.pending) return false;
+        if (!this.pending) {
+            return false;
+        }
         this.pending = false;
         this.tracking = false;
         this.destroyEditor();
@@ -638,7 +718,9 @@ class TextTool extends DrawingTool {
     }
 
     destroyNub() {
-        if (this.originNub === null) return;
+        if (this.originNub === null) {
+            return;
+        }
         this.getSurfaceBox().removeRenderer(this.originNub);
         this.originNub.dispose();
         this.originNub = null;

@@ -14,10 +14,11 @@
 
 class LayerItem extends MenuItem {
 
-    constructor(layer) {
+    constructor(layer, doubleClickCallback = null) {
         super();
 
         this.layer = layer;
+        this.doubleClickCallback = doubleClickCallback;
         this.enabled = true;
 
         this.thumbnail = null;
@@ -26,6 +27,16 @@ class LayerItem extends MenuItem {
     buildElement() {
         let element = super.buildElement();
         element.className += " layer-item";
+
+        // Double-click
+        element.ondblclick = event => {
+            if (event.target.closest("input") !== null) {
+                return;
+            }
+            if (this.doubleClickCallback !== null) {
+                this.doubleClickCallback(this);
+            }
+        };
         {
             let maxThumbnailSize = 40;
             let ratio = this.layer.width / this.layer.height;

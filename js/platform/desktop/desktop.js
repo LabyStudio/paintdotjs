@@ -34,15 +34,21 @@ window.desktopFileActions = {
 
 const waitForApplication = () => new Promise(resolve => {
     const poll = () => {
-        if (window.app && typeof DocumentIO !== 'undefined') resolve();
-        else setTimeout(poll, 25);
+        if (window.app && typeof DocumentIO !== 'undefined') {
+            resolve();
+        }
+        else {
+            setTimeout(poll, 25);
+        }
     };
     poll();
 });
 
 let closeDialogOpen = false;
 ipcRenderer.on('desktop:request-close', async () => {
-    if (closeDialogOpen) return;
+    if (closeDialogOpen) {
+        return;
+    }
     closeDialogOpen = true;
     let shouldClose = false;
     try {
@@ -82,14 +88,18 @@ const openLocalFiles = async filenames => {
             console.error(`Could not read ${filename}`, error);
         }
     }
-    if (files.length) await DocumentIO.openFiles(files);
+    if (files.length) {
+        await DocumentIO.openFiles(files);
+    }
 };
 
 ipcRenderer.on('desktop:open-files', (_event, filenames) => void openLocalFiles(filenames));
 
 let updatePromptOpen = false;
 const showDownloadedUpdate = async version => {
-    if (updatePromptOpen) return;
+    if (updatePromptOpen) {
+        return;
+    }
     updatePromptOpen = true;
     try {
         await waitForApplication();
@@ -128,7 +138,9 @@ ipcRenderer.on('desktop:update-state', (_event, update) => {
     window.desktopUpdater.state = update.state;
     window.desktopUpdater.detail = update.detail;
     window.desktopUpdater.onStateChanged?.(update);
-    if (update.state === 'downloaded') void showDownloadedUpdate(update.detail);
+    if (update.state === 'downloaded') {
+        void showDownloadedUpdate(update.detail);
+    }
 });
 
 const desktopTitlebar = new CustomTitlebar({

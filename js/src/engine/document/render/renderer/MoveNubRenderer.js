@@ -116,9 +116,3 @@ class MoveNubRenderer extends CanvasControl {
         // TODO notify?
     }
 }
-
-class MoveNubShape {
-    static SQUARE = 0;
-    static COMPASS = 1;
-    static CIRCLE = 2;
-}

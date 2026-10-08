@@ -78,7 +78,9 @@ class Surface {
 
     renderCustomBlend(targetContext, rectangle, opacity, blendMode) {
         const bounds = Rectangle.intersect(rectangle, this.getBounds());
-        if (bounds.isEmpty()) return;
+        if (bounds.isEmpty()) {
+            return;
+        }
 
         const source = this.context.getImageData(bounds.x, bounds.y, bounds.width, bounds.height);
         const target = targetContext.getImageData(bounds.x, bounds.y, bounds.width, bounds.height);
@@ -87,7 +89,9 @@ class Surface {
 
         for (let offset = 0; offset < sourceData.length; offset += 4) {
             const sourceAlpha = sourceData[offset + 3] / 255 * opacity;
-            if (sourceAlpha <= 0) continue;
+            if (sourceAlpha <= 0) {
+                continue;
+            }
 
             const backdropAlpha = targetData[offset + 3] / 255;
             const outputAlpha = sourceAlpha + backdropAlpha * (1 - sourceAlpha);
@@ -215,7 +219,9 @@ class Surface {
 
         let clipped = Rectangle.intersect(Utility.roundRectangle(rectangle), this.getBounds());
         clipped.intersect(source.getBounds());
-        if (clipped.width <= 0 || clipped.height <= 0) return;
+        if (clipped.width <= 0 || clipped.height <= 0) {
+            return;
+        }
 
         // Brush restoration must be pixel-exact. A clipped drawImage can leave
         // an antialiased edge at the clip boundary, which becomes a visible

@@ -39,7 +39,9 @@ class ColorPickerTool extends Tool {
     }
 
     updatePixelPreview(x, y) {
-        if (this.pixelPreview === null) return;
+        if (this.pixelPreview === null) {
+            return;
+        }
         const point = new Point(Math.floor(x), Math.floor(y));
         const bounds = this.getActiveLayer().getBounds();
         if (!bounds.contains(point)) {
@@ -50,7 +52,9 @@ class ColorPickerTool extends Tool {
     }
 
     onMouseDown(x, y, button) {
-        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
+        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) {
+            return false;
+        }
         this.updatePixelPreview(x, y);
         this.tracking = true;
         this.button = button;
@@ -59,12 +63,16 @@ class ColorPickerTool extends Tool {
 
     onMouseMove(x, y) {
         this.updatePixelPreview(x, y);
-        if (!this.tracking) return true;
+        if (!this.tracking) {
+            return true;
+        }
         return this.pickColor(x, y, this.button);
     }
 
     onMouseUp(x, y, button) {
-        if (!this.tracking || button !== this.button) return false;
+        if (!this.tracking || button !== this.button) {
+            return false;
+        }
         this.pickColor(x, y, button);
         this.tracking = false;
         const afterClick = this.getSetting("afterClick", "none");
@@ -85,7 +93,9 @@ class ColorPickerTool extends Tool {
             ? this.getDocumentWorkspace().getCompositionSurface()
             : this.getActiveLayer().getSurface();
         x = Math.floor(x); y = Math.floor(y);
-        if (x < 0 || y < 0 || x >= surface.width || y >= surface.height) return false;
+        if (x < 0 || y < 0 || x >= surface.width || y >= surface.height) {
+            return false;
+        }
         const sampleSize = Number(this.getSetting("sampleSize", 1));
         const radius = Math.floor(sampleSize / 2);
         const left = Math.max(0, x - radius);
@@ -110,8 +120,12 @@ class ColorPickerTool extends Tool {
         );
         const colors = FormRegistry.get("colorsForm");
         if (colors !== null) {
-            if (button === MouseButton.RIGHT) colors.setSecondaryColor(color, "picker");
-            else colors.setMainColor(color, "picker");
+            if (button === MouseButton.RIGHT) {
+                colors.setSecondaryColor(color, "picker");
+            }
+            else {
+                colors.setMainColor(color, "picker");
+            }
         }
         return true;
     }

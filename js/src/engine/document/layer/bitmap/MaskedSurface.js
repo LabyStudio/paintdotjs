@@ -81,7 +81,9 @@ class MaskedSurface {
         context.beginPath();
         for (const vertexList of path.getVertexLists()) {
             const vertices = vertexList.getVertices();
-            if (vertices.length === 0) continue;
+            if (vertices.length === 0) {
+                continue;
+            }
             context.moveTo(vertices[0].x, vertices[0].y);
             for (let i = 1; i < vertices.length; ++i) {
                 context.lineTo(vertices[i].x, vertices[i].y);
@@ -92,13 +94,17 @@ class MaskedSurface {
 
     getRectangleMaskBounds(path) {
         const lists = path.getVertexLists();
-        if (lists.length !== 1) return null;
+        if (lists.length !== 1) {
+            return null;
+        }
         const vertices = lists[0].getVertices();
         const points = vertices.length > 1
             && vertices[0].x === vertices[vertices.length - 1].x
             && vertices[0].y === vertices[vertices.length - 1].y
             ? vertices.slice(0, -1) : vertices;
-        if (points.length !== 4) return null;
+        if (points.length !== 4) {
+            return null;
+        }
         const pathBounds = path.getBounds();
         const left = pathBounds.getLeft();
         const top = pathBounds.getTop();
@@ -111,8 +117,12 @@ class MaskedSurface {
     }
 
     eraseFrom(targetSurface) {
-        if (this.surface === null) return;
-        if (typeof targetSurface.getSurface === "function") targetSurface = targetSurface.getSurface();
+        if (this.surface === null) {
+            return;
+        }
+        if (typeof targetSurface.getSurface === "function") {
+            targetSurface = targetSurface.getSurface();
+        }
 
         // Erase with the selection mask, not with the lifted bitmap. Using the
         // bitmap's alpha as an eraser only removes part of an anti-aliased pixel
@@ -129,15 +139,23 @@ class MaskedSurface {
 
     render(targetSurface, transform, sampling, gammaCorrected = false, fullQuality = true,
            renderingQuality = "high") {
-        if (this.disposed) throw new Error("MaskedSurface has been disposed");
-        if (this.surface === null || !transform.isInvertible()) return;
+        if (this.disposed) {
+            throw new Error("MaskedSurface has been disposed");
+        }
+        if (this.surface === null || !transform.isInvertible()) {
+            return;
+        }
 
-        if (typeof targetSurface.getSurface === "function") targetSurface = targetSurface.getSurface();
+        if (typeof targetSurface.getSurface === "function") {
+            targetSurface = targetSurface.getSurface();
+        }
         const m = transform.getElements();
         const integerTranslation = m[0][0] === 1 && m[0][1] === 0
             && m[1][0] === 0 && m[1][1] === 1
             && Number.isInteger(m[0][2]) && Number.isInteger(m[1][2]);
-        if (integerTranslation) sampling = ResamplingAlgorithm.NEAREST_NEIGHBOR;
+        if (integerTranslation) {
+            sampling = ResamplingAlgorithm.NEAREST_NEIGHBOR;
+        }
 
         if (sampling !== ResamplingAlgorithm.NEAREST_NEIGHBOR
             && this.renderResampledGpu(targetSurface, transform, sampling, gammaCorrected,
@@ -167,10 +185,14 @@ class MaskedSurface {
 
     renderResampledGpu(targetSurface, transform, sampling, gammaCorrected, renderingQuality) {
         const renderer = MaskedSurface.getGpuRenderer();
-        if (renderer === null) return false;
+        if (renderer === null) {
+            return false;
+        }
 
         const destinationBounds = this.getTransformedBounds(transform, targetSurface);
-        if (destinationBounds.isEmpty()) return true;
+        if (destinationBounds.isEmpty()) {
+            return true;
+        }
         const gl = renderer.gl;
         const maximumSize = renderer.maximumTextureSize;
         if (this.surface.width > maximumSize || this.surface.height > maximumSize
@@ -198,8 +220,12 @@ class MaskedSurface {
         }
 
         const canvas = renderer.canvas;
-        if (canvas.width !== destinationBounds.width) canvas.width = destinationBounds.width;
-        if (canvas.height !== destinationBounds.height) canvas.height = destinationBounds.height;
+        if (canvas.width !== destinationBounds.width) {
+            canvas.width = destinationBounds.width;
+        }
+        if (canvas.height !== destinationBounds.height) {
+            canvas.height = destinationBounds.height;
+        }
         gl.viewport(0, 0, canvas.width, canvas.height);
         gl.useProgram(renderer.program);
         gl.bindVertexArray(renderer.vertexArray);
@@ -274,10 +300,16 @@ class MaskedSurface {
             return;
         }
 
-        if (this.compositeCanvas === null) this.compositeCanvas = document.createElement("canvas");
+        if (this.compositeCanvas === null) {
+            this.compositeCanvas = document.createElement("canvas");
+        }
         const canvas = this.compositeCanvas;
-        if (canvas.width !== destinationBounds.width) canvas.width = destinationBounds.width;
-        if (canvas.height !== destinationBounds.height) canvas.height = destinationBounds.height;
+        if (canvas.width !== destinationBounds.width) {
+            canvas.width = destinationBounds.width;
+        }
+        if (canvas.height !== destinationBounds.height) {
+            canvas.height = destinationBounds.height;
+        }
         const context = canvas.getContext("2d");
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.globalCompositeOperation = "copy";
@@ -296,7 +328,9 @@ class MaskedSurface {
         );
         for (const vertexList of this.path.getVertexLists()) {
             const vertices = vertexList.getVertices();
-            if (vertices.length === 0) continue;
+            if (vertices.length === 0) {
+                continue;
+            }
             context.moveTo(vertices[0].x, vertices[0].y);
             for (let i = 1; i < vertices.length; ++i) {
                 context.lineTo(vertices[i].x, vertices[i].y);
@@ -316,7 +350,9 @@ class MaskedSurface {
     }
 
     static getGpuRenderer() {
-        if (MaskedSurface.gpuRenderer !== undefined) return MaskedSurface.gpuRenderer;
+        if (MaskedSurface.gpuRenderer !== undefined) {
+            return MaskedSurface.gpuRenderer;
+        }
         try {
             const canvas = document.createElement("canvas");
             const gl = canvas.getContext("webgl2", {
@@ -565,7 +601,9 @@ class MaskedSurface {
 
     renderResampled(targetSurface, transform, sampling, gammaCorrected, renderingQuality) {
         const destinationBounds = this.getTransformedBounds(transform, targetSurface);
-        if (destinationBounds.isEmpty()) return;
+        if (destinationBounds.isEmpty()) {
+            return;
+        }
 
         const rendered = Surface.create(destinationBounds.width, destinationBounds.height);
         const output = rendered.context.createImageData(rendered.width, rendered.height);
@@ -655,14 +693,18 @@ class MaskedSurface {
     }
 
     addTexel(source, x, y, toLinear, accumulator, weight) {
-        if (weight === 0) return;
+        if (weight === 0) {
+            return;
+        }
         x = Utility.clamp(x, this.sampleMinimumX,
             Math.min(this.sampleMaximumX, source.width - 1));
         y = Utility.clamp(y, this.sampleMinimumY,
             Math.min(this.sampleMaximumY, source.height - 1));
         const offset = (y * source.width + x) * 4;
         const alpha = source.data[offset + 3] / 255;
-        if (alpha === 0) return;
+        if (alpha === 0) {
+            return;
+        }
         accumulator[0] += (toLinear === null ? source.data[offset] : toLinear[source.data[offset]])
             * alpha * weight;
         accumulator[1] += (toLinear === null ? source.data[offset + 1] : toLinear[source.data[offset + 1]])
@@ -701,10 +743,14 @@ class MaskedSurface {
 
     writeSample(destination, offset, accumulator, gammaCorrected) {
         const alpha = Utility.clamp(accumulator[3], 0, 1);
-        if (alpha <= 1 / 65535) return;
+        if (alpha <= 1 / 65535) {
+            return;
+        }
         for (let channel = 0; channel < 3; ++channel) {
             let value = Utility.clamp(accumulator[channel] / accumulator[3], 0, 255);
-            if (gammaCorrected) value = MaskedSurface.linearToSrgb(value / 255) * 255;
+            if (gammaCorrected) {
+                value = MaskedSurface.linearToSrgb(value / 255) * 255;
+            }
             destination[offset + channel] = Math.round(value);
         }
         destination[offset + 3] = Math.round(alpha * 255);
@@ -715,8 +761,12 @@ class MaskedSurface {
         // overshoot is what gives Paint.NET's high-quality cubic mode its
         // visibly sharper result than the three linear families.
         const x = Math.abs(value);
-        if (x <= 1) return 1.5 * x * x * x - 2.5 * x * x + 1;
-        if (x < 2) return -0.5 * x * x * x + 2.5 * x * x - 4 * x + 2;
+        if (x <= 1) {
+            return 1.5 * x * x * x - 2.5 * x * x + 1;
+        }
+        if (x < 2) {
+            return -0.5 * x * x * x + 2.5 * x * x - 4 * x + 2;
+        }
         return 0;
     }
 
@@ -727,7 +777,9 @@ class MaskedSurface {
     }
 
     getLinearSurface() {
-        if (this.linearSurface !== null) return this.linearSurface;
+        if (this.linearSurface !== null) {
+            return this.linearSurface;
+        }
         this.linearSurface = this.surface.clone();
         const pixels = this.linearSurface.context.getImageData(
             0, 0, this.linearSurface.width, this.linearSurface.height
@@ -812,10 +864,18 @@ class MaskedSurface {
         if (this.gpuTexture !== null && renderer !== undefined && renderer !== null) {
             renderer.gl.deleteTexture(this.gpuTexture);
         }
-        if (this.surface !== null) this.surface.dispose();
-        if (this.linearSurface !== null) this.linearSurface.dispose();
-        if (this.path !== null) this.path.dispose();
-        if (this.shadowPath !== null) this.shadowPath.dispose();
+        if (this.surface !== null) {
+            this.surface.dispose();
+        }
+        if (this.linearSurface !== null) {
+            this.linearSurface.dispose();
+        }
+        if (this.path !== null) {
+            this.path.dispose();
+        }
+        if (this.shadowPath !== null) {
+            this.shadowPath.dispose();
+        }
         this.surface = null;
         this.linearSurface = null;
         this.sourcePixels = null;

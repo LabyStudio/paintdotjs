@@ -37,7 +37,9 @@ class BitmapHistoryMemento extends HistoryMemento {
                 Math.ceil(requested.getRight()), Math.ceil(requested.getBottom())
             );
             bounds = Rectangle.intersect(bounds, source.getBounds());
-            if (bounds.width <= 0 || bounds.height <= 0) continue;
+            if (bounds.width <= 0 || bounds.height <= 0) {
+                continue;
+            }
             this.chunks.push({
                 bounds,
                 imageData: source.context.getImageData(bounds.x, bounds.y, bounds.width, bounds.height)
@@ -66,7 +68,9 @@ class BitmapHistoryMemento extends HistoryMemento {
         for (const chunk of this.chunks) {
             surface.context.putImageData(chunk.imageData, chunk.bounds.x, chunk.bounds.y);
         }
-        if (!this.bounds.isEmpty()) layer.invalidate(this.bounds);
+        if (!this.bounds.isEmpty()) {
+            layer.invalidate(this.bounds);
+        }
 
         return redo;
     }

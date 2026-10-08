@@ -52,7 +52,9 @@ class DocumentContextMenu {
             icon: "menu_file_close_icon.png",
             shortcutActionId: "menu.file.close",
             callback: async () => {
-                if (!await DocumentIO.closeDocumentWorkspace(workspace)) return;
+                if (!await DocumentIO.closeDocumentWorkspace(workspace)) {
+                    return;
+                }
                 if (previousWorkspace !== null
                     && window.app.getDocumentWorkspaces().includes(previousWorkspace)) {
                     window.app.setActiveDocumentWorkspace(previousWorkspace);
@@ -71,10 +73,14 @@ class DocumentContextMenu {
         this.popup.positionAt(x, y);
 
         this.outsidePointerListener = event => {
-            if (!menu.contains(event.target)) this.close();
+            if (!menu.contains(event.target)) {
+                this.close();
+            }
         };
         this.escapeListener = event => {
-            if (event.key === "Escape") this.close();
+            if (event.key === "Escape") {
+                this.close();
+            }
         };
         document.addEventListener("pointerdown", this.outsidePointerListener, true);
         document.addEventListener("keydown", this.escapeListener, true);
@@ -100,7 +106,9 @@ class DocumentContextMenu {
     }
 
     static async runForWorkspace(workspace, callback) {
-        if (!window.app.getDocumentWorkspaces().includes(workspace)) return;
+        if (!window.app.getDocumentWorkspaces().includes(workspace)) {
+            return;
+        }
         if (window.app.getActiveDocumentWorkspace() !== workspace) {
             window.app.setActiveDocumentWorkspace(workspace);
         }
@@ -117,7 +125,9 @@ class DocumentContextMenu {
 
     static close() {
         this.popup?.close();
-        if (this.popup === null) this.finishClose();
+        if (this.popup === null) {
+            this.finishClose();
+        }
     }
 
     static finishClose() {

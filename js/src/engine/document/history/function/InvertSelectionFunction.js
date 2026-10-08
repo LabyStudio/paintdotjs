@@ -19,7 +19,9 @@ class InvertSelectionFunction extends HistoryFunction {
 
     onExecute(documentWorkspace) {
         const selection = documentWorkspace.getSelection();
-        if (selection.isEmpty()) return null;
+        if (selection.isEmpty()) {
+            return null;
+        }
 
         const memento = new SelectionHistoryMemento(
             InvertSelectionFunction.NAME,

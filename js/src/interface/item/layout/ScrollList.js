@@ -99,14 +99,16 @@ class ScrollList extends Item {
         this.scrollSession.setDragOwner(this);
         this.scrollSession.dragSwapPending = false;
         const draggingItem = this.getCurrentDraggingItem();
-        if (draggingItem !== null) {
+        if (draggingItem !== null && this.scrollSession.hasPassedDragThreshold()) {
             this.updateDraggingVisual(draggingItem, this.scrollSession.getLastPointerCoordinate());
         }
 
         for (let item of this.items) {
             const element = item.getElement();
             element.addEventListener("pointerdown", event => {
-                if (event.button !== 0 || event.target.closest("input, button") !== null) return;
+                if (event.button !== 0 || event.target.closest("input, button") !== null) {
+                    return;
+                }
                 this.startPointerDrag(item, event);
             });
         }
@@ -114,34 +116,48 @@ class ScrollList extends Item {
 
     getCurrentDraggingItem() {
         const draggingItem = this.scrollSession.getDraggingItem();
-        if (draggingItem === null) return null;
+        if (draggingItem === null) {
+            return null;
+        }
         return this.items.find(item => item.getKey() === draggingItem.getKey()) || null;
     }
 
     startPointerDrag(item, event) {
-        if (this.itemSwapper === null) return;
+        if (this.itemSwapper === null) {
+            return;
+        }
         const bounds = item.getElement().getBoundingClientRect();
         const coordinate = this.getPointerCoordinate(event);
         const itemStart = this.orientation === ScrollOrientation.HORIZONTAL ? bounds.left : bounds.top;
         this.scrollSession.setDraggingItem(item);
         this.scrollSession.beginPointerDrag(this, event.pointerId, coordinate - itemStart, coordinate);
-        this.updateDraggingVisual(item, coordinate);
-        if (this.selectedItem !== item) this.setSelected(item);
-        event.preventDefault();
+        if (this.selectedItem !== item) {
+            this.setSelected(item);
+        }
     }
 
     continuePointerDrag(event) {
         const item = this.getCurrentDraggingItem();
-        if (item === null) return this.stopPointerDrag();
-        if ((event.buttons & 1) === 0) return this.stopPointerDrag();
+        if (item === null) {
+            return this.stopPointerDrag();
+        }
+        if ((event.buttons & 1) === 0) {
+            return this.stopPointerDrag();
+        }
 
         const coordinate = this.getPointerCoordinate(event);
         const previousCoordinate = this.scrollSession.getLastPointerCoordinate();
         this.scrollSession.setLastPointerCoordinate(coordinate);
+        if (Math.abs(coordinate - this.scrollSession.dragStartPointerCoordinate) < 4) {
+            return;
+        }
+
+        this.scrollSession.setDragThresholdPassed(true);
         this.updateDraggingVisual(item, coordinate);
         this.autoScrollDuringDrag(coordinate);
-        if (Math.abs(coordinate - this.scrollSession.dragStartPointerCoordinate) < 4) return;
-        if (this.scrollSession.dragSwapPending) return;
+        if (this.scrollSession.dragSwapPending) {
+            return;
+        }
 
         const index = this.items.indexOf(item);
         let target = null;
@@ -151,14 +167,18 @@ class ScrollList extends Item {
             const middle = this.orientation === ScrollOrientation.HORIZONTAL
                 ? bounds.left + bounds.width / 2
                 : bounds.top + bounds.height / 2;
-            if (coordinate < middle) target = previous;
+            if (coordinate < middle) {
+                target = previous;
+            }
         } else if (coordinate > previousCoordinate && index < this.items.length - 1) {
             const next = this.items[index + 1];
             const bounds = next.getElement().getBoundingClientRect();
             const middle = this.orientation === ScrollOrientation.HORIZONTAL
                 ? bounds.left + bounds.width / 2
                 : bounds.top + bounds.height / 2;
-            if (coordinate > middle) target = next;
+            if (coordinate > middle) {
+                target = next;
+            }
         }
         if (target !== null) {
             this.scrollSession.dragSwapPending = true;
@@ -192,9 +212,15 @@ class ScrollList extends Item {
         const size = this.orientation === ScrollOrientation.HORIZONTAL ? bounds.width : bounds.height;
         const edge = Math.min(32, size / 4);
         let amount = 0;
-        if (coordinate < start + edge) amount = -Math.min(14, (start + edge - coordinate) * 0.45);
-        if (coordinate > end - edge) amount = Math.min(14, (coordinate - end + edge) * 0.45);
-        if (amount === 0) return;
+        if (coordinate < start + edge) {
+            amount = -Math.min(14, (start + edge - coordinate) * 0.45);
+        }
+        if (coordinate > end - edge) {
+            amount = Math.min(14, (coordinate - end + edge) * 0.45);
+        }
+        if (amount === 0) {
+            return;
+        }
         if (this.orientation === ScrollOrientation.HORIZONTAL) {
             this.element.scrollLeft += amount;
         } else {
@@ -307,7 +333,9 @@ class ScrollList extends Item {
     }
 
     getScrollPosition() {
-        if (this.element === null) return this.scrollSession.getScrollPosition();
+        if (this.element === null) {
+            return this.scrollSession.getScrollPosition();
+        }
         return this.orientation === ScrollOrientation.HORIZONTAL
             ? this.element.scrollLeft
             : this.element.scrollTop;

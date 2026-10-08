@@ -31,13 +31,17 @@ class PaintBucketTool extends Tool {
     }
 
     onDeactivate() {
-        if (this.pending) this.commitPending();
+        if (this.pending) {
+            this.commitPending();
+        }
         this.destroyNub();
         super.onDeactivate();
     }
 
     onMouseDown(x, y, button) {
-        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
+        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) {
+            return false;
+        }
         const point = new Point(x, y);
         if (this.pending && this.originNub !== null && this.originNub.isPointTouching(point, true)) {
             this.tracking = true;
@@ -46,9 +50,13 @@ class PaintBucketTool extends Tool {
             this.app.setCursorImg("hand_closed_cursor");
             return true;
         }
-        if (this.pending) this.commitPending();
+        if (this.pending) {
+            this.commitPending();
+        }
         const surface = this.getActiveLayer().getSurface();
-        if (!surface.getBounds().contains(point)) return false;
+        if (!surface.getBounds().contains(point)) {
+            return false;
+        }
         this.beginBitmapTransaction();
         const sampleSurface = this.getSetting("sampleMode", "layer") === "image"
             ? this.getDocumentWorkspace().getCompositionSurface()
@@ -63,7 +71,9 @@ class PaintBucketTool extends Tool {
     }
 
     onMouseMove(x, y) {
-        if (!this.tracking) return false;
+        if (!this.tracking) {
+            return false;
+        }
         this.origin = new Point(
             this.originStart.x + x - this.dragStart.x,
             this.originStart.y + y - this.dragStart.y
@@ -74,7 +84,9 @@ class PaintBucketTool extends Tool {
     }
 
     onMouseUp(x, y) {
-        if (!this.tracking) return false;
+        if (!this.tracking) {
+            return false;
+        }
         this.onMouseMove(x, y);
         this.tracking = false;
         this.app.setCursorImg("paint_bucket_tool_cursor");
@@ -82,14 +94,22 @@ class PaintBucketTool extends Tool {
     }
 
     onKeyPress(key) {
-        if (!this.pending) return false;
-        if (key === "Enter") return this.commitPending();
-        if (key === "Escape") return this.commitPending();
+        if (!this.pending) {
+            return false;
+        }
+        if (key === "Enter") {
+            return this.commitPending();
+        }
+        if (key === "Escape") {
+            return this.commitPending();
+        }
         return false;
     }
 
     onSettingChanged(key) {
-        if (!this.pending) return;
+        if (!this.pending) {
+            return;
+        }
         if (key === "sampleMode") {
             const bounds = this.bitmapTransaction.dirtyBounds;
             if (bounds !== null && !bounds.isEmpty()) {
@@ -107,7 +127,9 @@ class PaintBucketTool extends Tool {
     }
 
     renderPending() {
-        if (!this.pending || this.bitmapTransaction === null) return false;
+        if (!this.pending || this.bitmapTransaction === null) {
+            return false;
+        }
         const surface = this.getActiveLayer().getSurface();
         const width = surface.width;
         const height = surface.height;
@@ -140,11 +162,17 @@ class PaintBucketTool extends Tool {
         const stack = [x, y];
         let minX = width, minY = height, maxX = -1, maxY = -1;
         const matches = (px, py) => {
-            if (px < 0 || py < 0 || px >= width || py >= height) return false;
+            if (px < 0 || py < 0 || px >= width || py >= height) {
+                return false;
+            }
             const pixel = py * width + px;
-            if (visited[pixel]) return false;
+            if (visited[pixel]) {
+                return false;
+            }
             if (selectionPath !== null
-                && !surface.context.isPointInPath(selectionPath, px + 0.5, py + 0.5, "evenodd")) return false;
+                && !surface.context.isPointInPath(selectionPath, px + 0.5, py + 0.5, "evenodd")) {
+                return false;
+            }
             return this.matchesColorTolerance(sampleData, pixel * 4, target, tolerance, premultiplied);
         };
         const paint = (px, py) => {
@@ -160,28 +188,44 @@ class PaintBucketTool extends Tool {
         if (floodMode === "global") {
             for (let py = 0; py < height; ++py) {
                 for (let px = 0; px < width; ++px) {
-                    if (matches(px, py)) paint(px, py);
-                    else visited[py * width + px] = 1;
+                    if (matches(px, py)) {
+                        paint(px, py);
+                    }
+                    else {
+                        visited[py * width + px] = 1;
+                    }
                 }
             }
         } else {
             while (stack.length > 0) {
                 const seedY = stack.pop();
                 const seedX = stack.pop();
-                if (!matches(seedX, seedY)) continue;
+                if (!matches(seedX, seedY)) {
+                    continue;
+                }
                 let left = seedX;
-                while (matches(left - 1, seedY)) --left;
+                while (matches(left - 1, seedY)) {
+                    --left;
+                }
                 let spanUp = false, spanDown = false;
                 for (let px = left; matches(px, seedY); ++px) {
                     paint(px, seedY);
                     if (matches(px, seedY - 1)) {
-                        if (!spanUp) stack.push(px, seedY - 1);
+                        if (!spanUp) {
+                            stack.push(px, seedY - 1);
+                        }
                         spanUp = true;
-                    } else spanUp = false;
+                    } else {
+                        spanUp = false;
+                    }
                     if (matches(px, seedY + 1)) {
-                        if (!spanDown) stack.push(px, seedY + 1);
+                        if (!spanDown) {
+                            stack.push(px, seedY + 1);
+                        }
                         spanDown = true;
-                    } else spanDown = false;
+                    } else {
+                        spanDown = false;
+                    }
                 }
             }
         }
@@ -205,7 +249,9 @@ class PaintBucketTool extends Tool {
     }
 
     commitPending() {
-        if (!this.pending) return false;
+        if (!this.pending) {
+            return false;
+        }
         this.pending = false;
         this.tracking = false;
         this.destroyNub();
@@ -216,7 +262,9 @@ class PaintBucketTool extends Tool {
     }
 
     cancelPending() {
-        if (!this.pending) return false;
+        if (!this.pending) {
+            return false;
+        }
         this.pending = false;
         this.tracking = false;
         this.destroyNub();
@@ -227,7 +275,9 @@ class PaintBucketTool extends Tool {
     }
 
     disposeSampleSnapshot() {
-        if (this.sampleSnapshot !== null) this.sampleSnapshot.dispose();
+        if (this.sampleSnapshot !== null) {
+            this.sampleSnapshot.dispose();
+        }
         this.sampleSnapshot = null;
     }
 
@@ -242,21 +292,29 @@ class PaintBucketTool extends Tool {
     }
 
     destroyNub() {
-        if (this.originNub === null) return;
+        if (this.originNub === null) {
+            return;
+        }
         this.getSurfaceBox().removeRenderer(this.originNub);
         this.originNub.dispose();
         this.originNub = null;
     }
 
     createSelectionPath() {
-        if (this.getSelection().isEmpty()) return null;
+        if (this.getSelection().isEmpty()) {
+            return null;
+        }
         const selection = this.getSelection().createPath();
         const result = new Path2D();
         for (const list of selection.getVertexLists()) {
             const points = list.getVertices();
-            if (points.length === 0) continue;
+            if (points.length === 0) {
+                continue;
+            }
             result.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; ++i) result.lineTo(points[i].x, points[i].y);
+            for (let i = 1; i < points.length; ++i) {
+                result.lineTo(points[i].x, points[i].y);
+            }
             result.closePath();
         }
         selection.dispose();

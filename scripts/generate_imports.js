@@ -59,9 +59,12 @@ const startIndex = index.indexOf(start) + start.length;
 const endIndex = index.indexOf(end);
 
 let prevImports = index.substring(startIndex, endIndex).split('\n');
-const newImports = imports.filter(i => !prevImports.includes(i));
+const importPath = value => value.match(/<script src="([^"?]+)/)?.[1] || value;
+const availablePaths = new Set(imports.map(importPath));
+const previousPaths = new Set(prevImports.map(importPath));
+const newImports = imports.filter(item => !previousPaths.has(importPath(item)));
 
-prevImports = prevImports.filter(i => imports.includes(i));
+prevImports = prevImports.filter(item => availablePaths.has(importPath(item)));
 
 let mergedImports = prevImports.slice();
 for (let item of newImports) {

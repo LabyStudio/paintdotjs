@@ -61,7 +61,9 @@ class DocumentItem extends MenuItem {
         }
         this.updateDirtyIndicator();
         element.addEventListener("contextmenu", event => {
-            if (this.contextMenuCallback === null) return;
+            if (this.contextMenuCallback === null) {
+                return;
+            }
             event.preventDefault();
             event.stopPropagation();
             this.contextMenuCallback(event, this);

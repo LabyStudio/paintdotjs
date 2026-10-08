@@ -14,7 +14,9 @@
 
 class ModalDialogController {
     static initialize() {
-        if (this.observer !== null) return;
+        if (this.observer !== null) {
+            return;
+        }
         this.observer = new MutationObserver(() => this.sync());
         this.observer.observe(document.body, {childList: true, subtree: true});
         this.sync();
@@ -41,9 +43,13 @@ class ModalDialogController {
 
     static blockBackgroundEvent(event) {
         const active = this.getActiveBackdrop();
-        if (active === null) return false;
+        if (active === null) {
+            return false;
+        }
         const dialog = active.querySelector(".app-dialog");
-        if (dialog !== null && dialog.contains(event.target)) return false;
+        if (dialog !== null && dialog.contains(event.target)) {
+            return false;
+        }
         event.preventDefault();
         event.stopImmediatePropagation();
         this.signalAttention(dialog);
@@ -51,9 +57,13 @@ class ModalDialogController {
     }
 
     static signalAttention(dialog) {
-        if (dialog === null) return;
+        if (dialog === null) {
+            return;
+        }
         const now = performance.now();
-        if (now - this.lastAttention < 250) return;
+        if (now - this.lastAttention < 250) {
+            return;
+        }
         this.lastAttention = now;
         dialog.classList.remove("modal-dialog-attention");
         // Restart the animation when the user tries the background again.
@@ -68,7 +78,9 @@ class ModalDialogController {
     static sync() {
         const active = this.getActiveBackdrop();
         const content = document.getElementById("content");
-        if (content !== null) content.inert = active !== null;
+        if (content !== null) {
+            content.inert = active !== null;
+        }
         document.body.classList.toggle("modal-dialog-active", active !== null);
 
         if (active !== null && !active.contains(document.activeElement)) {

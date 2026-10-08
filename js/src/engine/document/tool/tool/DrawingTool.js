@@ -48,18 +48,26 @@ class DrawingTool extends Tool {
     }
 
     onDeactivate() {
-        if (this.tracking) this.commitStroke();
+        if (this.tracking) {
+            this.commitStroke();
+        }
         super.onDeactivate();
     }
 
     onMouseDown(x, y, button, input = null) {
-        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
+        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) {
+            return false;
+        }
         // Browser pointer capture can be interrupted by focus changes, device
         // cancellation, or a second contact. AppView normally finishes that
         // stroke, but recover here as well so a stale transaction can never
         // make the next valid stroke fail.
-        if (this.tracking) this.commitStroke();
-        else if (this.bitmapTransaction !== null) this.cancelBitmapTransaction();
+        if (this.tracking) {
+            this.commitStroke();
+        }
+        else if (this.bitmapTransaction !== null) {
+            this.cancelBitmapTransaction();
+        }
         // Sampled strokes are repeatedly rebuilt from their original pixels.
         // Keep one immutable snapshot for the whole stroke. Lazily capturing
         // 256px tiles can capture a tile after an earlier presentation has
@@ -80,12 +88,16 @@ class DrawingTool extends Tool {
             this.pendingStrokeBounds = null;
         }
         this.drawSegment(this.lastPoint, this.lastPoint, this.lastPressure, this.lastPressure);
-        if (this.strokeSurface !== null) this.requestStrokePresentation();
+        if (this.strokeSurface !== null) {
+            this.requestStrokePresentation();
+        }
         return true;
     }
 
     onMouseMove(x, y, input = null) {
-        if (!this.tracking) return false;
+        if (!this.tracking) {
+            return false;
+        }
         const samples = input !== null && Array.isArray(input.samples) && input.samples.length > 0
             ? input.samples
             : [{x, y, pressure: this.getInputPressure(input)}];
@@ -105,7 +117,9 @@ class DrawingTool extends Tool {
             } else {
                 this.smoothedPoint = point.clone();
             }
-            if (point.equals(this.lastPoint)) continue;
+            if (point.equals(this.lastPoint)) {
+                continue;
+            }
             const pressure = this.getInputPressure(sample);
             this.drawSegment(this.lastPoint, point, this.lastPressure, pressure);
             drewSample = true;
@@ -116,19 +130,25 @@ class DrawingTool extends Tool {
         // rectangle while the document is shown at a scaled zoom: the update
         // edge becomes a transparent seam. Recompose once per pointer event,
         // after all coalesced samples have been added to the v5-style stroke.
-        if (drewSample && this.strokeSurface !== null) this.requestStrokePresentation();
+        if (drewSample && this.strokeSurface !== null) {
+            this.requestStrokePresentation();
+        }
         return true;
     }
 
     onMouseUp(x, y, button, input = null) {
-        if (!this.tracking || button !== this.button) return false;
+        if (!this.tracking || button !== this.button) {
+            return false;
+        }
         this.onMouseMove(x, y, input);
         this.commitStroke();
         return true;
     }
 
     getInputPressure(input) {
-        if (!this.getSetting("pressure", false)) return 1;
+        if (!this.getSetting("pressure", false)) {
+            return 1;
+        }
         const pressure = input && Number.isFinite(Number(input.pressure))
             ? Number(input.pressure)
             : 1;
@@ -145,17 +165,23 @@ class DrawingTool extends Tool {
         const changedBounds = this.getClippedChangedBounds();
         this.markBitmapTransactionDirty(changedBounds);
         this.commitBitmapTransaction();
-        if (this.strokeSurface !== null) this.strokeSurface.dispose();
+        if (this.strokeSurface !== null) {
+            this.strokeSurface.dispose();
+        }
         this.strokeSurface = null;
         this.pendingStrokeBounds = null;
         // Rebuild the complete composition once at the end. Incremental updates
         // stay fast while drawing, while this final pass removes any scaled-view
         // seam at the dirty-region boundary.
-        if (!changedBounds.isEmpty()) this.getActiveLayer().invalidate();
+        if (!changedBounds.isEmpty()) {
+            this.getActiveLayer().invalidate();
+        }
     }
 
     requestStrokePresentation() {
-        if (this.presentationFrame !== null) return;
+        if (this.presentationFrame !== null) {
+            return;
+        }
         this.presentationFrame = requestAnimationFrame(() => {
             this.presentationFrame = null;
             const dirtyBounds = this.presentStroke();
@@ -166,7 +192,9 @@ class DrawingTool extends Tool {
     }
 
     presentStroke() {
-        if (this.strokeSurface === null || this.pendingStrokeBounds === null) return null;
+        if (this.strokeSurface === null || this.pendingStrokeBounds === null) {
+            return null;
+        }
 
         const surface = this.getActiveLayer().getSurface();
         const dirtyBounds = Rectangle.intersect(
@@ -174,7 +202,9 @@ class DrawingTool extends Tool {
             surface.getBounds()
         );
         this.pendingStrokeBounds = null;
-        if (dirtyBounds.isEmpty()) return dirtyBounds;
+        if (dirtyBounds.isEmpty()) {
+            return dirtyBounds;
+        }
 
         // Paint.NET renders brush changes through a 256px tile cache. Canvas
         // does not expose that cache directly, but the same principle applies:
@@ -245,7 +275,9 @@ class DrawingTool extends Tool {
         const offsets = [];
         if (!this.sampledStroke) {
             const steps = Math.max(1, Math.ceil(distance / spacing));
-            for (let i = 0; i <= steps; ++i) offsets.push(distance * i / steps);
+            for (let i = 0; i <= steps; ++i) {
+                offsets.push(distance * i / steps);
+            }
         } else if (!this.hasStrokeSample) {
             offsets.push(0);
             this.hasStrokeSample = true;
@@ -295,7 +327,9 @@ class DrawingTool extends Tool {
 
     getBrushStampExtent(stampWidth, hardness) {
         const radius = Math.max(0.5, stampWidth / 2);
-        if (hardness >= 0.999) return radius;
+        if (hardness >= 0.999) {
+            return radius;
+        }
         return this.getBrushStampProfile(radius, hardness).extentRadius;
     }
 
@@ -366,7 +400,9 @@ class DrawingTool extends Tool {
             const ny = (py + 0.5 - centerY) / radius;
             for (let px = left; px < right; ++px) {
                 const nx = (px + 0.5 - centerX) / radius;
-                if (nx * nx + ny * ny <= 1) context.fillRect(px, py, 1, 1);
+                if (nx * nx + ny * ny <= 1) {
+                    context.fillRect(px, py, 1, 1);
+                }
             }
         }
     }
@@ -383,12 +419,16 @@ class DrawingTool extends Tool {
             color.red, color.green, color.blue, color.alpha
         ].join(":");
         let sprite = this.brushSpriteCache.get(cacheKey);
-        if (sprite !== undefined) return sprite;
+        if (sprite !== undefined) {
+            return sprite;
+        }
 
         const profile = this.getBrushStampProfile(renderDiameter / 2, hardness);
         let spriteSize = Math.ceil(profile.extentRadius * 2) + 2;
         // Paint.NET measures an inflated, odd-sized bitmap around the center.
-        if ((spriteSize & 1) === 0) ++spriteSize;
+        if ((spriteSize & 1) === 0) {
+            ++spriteSize;
+        }
 
         const canvas = document.createElement("canvas");
         canvas.width = spriteSize;
@@ -484,14 +524,20 @@ class DrawingTool extends Tool {
 
     clipToSelection(context) {
         const selection = this.getSelection();
-        if (selection.isEmpty()) return;
+        if (selection.isEmpty()) {
+            return;
+        }
         const path = selection.createPath();
         context.beginPath();
         for (const list of path.getVertexLists()) {
             const points = list.getVertices();
-            if (points.length === 0) continue;
+            if (points.length === 0) {
+                continue;
+            }
             context.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; ++i) context.lineTo(points[i].x, points[i].y);
+            for (let i = 1; i < points.length; ++i) {
+                context.lineTo(points[i].x, points[i].y);
+            }
             context.closePath();
         }
         context.clip("evenodd");

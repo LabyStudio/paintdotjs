@@ -38,7 +38,9 @@ class ToolOptionDropdown {
         this.element.className = "tool-dropdown "
             + (options.iconOnly ? "tool-dropdown-icon" : "tool-dropdown-text")
             + (options.toolbar ? " tool-dropdown-toolbar" : " tool-dropdown-field");
-        if (options.cycleOnMainClick) this.element.classList.add("tool-dropdown-split");
+        if (options.cycleOnMainClick) {
+            this.element.classList.add("tool-dropdown-split");
+        }
         if (options.fitSelected) {
             this.element.classList.add("tool-dropdown-fit-selected");
         } else {
@@ -46,24 +48,29 @@ class ToolOptionDropdown {
             this.element.style.minWidth = options.width + "px";
         }
 
-        if (options.leadingIcon) {
-            this.leadingIcon = document.createElement("img");
-            this.leadingIcon.className = "tool-dropdown-leading-icon";
-            this.leadingIcon.src = "assets/icons/" + options.leadingIcon;
-            this.element.appendChild(this.leadingIcon);
+        {
+            // Leading icon
+            if (options.leadingIcon) {
+                this.leadingIcon = document.createElement("img");
+                this.leadingIcon.className = "tool-dropdown-leading-icon";
+                this.leadingIcon.src = "assets/icons/" + options.leadingIcon;
+                this.element.appendChild(this.leadingIcon);
+            }
+
+            // Selected value
+            this.valueIcon = document.createElement("img");
+            this.valueIcon.className = "tool-dropdown-value-icon";
+            this.element.appendChild(this.valueIcon);
+
+            this.valueLabel = document.createElement("span");
+            this.valueLabel.className = "tool-dropdown-value-label";
+            this.element.appendChild(this.valueLabel);
+
+            // Menu arrow
+            this.arrow = document.createElement("span");
+            this.arrow.className = "tool-dropdown-arrow";
+            this.element.appendChild(this.arrow);
         }
-
-        this.valueIcon = document.createElement("img");
-        this.valueIcon.className = "tool-dropdown-value-icon";
-        this.element.appendChild(this.valueIcon);
-
-        this.valueLabel = document.createElement("span");
-        this.valueLabel.className = "tool-dropdown-value-label";
-        this.element.appendChild(this.valueLabel);
-
-        this.arrow = document.createElement("span");
-        this.arrow.className = "tool-dropdown-arrow";
-        this.element.appendChild(this.arrow);
 
         this.element.onclick = event => {
             event.stopPropagation();
@@ -100,18 +107,26 @@ class ToolOptionDropdown {
     }
 
     getIconSource(entry) {
-        if (this.options.shapeGrid) return ToolOptionDropdown.getShapeIconSource(entry[0]);
+        if (this.options.shapeGrid) {
+            return ToolOptionDropdown.getShapeIconSource(entry[0]);
+        }
         const iconName = entry[2];
-        if (!iconName) return null;
+        if (!iconName) {
+            return null;
+        }
         return iconName.startsWith("data:") ? iconName : "assets/icons/" + iconName;
     }
 
     update() {
         const entry = this.getSelectedEntry();
-        if (entry === undefined) return;
+        if (entry === undefined) {
+            return;
+        }
         const iconSource = this.getIconSource(entry);
         this.valueIcon.hidden = !iconSource || !!this.options.leadingIcon;
-        if (!this.valueIcon.hidden) this.valueIcon.src = iconSource;
+        if (!this.valueIcon.hidden) {
+            this.valueIcon.src = iconSource;
+        }
         this.valueLabel.hidden = !!this.options.iconOnly;
         this.valueLabel.textContent = entry[1];
         // Keep the collapsed selector in the UI font, like Paint.NET. Using
@@ -123,7 +138,9 @@ class ToolOptionDropdown {
     }
 
     cycle() {
-        if (ToolOptionDropdown.active === this) this.close();
+        if (ToolOptionDropdown.active === this) {
+            this.close();
+        }
         const index = Math.max(0, this.options.values.findIndex(entry => entry[0] === this.value));
         const entry = this.options.values[(index + 1) % this.options.values.length];
         this.value = entry[0];
@@ -146,7 +163,9 @@ class ToolOptionDropdown {
                 ? "tool-dropdown-menu-checkmarks"
                 : (this.options.iconOnly || this.options.menuIcons
                     ? "tool-dropdown-menu-icons" : "tool-dropdown-menu-text"));
-        if (this.options.fontPreview) this.menu.classList.add("tool-font-dropdown-menu");
+        if (this.options.fontPreview) {
+            this.menu.classList.add("tool-font-dropdown-menu");
+        }
         this.menu.style.minWidth = Math.max(this.options.menuWidth || 0, this.options.width) + "px";
 
         if (this.options.shapeGrid) {
@@ -177,31 +196,38 @@ class ToolOptionDropdown {
         const button = document.createElement("button");
         button.type = "button";
         button.toggleAttribute("active", entry[0] === this.value);
-        if (this.options.menuCheckmarks) {
-            const check = document.createElement("span");
-            check.className = "tool-dropdown-check";
-            button.appendChild(check);
-        } else if (entry[2]) {
-            const icon = document.createElement("img");
-            icon.src = this.getIconSource(entry);
-            button.appendChild(icon);
-        }
-        const label = document.createElement("span");
-        label.className = "tool-dropdown-entry-label";
-        label.textContent = entry[1];
-        button.appendChild(label);
-        if (this.options.fontPreview) {
-            const preview = document.createElement("span");
-            preview.className = "tool-font-dropdown-preview";
-            preview.textContent = "The quick brown fox";
-            if (FontManager.isCustomFont(entry[0])) {
-                preview.dataset.fontFamily = entry[0];
-                preview.dataset.fontName = entry[1];
-                this.fontPreviewObserver?.observe(preview);
-            } else {
-                preview.style.fontFamily = `'${String(entry[0]).replace(/'/g, "\\'")}', sans-serif`;
+        {
+            // Selection marker or icon
+            if (this.options.menuCheckmarks) {
+                const check = document.createElement("span");
+                check.className = "tool-dropdown-check";
+                button.appendChild(check);
+            } else if (entry[2]) {
+                const icon = document.createElement("img");
+                icon.src = this.getIconSource(entry);
+                button.appendChild(icon);
             }
-            button.appendChild(preview);
+
+            // Label
+            const label = document.createElement("span");
+            label.className = "tool-dropdown-entry-label";
+            label.textContent = entry[1];
+            button.appendChild(label);
+
+            // Font preview
+            if (this.options.fontPreview) {
+                const preview = document.createElement("span");
+                preview.className = "tool-font-dropdown-preview";
+                preview.textContent = "The quick brown fox";
+                if (FontManager.isCustomFont(entry[0])) {
+                    preview.dataset.fontFamily = entry[0];
+                    preview.dataset.fontName = entry[1];
+                    this.fontPreviewObserver?.observe(preview);
+                } else {
+                    preview.style.fontFamily = `'${String(entry[0]).replace(/'/g, "\\'")}', sans-serif`;
+                }
+                button.appendChild(preview);
+            }
         }
         button.onclick = event => {
             event.stopPropagation();
@@ -219,7 +245,9 @@ class ToolOptionDropdown {
         this.pendingFontJumpValue = this.value;
         this.fontPreviewObserver = new IntersectionObserver(entries => {
             for (const observed of entries) {
-                if (!observed.isIntersecting) continue;
+                if (!observed.isIntersecting) {
+                    continue;
+                }
                 const preview = observed.target;
                 this.fontPreviewObserver?.unobserve(preview);
                 FontManager.ensureLoaded(preview.dataset.fontFamily).then(face => {
@@ -236,7 +264,9 @@ class ToolOptionDropdown {
         let index = 0;
         const appendChunk = () => {
             if (this.menu === null || token !== this.fontRenderToken
-                || !results.isConnected) return;
+                || !results.isConnected) {
+                return;
+            }
             const fragment = document.createDocumentFragment();
             const end = Math.min(index + 12, this.options.values.length);
             for (; index < end; ++index) {
@@ -247,13 +277,17 @@ class ToolOptionDropdown {
             }
             results.appendChild(fragment);
             this.focusPendingFontEntry();
-            if (index < this.options.values.length) requestAnimationFrame(appendChunk);
+            if (index < this.options.values.length) {
+                requestAnimationFrame(appendChunk);
+            }
         };
         requestAnimationFrame(appendChunk);
     }
 
     onFontTypeahead(event) {
-        if (this.menu === null || !this.options.fontPreview) return;
+        if (this.menu === null || !this.options.fontPreview) {
+            return;
+        }
         if (event.key === "Escape") {
             event.preventDefault();
             event.stopImmediatePropagation();
@@ -277,7 +311,9 @@ class ToolOptionDropdown {
             return;
         }
         if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey
-            || event.isComposing || event.key.length !== 1) return;
+            || event.isComposing || event.key.length !== 1) {
+            return;
+        }
 
         // The font picker owns printable keys while open. Consume them even
         // when no font matches so tool/action shortcuts can never fire.
@@ -286,7 +322,9 @@ class ToolOptionDropdown {
 
         const now = Date.now();
         const character = event.key.toLocaleLowerCase();
-        if (now - this.fontTypeaheadTime > 1000) this.fontTypeaheadValue = "";
+        if (now - this.fontTypeaheadTime > 1000) {
+            this.fontTypeaheadValue = "";
+        }
         this.fontTypeaheadTime = now;
         let candidate = this.fontTypeaheadValue + character;
         let match = this.findFontTypeaheadMatch(candidate);
@@ -302,13 +340,17 @@ class ToolOptionDropdown {
             this.fontTypeaheadValue = "";
             this.fontTypeaheadTimer = null;
         }, 1000);
-        if (match === null) return;
+        if (match === null) {
+            return;
+        }
         this.pendingFontJumpValue = match[0];
         this.focusPendingFontEntry();
     }
 
     moveFontSelection(offset) {
-        if (this.options.values.length === 0) return;
+        if (this.options.values.length === 0) {
+            return;
+        }
         clearTimeout(this.fontTypeaheadTimer);
         this.fontTypeaheadTimer = null;
         this.fontTypeaheadValue = "";
@@ -319,8 +361,12 @@ class ToolOptionDropdown {
         if (index < 0 && this.pendingFontJumpValue !== null) {
             index = this.options.values.findIndex(entry => entry[0] === this.pendingFontJumpValue);
         }
-        if (index < 0) index = this.options.values.findIndex(entry => entry[0] === this.value);
-        if (index < 0) index = 0;
+        if (index < 0) {
+            index = this.options.values.findIndex(entry => entry[0] === this.value);
+        }
+        if (index < 0) {
+            index = 0;
+        }
 
         const nextIndex = Math.max(0, Math.min(this.options.values.length - 1, index + offset));
         const entry = this.options.values[nextIndex];
@@ -345,15 +391,21 @@ class ToolOptionDropdown {
 
     findFontTypeaheadMatch(prefix) {
         for (const entry of this.options.values) {
-            if (String(entry[1]).toLocaleLowerCase().startsWith(prefix)) return entry;
+            if (String(entry[1]).toLocaleLowerCase().startsWith(prefix)) {
+                return entry;
+            }
         }
         return null;
     }
 
     focusPendingFontEntry() {
-        if (this.pendingFontJumpValue === null) return;
+        if (this.pendingFontJumpValue === null) {
+            return;
+        }
         const button = this.fontEntryButtons.get(this.pendingFontJumpValue);
-        if (button === undefined || !button.isConnected) return;
+        if (button === undefined || !button.isConnected) {
+            return;
+        }
         this.pendingFontJumpValue = null;
         button.focus({preventScroll: true});
         button.scrollIntoView({block: "nearest"});
@@ -361,33 +413,42 @@ class ToolOptionDropdown {
 
     buildShapeGrid() {
         for (const group of this.options.shapeGroups) {
+            // Group heading
             const heading = document.createElement("div");
             heading.className = "tool-shape-grid-heading";
             heading.textContent = group.label;
             this.menu.appendChild(heading);
 
+            // Shape grid
             const grid = document.createElement("div");
             grid.className = "tool-shape-grid";
-            for (const value of group.values) {
-                const entry = this.options.values.find(candidate => candidate[0] === value);
-                if (!entry) continue;
-                const button = document.createElement("button");
-                button.type = "button";
-                button.title = entry[1];
-                button.setAttribute("aria-label", entry[1]);
-                button.toggleAttribute("active", entry[0] === this.value);
-                const icon = document.createElement("img");
-                icon.src = this.getIconSource(entry);
-                icon.alt = "";
-                button.appendChild(icon);
-                button.onclick = event => {
-                    event.stopPropagation();
-                    this.value = entry[0];
-                    this.update();
-                    this.options.onChange(entry[0]);
-                    this.close();
-                };
-                grid.appendChild(button);
+            {
+                for (const value of group.values) {
+                    const entry = this.options.values.find(candidate => candidate[0] === value);
+                    if (!entry) {
+                        continue;
+                    }
+
+                    const button = document.createElement("button");
+                    button.type = "button";
+                    button.title = entry[1];
+                    button.setAttribute("aria-label", entry[1]);
+                    button.toggleAttribute("active", entry[0] === this.value);
+                    {
+                        const icon = document.createElement("img");
+                        icon.src = this.getIconSource(entry);
+                        icon.alt = "";
+                        button.appendChild(icon);
+                    }
+                    button.onclick = event => {
+                        event.stopPropagation();
+                        this.value = entry[0];
+                        this.update();
+                        this.options.onChange(entry[0]);
+                        this.close();
+                    };
+                    grid.appendChild(button);
+                }
             }
             this.menu.appendChild(grid);
         }
@@ -447,12 +508,18 @@ class ToolOptionDropdown {
         this.fontEntryButtons.clear();
         document.removeEventListener("click", this.documentClickListener);
         this.element.setAttribute("aria-expanded", "false");
-        if (this.menu !== null) this.menu.remove();
+        if (this.menu !== null) {
+            this.menu.remove();
+        }
         this.menu = null;
-        if (ToolOptionDropdown.active === this) ToolOptionDropdown.active = null;
+        if (ToolOptionDropdown.active === this) {
+            ToolOptionDropdown.active = null;
+        }
     }
 
     static closeActive() {
-        if (ToolOptionDropdown.active !== null) ToolOptionDropdown.active.close();
+        if (ToolOptionDropdown.active !== null) {
+            ToolOptionDropdown.active.close();
+        }
     }
 }

@@ -26,7 +26,9 @@ const initializePortableCodecs = () => {
     if (imageMagickPromise === null) {
         imageMagickPromise = fetch(magickWasmUrl)
             .then(response => {
-                if (!response.ok) throw new Error('Could not load the bundled image codecs');
+                if (!response.ok) {
+                    throw new Error('Could not load the bundled image codecs');
+                }
                 return response.arrayBuffer();
             })
             .then(bytes => initializeImageMagick(new Uint8Array(bytes)));
@@ -92,10 +94,14 @@ const decodeJpegXr = async bytes => {
 };
 
 export async function decode(bytes, format) {
-    if (format === 'jxr' || format === 'wdp' || format === 'wmp') return decodeJpegXr(bytes);
+    if (format === 'jxr' || format === 'wdp' || format === 'wmp') {
+        return decodeJpegXr(bytes);
+    }
     await initializePortableCodecs();
     const inputFormat = magickFormat(format);
-    if (inputFormat === MagickFormat.Unknown) throw new Error('Unsupported image format: ' + format);
+    if (inputFormat === MagickFormat.Unknown) {
+        throw new Error('Unsupported image format: ' + format);
+    }
     return ImageMagick.read(bytes, inputFormat, image => {
         image.autoOrient();
         image.depth = 8;
@@ -110,7 +116,9 @@ export async function decode(bytes, format) {
 export async function encode(pngBytes, format, quality, options = {}) {
     await initializePortableCodecs();
     const outputFormat = magickFormat(format);
-    if (outputFormat === MagickFormat.Unknown) throw new Error('Unsupported image format: ' + format);
+    if (outputFormat === MagickFormat.Unknown) {
+        throw new Error('Unsupported image format: ' + format);
+    }
     return ImageMagick.read(pngBytes, MagickFormat.Png, image => {
         image.quality = quality;
         if (outputFormat === MagickFormat.Jpeg && options.subsampling) {

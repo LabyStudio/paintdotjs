@@ -103,7 +103,9 @@ class ShortcutKey {
             return new ShortcutKey(null, false, false, false, false);
         }
         const plusKey = normalizedCombo.endsWith("+");
-        if (plusKey) normalizedCombo = normalizedCombo.slice(0, -1);
+        if (plusKey) {
+            normalizedCombo = normalizedCombo.slice(0, -1);
+        }
         let segments = normalizedCombo.replace(/\s/g, "").split("+").filter(Boolean);
         let targetKey = null;
         let shift = false;
@@ -125,7 +127,9 @@ class ShortcutKey {
                 targetKey = ShortcutKey.normalizeKey(key);
             }
         }
-        if (plusKey) targetKey = "+";
+        if (plusKey) {
+            targetKey = "+";
+        }
         return new ShortcutKey(targetKey, shift, ctrl, alt, meta);
     }
 
@@ -138,7 +142,9 @@ class ShortcutKey {
     }
 
     static normalizeKey(key) {
-        if (key === null || key === undefined) return null;
+        if (key === null || key === undefined) {
+            return null;
+        }
         const aliases = {
             " ": "Space",
             Spacebar: "Space",

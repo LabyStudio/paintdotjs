@@ -37,7 +37,9 @@ class MeasurementUnitSelectorItem extends SelectorMenuItem {
         this.setSelectedId(this.id + ".pixel");
         this.app.on("app:update_measurement_unit", unit => {
             const selectedId = this.id + "." + unit;
-            if (this.getSelectedId() !== selectedId) this.setSelectedId(selectedId);
+            if (this.getSelectedId() !== selectedId) {
+                this.setSelectedId(selectedId);
+            }
         });
     }
 

@@ -21,15 +21,21 @@ class DropEntry extends ActionItem {
     initialize(parent) {
         super.initialize(parent);
         this.getElement().addEventListener("mouseenter", () => {
-            if (!Array.isArray(this.parent?.entries)) return;
+            if (!Array.isArray(this.parent?.entries)) {
+                return;
+            }
             for (const sibling of this.parent.entries) {
-                if (sibling !== this && sibling instanceof SubmenuDropEntry) sibling.close();
+                if (sibling !== this && sibling instanceof SubmenuDropEntry) {
+                    sibling.close();
+                }
             }
         });
     }
 
     onPress(event) {
-        if (!this.isEnabled() || this.pressable === null) return;
+        if (!this.isEnabled() || this.pressable === null) {
+            return;
+        }
 
         // Close before running the command. Dialog actions synchronously add a
         // modal backdrop, which can otherwise intercept the document-level

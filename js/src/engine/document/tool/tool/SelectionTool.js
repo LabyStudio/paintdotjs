@@ -64,7 +64,9 @@ class SelectionTool extends Tool {
     }
 
     onDeactivate() {
-        if (this.tracking) this.done();
+        if (this.tracking) {
+            this.done();
+        }
 
         this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(false);
 
@@ -213,7 +215,9 @@ class SelectionTool extends Tool {
 
     onMouseUp(mouseX, mouseY, button, input = null) {
         const wasTracking = this.tracking;
-        if (wasTracking) this.onMouseMove(mouseX, mouseY, input);
+        if (wasTracking) {
+            this.onMouseMove(mouseX, mouseY, input);
+        }
         if (this.moveOriginMode) {
             this.moveOriginMode = false;
         } else {
@@ -296,7 +300,9 @@ class SelectionTool extends Tool {
     }
 
     getPolygonBounds(polygon) {
-        if (polygon.length === 0) return Rectangle.empty();
+        if (polygon.length === 0) {
+            return Rectangle.empty();
+        }
         let minX = polygon[0].x;
         let minY = polygon[0].y;
         let maxX = minX;
@@ -337,7 +343,9 @@ class SelectionTool extends Tool {
     }
 
     onModifierKeysChanged() {
-        if (this.tracking) this.render();
+        if (this.tracking) {
+            this.render();
+        }
         this.updateCursor();
     }
 

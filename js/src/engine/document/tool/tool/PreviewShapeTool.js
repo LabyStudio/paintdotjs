@@ -49,7 +49,9 @@ class PreviewShapeTool extends DrawingTool {
     onActivate() {
         super.onActivate();
         this.colorsForm = FormRegistry.get("colorsForm");
-        if (this.colorsForm !== null) this.colorsForm.changed.add(this.colorsChangedListener);
+        if (this.colorsForm !== null) {
+            this.colorsForm.changed.add(this.colorsChangedListener);
+        }
     }
 
     usesContinuousPointerCoordinates() {
@@ -59,12 +61,18 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     onMouseDown(x, y, button) {
-        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
+        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) {
+            return false;
+        }
         const point = new Point(x, y);
 
         if (this.supportsPendingEdit() && this.pending) {
-            if (this.shape === "line" && this.beginCurveControlInteraction(point)) return true;
-            if (this.shape === "gradient" && this.beginGradientControlInteraction(point)) return true;
+            if (this.shape === "line" && this.beginCurveControlInteraction(point)) {
+                return true;
+            }
+            if (this.shape === "gradient" && this.beginGradientControlInteraction(point)) {
+                return true;
+            }
             // Paint.NET's LineCurveShape uses ShapeTransformOption.None. Its
             // four path points are editable, but it does not show the generic
             // eight-handle bounding box or the rotation handle.
@@ -88,7 +96,9 @@ class PreviewShapeTool extends DrawingTool {
                     this.rotateNub.setVisible(this.interactionMode === MoveToolBaseMode.ROTATE);
                     this.rotateIndicator.setVisible(false);
                 }
-                if (this.interactionMode === MoveToolBaseMode.SCALE) this.app.setCursorImg("hand_closed_cursor");
+                if (this.interactionMode === MoveToolBaseMode.SCALE) {
+                    this.app.setCursorImg("hand_closed_cursor");
+                }
                 return true;
             }
             this.commitPending();
@@ -119,7 +129,9 @@ class PreviewShapeTool extends DrawingTool {
     onMouseMove(x, y) {
         const point = new Point(x, y);
         if (!this.tracking) {
-            if (this.supportsPendingEdit() && this.pending) this.updateHoverCursor(point);
+            if (this.supportsPendingEdit() && this.pending) {
+                this.updateHoverCursor(point);
+            }
             return false;
         }
         if (this.interactionMode !== null) {
@@ -131,8 +143,12 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     onMouseUp(x, y, button) {
-        if (!this.supportsPendingEdit()) return super.onMouseUp(x, y, button);
-        if (!this.tracking || (this.interactionMode === null && button !== this.button)) return false;
+        if (!this.supportsPendingEdit()) {
+            return super.onMouseUp(x, y, button);
+        }
+        if (!this.tracking || (this.interactionMode === null && button !== this.button)) {
+            return false;
+        }
         this.onMouseMove(x, y);
         const editingStartState = this.interactionMode === null ? null : this.editingStartState;
         if (this.interactionMode === null && this.startPoint.equals(this.endPoint)) {
@@ -161,7 +177,9 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     onKeyPress(key) {
-        if (!this.supportsPendingEdit() || (!this.pending && !this.tracking)) return false;
+        if (!this.supportsPendingEdit() || (!this.pending && !this.tracking)) {
+            return false;
+        }
         if (key === "Enter") {
             this.commitPending();
             return true;
@@ -176,8 +194,12 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     onPulse() {
-        if (this.supportsPendingEdit()) MoveToolBase.prototype.onPulse.call(this);
-        else super.onPulse();
+        if (this.supportsPendingEdit()) {
+            MoveToolBase.prototype.onPulse.call(this);
+        }
+        else {
+            super.onPulse();
+        }
     }
 
     onDeactivate() {
@@ -185,7 +207,9 @@ class PreviewShapeTool extends DrawingTool {
             this.colorsForm.changed.remove(this.colorsChangedListener);
             this.colorsForm = null;
         }
-        if (this.supportsPendingEdit() && (this.pending || this.tracking)) this.commitPending();
+        if (this.supportsPendingEdit() && (this.pending || this.tracking)) {
+            this.commitPending();
+        }
         this.destroyNubs();
         super.onDeactivate();
     }
@@ -316,7 +340,9 @@ class PreviewShapeTool extends DrawingTool {
         }
         for (const nub of this.moveNubs || []) {
             if (nub.isVisible() && nub.isPointTouching(point, true)) {
-                if (this.rotateIndicator !== null) this.rotateIndicator.setVisible(false);
+                if (this.rotateIndicator !== null) {
+                    this.rotateIndicator.setVisible(false);
+                }
                 this.app.setCursorImg("hand_open_cursor");
                 return;
             }
@@ -326,7 +352,9 @@ class PreviewShapeTool extends DrawingTool {
             this.app.setCursorImg("hand_open_cursor");
             return;
         }
-        if (this.rotateIndicator !== null) this.rotateIndicator.setVisible(false);
+        if (this.rotateIndicator !== null) {
+            this.rotateIndicator.setVisible(false);
+        }
         this.app.setCursor(this.hitTestPendingShape(point) ? "move" : "crosshair");
     }
 
@@ -334,7 +362,9 @@ class PreviewShapeTool extends DrawingTool {
         if (this.interactionMode === "curve") {
             const localPoint = point.clone();
             const inverse = this.shapeTransform.clone();
-            if (inverse.isInvertible()) inverse.invert();
+            if (inverse.isInvertible()) {
+                inverse.invert();
+            }
             inverse.transformPoints([localPoint]);
             localPoint.x = Math.round(localPoint.x);
             localPoint.y = Math.round(localPoint.y);
@@ -350,12 +380,18 @@ class PreviewShapeTool extends DrawingTool {
         } else if (this.interactionMode === "gradientPoint") {
             const localPoint = point.clone();
             const inverse = this.shapeTransform.clone();
-            if (inverse.isInvertible()) inverse.invert();
+            if (inverse.isInvertible()) {
+                inverse.invert();
+            }
             inverse.transformPoints([localPoint]);
             localPoint.x = Math.round(localPoint.x);
             localPoint.y = Math.round(localPoint.y);
-            if (this.gradientControlIndex === 0) this.startPoint = localPoint;
-            else this.endPoint = localPoint;
+            if (this.gradientControlIndex === 0) {
+                this.startPoint = localPoint;
+            }
+            else {
+                this.endPoint = localPoint;
+            }
             this.positionGradientNubs();
             return;
         } else if (this.interactionMode === MoveToolBaseMode.TRANSLATE) {
@@ -388,7 +424,9 @@ class PreviewShapeTool extends DrawingTool {
         } else if (this.interactionMode === MoveToolBaseMode.SCALE) {
             const localPoint = point.clone();
             const inverse = this.originalTransform.clone();
-            if (inverse.isInvertible()) inverse.invert();
+            if (inverse.isInvertible()) {
+                inverse.invert();
+            }
             inverse.transformPoints([localPoint]);
             localPoint.x = Math.round(localPoint.x);
             localPoint.y = Math.round(localPoint.y);
@@ -400,10 +438,18 @@ class PreviewShapeTool extends DrawingTool {
             const originalWidth = Math.max(1, right - left);
             const originalHeight = Math.max(1, bottom - top);
             const edge = this.interactionEdge;
-            if ([MoveToolBaseEdge.TOP_LEFT, MoveToolBaseEdge.LEFT, MoveToolBaseEdge.BOTTOM_LEFT].includes(edge)) left = localPoint.x;
-            if ([MoveToolBaseEdge.TOP_RIGHT, MoveToolBaseEdge.RIGHT, MoveToolBaseEdge.BOTTOM_RIGHT].includes(edge)) right = localPoint.x;
-            if ([MoveToolBaseEdge.TOP_LEFT, MoveToolBaseEdge.TOP, MoveToolBaseEdge.TOP_RIGHT].includes(edge)) top = localPoint.y;
-            if ([MoveToolBaseEdge.BOTTOM_LEFT, MoveToolBaseEdge.BOTTOM, MoveToolBaseEdge.BOTTOM_RIGHT].includes(edge)) bottom = localPoint.y;
+            if ([MoveToolBaseEdge.TOP_LEFT, MoveToolBaseEdge.LEFT, MoveToolBaseEdge.BOTTOM_LEFT].includes(edge)) {
+                left = localPoint.x;
+            }
+            if ([MoveToolBaseEdge.TOP_RIGHT, MoveToolBaseEdge.RIGHT, MoveToolBaseEdge.BOTTOM_RIGHT].includes(edge)) {
+                right = localPoint.x;
+            }
+            if ([MoveToolBaseEdge.TOP_LEFT, MoveToolBaseEdge.TOP, MoveToolBaseEdge.TOP_RIGHT].includes(edge)) {
+                top = localPoint.y;
+            }
+            if ([MoveToolBaseEdge.BOTTOM_LEFT, MoveToolBaseEdge.BOTTOM, MoveToolBaseEdge.BOTTOM_RIGHT].includes(edge)) {
+                bottom = localPoint.y;
+            }
 
             const isCorner = [MoveToolBaseEdge.TOP_LEFT, MoveToolBaseEdge.TOP_RIGHT,
                 MoveToolBaseEdge.BOTTOM_LEFT, MoveToolBaseEdge.BOTTOM_RIGHT].includes(edge);
@@ -412,10 +458,18 @@ class PreviewShapeTool extends DrawingTool {
                     Math.abs(bottom - top) / originalHeight);
                 const width = originalWidth * scale;
                 const height = originalHeight * scale;
-                if ([MoveToolBaseEdge.TOP_LEFT, MoveToolBaseEdge.BOTTOM_LEFT].includes(edge)) left = right - width;
-                else right = left + width;
-                if ([MoveToolBaseEdge.TOP_LEFT, MoveToolBaseEdge.TOP_RIGHT].includes(edge)) top = bottom - height;
-                else bottom = top + height;
+                if ([MoveToolBaseEdge.TOP_LEFT, MoveToolBaseEdge.BOTTOM_LEFT].includes(edge)) {
+                    left = right - width;
+                }
+                else {
+                    right = left + width;
+                }
+                if ([MoveToolBaseEdge.TOP_LEFT, MoveToolBaseEdge.TOP_RIGHT].includes(edge)) {
+                    top = bottom - height;
+                }
+                else {
+                    bottom = top + height;
+                }
             }
 
             this.startPoint = new Point(left, top);
@@ -671,8 +725,12 @@ class PreviewShapeTool extends DrawingTool {
                         rectangleInterior.width, rectangleInterior.height);
                     context.fill();
                     context.restore();
-                } else if (catalogPath === null) context.fill();
-                else context.fill(catalogPath, "evenodd");
+                } else if (catalogPath === null) {
+                    context.fill();
+                }
+                else {
+                    context.fill(catalogPath, "evenodd");
+                }
             }
             if (["outline", "both", "fillOutline"].includes(drawType)) {
                 // Filling the separately inset interior replaced the current
@@ -682,8 +740,12 @@ class PreviewShapeTool extends DrawingTool {
                     context.rect(rectangleOutline.x, rectangleOutline.y,
                         rectangleOutline.width, rectangleOutline.height);
                 }
-                if (catalogPath === null) context.stroke();
-                else context.stroke(catalogPath);
+                if (catalogPath === null) {
+                    context.stroke();
+                }
+                else {
+                    context.stroke(catalogPath);
+                }
             }
         }
         context.restore();
@@ -757,8 +819,12 @@ class PreviewShapeTool extends DrawingTool {
             const angle = -Math.PI / 2 + i * Math.PI * 2 / (teeth * 4);
             const x = centerX + Math.cos(angle) * rect.width * radius;
             const y = centerY + Math.sin(angle) * rect.height * radius;
-            if (i === 0) context.moveTo(x, y);
-            else context.lineTo(x, y);
+            if (i === 0) {
+                context.moveTo(x, y);
+            }
+            else {
+                context.lineTo(x, y);
+            }
         }
         context.closePath();
         context.moveTo(centerX + rect.width * 0.185, centerY);
@@ -876,7 +942,9 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     ensureCurveControlPoints() {
-        if (this.shape !== "line") return;
+        if (this.shape !== "line") {
+            return;
+        }
         if (this.curveControlPoints === null) {
             const dx = this.endPoint.x - this.startPoint.x;
             const dy = this.endPoint.y - this.startPoint.y;
@@ -889,9 +957,13 @@ class PreviewShapeTool extends DrawingTool {
 
     beginGradientControlInteraction(point) {
         this.positionGradientNubs();
-        if (this.gradientNubs === null) return false;
+        if (this.gradientNubs === null) {
+            return false;
+        }
         for (let i = 0; i < this.gradientNubs.length; ++i) {
-            if (!this.gradientNubs[i].isPointTouching(point, true)) continue;
+            if (!this.gradientNubs[i].isPointTouching(point, true)) {
+                continue;
+            }
             this.tracking = true;
             this.interactionMode = "gradientPoint";
             this.gradientControlIndex = i;
@@ -908,7 +980,9 @@ class PreviewShapeTool extends DrawingTool {
 
     positionGradientNubs() {
         if (this.shape !== "gradient" || !this.pending) {
-            for (const nub of this.gradientNubs || []) nub.setVisible(false);
+            for (const nub of this.gradientNubs || []) {
+                nub.setVisible(false);
+            }
             return;
         }
         if (this.gradientNubs === null) {
@@ -928,10 +1002,14 @@ class PreviewShapeTool extends DrawingTool {
 
     beginCurveControlInteraction(point) {
         this.ensureCurveControlPoints();
-        if (this.curveControlPoints === null) return false;
+        if (this.curveControlPoints === null) {
+            return false;
+        }
         this.positionCurveNubs();
         for (let i = 0; i < this.curveNubs.length; ++i) {
-            if (!this.curveNubs[i].isPointTouching(point, true)) continue;
+            if (!this.curveNubs[i].isPointTouching(point, true)) {
+                continue;
+            }
             this.tracking = true;
             this.interactionMode = "curve";
             this.curveControlIndex = i;
@@ -948,7 +1026,9 @@ class PreviewShapeTool extends DrawingTool {
 
     positionCurveNubs() {
         if (this.shape !== "line" || !this.pending) {
-            for (const nub of this.curveNubs || []) nub.setVisible(false);
+            for (const nub of this.curveNubs || []) {
+                nub.setVisible(false);
+            }
             return;
         }
         this.ensureCurveControlPoints();
@@ -1047,10 +1127,14 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     hitTestPendingShape(point) {
-        if (!this.pending || this.startPoint === null || this.endPoint === null) return false;
+        if (!this.pending || this.startPoint === null || this.endPoint === null) {
+            return false;
+        }
         const localPoint = point.clone();
         const inverse = this.shapeTransform.clone();
-        if (!inverse.isInvertible()) return false;
+        if (!inverse.isInvertible()) {
+            return false;
+        }
         inverse.invert();
         inverse.transformPoints([localPoint]);
         if (this.shape !== "line" && this.shape !== "gradient") {
@@ -1070,12 +1154,18 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     commitStroke() {
-        if (!this.supportsPendingEdit()) super.commitStroke();
-        else this.commitPending();
+        if (!this.supportsPendingEdit()) {
+            super.commitStroke();
+        }
+        else {
+            this.commitPending();
+        }
     }
 
     commitPending() {
-        if (!this.pending && !this.tracking) return false;
+        if (!this.pending && !this.tracking) {
+            return false;
+        }
         const state = this.capturePendingState();
         this.tracking = false;
         this.pending = false;
@@ -1098,7 +1188,9 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     cancelPending() {
-        if (!this.pending && !this.tracking) return false;
+        if (!this.pending && !this.tracking) {
+            return false;
+        }
         this.cancelBitmapTransaction();
         this.tracking = false;
         this.pending = false;
@@ -1113,7 +1205,9 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     pushDrawHistoryMemento() {
-        if (this.drawHistoryPushed) return;
+        if (this.drawHistoryPushed) {
+            return;
+        }
         this.historyStack.pushNewMemento(new ShapeDrawHistoryMemento(
             this.getDocumentWorkspace(), this.getName(), this.getImage()
         ));
@@ -1145,7 +1239,9 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     restorePendingState(state) {
-        if (this.bitmapTransaction !== null) this.cancelBitmapTransaction();
+        if (this.bitmapTransaction !== null) {
+            this.cancelBitmapTransaction();
+        }
         this.beginBitmapTransaction();
         this.startPoint = state.startPoint.clone();
         this.endPoint = state.endPoint.clone();
@@ -1177,7 +1273,9 @@ class PreviewShapeTool extends DrawingTool {
     }
 
     drawLineCap(context, point, other, cap, width) {
-        if (cap === "flat") return;
+        if (cap === "flat") {
+            return;
+        }
         if (cap === "round") {
             context.beginPath();
             context.arc(point.x + 0.5, point.y + 0.5, width / 2, 0, Math.PI * 2);
@@ -1200,6 +1298,8 @@ class PreviewShapeTool extends DrawingTool {
         if (cap === "filledArrow") {
             context.fillStyle = context.strokeStyle;
             context.fill();
-        } else context.stroke();
+        } else {
+            context.stroke();
+        }
     }
 }

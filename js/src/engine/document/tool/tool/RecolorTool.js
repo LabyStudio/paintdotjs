@@ -52,7 +52,9 @@ class RecolorTool extends DrawingTool {
             Math.ceil(Math.max(from.x, to.x) + extent + 1), Math.ceil(Math.max(from.y, to.y) + extent + 1)
         );
         const clipped = Rectangle.intersect(bounds, surface.getBounds());
-        if (clipped.isEmpty()) return;
+        if (clipped.isEmpty()) {
+            return;
+        }
         this.saveRegion(null, clipped);
         const pixels = surface.context.getImageData(clipped.x, clipped.y, clipped.width, clipped.height);
         const targetColor = this.strokeTarget
@@ -70,7 +72,9 @@ class RecolorTool extends DrawingTool {
                     docX, docY, from, to, segmentLength, spacing, stampCount,
                     radius, profile, antialiased
                 );
-                if (strength <= 0) continue;
+                if (strength <= 0) {
+                    continue;
+                }
                 const i = (py * clipped.width + px) * 4;
                 if (this.matchesColorTolerance(pixels.data, i, target, tolerance, premultiplied)) {
                     const shiftedRed = Utility.clamp(pixels.data[i] + replacement.red - target[0], 0, 255);
@@ -108,7 +112,9 @@ class RecolorTool extends DrawingTool {
             );
         };
 
-        if (!antialiased) return distanceAt(x, y) <= radius ? 1 : 0;
+        if (!antialiased) {
+            return distanceAt(x, y) <= radius ? 1 : 0;
+        }
 
         // Recolor writes pixels directly instead of compositing a Canvas
         // bitmap. Average a 4x4 pixel footprint so it receives the same
@@ -129,7 +135,9 @@ class RecolorTool extends DrawingTool {
 
     distanceToSegment(x, y, a, b) {
         const dx = b.x - a.x, dy = b.y - a.y;
-        if (dx === 0 && dy === 0) return Math.hypot(x - a.x, y - a.y);
+        if (dx === 0 && dy === 0) {
+            return Math.hypot(x - a.x, y - a.y);
+        }
         const t = Utility.clamp(((x - a.x) * dx + (y - a.y) * dy) / (dx * dx + dy * dy), 0, 1);
         return Math.hypot(x - (a.x + t * dx), y - (a.y + t * dy));
     }

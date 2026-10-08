@@ -77,7 +77,9 @@ class NumberItem extends TextFieldItem {
 
     setEnabled(enabled) {
         super.setEnabled(enabled);
-        if (this.input !== undefined) this.input.disabled = !enabled;
+        if (this.input !== undefined) {
+            this.input.disabled = !enabled;
+        }
     }
 
     getValue() {

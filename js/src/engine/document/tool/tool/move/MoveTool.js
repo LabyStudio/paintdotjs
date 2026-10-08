@@ -103,8 +103,12 @@ class MoveTool extends MoveToolBase {
     }
 
     setPendingPaste(image, underlay = null, origin = null) {
-        if (this.pendingPasteSurface !== null) this.pendingPasteSurface.dispose();
-        if (this.pendingPasteUnderlay !== null) this.pendingPasteUnderlay.dispose();
+        if (this.pendingPasteSurface !== null) {
+            this.pendingPasteSurface.dispose();
+        }
+        if (this.pendingPasteUnderlay !== null) {
+            this.pendingPasteUnderlay.dispose();
+        }
         this.pendingPasteSurface = Surface.create(image.width, image.height);
         this.pendingPasteSurface.context.drawImage(image, 0, 0);
         this.pendingPasteUnderlay = underlay === null ? null : underlay.clone();
@@ -262,7 +266,9 @@ class MoveTool extends MoveToolBase {
     mergeDirtyRectangles(rectangles) {
         const merged = [];
         for (const rectangle of rectangles) {
-            if (rectangle === null || rectangle.isEmpty()) continue;
+            if (rectangle === null || rectangle.isEmpty()) {
+                continue;
+            }
 
             let candidate = rectangle.clone();
             let didMerge;
@@ -331,7 +337,9 @@ class MoveTool extends MoveToolBase {
         );
 
         let dirtyRectangles = [sourceBounds, destinationBounds];
-        if (previousBounds !== null) dirtyRectangles.push(previousBounds);
+        if (previousBounds !== null) {
+            dirtyRectangles.push(previousBounds);
+        }
         dirtyRectangles = this.mergeDirtyRectangles(dirtyRectangles);
         let dirtyRegion = Region.fromRectangles(dirtyRectangles);
         this.context.previewBounds = destinationBounds.clone();
@@ -341,8 +349,12 @@ class MoveTool extends MoveToolBase {
     }
 
     onSettingChanged(key) {
-        if (key !== "resampling" && key !== "gammaCorrected" && key !== "renderingQuality") return;
-        if (!this.context.lifted || this.context.liftedPixels === null) return;
+        if (key !== "resampling" && key !== "gammaCorrected" && key !== "renderingQuality") {
+            return;
+        }
+        if (!this.context.lifted || this.context.liftedPixels === null) {
+            return;
+        }
 
         // Paint.NET's interpolation and gamma settings are part of the active
         // transaction. Rebuild the floating-pixel preview immediately instead
@@ -408,7 +420,9 @@ class MoveTool extends MoveToolBase {
     }
 
     restorePreview(exact = false) {
-        if (!this.context.lifted || this.context.liftedBounds === null) return;
+        if (!this.context.lifted || this.context.liftedBounds === null) {
+            return;
+        }
         const restore = exact
             ? (surface, rectangle) => surface.copyRegionFromExact(this.scratchSurface, rectangle)
             : (surface, rectangle) => surface.copyRegionFrom(this.scratchSurface, rectangle);
@@ -569,39 +583,4 @@ class MoveTool extends MoveToolBase {
 
         this.dontDrop = false;
     }
-}
-
-class MoveToolContext extends MoveToolBaseContext {
-
-    constructor() {
-        super();
-
-        this.liftedPixels = null;
-        this.poLiftedPixels = null;
-        this.copying = false;
-        this.previewBounds = null;
-    }
-
-    clone() {
-        const base = super.clone();
-        const clone = new MoveToolContext();
-        Object.assign(clone, base);
-        clone.liftedPixels = this.liftedPixels === null ? null : this.liftedPixels.clone();
-        clone.poLiftedPixels = this.poLiftedPixels;
-        clone.copying = this.copying;
-        clone.previewBounds = this.previewBounds === null ? null : this.previewBounds.clone();
-        return clone;
-    }
-
-    dispose() {
-        if (this.liftedPixels !== null) {
-            this.liftedPixels.dispose();
-            this.liftedPixels = null;
-        }
-        if (this.baseTransform !== null) this.baseTransform.dispose();
-        if (this.liftTransform !== null) this.liftTransform.dispose();
-        if (this.deltaTransform !== null) this.deltaTransform.dispose();
-        if (this.startPath !== null) this.startPath.dispose();
-    }
-
 }

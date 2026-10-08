@@ -15,12 +15,16 @@
 class DocumentIO {
 
     static initialize(app) {
-        if (this.initialized) return;
+        if (this.initialized) {
+            return;
+        }
         this.initialized = true;
         this.app = app;
 
         window.addEventListener("beforeunload", event => {
-            if (isApp || !app.hasUnsavedDocuments() || Date.now() < this.allowWebCloseUntil) return;
+            if (isApp || !app.hasUnsavedDocuments() || Date.now() < this.allowWebCloseUntil) {
+                return;
+            }
             event.preventDefault();
             event.returnValue = "";
             this.scheduleWebCloseDialog();
@@ -30,7 +34,9 @@ class DocumentIO {
         // open the icon itself. External file drags do not originate here, so
         // cancelling native drags for UI images keeps normal file import intact.
         document.addEventListener("dragstart", event => {
-            if (event.target instanceof HTMLImageElement) event.preventDefault();
+            if (event.target instanceof HTMLImageElement) {
+                event.preventDefault();
+            }
         });
         document.addEventListener("dragover", event => {
             if (event.dataTransfer !== null && Array.from(event.dataTransfer.types).includes("Files")) {
@@ -40,14 +46,20 @@ class DocumentIO {
         });
         document.addEventListener("drop", event => {
             const files = event.dataTransfer === null ? [] : Array.from(event.dataTransfer.files || []);
-            if (files.length === 0) return;
+            if (files.length === 0) {
+                return;
+            }
             event.preventDefault();
             this.handleDroppedFiles(files);
         });
         document.addEventListener("paste", event => {
-            if (event.defaultPrevented || event.clipboardData === null) return;
+            if (event.defaultPrevented || event.clipboardData === null) {
+                return;
+            }
             const image = Array.from(event.clipboardData.items || []).find(item => item.type.startsWith("image/"));
-            if (image === undefined) return;
+            if (image === undefined) {
+                return;
+            }
             const file = image.getAsFile();
             if (file !== null) {
                 event.preventDefault();
@@ -57,18 +69,24 @@ class DocumentIO {
     }
 
     static scheduleWebCloseDialog() {
-        if (this.webCloseDialogScheduled || this.webCloseDialogOpen) return;
+        if (this.webCloseDialogScheduled || this.webCloseDialogOpen) {
+            return;
+        }
         this.webCloseDialogScheduled = true;
         setTimeout(async () => {
             this.webCloseDialogScheduled = false;
-            if (!this.app.hasUnsavedDocuments() || this.webCloseDialogOpen) return;
+            if (!this.app.hasUnsavedDocuments() || this.webCloseDialogOpen) {
+                return;
+            }
             this.webCloseDialogOpen = true;
             try {
                 const dirtyWorkspaces = this.app.getDocumentWorkspaces()
                     .filter(workspace => workspace.isDirty());
                 const choice = await this.showUnsavedChangesDialog(dirtyWorkspaces, false);
                 if (choice === "save") {
-                    if (await this.saveAll()) this.exitWebApp();
+                    if (await this.saveAll()) {
+                        this.exitWebApp();
+                    }
                 } else if (choice === "discard") {
                     this.exitWebApp();
                 }
@@ -84,53 +102,59 @@ class DocumentIO {
         this.allowWebCloseUntil = Date.now() + 10000;
         window.close();
         setTimeout(() => {
-            if (!document.hidden) window.location.replace("about:blank");
+            if (!document.hidden) {
+                window.location.replace("about:blank");
+            }
         }, 100);
     }
 
     static createUnsavedChangesPreview(workspaces, explanationText = null) {
         const preview = document.createElement("div");
         preview.className = "unsaved-changes-preview";
+        {
+            // Explanation
+            const explanation = document.createElement("p");
+            explanation.textContent = explanationText ||
+                "The following images have changes that have not been saved. " +
+                "Select a thumbnail to show that image in the main window.";
 
-        const explanation = document.createElement("p");
-        explanation.textContent = explanationText ||
-            "The following images have changes that have not been saved. " +
-            "Select a thumbnail to show that image in the main window.";
+            // Thumbnails
+            const strip = document.createElement("div");
+            strip.className = "unsaved-changes-thumbnails";
+            const buttons = [];
+            const selectWorkspace = workspace => {
+                this.app.setActiveDocumentWorkspace(workspace);
+                for (const entry of buttons) {
+                    entry.button.classList.toggle("selected", entry.workspace === workspace);
+                }
+            };
+            for (const workspace of workspaces) {
+                workspace.updateComposition();
+                const source = workspace.getCompositionSurface().getCanvas();
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "unsaved-changes-thumbnail";
+                button.title = workspace.getFriendlyName();
+                {
+                    // Preview
+                    const canvas = document.createElement("canvas");
+                    const scale = Math.min(1, 80 / source.width, 64 / source.height);
+                    canvas.width = Math.max(1, Math.round(source.width * scale));
+                    canvas.height = Math.max(1, Math.round(source.height * scale));
+                    canvas.getContext("2d").drawImage(source, 0, 0, canvas.width, canvas.height);
 
-        const strip = document.createElement("div");
-        strip.className = "unsaved-changes-thumbnails";
-        const buttons = [];
-        const selectWorkspace = workspace => {
-            this.app.setActiveDocumentWorkspace(workspace);
-            for (const entry of buttons) {
-                entry.button.classList.toggle("selected", entry.workspace === workspace);
+                    // Name
+                    const name = document.createElement("span");
+                    name.textContent = workspace.getFriendlyName();
+                    button.append(canvas, name);
+                }
+                button.onclick = () => selectWorkspace(workspace);
+                strip.appendChild(button);
+                buttons.push({button, workspace});
             }
-        };
-
-        for (const workspace of workspaces) {
-            workspace.updateComposition();
-            const source = workspace.getCompositionSurface().getCanvas();
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "unsaved-changes-thumbnail";
-            button.title = workspace.getFriendlyName();
-
-            const canvas = document.createElement("canvas");
-            const scale = Math.min(1, 80 / source.width, 64 / source.height);
-            canvas.width = Math.max(1, Math.round(source.width * scale));
-            canvas.height = Math.max(1, Math.round(source.height * scale));
-            canvas.getContext("2d").drawImage(source, 0, 0, canvas.width, canvas.height);
-
-            const name = document.createElement("span");
-            name.textContent = workspace.getFriendlyName();
-            button.append(canvas, name);
-            button.onclick = () => selectWorkspace(workspace);
-            strip.appendChild(button);
-            buttons.push({button, workspace});
+            preview.append(explanation, strip);
+            selectWorkspace(this.app.getActiveDocumentWorkspace());
         }
-
-        preview.append(explanation, strip);
-        selectWorkspace(this.app.getActiveDocumentWorkspace());
         return preview;
     }
 
@@ -163,10 +187,14 @@ class DocumentIO {
     }
 
     static async closeDocumentWorkspace(workspace) {
-        if (workspace === null || !this.app.getDocumentWorkspaces().includes(workspace)) return false;
+        if (workspace === null || !this.app.getDocumentWorkspaces().includes(workspace)) {
+            return false;
+        }
 
         this.closingWorkspaces ??= new Set();
-        if (this.closingWorkspaces.has(workspace)) return false;
+        if (this.closingWorkspaces.has(workspace)) {
+            return false;
+        }
         this.closingWorkspaces.add(workspace);
 
         try {
@@ -201,8 +229,12 @@ class DocumentIO {
                     }]
                 });
 
-                if (choice !== "save" && choice !== "discard") return false;
-                if (choice === "save" && !await this.saveActive(false)) return false;
+                if (choice !== "save" && choice !== "discard") {
+                    return false;
+                }
+                if (choice === "save" && !await this.saveActive(false)) {
+                    return false;
+                }
             }
 
             return this.app.closeDocumentWorkspace(workspace, false);
@@ -221,8 +253,10 @@ class DocumentIO {
             height = clipboardSize.height;
         }
         const result = await NewFileDialog.open(width, height);
-        if (result !== null) this.app.createBlankDocumentInNewWorkspace(
+        if (result !== null) {
+            this.app.createBlankDocumentInNewWorkspace(
             result.width, result.height, result.resolution);
+        }
     }
 
     static async getClipboardImageSize() {
@@ -240,7 +274,9 @@ class DocumentIO {
         }
 
         const blob = await this.readClipboardImage();
-        if (blob === null) return null;
+        if (blob === null) {
+            return null;
+        }
 
         let image = null;
         try {
@@ -251,7 +287,9 @@ class DocumentIO {
         } catch (_) {
             return null;
         } finally {
-            if (image !== null && typeof image.close === "function") image.close();
+            if (image !== null && typeof image.close === "function") {
+                image.close();
+            }
         }
     }
 
@@ -281,7 +319,9 @@ class DocumentIO {
                     });
                 } catch (error) {
                     // Some Chromium versions reject uncommon but valid extensions.
-                    if (!(error instanceof TypeError)) throw error;
+                    if (!(error instanceof TypeError)) {
+                        throw error;
+                    }
                     handles = await window.showOpenFilePicker({multiple: true});
                 }
                 const files = [];
@@ -293,10 +333,14 @@ class DocumentIO {
                 await this.openFiles(files);
                 return;
             } catch (error) {
-                if (error.name === "AbortError") return;
+                if (error.name === "AbortError") {
+                    return;
+                }
                 // Fall back to the broadly supported input picker if the File
                 // System Access API is unavailable in this browser context.
-                if (error.name !== "SecurityError" && error.name !== "NotAllowedError") throw error;
+                if (error.name !== "SecurityError" && error.name !== "NotAllowedError") {
+                    throw error;
+                }
             }
         }
 
@@ -310,7 +354,9 @@ class DocumentIO {
     }
 
     static openLayerFilePicker() {
-        if (this.app.getActiveDocumentWorkspace() === null) return;
+        if (this.app.getActiveDocumentWorkspace() === null) {
+            return;
+        }
 
         const input = document.createElement("input");
         input.type = "file";
@@ -378,7 +424,9 @@ class DocumentIO {
                 }
             ]
         });
-        if (choice === "open") await this.openFiles(files);
+        if (choice === "open") {
+            await this.openFiles(files);
+        }
         if (choice === "layer") {
             for (const file of files) {
                 try {
@@ -393,8 +441,12 @@ class DocumentIO {
     static async openFiles(files) {
         for (const file of files) {
             try {
-                if (file.name.toLowerCase().endsWith(".pdn")) await this.openPdn(file);
-                else await this.openImage(file);
+                if (file.name.toLowerCase().endsWith(".pdn")) {
+                    await this.openPdn(file);
+                }
+                else {
+                    await this.openImage(file);
+                }
             } catch (error) {
                 alert("Could not open \"" + file.name + "\": " + error.message);
             }
@@ -452,7 +504,9 @@ class DocumentIO {
     static getImageFormat(blob) {
         const name = String(blob?.name || "").toLowerCase();
         const extension = name.match(/\.([^.]+)$/)?.[1];
-        if (extension !== undefined) return extension;
+        if (extension !== undefined) {
+            return extension;
+        }
         return {
             "image/png": "png", "image/jpeg": "jpeg", "image/webp": "webp",
             "image/gif": "gif", "image/bmp": "bmp", "image/avif": "avif",
@@ -477,7 +531,9 @@ class DocumentIO {
         workspace.setDirty(false);
         workspace.getDocument().invalidate();
         workspace.fitViewport();
-        if (typeof image.close === "function") image.close();
+        if (typeof image.close === "function") {
+            image.close();
+        }
         return workspace;
     }
 
@@ -504,7 +560,9 @@ class DocumentIO {
         }
         const image = await this.loadImage(file);
         let workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null) workspace = this.app.createBlankDocumentInNewWorkspace(image.width, image.height);
+        if (workspace === null) {
+            workspace = this.app.createBlankDocumentInNewWorkspace(image.width, image.height);
+        }
         this.finishActiveTool();
         let documentModel = workspace.getDocument();
         const expandedWidth = Math.max(documentModel.getWidth(), image.width);
@@ -522,18 +580,24 @@ class DocumentIO {
         workspace.setActiveLayer(layer);
         workspace.setDirty(true);
         documentModel.invalidate();
-        if (typeof image.close === "function") image.close();
+        if (typeof image.close === "function") {
+            image.close();
+        }
     }
 
     static async saveActive(saveAs = false) {
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null) return false;
+        if (workspace === null) {
+            return false;
+        }
         this.finishActiveTool();
         const layered = workspace.getDocument().getLayers().getLayerCount() > 1;
         let format = workspace.fileFormat === null
             ? SaveImageDialog.fromFileName(workspace.fileName, layered ? "pdn" : "png")
             : SaveImageDialog.find(workspace.fileFormat);
-        if (layered && format.id !== "pdn" && !saveAs) format = SaveImageDialog.find("pdn");
+        if (layered && format.id !== "pdn" && !saveAs) {
+            format = SaveImageDialog.find("pdn");
+        }
 
         let options = {...(workspace.saveOptions || {})};
         let configuredBlob = null;
@@ -547,7 +611,9 @@ class DocumentIO {
                     ? this.serializePdn(workspace)
                     : ImageEncoder.encode(workspace.getCompositionSurface().getCanvas(), formatId, encodeOptions)
             });
-            if (selection === null) return false;
+            if (selection === null) {
+                return false;
+            }
             format = SaveImageDialog.find(selection.format);
             options = selection.options;
             configuredBlob = selection.blob;
@@ -562,7 +628,9 @@ class DocumentIO {
         const hasExpectedExtension = name => extensions.some(extension =>
             String(name || "").toLowerCase().endsWith(extension));
         let handle = !saveAs ? workspace.fileHandle : null;
-        if (handle !== null && !hasExpectedExtension(handle.name)) handle = null;
+        if (handle !== null && !hasExpectedExtension(handle.name)) {
+            handle = null;
+        }
         let localFilePath = !saveAs && handle === null
             && typeof window.desktopFileActions?.writeFile === "function"
             && hasExpectedExtension(workspace.getFilePath())
@@ -577,11 +645,15 @@ class DocumentIO {
                     });
                 } catch (error) {
                     // Some Chromium versions reject uncommon but valid MIME types.
-                    if (!(error instanceof TypeError)) throw error;
+                    if (!(error instanceof TypeError)) {
+                        throw error;
+                    }
                     handle = await window.showSaveFilePicker({suggestedName: baseName});
                 }
             } catch (error) {
-                if (error.name === "AbortError") return false;
+                if (error.name === "AbortError") {
+                    return false;
+                }
                 throw error;
             }
         }
@@ -605,7 +677,9 @@ class DocumentIO {
                     icon: "assets/icons/menu_edit_undo_icon.png"
                 }]
             });
-            if (choice !== "flatten") return false;
+            if (choice !== "flatten") {
+                return false;
+            }
             flattenAfterSave = true;
         }
 
@@ -641,7 +715,9 @@ class DocumentIO {
             this.downloadBlob(blob, baseName);
             workspace.setFileInfo(baseName, null, null, format.id, options);
         }
-        if (flattenAfterSave) this.flattenDocument();
+        if (flattenAfterSave) {
+            this.flattenDocument();
+        }
         workspace.setDirty(false);
         return true;
     }
@@ -654,7 +730,9 @@ class DocumentIO {
         try {
             for (const workspace of workspaces) {
                 this.app.setActiveDocumentWorkspace(workspace);
-                if (!await this.saveActive(false)) return false;
+                if (!await this.saveActive(false)) {
+                    return false;
+                }
             }
             return true;
         } finally {
@@ -666,7 +744,9 @@ class DocumentIO {
 
     static async printActive() {
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null) return false;
+        if (workspace === null) {
+            return false;
+        }
 
         this.finishActiveTool();
         workspace.updateComposition();
@@ -732,7 +812,9 @@ class DocumentIO {
             canvas.width = data.width;
             canvas.height = data.height;
             canvas.getContext("2d").drawImage(image, 0, 0);
-            if (typeof image.close === "function") image.close();
+            if (typeof image.close === "function") {
+                image.close();
+            }
             layers.push({...saved, canvas});
         }
         return {
@@ -786,7 +868,9 @@ class DocumentIO {
     }
 
     static getLocalFilePath(file) {
-        if (file === null || file === undefined) return null;
+        if (file === null || file === undefined) {
+            return null;
+        }
         if (window.desktopFileActions !== undefined) {
             try {
                 return window.desktopFileActions.getPathForFile(file) || null;
@@ -794,7 +878,9 @@ class DocumentIO {
                 // Synthetic browser files do not have a local filesystem path.
             }
         }
-        if (typeof file.path === "string" && file.path.length > 0) return file.path;
+        if (typeof file.path === "string" && file.path.length > 0) {
+            return file.path;
+        }
         return null;
     }
 
@@ -810,10 +896,14 @@ class DocumentIO {
 
     static async copySelection(copyMerged = false) {
         let workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null || workspace.getActiveLayer() === null) return false;
+        if (workspace === null || workspace.getActiveLayer() === null) {
+            return false;
+        }
         this.finishActiveTool();
         workspace = this.app.getActiveDocumentWorkspace();
-        if (copyMerged) workspace.updateComposition();
+        if (copyMerged) {
+            workspace.updateComposition();
+        }
         const layerSurface = copyMerged
             ? workspace.getCompositionSurface()
             : workspace.getActiveLayer().getSurface();
@@ -864,7 +954,9 @@ class DocumentIO {
             || !(workspace.getActiveLayer() instanceof BitmapLayer)) {
             return false;
         }
-        if (!await this.copySelection(false)) return false;
+        if (!await this.copySelection(false)) {
+            return false;
+        }
         workspace.executeFunction(new EraseSelectionFunction());
         return true;
     }
@@ -894,7 +986,9 @@ class DocumentIO {
                 // Fall back to the in-app clipboard below.
             }
         }
-        if (blob === null) blob = this.internalClipboard;
+        if (blob === null) {
+            blob = this.internalClipboard;
+        }
         return blob;
     }
 
@@ -912,13 +1006,17 @@ class DocumentIO {
         layer.getSurface().context.drawImage(image, 0, 0);
         layer.invalidate();
         workspace.setDirty(true);
-        if (typeof image.close === "function") image.close();
+        if (typeof image.close === "function") {
+            image.close();
+        }
         return true;
     }
 
     static async pasteIntoNewLayer() {
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null) return this.pasteIntoNewImage();
+        if (workspace === null) {
+            return this.pasteIntoNewImage();
+        }
 
         const blob = await this.readClipboardImage();
         if (blob === null) {
@@ -974,15 +1072,21 @@ class DocumentIO {
         documentModel.invalidate();
         workspace.setDirty(true);
         this.app.setActiveToolFromType(ToolType.MOVE);
-        if (typeof image.close === "function") image.close();
+        if (typeof image.close === "function") {
+            image.close();
+        }
         return true;
     }
 
     static copySelectionOutline() {
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null || workspace.getSelection().isEmpty()) return false;
+        if (workspace === null || workspace.getSelection().isEmpty()) {
+            return false;
+        }
 
-        if (this.internalSelectionPath !== null) this.internalSelectionPath.dispose();
+        if (this.internalSelectionPath !== null) {
+            this.internalSelectionPath.dispose();
+        }
         this.internalSelectionPath = workspace.getSelection().createPath();
         this.app.fire("app:selection_clipboard_changed");
         return true;
@@ -990,7 +1094,9 @@ class DocumentIO {
 
     static pasteSelectionOutline(combineMode = CombineMode.REPLACE) {
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null || this.internalSelectionPath === null) return false;
+        if (workspace === null || this.internalSelectionPath === null) {
+            return false;
+        }
 
         const history = new SelectionHistoryMemento(
             i18n("menu.edit.pasteSelection.text"),
@@ -999,7 +1105,9 @@ class DocumentIO {
         );
         const selection = workspace.getSelection();
         selection.push();
-        if (combineMode === CombineMode.REPLACE) selection.reset();
+        if (combineMode === CombineMode.REPLACE) {
+            selection.reset();
+        }
         selection.setContinuationPath(this.internalSelectionPath.clone(), combineMode);
         selection.commitContinuation();
         selection.pop();
@@ -1010,7 +1118,9 @@ class DocumentIO {
     static async pasteBlob(blob) {
         const image = await this.loadImage(blob);
         let workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null) workspace = this.app.createBlankDocumentInNewWorkspace(image.width, image.height);
+        if (workspace === null) {
+            workspace = this.app.createBlankDocumentInNewWorkspace(image.width, image.height);
+        }
         const documentModel = workspace.getDocument();
         let expand = false;
         if (image.width > documentModel.getWidth() || image.height > documentModel.getHeight()) {
@@ -1048,7 +1158,9 @@ class DocumentIO {
                 ]
             });
             if (choice === "cancel") {
-                if (typeof image.close === "function") image.close();
+                if (typeof image.close === "function") {
+                    image.close();
+                }
                 return false;
             }
             expand = choice === "expand";
@@ -1108,7 +1220,9 @@ class DocumentIO {
         }
         pasteUnderlay.dispose();
         workspace.setDirty(true);
-        if (typeof image.close === "function") image.close();
+        if (typeof image.close === "function") {
+            image.close();
+        }
         return true;
     }
 
@@ -1179,10 +1293,18 @@ class DocumentIO {
 
         let x = Math.round(sourceBounds.getLeft());
         let y = Math.round(sourceBounds.getTop());
-        if (x < visibleLeft) x = visibleLeft;
-        else if (x + width > visibleRight) x = visibleRight - width;
-        if (y < visibleTop) y = visibleTop;
-        else if (y + height > visibleBottom) y = visibleBottom - height;
+        if (x < visibleLeft) {
+            x = visibleLeft;
+        }
+        else if (x + width > visibleRight) {
+            x = visibleRight - width;
+        }
+        if (y < visibleTop) {
+            y = visibleTop;
+        }
+        else if (y + height > visibleBottom) {
+            y = visibleBottom - height;
+        }
 
         x = Math.max(0, x);
         y = Math.max(0, y);
@@ -1199,16 +1321,22 @@ class DocumentIO {
     static finishActiveTool(reactivate = true) {
         const tool = this.app.getActiveTool();
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (tool === null || workspace === null || !tool.isActive()) return null;
+        if (tool === null || workspace === null || !tool.isActive()) {
+            return null;
+        }
         const type = tool.getType();
         this.app.setActiveTool(null);
-        if (reactivate) this.app.setActiveToolFromType(type);
+        if (reactivate) {
+            this.app.setActiveToolFromType(type);
+        }
         return type;
     }
 
     static async resizeImage() {
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null) return false;
+        if (workspace === null) {
+            return false;
+        }
         const oldDocument = workspace.getDocument();
         const result = await ImageSizeDialog.open("resize", {
             width: oldDocument.getWidth(),
@@ -1298,7 +1426,9 @@ class DocumentIO {
 
     static async changeCanvasSize() {
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null) return false;
+        if (workspace === null) {
+            return false;
+        }
         const oldDocument = workspace.getDocument();
         const result = await ImageSizeDialog.open("canvas", {
             width: oldDocument.getWidth(),
@@ -1356,12 +1486,22 @@ class DocumentIO {
     }
 
     static getCanvasFillStyle(fill) {
-        if (fill === "transparent") return null;
-        if (fill === "white") return "#ffffffff";
-        if (fill === "black") return "#000000ff";
+        if (fill === "transparent") {
+            return null;
+        }
+        if (fill === "white") {
+            return "#ffffffff";
+        }
+        if (fill === "black") {
+            return "#000000ff";
+        }
         const colors = FormRegistry.get("colorsForm");
-        if (fill === "primary") return colors?.mainColor?.toHex?.() || "#ff0000ff";
-        if (fill === "secondary") return colors?.secondaryColor?.toHex?.() || "#ffffffff";
+        if (fill === "primary") {
+            return colors?.mainColor?.toHex?.() || "#ff0000ff";
+        }
+        if (fill === "secondary") {
+            return colors?.secondaryColor?.toHex?.() || "#ffffffff";
+        }
         return null;
     }
 
@@ -1385,16 +1525,22 @@ class DocumentIO {
         }
         workspace.setActiveLayerIndex(Math.min(activeIndex, replacement.getLayers().getLayerCount() - 1));
         workspace.getSelection().reset();
-        if (clearHistory) workspace.getHistory().clearAll();
+        if (clearHistory) {
+            workspace.getHistory().clearAll();
+        }
         replacement.invalidate();
         workspace.fitViewport();
         this.app.fire("document:update_size", width, height);
-        if (activeToolType !== null) this.app.setActiveToolFromType(activeToolType);
+        if (activeToolType !== null) {
+            this.app.setActiveToolFromType(activeToolType);
+        }
     }
 
     static cropToSelection() {
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null || workspace.getSelection().isEmpty()) return false;
+        if (workspace === null || workspace.getSelection().isEmpty()) {
+            return false;
+        }
 
         const activeToolType = this.finishActiveTool(false);
         const oldDocument = workspace.getDocument();
@@ -1431,7 +1577,9 @@ class DocumentIO {
             context.beginPath();
             for (const vertexList of selectionPath.getVertexLists()) {
                 const vertices = vertexList.getVertices();
-                if (vertices.length === 0) continue;
+                if (vertices.length === 0) {
+                    continue;
+                }
                 context.moveTo(vertices[0].x, vertices[0].y);
                 for (let index = 1; index < vertices.length; ++index) {
                     context.lineTo(vertices[index].x, vertices[index].y);
@@ -1457,7 +1605,9 @@ class DocumentIO {
 
     static transformDocument(transformType) {
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null) return false;
+        if (workspace === null) {
+            return false;
+        }
 
         const activeToolType = this.finishActiveTool(false);
         const oldDocument = workspace.getDocument();
@@ -1494,7 +1644,9 @@ class DocumentIO {
     static transformActiveLayer(transformType) {
         const workspace = this.app.getActiveDocumentWorkspace();
         const layer = workspace === null ? null : workspace.getActiveLayer();
-        if (!(layer instanceof BitmapLayer)) return false;
+        if (!(layer instanceof BitmapLayer)) {
+            return false;
+        }
 
         const activeToolType = this.finishActiveTool(false);
         const surface = layer.getSurface();
@@ -1557,7 +1709,9 @@ class DocumentIO {
 
     static flattenDocument() {
         const workspace = this.app.getActiveDocumentWorkspace();
-        if (workspace === null || workspace.getDocument().getLayers().getLayerCount() < 2) return false;
+        if (workspace === null || workspace.getDocument().getLayers().getLayerCount() < 2) {
+            return false;
+        }
 
         const activeToolType = this.finishActiveTool(false);
         workspace.updateComposition();

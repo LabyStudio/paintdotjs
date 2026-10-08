@@ -93,7 +93,7 @@ class LayerForm extends Form {
                 // Fill the layer list with the layers of the active document
                 let layers = document.getLayers();
                 for (let layer of layers.list()) {
-                    this.layerListItem.addAt(0, new LayerItem(layer));
+                    this.layerListItem.addAt(0, new LayerItem(layer, item => this.openLayerProperties(item)));
                 }
 
                 // Set the selected layer to the active layer of the active document
@@ -130,6 +130,16 @@ class LayerForm extends Form {
             }
         }
         return null;
+    }
+
+    openLayerProperties(item) {
+        let documentWorkspace = this.app.getActiveDocumentWorkspace();
+        if (documentWorkspace === null) {
+            return;
+        }
+
+        documentWorkspace.setActiveLayer(item.getLayer());
+        ActionRegistry.get("menu.layers.layer.properties").runPerformAction();
     }
 
     create(id) {

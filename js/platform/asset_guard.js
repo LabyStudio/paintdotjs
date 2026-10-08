@@ -27,38 +27,52 @@
     }
 
     window.paintDotJsAssetsReady = assetsReady;
-    if (assetsReady) return;
+    if (assetsReady) {
+        return;
+    }
 
     const showSetupMessage = () => {
         const content = document.getElementById('content');
         const overlay = document.getElementById('windowOverlay');
-        if (content !== null) content.remove();
-        if (overlay !== null) overlay.remove();
+        if (content !== null) {
+            content.remove();
+        }
+        if (overlay !== null) {
+            overlay.remove();
+        }
 
         const page = document.createElement('main');
         page.className = 'missing-assets-page';
+        {
+            // Setup message
+            const dialog = document.createElement('section');
+            dialog.className = 'missing-assets-dialog';
+            {
+                // Heading
+                const title = document.createElement('h1');
+                title.textContent = 'Required assets are missing';
 
-        const dialog = document.createElement('section');
-        dialog.className = 'missing-assets-dialog';
+                // Explanation
+                const explanation = document.createElement('p');
+                explanation.textContent = 'This paint.js checkout has not prepared the Paint.NET assets yet.';
 
-        const title = document.createElement('h1');
-        title.textContent = 'Required assets are missing';
+                // Setup command
+                const instruction = document.createElement('p');
+                instruction.textContent = 'Run this command from the project directory, then reload the page:';
 
-        const explanation = document.createElement('p');
-        explanation.textContent = 'This paint.js checkout has not prepared the Paint.NET assets yet.';
+                const command = document.createElement('code');
+                command.textContent = 'npm run check-assets';
 
-        const instruction = document.createElement('p');
-        instruction.textContent = 'Run this command from the project directory, then reload the page:';
+                // Note
+                const note = document.createElement('p');
+                note.className = 'missing-assets-note';
+                note.textContent = 'The assets are downloaded separately because they cannot be included in the repository.';
 
-        const command = document.createElement('code');
-        command.textContent = 'npm run check-assets';
+                dialog.append(title, explanation, instruction, command, note);
+            }
+            page.appendChild(dialog);
+        }
 
-        const note = document.createElement('p');
-        note.className = 'missing-assets-note';
-        note.textContent = 'The assets are downloaded separately because they cannot be included in the repository.';
-
-        dialog.append(title, explanation, instruction, command, note);
-        page.appendChild(dialog);
         document.body.appendChild(page);
     };
 

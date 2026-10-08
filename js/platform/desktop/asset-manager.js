@@ -50,10 +50,16 @@ function developmentAssets() {
 
 function findInstalledAssets() {
     const external = process.env.PAINTDOTJS_ASSETS_DIR;
-    if (external && validAssetDirectory(external)) return path.resolve(external);
-    if (!app.isPackaged) return developmentAssets();
+    if (external && validAssetDirectory(external)) {
+        return path.resolve(external);
+    }
+    if (!app.isPackaged) {
+        return developmentAssets();
+    }
     const bundled = path.join(process.resourcesPath, 'assets');
-    if (validAssetDirectory(bundled)) return bundled;
+    if (validAssetDirectory(bundled)) {
+        return bundled;
+    }
     const userAssets = path.join(app.getPath('userData'), 'assets');
     return validAssetDirectory(userAssets) ? userAssets : null;
 }
@@ -82,7 +88,9 @@ function createSetupWindow() {
 }
 
 function updateSetupWindow(window, percent, status) {
-    if (!window || window.isDestroyed()) return;
+    if (!window || window.isDestroyed()) {
+        return;
+    }
     const script = `document.querySelector('progress').value=${Number(percent) || 0};document.querySelector('#status').textContent=${JSON.stringify(status)}`;
     void window.webContents.executeJavaScript(script).catch(() => {});
     window.setProgressBar(Math.max(0, Math.min(1, percent / 100)));
@@ -124,15 +132,21 @@ async function installDownloadedAssets() {
         updateSetupWindow(setupWindow, 100, 'Installation complete');
         return destination;
     } finally {
-        if (!setupWindow.isDestroyed()) setupWindow.close();
+        if (!setupWindow.isDestroyed()) {
+            setupWindow.close();
+        }
         await fsp.rm(temporaryRoot, {recursive: true, force: true});
     }
 }
 
 async function ensureDesktopAssets() {
     const existing = findInstalledAssets();
-    if (existing) return existing;
-    if (!app.isPackaged) throw new Error('Run npm run check-assets before starting the desktop app.');
+    if (existing) {
+        return existing;
+    }
+    if (!app.isPackaged) {
+        throw new Error('Run npm run check-assets before starting the desktop app.');
+    }
     return installDownloadedAssets();
 }
 

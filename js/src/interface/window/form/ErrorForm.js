@@ -43,66 +43,91 @@ class ErrorForm extends Form {
     buildContent() {
         const root = document.createElement("div");
         root.className = "error-form";
+        {
+            // Error details
+            const content = document.createElement("div");
+            content.className = "error-form-content";
+            {
+                // Heading
+                const heading = document.createElement("strong");
+                heading.className = "error-form-heading";
+                heading.textContent = "paint.js encountered an unexpected error.";
 
-        const content = document.createElement("div");
-        content.className = "error-form-content";
+                const explanation = document.createElement("p");
+                explanation.className = "error-form-explanation";
+                explanation.textContent = "You can ignore this error and continue working. Some actions may not have completed.";
 
-        const heading = document.createElement("strong");
-        heading.className = "error-form-heading";
-        heading.textContent = "paint.js encountered an unexpected error.";
+                const source = document.createElement("div");
+                source.className = "error-form-source";
+                source.textContent = this.report.source;
 
-        const explanation = document.createElement("p");
-        explanation.className = "error-form-explanation";
-        explanation.textContent = "You can ignore this error and continue working. Some actions may not have completed.";
+                // Error message
+                const errorLabel = document.createElement("label");
+                errorLabel.textContent = "Error";
 
-        const source = document.createElement("div");
-        source.className = "error-form-source";
-        source.textContent = this.report.source;
+                const message = document.createElement("pre");
+                message.className = "error-form-message";
+                message.textContent = this.report.message;
 
-        const errorLabel = document.createElement("label");
-        errorLabel.textContent = "Error";
-        const message = document.createElement("pre");
-        message.className = "error-form-message";
-        message.textContent = this.report.message;
+                // Stack trace
+                const stackLabel = document.createElement("label");
+                stackLabel.textContent = "Stack trace";
 
-        const stackLabel = document.createElement("label");
-        stackLabel.textContent = "Stack trace";
-        const stack = document.createElement("pre");
-        stack.className = "error-form-stack";
-        stack.textContent = this.report.stack || "No stack trace is available.";
+                const stack = document.createElement("pre");
+                stack.className = "error-form-stack";
+                stack.textContent = this.report.stack || "No stack trace is available.";
 
-        content.append(heading, explanation, source, errorLabel, message, stackLabel, stack);
+                content.append(heading, explanation, source, errorLabel, message, stackLabel, stack);
+            }
+            root.appendChild(content);
 
-        const footer = document.createElement("div");
-        footer.className = "error-form-footer";
-        this.saveStatus = document.createElement("span");
-        this.saveStatus.className = "error-form-save-status";
-        this.saveStatus.setAttribute("role", "status");
+            // Footer
+            const footer = document.createElement("div");
+            footer.className = "error-form-footer";
+            {
+                // Copy button
+                this.copyButton = document.createElement("button");
+                this.copyButton.type = "button";
+                this.copyButton.textContent = "Copy Error";
+                this.copyButton.onclick = () => this.copyError();
 
-        const actions = document.createElement("div");
-        actions.className = "error-form-actions";
-        this.copyButton = document.createElement("button");
-        this.copyButton.type = "button";
-        this.copyButton.textContent = "Copy Error";
-        this.copyButton.onclick = () => this.copyError();
-        this.saveButton = document.createElement("button");
-        this.saveButton.type = "button";
-        this.saveButton.textContent = "Save All";
-        this.saveButton.disabled = this.app.getDocumentWorkspaces().length === 0;
-        this.saveButton.onclick = () => this.saveAll();
-        this.ignoreButton = document.createElement("button");
-        this.ignoreButton.type = "button";
-        this.ignoreButton.textContent = "Ignore";
-        this.ignoreButton.onclick = () => this.ignore();
-        actions.append(this.saveButton, this.ignoreButton);
-        footer.append(this.copyButton, this.saveStatus, actions);
+                // Save status
+                this.saveStatus = document.createElement("span");
+                this.saveStatus.className = "error-form-save-status";
+                this.saveStatus.setAttribute("role", "status");
 
-        root.append(content, footer);
+                // Actions
+                const actions = document.createElement("div");
+                actions.className = "error-form-actions";
+                {
+                    // Save button
+                    this.saveButton = document.createElement("button");
+                    this.saveButton.type = "button";
+                    this.saveButton.textContent = "Save All";
+                    this.saveButton.disabled = this.app.getDocumentWorkspaces().length === 0;
+                    this.saveButton.onclick = () => this.saveAll();
+
+                    // Ignore button
+                    this.ignoreButton = document.createElement("button");
+                    this.ignoreButton.type = "button";
+                    this.ignoreButton.textContent = "Ignore";
+                    this.ignoreButton.onclick = () => this.ignore();
+
+                    actions.append(this.saveButton, this.ignoreButton);
+                }
+
+                footer.append(this.copyButton, this.saveStatus, actions);
+            }
+            root.appendChild(footer);
+        }
+
         return root;
     }
 
     ignore() {
-        if (this.window !== null && this.window.isOpen()) this.window.close();
+        if (this.window !== null && this.window.isOpen()) {
+            this.window.close();
+        }
     }
 
     async copyError() {
@@ -125,7 +150,9 @@ class ErrorForm extends Form {
                 textarea.select();
                 const copied = document.execCommand("copy");
                 textarea.remove();
-                if (!copied) throw new Error("The browser rejected the clipboard request.");
+                if (!copied) {
+                    throw new Error("The browser rejected the clipboard request.");
+                }
             }
             this.saveStatus.textContent = "Error copied to clipboard.";
         } catch (error) {
@@ -134,7 +161,9 @@ class ErrorForm extends Form {
     }
 
     async saveAll() {
-        if (this.saveButton === null || this.saveButton.disabled) return;
+        if (this.saveButton === null || this.saveButton.disabled) {
+            return;
+        }
         this.saveButton.disabled = true;
         this.saveStatus.textContent = "Saving…";
         try {
@@ -153,7 +182,9 @@ class ErrorForm extends Form {
     }
 
     static install() {
-        if (this.installed) return;
+        if (this.installed) {
+            return;
+        }
         this.installed = true;
         this.originalConsoleError = console.error.bind(console);
 
@@ -173,15 +204,21 @@ class ErrorForm extends Form {
     }
 
     static report(error, source = "Application error") {
-        if (this.originalConsoleError !== null) this.originalConsoleError(error);
+        if (this.originalConsoleError !== null) {
+            this.originalConsoleError(error);
+        }
         this.show(this.fromError(error, source));
     }
 
     static show(report) {
-        if (this.showing) return;
+        if (this.showing) {
+            return;
+        }
         const fingerprint = report.message + "\n" + report.stack;
         const now = Date.now();
-        if (fingerprint === this.lastFingerprint && now - this.lastReportTime < 1000) return;
+        if (fingerprint === this.lastFingerprint && now - this.lastReportTime < 1000) {
+            return;
+        }
         this.lastFingerprint = fingerprint;
         this.lastReportTime = now;
 
@@ -236,11 +273,17 @@ class ErrorForm extends Form {
     }
 
     static stringify(value) {
-        if (value instanceof Error) return value.message || String(value);
-        if (typeof value === "string") return value;
+        if (value instanceof Error) {
+            return value.message || String(value);
+        }
+        if (typeof value === "string") {
+            return value;
+        }
         try {
             const json = JSON.stringify(value);
-            if (json !== undefined) return json;
+            if (json !== undefined) {
+                return json;
+            }
         } catch (_) {
             // Fall back to String for circular or otherwise unserializable values.
         }

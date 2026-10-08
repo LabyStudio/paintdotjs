@@ -48,7 +48,9 @@ class LayerPropertiesAction extends LayerAction {
         }
 
         applyProperties(properties);
-        if (LayerProperties.areEqual(originalProperties, properties)) return null;
+        if (LayerProperties.areEqual(originalProperties, properties)) {
+            return null;
+        }
         return memento;
     }
 

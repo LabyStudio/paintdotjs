@@ -41,6 +41,8 @@ class ColorAddItem extends IconItem {
 
     setChecked(checked) {
         this.setActive(checked);
-        if (this.element !== null) this.element.setAttribute("aria-pressed", checked ? "true" : "false");
+        if (this.element !== null) {
+            this.element.setAttribute("aria-pressed", checked ? "true" : "false");
+        }
     }
 }

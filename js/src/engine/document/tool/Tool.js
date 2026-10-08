@@ -136,13 +136,17 @@ class Tool {
 
     getFillColorAt(x, y, foreground, background) {
         const style = this.getSetting("fillStyle", "solid");
-        if (style === "solid") return foreground;
+        if (style === "solid") {
+            return foreground;
+        }
         return this.isHatchForeground(x, y, style) ? foreground : background;
     }
 
     createFillStyle(context, foreground, background) {
         const style = this.getSetting("fillStyle", "solid");
-        if (style === "solid") return foreground.toHex();
+        if (style === "solid") {
+            return foreground.toHex();
+        }
         const tile = document.createElement("canvas");
         tile.width = 8;
         tile.height = 8;
@@ -178,7 +182,9 @@ class Tool {
                 case "colorBurn": return front <= 0 ? 0 : 1 - Math.min(1, (1 - back) / front);
                 case "hardLight": return front <= 0.5 ? 2 * back * front : 1 - 2 * (1 - back) * (1 - front);
                 case "softLight":
-                    if (front <= 0.5) return back - (1 - 2 * front) * back * (1 - back);
+                    if (front <= 0.5) {
+                        return back - (1 - 2 * front) * back * (1 - back);
+                    }
                     return back + (2 * front - 1) * ((back <= 0.25
                         ? ((16 * back - 12) * back + 4) * back
                         : Math.sqrt(back)) - back);
@@ -214,8 +220,12 @@ class Tool {
         const blue = data[index + 2];
         const alpha = data[index + 3];
         if (red === target[0] && green === target[1]
-            && blue === target[2] && alpha === target[3]) return true;
-        if (premultiplied && alpha === 0 && target[3] === 0) return true;
+            && blue === target[2] && alpha === target[3]) {
+            return true;
+        }
+        if (premultiplied && alpha === 0 && target[3] === 0) {
+            return true;
+        }
 
         let r1 = red / 255, g1 = green / 255, b1 = blue / 255, a1 = alpha / 255;
         let r2 = target[0] / 255, g2 = target[1] / 255;
@@ -324,7 +334,9 @@ class Tool {
         // origin can be outside savedTiles, so there is no tile to query or
         // preserve. This also avoids allocating the tile stencil for a stroke
         // that never touches the layer.
-        if (bounds.isEmpty()) return;
+        if (bounds.isEmpty()) {
+            return;
+        }
 
         if (this.savedTiles === null) {
             this.savedTiles = new BitVector2D(
@@ -410,7 +422,9 @@ class Tool {
             this.savedRegion.dispose();
             this.savedRegion = null;
         }
-        if (copySurface) this.scratchSurface.copySurface(layer.getSurface());
+        if (copySurface) {
+            this.scratchSurface.copySurface(layer.getSurface());
+        }
         this.bitmapTransaction = {
             layer,
             layerIndex: this.getActiveLayerIndex(),
@@ -442,7 +456,9 @@ class Tool {
     }
 
     markBitmapTransactionDirty(bounds) {
-        if (this.bitmapTransaction === null) return;
+        if (this.bitmapTransaction === null) {
+            return;
+        }
         const clipped = Rectangle.intersect(Utility.roundRectangle(bounds),
             this.bitmapTransaction.layer.getBounds());
         this.bitmapTransaction.dirtyBounds = this.bitmapTransaction.dirtyBounds === null
@@ -452,13 +468,17 @@ class Tool {
 
     commitBitmapTransaction(name = this.getName(), image = this.getImage()) {
         const memento = this.takeBitmapTransactionMemento(name, image);
-        if (memento === null) return false;
+        if (memento === null) {
+            return false;
+        }
         this.historyStack.pushNewMemento(memento);
         return true;
     }
 
     takeBitmapTransactionMemento(name = this.getName(), image = this.getImage()) {
-        if (this.bitmapTransaction === null) return null;
+        if (this.bitmapTransaction === null) {
+            return null;
+        }
         const transaction = this.bitmapTransaction;
         this.bitmapTransaction = null;
         if (transaction.dirtyBounds === null || transaction.dirtyBounds.isEmpty()) {
@@ -473,13 +493,17 @@ class Tool {
             region, this.scratchSurface
         );
         region.dispose();
-        for (const rectangle of transaction.savedRectangles) rectangle.dispose();
+        for (const rectangle of transaction.savedRectangles) {
+            rectangle.dispose();
+        }
         this.resetSavedTileState();
         return memento;
     }
 
     cancelBitmapTransaction() {
-        if (this.bitmapTransaction === null) return false;
+        if (this.bitmapTransaction === null) {
+            return false;
+        }
         const transaction = this.bitmapTransaction;
         this.bitmapTransaction = null;
         if (transaction.dirtyBounds !== null && !transaction.dirtyBounds.isEmpty()) {
@@ -492,14 +516,18 @@ class Tool {
             }
             transaction.layer.invalidate(transaction.dirtyBounds);
         }
-        for (const rectangle of transaction.savedRectangles) rectangle.dispose();
+        for (const rectangle of transaction.savedRectangles) {
+            rectangle.dispose();
+        }
         this.resetSavedTileState();
         return true;
     }
 
     resetSavedTileState() {
         this.savedTiles = null;
-        if (this.savedRegion !== null) this.savedRegion.dispose();
+        if (this.savedRegion !== null) {
+            this.savedRegion.dispose();
+        }
         this.savedRegion = null;
     }
 

@@ -24,8 +24,12 @@ function walk(directory) {
     const result = [];
     for (const entry of fs.readdirSync(directory, {withFileTypes: true})) {
         const filename = path.join(directory, entry.name);
-        if (entry.isDirectory()) result.push(...walk(filename));
-        else if (entry.isFile()) result.push(filename);
+        if (entry.isDirectory()) {
+            result.push(...walk(filename));
+        }
+        else if (entry.isFile()) {
+            result.push(filename);
+        }
     }
     return result;
 }
@@ -33,7 +37,9 @@ function walk(directory) {
 function findFile(source, basename) {
     const target = basename.toLowerCase();
     const filename = walk(source).find(file => path.basename(file).toLowerCase() === target);
-    if (!filename) throw new Error(`${basename} was not found in the official archive`);
+    if (!filename) {
+        throw new Error(`${basename} was not found in the official archive`);
+    }
     return filename;
 }
 
@@ -56,8 +62,12 @@ function extractNamedResources(resourcesDll, destination) {
     if (result.error?.code === 'ENOENT') {
         throw new Error('Updating Paint.NET assets requires monodis (the mono-utils package)');
     }
-    if (result.error) throw result.error;
-    if (result.status !== 0) throw new Error(result.stderr.trim() || 'monodis could not read Paint.NET resources');
+    if (result.error) {
+        throw result.error;
+    }
+    if (result.status !== 0) {
+        throw new Error(result.stderr.trim() || 'monodis could not read Paint.NET resources');
+    }
 }
 
 function generateAssetManifest({source, output, version}) {
@@ -69,17 +79,25 @@ function generateAssetManifest({source, output, version}) {
         const selected = new Map();
         for (const filename of walk(temporary)) {
             const resourceName = path.basename(filename);
-            if (!resourceName.toLowerCase().endsWith('.png')) continue;
+            if (!resourceName.toLowerCase().endsWith('.png')) {
+                continue;
+            }
             const parts = resourceName.split('.');
             const category = parts.length > 1 ? parts[1].toLowerCase() : 'images';
-            if (!['icons', 'images', 'cursors'].includes(category)) continue;
+            if (!['icons', 'images', 'cursors'].includes(category)) {
+                continue;
+            }
             const name = sanitizeAssetName(resourceName);
             const size = Number(/(\d+)\.png$/i.exec(resourceName)?.[1] || 0);
             const relativePath = `${category}/${name}.png`;
             const previous = selected.get(relativePath);
-            if (!previous || size > previous.size) selected.set(relativePath, {filename, size});
+            if (!previous || size > previous.size) {
+                selected.set(relativePath, {filename, size});
+            }
         }
-        if (!selected.size) throw new Error('No named PNG resources were found in PaintDotNet.Resources.dll');
+        if (!selected.size) {
+            throw new Error('No named PNG resources were found in PaintDotNet.Resources.dll');
+        }
 
         const files = {};
         for (const [relativePath, resource] of [...selected].sort(([left], [right]) => left.localeCompare(right))) {

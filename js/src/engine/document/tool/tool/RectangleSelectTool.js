@@ -62,8 +62,12 @@ class RectangleSelectTool extends SelectionTool {
             const ratioHeight = Math.max(1, Number(this.getSetting("selectionHeight", 1)));
             const dx = b.x - a.x, dy = b.y - a.y;
             let width = Math.abs(dx), height = Math.abs(dy);
-            if (width / ratioWidth < height / ratioHeight) height = width * ratioHeight / ratioWidth;
-            else width = height * ratioWidth / ratioHeight;
+            if (width / ratioWidth < height / ratioHeight) {
+                height = width * ratioHeight / ratioWidth;
+            }
+            else {
+                width = height * ratioWidth / ratioHeight;
+            }
             rect = Rectangle.absolute(a.x, a.y, a.x + Math.sign(dx || 1) * width, a.y + Math.sign(dy || 1) * height);
         } else if (isShiftKeyDown) {
             rect = Utility.pointsToConstrainedRectangle(a, b);

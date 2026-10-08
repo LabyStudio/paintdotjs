@@ -19,10 +19,14 @@ class EraseSelectionFunction extends HistoryFunction {
 
     onExecute(documentWorkspace) {
         const selection = documentWorkspace.getSelection();
-        if (selection.isEmpty()) return null;
+        if (selection.isEmpty()) {
+            return null;
+        }
 
         const layer = documentWorkspace.getActiveLayer();
-        if (!(layer instanceof BitmapLayer)) return null;
+        if (!(layer instanceof BitmapLayer)) {
+            return null;
+        }
 
         const path = selection.createPath();
         const surface = layer.getSurface();

@@ -41,7 +41,9 @@ const requiredPaths = [
 function readSource(relativePath) {
     const cleanPath = relativePath.replace(/^\.\//, '').replace(/[?#].*$/, '');
     const filename = path.resolve(root, cleanPath);
-    if (!filename.startsWith(root + path.sep)) throw new Error(`Invalid script path: ${relativePath}`);
+    if (!filename.startsWith(root + path.sep)) {
+        throw new Error(`Invalid script path: ${relativePath}`);
+    }
     return fs.readFileSync(filename, 'utf8');
 }
 
@@ -62,11 +64,15 @@ async function build() {
 
     const sourceHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const sourceBlock = sourceHtml.match(/<!-- Sources\$start -->([\s\S]*?)<!-- Sources\$end -->/);
-    if (sourceBlock === null) throw new Error('Could not find the application source block in index.html');
+    if (sourceBlock === null) {
+        throw new Error('Could not find the application source block in index.html');
+    }
 
     const sourceScripts = Array.from(sourceBlock[1].matchAll(/<script\s+src="([^"]+)"\s*><\/script>/g),
         match => match[1]);
-    if (sourceScripts.length === 0) throw new Error('No application scripts found in index.html');
+    if (sourceScripts.length === 0) {
+        throw new Error('No application scripts found in index.html');
+    }
 
     // The debug page loads its platform adapter dynamically. The deployed build
     // is web-only, so compile that adapter directly into the production bundle.
@@ -86,7 +92,9 @@ async function build() {
         mangle: true,
         format: {comments: false, preamble: attributionBanner}
     });
-    if (typeof minified.code !== 'string') throw new Error('Terser did not produce an application bundle');
+    if (typeof minified.code !== 'string') {
+        throw new Error('Terser did not produce an application bundle');
+    }
     fs.writeFileSync(path.join(output, 'build/web/app.bundle.js'), minified.code + '\n');
 
     let productionHtml = sourceHtml.replace(
@@ -95,7 +103,9 @@ async function build() {
         '<script src="./build/web/bundle.js"></script>\n' +
         '<script src="./build/web/app.bundle.js"></script>'
     );
-    if (productionHtml === sourceHtml) throw new Error('Could not replace debug scripts in production index.html');
+    if (productionHtml === sourceHtml) {
+        throw new Error('Could not replace debug scripts in production index.html');
+    }
 
     const analyticsId = (process.env.GOOGLE_ANALYTICS_ID || '').trim();
     if (analyticsId !== '') {

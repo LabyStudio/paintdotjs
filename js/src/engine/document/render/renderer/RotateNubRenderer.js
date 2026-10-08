@@ -42,7 +42,9 @@ class RotateNubRenderer extends SurfaceBoxRenderer {
         super.render(destination, renderBounds);
 
         const surface = this.surfaceBox.getSurface();
-        if (surface === null || this.location === null) return;
+        if (surface === null || this.location === null) {
+            return;
+        }
 
         const scaleX = renderBounds.getWidth() / surface.getWidth();
         const scaleY = renderBounds.getHeight() / surface.getHeight();

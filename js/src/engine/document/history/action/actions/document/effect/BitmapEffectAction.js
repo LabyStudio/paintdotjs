@@ -28,8 +28,12 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
     }
 
     static cloneValues(values) {
-        if (values === null || values === undefined) return values;
-        if (typeof structuredClone === "function") return structuredClone(values);
+        if (values === null || values === undefined) {
+            return values;
+        }
+        if (typeof structuredClone === "function") {
+            return structuredClone(values);
+        }
         return JSON.parse(JSON.stringify(values));
     }
 
@@ -39,7 +43,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
     }
 
     static getLastEffect() {
-        if (this.lastEffect === null) return null;
+        if (this.lastEffect === null) {
+            return null;
+        }
         return {
             definition: this.lastEffect.definition,
             values: this.cloneValues(this.lastEffect.values)
@@ -48,14 +54,18 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
 
     static repeatLast(documentWorkspace) {
         const last = this.getLastEffect();
-        if (last === null) return null;
+        if (last === null) {
+            return null;
+        }
         return new BitmapEffectAction(last.definition)
             .performAction(documentWorkspace, last.values);
     }
 
     async performAction(documentWorkspace, repeatedValues = undefined) {
         const layer = documentWorkspace.getActiveLayer();
-        if (!(layer instanceof BitmapLayer)) return null;
+        if (!(layer instanceof BitmapLayer)) {
+            return null;
+        }
 
         const app = documentWorkspace.getApp();
         const layerIndex = documentWorkspace.getActiveLayerIndex();
@@ -100,7 +110,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
             document.documentElement.classList.toggle("effect-rendering", busy);
         };
         const getWorkerUrl = () => {
-            if (workerUrl !== null) return workerUrl;
+            if (workerUrl !== null) {
+                return workerUrl;
+            }
             const workerSource = `
                 self.Utility = {
                     clamp: (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value))
@@ -124,7 +136,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
         };
         const cancelWorker = () => {
             setWorkerBusy(false);
-            if (workerJob === null) return;
+            if (workerJob === null) {
+                return;
+            }
             const job = workerJob;
             workerJob = null;
             job.worker.terminate();
@@ -138,7 +152,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
                 workerJob = job;
                 setWorkerBusy(true);
                 worker.onmessage = event => {
-                    if (workerJob !== job) return;
+                    if (workerJob !== job) {
+                        return;
+                    }
                     workerJob = null;
                     worker.terminate();
                     setWorkerBusy(false);
@@ -146,7 +162,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
                         new Uint8ClampedArray(event.data), surface.getWidth(), surface.getHeight()));
                 };
                 worker.onerror = event => {
-                    if (workerJob !== job) return;
+                    if (workerJob !== job) {
+                        return;
+                    }
                     workerJob = null;
                     worker.terminate();
                     setWorkerBusy(false);
@@ -155,7 +173,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
                 const sourceData = new Uint8ClampedArray(source.data);
                 const selectionData = selectionMask === null ? null : new Uint8Array(selectionMask);
                 const transfers = [sourceData.buffer];
-                if (selectionData !== null) transfers.push(selectionData.buffer);
+                if (selectionData !== null) {
+                    transfers.push(selectionData.buffer);
+                }
                 try {
                     worker.postMessage({
                         sourceBuffer: sourceData.buffer,
@@ -184,7 +204,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
                 return null;
             }
             return renderInWorker(values).then(pixels => {
-                if (pixels !== null) present(pixels);
+                if (pixels !== null) {
+                    present(pixels);
+                }
             });
         };
 
@@ -204,7 +226,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
         if (values === null) {
             cancelWorker();
             present(source);
-            if (workerUrl !== null) URL.revokeObjectURL(workerUrl);
+            if (workerUrl !== null) {
+                URL.revokeObjectURL(workerUrl);
+            }
             return null;
         }
         if (repeatedValues === undefined) {
@@ -215,7 +239,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
         if (useWorker) {
             try {
                 const pixels = await renderInWorker(values);
-                if (pixels !== null) present(pixels);
+                if (pixels !== null) {
+                    present(pixels);
+                }
             } catch (error) {
                 // Worker creation can be blocked by an unusually strict host
                 // policy. Preserve functionality with the optimized sync path.
@@ -226,7 +252,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
             present(render(values));
         }
         cancelWorker();
-        if (workerUrl !== null) URL.revokeObjectURL(workerUrl);
+        if (workerUrl !== null) {
+            URL.revokeObjectURL(workerUrl);
+        }
         this.rememberSuccessfulEffect(app, values);
         return memento;
     }
@@ -243,28 +271,5 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
 
     isActionExecutable(documentWorkspace) {
         return documentWorkspace.getActiveLayer() instanceof BitmapLayer;
-    }
-}
-
-class RepeatEffectAction extends DocumentWorkspaceAction {
-
-    constructor() {
-        super("menu.effects.repeat", null, null, "Ctrl+F");
-    }
-
-    performAction(documentWorkspace) {
-        return BitmapEffectAction.repeatLast(documentWorkspace);
-    }
-
-    isActionExecutable(documentWorkspace) {
-        return BitmapEffectAction.getLastEffect() !== null
-            && documentWorkspace.getActiveLayer() instanceof BitmapLayer;
-    }
-
-    getDisplayName() {
-        const last = BitmapEffectAction.getLastEffect();
-        if (last === null) return i18n("effects.repeatMenuItem.format", [""]);
-        const name = i18n(last.definition.translationKey || last.definition.id + ".name");
-        return i18n("effects.repeatMenuItem.format", [name]);
     }
 }

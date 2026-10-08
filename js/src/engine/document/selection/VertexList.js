@@ -44,10 +44,18 @@ class VertexList {
         let maxY = this.vertices[0].y;
 
         for (let point of this.vertices) {
-            if (point.x < minX) minX = point.x;
-            if (point.y < minY) minY = point.y;
-            if (point.x > maxX) maxX = point.x;
-            if (point.y > maxY) maxY = point.y;
+            if (point.x < minX) {
+                minX = point.x;
+            }
+            if (point.y < minY) {
+                minY = point.y;
+            }
+            if (point.x > maxX) {
+                maxX = point.x;
+            }
+            if (point.y > maxY) {
+                maxY = point.y;
+            }
         }
 
         return new Rectangle(minX, minY, maxX - minX, maxY - minY);

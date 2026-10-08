@@ -361,7 +361,7 @@
     box-sizing: border-box;
     min-width: 246px;
     height: 29px;
-    padding: 5px 10px;
+    padding: 5px 10px 5px calc(var(--drop-menu-icon-divider) + var(--drop-menu-text-gap));
     line-height: 19px;
     color: var(--color-menu-item-text);
     white-space: nowrap;

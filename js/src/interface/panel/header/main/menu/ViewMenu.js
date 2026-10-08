@@ -55,7 +55,9 @@ class ViewMenu extends DropMenuItem {
 
         for (const unit of ["pixel", "inch", "centimeter"]) {
             const entry = this.get("measurementUnit." + unit);
-            if (entry === undefined) continue;
+            if (entry === undefined) {
+                continue;
+            }
 
             const selected = unit === selectedUnit;
             entry.setClassName("checked-drop-entry", selected);

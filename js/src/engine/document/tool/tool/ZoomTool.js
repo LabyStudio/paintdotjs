@@ -27,7 +27,9 @@ class ZoomTool extends Tool {
     }
 
     onMouseDown(x, y, button) {
-        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
+        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) {
+            return false;
+        }
         this.tracking = true;
         this.button = button;
         this.startPoint = new Point(x, y);
@@ -37,13 +39,17 @@ class ZoomTool extends Tool {
     }
 
     onMouseMove(x, y) {
-        if (!this.tracking) return false;
+        if (!this.tracking) {
+            return false;
+        }
         this.endPoint = new Point(x, y);
         return true;
     }
 
     onMouseUp(x, y, button) {
-        if (!this.tracking || button !== this.button) return false;
+        if (!this.tracking || button !== this.button) {
+            return false;
+        }
         this.endPoint = new Point(x, y);
         this.tracking = false;
         const workspace = this.getDocumentWorkspace();

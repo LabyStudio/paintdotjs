@@ -57,7 +57,9 @@ class ToolSelector extends SelectorMenuItem {
     buildElement() {
         const element = super.buildElement();
         const type = ToolType.getById(this.getSelectedId());
-        if (type !== null) element.title = type.getTooltipText();
+        if (type !== null) {
+            element.title = type.getTooltipText();
+        }
         return element;
     }
 

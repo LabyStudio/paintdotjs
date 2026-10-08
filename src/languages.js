@@ -18,7 +18,9 @@ import manifest from '../assets/lang/languages.json';
 const codes = manifest.locales.filter(code => typeof code === 'string');
 
 const findSupportedCode = requested => {
-    if (!requested) return null;
+    if (!requested) {
+        return null;
+    }
     const normalized = requested.replace('_', '-');
     return codes.find(code => code.toLowerCase() === normalized.toLowerCase())
         || codes.find(code => code.split('-')[0].toLowerCase() === normalized.split('-')[0].toLowerCase())
@@ -36,7 +38,9 @@ const requestedCode = preference === 'auto' ? navigator.language : preference;
 const selectedCode = findSupportedCode(requestedCode) || 'en';
 
 const loadLanguage = code => {
-    if (code === 'en') return en;
+    if (code === 'en') {
+        return en;
+    }
     try {
         // Loading one small local dictionary synchronously keeps i18n available
         // to the classic source scripts that execute immediately after bundle.js.
@@ -58,7 +62,9 @@ const selectedData = loadLanguage(selectedCode);
 const resolve = (object, path) => {
     let current = object;
     for (const segment of path.split('.')) {
-        if (current === null || typeof current !== 'object' || current[segment] === undefined) return undefined;
+        if (current === null || typeof current !== 'object' || current[segment] === undefined) {
+            return undefined;
+        }
         current = current[segment];
     }
     return current;
@@ -67,7 +73,9 @@ const resolve = (object, path) => {
 window.i18n = function (path, variables) {
     let translation = resolve(Language.data, path) ?? resolve(en, path) ?? path;
     if (variables) {
-        if (!Array.isArray(variables)) variables = [variables];
+        if (!Array.isArray(variables)) {
+            variables = [variables];
+        }
         for (let i = 0; i < variables.length; i++) {
             translation = translation.split('{' + i + '}').join(variables[i]);
         }

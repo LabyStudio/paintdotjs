@@ -52,7 +52,9 @@ class DocumentStateHistoryMemento extends HistoryMemento {
         app.fire("document:update_size", this.document.getWidth(), this.document.getHeight());
         app.fire("document:update_viewport", this.documentWorkspace);
 
-        if (activeToolType !== null) app.setActiveToolFromType(activeToolType);
+        if (activeToolType !== null) {
+            app.setActiveToolFromType(activeToolType);
+        }
         return redo;
     }
 }

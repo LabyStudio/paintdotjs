@@ -27,7 +27,9 @@ class ViewActualSizeItem extends IconItem {
 
     toggleZoomBasis() {
         const activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
-        if (activeDocumentWorkspace === null) return;
+        if (activeDocumentWorkspace === null) {
+            return;
+        }
 
         if (activeDocumentWorkspace.isZoomToWindow()) {
             // Paint.NET's status-bar toggle switches from Fit to Window to 100%.
@@ -41,7 +43,9 @@ class ViewActualSizeItem extends IconItem {
         const activeDocumentWorkspace = this.app.getActiveDocumentWorkspace();
         const zoomToWindow = activeDocumentWorkspace !== null
             && activeDocumentWorkspace.isZoomToWindow();
-        if (this.zoomToWindow === zoomToWindow) return;
+        if (this.zoomToWindow === zoomToWindow) {
+            return;
+        }
 
         this.zoomToWindow = zoomToWindow;
         const iconPathKey = this.zoomToWindow
@@ -69,7 +73,9 @@ class ViewActualSizeItem extends IconItem {
     buildElement() {
         const element = super.buildElement();
         const icon = element.querySelector("img");
-        if (icon !== null) icon.title = this.getText();
+        if (icon !== null) {
+            icon.title = this.getText();
+        }
         return element;
     }
 

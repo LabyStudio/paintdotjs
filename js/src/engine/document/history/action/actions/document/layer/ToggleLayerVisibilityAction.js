@@ -26,6 +26,7 @@ class ToggleLayerVisibilityAction extends LayerAction {
     performAction(documentWorkspace) {
         let layer = documentWorkspace.getActiveLayer();
         layer.setVisible(!layer.isVisible());
+        documentWorkspace.getApp().fire("document:layer_properties_changed", layer);
     }
 
     isLayerActionExecutable(documentWorkspace, index, size) {

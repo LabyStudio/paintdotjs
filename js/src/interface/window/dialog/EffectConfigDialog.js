@@ -24,26 +24,16 @@ class EffectConfigDialog {
             const values = {...options.values};
             const backdrop = document.createElement("div");
             backdrop.className = "app-dialog-backdrop";
-            if (isApp) backdrop.classList.add("dialog-backdrop-app");
+            if (isApp) {
+                backdrop.classList.add("dialog-backdrop-app");
+            }
 
             const dialog = document.createElement("form");
             dialog.className = "app-dialog effect-config-dialog";
-            if (options.layout) dialog.classList.add("effect-" + options.layout + "-dialog");
-            const titleBar = document.createElement("header");
-            titleBar.className = "app-dialog-title-bar";
-            const titleGroup = document.createElement("div");
-            titleGroup.className = "app-dialog-title";
-            const icon = document.createElement("img");
-            icon.src = options.icon;
-            icon.alt = "";
-            const title = document.createElement("strong");
-            title.textContent = options.title;
-            titleGroup.append(icon, title);
-            const close = document.createElement("button");
-            close.type = "button";
-            close.className = "app-dialog-close";
-            close.textContent = "×";
-            titleBar.append(titleGroup, close);
+            if (options.layout) {
+                dialog.classList.add("effect-" + options.layout + "-dialog");
+            }
+            const {element: titleBar, close} = this.createTitleBar(options);
 
             const content = document.createElement("div");
             content.className = "effect-config-content";
@@ -55,8 +45,12 @@ class EffectConfigDialog {
             let previewGeneration = 0;
             const cancelScheduledPreview = () => {
                 ++previewGeneration;
-                if (previewFrame !== null) cancelAnimationFrame(previewFrame);
-                if (previewTimer !== null) clearTimeout(previewTimer);
+                if (previewFrame !== null) {
+                    cancelAnimationFrame(previewFrame);
+                }
+                if (previewTimer !== null) {
+                    clearTimeout(previewTimer);
+                }
                 previewFrame = null;
                 previewTimer = null;
                 backdrop.classList.remove("effect-preview-rendering");
@@ -66,18 +60,24 @@ class EffectConfigDialog {
                 cancelScheduledPreview();
                 const generation = previewGeneration;
                 previewFrame = requestAnimationFrame(() => {
-                    if (generation !== previewGeneration) return;
+                    if (generation !== previewGeneration) {
+                        return;
+                    }
                     previewFrame = null;
                     backdrop.classList.add("effect-preview-rendering");
                     dialog.setAttribute("aria-busy", "true");
                     // Run after the frame is painted so opening or manipulating
                     // a dialog never waits behind a long synchronous effect.
                     previewTimer = setTimeout(() => {
-                        if (generation !== previewGeneration) return;
+                        if (generation !== previewGeneration) {
+                            return;
+                        }
                         previewTimer = null;
                         const start = performance.now();
                         const complete = () => {
-                            if (generation !== previewGeneration) return;
+                            if (generation !== previewGeneration) {
+                                return;
+                            }
                             const elapsed = performance.now() - start;
                             // Slow effects get a longer coalescing window. This
                             // prevents stale slider positions from forming a render
@@ -110,129 +110,34 @@ class EffectConfigDialog {
                 : null;
             if (specialized !== null) {
                 content.appendChild(specialized.element);
-                for (const [key, setter] of specialized.setters) setters.set(key, setter);
-            } else for (const control of options.controls) {
-                if (control.type === "select") {
-                    const row = document.createElement("section");
-                    row.className = "effect-config-row effect-config-select-row";
-                    const label = document.createElement("label");
-                    label.textContent = control.label;
-                    const select = document.createElement("select");
-                    for (const choice of control.choices) {
-                        const option = document.createElement("option");
-                        option.value = choice.value;
-                        option.textContent = choice.label;
-                        select.appendChild(option);
-                    }
-                    select.value = values[control.key];
-                    select.onchange = () => {
-                        values[control.key] = select.value;
-                        notify(true);
-                    };
-                    row.append(label, select);
-                    content.appendChild(row);
-                    setters.set(control.key, value => select.value = value);
-                    continue;
+                for (const [key, setter] of specialized.setters) {
+                    setters.set(key, setter);
                 }
-
-                if (control.type === "curve") {
-                    const editor = EffectConfigDialog.createCurveEditor(control, values, notify);
-                    content.appendChild(editor.element);
-                    setters.set(control.key, editor.setValue);
-                    continue;
+            } else {
+                for (const control of options.controls) {
+                    const item = this.createGenericControl(control, values, notify);
+                    content.appendChild(item.element);
+                    setters.set(control.key, item.setValue);
                 }
-
-                if (control.type === "checkbox") {
-                    const label = document.createElement("label");
-                    label.className = "effect-config-checkbox";
-                    const input = document.createElement("input");
-                    input.type = "checkbox";
-                    input.checked = values[control.key];
-                    input.onchange = () => {
-                        values[control.key] = input.checked;
-                        notify(true);
-                    };
-                    label.append(input, document.createTextNode(control.label));
-                    content.appendChild(label);
-                    setters.set(control.key, value => input.checked = value);
-                    continue;
-                }
-
-                const row = document.createElement("section");
-                row.className = "effect-config-row";
-                const label = document.createElement("label");
-                label.textContent = control.label;
-                const controls = document.createElement("div");
-                const range = document.createElement("input");
-                range.type = "range";
-                range.min = control.min;
-                range.max = control.max;
-                range.step = control.step;
-                const number = document.createElement("input");
-                number.type = "number";
-                number.min = control.min;
-                number.max = control.max;
-                number.step = control.step;
-                const set = value => {
-                    const numeric = Math.max(control.min, Math.min(control.max, Number(value)));
-                    values[control.key] = numeric;
-                    range.value = numeric;
-                    number.value = numeric;
-                    const percent = (numeric - control.min) / (control.max - control.min) * 100;
-                    range.style.setProperty("--effect-value", percent + "%");
-                };
-                set(values[control.key]);
-                range.oninput = () => { set(range.value); notify(); };
-                range.onchange = () => notify(true);
-                number.oninput = () => { set(number.value); notify(); };
-                number.onchange = () => notify(true);
-                const resetValue = () => { set(control.defaultValue); notify(true); };
-                EffectConfigDialog.enableSliderThumbReset(range, resetValue);
-                controls.append(
-                    range,
-                    NumberInput.wrap(number),
-                    EffectConfigDialog.createResetButton(resetValue)
-                );
-                row.append(label, controls);
-                content.appendChild(row);
-                setters.set(control.key, set);
             }
 
-            const footer = document.createElement("footer");
-            footer.className = "app-dialog-footer effect-config-footer";
-            const left = document.createElement("div");
-            const preview = document.createElement("label");
-            preview.className = "effect-config-checkbox";
-            const previewInput = document.createElement("input");
-            previewInput.type = "checkbox";
-            previewInput.checked = true;
-            previewInput.onchange = () => {
-                previewEnabled = previewInput.checked;
+            const {element: footer, cancel} = this.createFooter(specialized, enabled => {
+                previewEnabled = enabled;
                 notify(true);
-            };
-            preview.append(previewInput, document.createTextNode("Preview"));
-            if (specialized === null) left.appendChild(preview);
-            if (specialized !== null && specialized.leftButtons) {
-                for (const button of specialized.leftButtons) left.prepend(button);
-            }
-            const buttons = document.createElement("div");
-            const ok = document.createElement("button");
-            ok.type = "submit";
-            ok.textContent = "OK";
-            const cancel = document.createElement("button");
-            cancel.type = "button";
-            cancel.textContent = "Cancel";
-            buttons.append(ok, cancel);
-            footer.append(left, buttons);
+            });
 
             let mover = null;
             let closed = false;
             const finish = result => {
-                if (closed) return;
+                if (closed) {
+                    return;
+                }
                 closed = true;
                 cancelScheduledPreview();
                 document.removeEventListener("keydown", onKeyDown, true);
-                if (mover !== null) mover.destroy();
+                if (mover !== null) {
+                    mover.destroy();
+                }
                 backdrop.remove();
                 resolve(result);
             };
@@ -243,8 +148,15 @@ class EffectConfigDialog {
                 }
             };
             close.onclick = cancel.onclick = () => finish(null);
-            backdrop.onclick = event => { if (event.target === backdrop) finish(null); };
-            dialog.onsubmit = event => { event.preventDefault(); finish({...values}); };
+            backdrop.onclick = event => {
+                if (event.target === backdrop) {
+                    finish(null);
+                }
+            };
+            dialog.onsubmit = event => {
+                event.preventDefault();
+                finish({...values});
+            };
             dialog.append(titleBar, content, footer);
             backdrop.appendChild(dialog);
             document.body.appendChild(backdrop);
@@ -252,6 +164,183 @@ class EffectConfigDialog {
             document.addEventListener("keydown", onKeyDown, true);
             notify(true);
         });
+    }
+
+    static createGenericControl(control, values, notify) {
+        if (control.type === "curve") {
+            return this.createCurveEditor(control, values, notify);
+        }
+
+        if (control.type === "select") {
+            const row = document.createElement("section");
+            row.className = "effect-config-row effect-config-select-row";
+            let setValue = null;
+            {
+                // Label
+                const label = document.createElement("label");
+                label.textContent = control.label;
+
+                // Choices
+                const select = document.createElement("select");
+                for (const choice of control.choices) {
+                    const option = document.createElement("option");
+                    option.value = choice.value;
+                    option.textContent = choice.label;
+                    select.appendChild(option);
+                }
+                setValue = value => select.value = value;
+                setValue(values[control.key]);
+                select.onchange = () => {
+                    values[control.key] = select.value;
+                    notify(true);
+                };
+                row.append(label, select);
+            }
+            return {element: row, setValue};
+        }
+
+        if (control.type === "checkbox") {
+            const label = document.createElement("label");
+            label.className = "effect-config-checkbox";
+            let setValue = null;
+            {
+                const input = document.createElement("input");
+                input.type = "checkbox";
+                setValue = value => input.checked = value;
+                setValue(values[control.key]);
+                input.onchange = () => {
+                    values[control.key] = input.checked;
+                    notify(true);
+                };
+                label.append(input, document.createTextNode(control.label));
+            }
+            return {element: label, setValue};
+        }
+
+        const row = document.createElement("section");
+        row.className = "effect-config-row";
+        let setValue = null;
+        {
+            // Label
+            const label = document.createElement("label");
+            label.textContent = control.label;
+
+            // Slider and number input
+            const controls = document.createElement("div");
+            {
+                const range = document.createElement("input");
+                range.type = "range";
+                range.min = control.min;
+                range.max = control.max;
+                range.step = control.step;
+
+                const number = document.createElement("input");
+                number.type = "number";
+                number.min = control.min;
+                number.max = control.max;
+                number.step = control.step;
+
+                setValue = value => {
+                    const numeric = Math.max(control.min, Math.min(control.max, Number(value)));
+                    values[control.key] = numeric;
+                    range.value = numeric;
+                    number.value = numeric;
+                    const percent = (numeric - control.min) / (control.max - control.min) * 100;
+                    range.style.setProperty("--effect-value", percent + "%");
+                };
+                setValue(values[control.key]);
+                range.oninput = () => {
+                    setValue(range.value);
+                    notify();
+                };
+                range.onchange = () => notify(true);
+                number.oninput = () => {
+                    setValue(number.value);
+                    notify();
+                };
+                number.onchange = () => notify(true);
+                const resetValue = () => {
+                    setValue(control.defaultValue);
+                    notify(true);
+                };
+                this.enableSliderThumbReset(range, resetValue);
+                controls.append(range, NumberInput.wrap(number), this.createResetButton(resetValue));
+            }
+            row.append(label, controls);
+        }
+        return {element: row, setValue};
+    }
+
+    static createTitleBar(options) {
+        const titleBar = document.createElement("header");
+        titleBar.className = "app-dialog-title-bar";
+        let close = null;
+        {
+            // Title
+            const titleGroup = document.createElement("div");
+            titleGroup.className = "app-dialog-title";
+            {
+                const icon = document.createElement("img");
+                icon.src = options.icon;
+                icon.alt = "";
+
+                const title = document.createElement("strong");
+                title.textContent = options.title;
+                titleGroup.append(icon, title);
+            }
+
+            // Close button
+            close = document.createElement("button");
+            close.type = "button";
+            close.className = "app-dialog-close";
+            close.textContent = "×";
+            titleBar.append(titleGroup, close);
+        }
+        return {element: titleBar, close};
+    }
+
+    static createFooter(specialized, onPreviewChange) {
+        const footer = document.createElement("footer");
+        footer.className = "app-dialog-footer effect-config-footer";
+        let cancel = null;
+        {
+            // Preview and specialized actions
+            const left = document.createElement("div");
+            {
+                if (specialized === null) {
+                    const preview = document.createElement("label");
+                    preview.className = "effect-config-checkbox";
+                    {
+                        const input = document.createElement("input");
+                        input.type = "checkbox";
+                        input.checked = true;
+                        input.onchange = () => onPreviewChange(input.checked);
+                        preview.append(input, document.createTextNode("Preview"));
+                    }
+                    left.appendChild(preview);
+                } else if (specialized.leftButtons) {
+                    for (const button of specialized.leftButtons) {
+                        left.prepend(button);
+                    }
+                }
+            }
+
+            // Dialog buttons
+            const buttons = document.createElement("div");
+            {
+                const ok = document.createElement("button");
+                ok.type = "submit";
+                ok.textContent = "OK";
+
+                cancel = document.createElement("button");
+                cancel.type = "button";
+                cancel.textContent = "Cancel";
+                buttons.append(ok, cancel);
+            }
+
+            footer.append(left, buttons);
+        }
+        return {element: footer, cancel};
     }
 
     static createSpecializedContent(options, values, notify) {
@@ -274,10 +363,12 @@ class EffectConfigDialog {
         reset.className = "effect-row-reset";
         reset.title = "Reset";
         reset.setAttribute("aria-label", "Reset");
-        const icon = document.createElement("img");
-        icon.src = "assets/icons/reset_icon.png";
-        icon.alt = "";
-        reset.appendChild(icon);
+        {
+            const icon = document.createElement("img");
+            icon.src = "assets/icons/reset_icon.png";
+            icon.alt = "";
+            reset.appendChild(icon);
+        }
         reset.onclick = onReset;
         return reset;
     }
@@ -323,23 +414,36 @@ class EffectConfigDialog {
     static createSpecializedSlider(control, values, notify, options = {}) {
         const row = document.createElement("div");
         row.className = "effect-special-slider " + (options.className || "");
-        if (options.showLabel !== false) {
-            const label = document.createElement("label");
-            label.textContent = control.label;
-            row.appendChild(label);
+        let range = null;
+        let number = null;
+        let line = null;
+        {
+            // Label
+            if (options.showLabel !== false) {
+                const label = document.createElement("label");
+                label.textContent = control.label;
+                row.appendChild(label);
+            }
+
+            // Slider and value
+            line = document.createElement("div");
+            line.className = "effect-special-slider-line";
+            {
+                range = document.createElement("input");
+                range.type = "range";
+                range.min = control.exponential ? 0 : control.min;
+                range.max = control.exponential ? 1000 : control.max;
+                range.step = control.exponential ? 1 : control.step;
+
+                number = document.createElement("input");
+                number.type = "number";
+                number.min = control.min;
+                number.max = control.max;
+                number.step = control.step;
+                line.append(range, NumberInput.wrap(number));
+            }
+            row.appendChild(line);
         }
-        const line = document.createElement("div");
-        line.className = "effect-special-slider-line";
-        const range = document.createElement("input");
-        range.type = "range";
-        range.min = control.exponential ? 0 : control.min;
-        range.max = control.exponential ? 1000 : control.max;
-        range.step = control.exponential ? 1 : control.step;
-        const number = document.createElement("input");
-        number.type = "number";
-        number.min = control.min;
-        number.max = control.max;
-        number.step = control.step;
         const set = value => {
             const numeric = Math.max(control.min, Math.min(control.max, Number(value)));
             values[control.key] = numeric;
@@ -348,7 +452,9 @@ class EffectConfigDialog {
                 : numeric;
             number.value = numeric.toFixed(control.step < 1 ? 2 : 0);
             range.style.setProperty("--effect-value", ((numeric - control.min) / (control.max - control.min) * 100) + "%");
-            if (options.onSet) options.onSet(numeric);
+            if (options.onSet) {
+                options.onSet(numeric);
+            }
         };
         range.oninput = () => {
             const value = control.exponential
@@ -362,12 +468,9 @@ class EffectConfigDialog {
         number.onchange = () => notify(true);
         const resetValue = () => { set(control.defaultValue); notify(true); };
         this.enableSliderThumbReset(range, resetValue);
-        const numberBox = NumberInput.wrap(number);
-        line.append(range, numberBox);
         if (options.reset !== false) {
             line.appendChild(this.createResetButton(resetValue));
         }
-        row.appendChild(line);
         set(values[control.key]);
         return {element: row, setValue: set};
     }
@@ -375,20 +478,26 @@ class EffectConfigDialog {
     static createSpecializedSelect(control, values, notify, labelText = control.label) {
         const row = document.createElement("label");
         row.className = "effect-special-select";
-        row.appendChild(document.createTextNode(labelText));
-        const select = document.createElement("select");
-        for (const choice of control.choices) {
-            const option = document.createElement("option");
-            option.value = choice.value;
-            option.textContent = choice.label;
-            select.appendChild(option);
+        let select = null;
+        {
+            // Label
+            row.appendChild(document.createTextNode(labelText));
+
+            // Choices
+            select = document.createElement("select");
+            for (const choice of control.choices) {
+                const option = document.createElement("option");
+                option.value = choice.value;
+                option.textContent = choice.label;
+                select.appendChild(option);
+            }
+            row.appendChild(select);
         }
         const set = value => {
             values[control.key] = value;
             select.value = value;
         };
         select.onchange = () => { set(select.value); notify(true); };
-        row.appendChild(select);
         set(values[control.key]);
         return {element: row, setValue: set};
     }
@@ -413,44 +522,78 @@ class EffectConfigDialog {
         const setters = new Map();
         const createGroup = (title, createVisual, keys) => {
             const section = document.createElement("section");
-            const heading = document.createElement("h3");
-            heading.textContent = title;
-            const body = document.createElement("div");
-            body.className = "rotate-zoom-group-body";
-            const groupSetters = new Map();
-            const visual = createVisual(changes => {
-                for (const [key, value] of Object.entries(changes)) groupSetters.get(key)(value);
-                notify();
-            });
-            body.appendChild(visual.element);
-            const sliders = document.createElement("div");
-            sliders.className = "rotate-zoom-sliders";
-            for (const key of keys) {
-                const slider = this.createSpecializedSlider(this.findControl(options, key), values, notify, {
-                    showLabel: false,
-                    onSet: () => visual.redraw()
-                });
-                sliders.appendChild(slider.element);
-                setters.set(key, slider.setValue);
-                groupSetters.set(key, slider.setValue);
+            {
+                // Heading
+                const heading = document.createElement("h3");
+                heading.textContent = title;
+
+                // Controls
+                const body = document.createElement("div");
+                body.className = "rotate-zoom-group-body";
+                {
+                    const groupSetters = new Map();
+                    const visual = createVisual(changes => {
+                        for (const [key, value] of Object.entries(changes)) {
+                            groupSetters.get(key)(value);
+                        }
+                        notify();
+                    });
+                    body.appendChild(visual.element);
+
+                    const sliders = document.createElement("div");
+                    sliders.className = "rotate-zoom-sliders";
+                    for (const key of keys) {
+                        const slider = this.createSpecializedSlider(this.findControl(options, key), values, notify, {
+                            showLabel: false,
+                            onSet: () => visual.redraw()
+                        });
+                        sliders.appendChild(slider.element);
+                        setters.set(key, slider.setValue);
+                        groupSetters.set(key, slider.setValue);
+                    }
+                    visual.redraw();
+                    body.appendChild(sliders);
+                }
+                section.append(heading, body);
             }
-            visual.redraw();
-            body.appendChild(sliders);
-            section.append(heading, body);
             return section;
         };
-        element.appendChild(createGroup("Roll / Rotate", onChange => this.createRollVisual(values, onChange), ["angle", "rollDirection", "rollAmount"]));
-        element.appendChild(createGroup("Pan", onChange => this.createPanVisual(options.source, values, onChange), ["panX", "panY"]));
-        for (const key of ["zoom", "quality"]) {
-            const slider = this.createSpecializedSlider(this.findControl(options, key), values, notify, {reset: true});
-            element.appendChild(slider.element);
-            setters.set(key, slider.setValue);
+        {
+            // Rotation and pan
+            element.appendChild(createGroup(
+                "Roll / Rotate",
+                onChange => this.createRollVisual(values, onChange),
+                ["angle", "rollDirection", "rollAmount"]
+            ));
+            element.appendChild(createGroup(
+                "Pan",
+                onChange => this.createPanVisual(options.source, values, onChange),
+                ["panX", "panY"]
+            ));
+
+            // Zoom and quality
+            for (const key of ["zoom", "quality"]) {
+                const slider = this.createSpecializedSlider(
+                    this.findControl(options, key),
+                    values,
+                    notify,
+                    {reset: true}
+                );
+                element.appendChild(slider.element);
+                setters.set(key, slider.setValue);
+            }
+
+            // Sampling
+            const tiling = this.createSpecializedSelect(
+                this.findControl(options, "tiling"), values, notify, "Tiling Mode:"
+            );
+            const sampling = this.createSpecializedSelect(
+                this.findControl(options, "sampling"), values, notify, "Sampling:"
+            );
+            element.append(tiling.element, sampling.element);
+            setters.set("tiling", tiling.setValue);
+            setters.set("sampling", sampling.setValue);
         }
-        const tiling = this.createSpecializedSelect(this.findControl(options, "tiling"), values, notify, "Tiling Mode:");
-        const sampling = this.createSpecializedSelect(this.findControl(options, "sampling"), values, notify, "Sampling:");
-        element.append(tiling.element, sampling.element);
-        setters.set("tiling", tiling.setValue);
-        setters.set("sampling", sampling.setValue);
         return {element, setters, showReset: false};
     }
 
@@ -468,7 +611,9 @@ class EffectConfigDialog {
         // Paint.NET stores this control as angle, roll direction, and roll amount.
         const projectSpherePoint = (x, y, z, rollX, rollY) => {
             const rollLength = Math.hypot(rollX, rollY);
-            if (rollLength === 0) return {x, y, z};
+            if (rollLength === 0) {
+                return {x, y, z};
+            }
 
             const axisAngle = Math.atan2(rollY, rollX);
             const sinAxis = Math.sin(axisAngle);
@@ -495,7 +640,9 @@ class EffectConfigDialog {
         );
         const drawSphereSegment = (start, end, color, width) => {
             // Paint.NET only draws segments on the visible hemisphere.
-            if (start.z >= .03 || end.z >= .03) return;
+            if (start.z >= .03 || end.z >= .03) {
+                return;
+            }
             context.strokeStyle = color;
             context.lineWidth = width;
             context.beginPath();
@@ -574,26 +721,34 @@ class EffectConfigDialog {
             };
         };
         const update = event => {
-            if (!drag) return;
+            if (!drag) {
+                return;
+            }
             const current = point(event);
             if (drag.sphere) {
                 let x = drag.startX + (current.x - drag.x) * 3 / (outerRadius * 2 - 4);
                 let y = drag.startY + (current.y - drag.y) * 3 / (outerRadius * 2 - 4);
                 const length = Math.hypot(x, y);
                 if (length > 1) { x /= length; y /= length; }
-                if (event.shiftKey) Math.abs(x) > Math.abs(y) ? y = 0 : x = 0;
+                if (event.shiftKey) {
+                    Math.abs(x) > Math.abs(y) ? y = 0 : x = 0;
+                }
                 onChange({
                     rollDirection: Math.atan2(y, x) * 180 / Math.PI,
                     rollAmount: 89.94 * Math.hypot(x, y)
                 });
             } else {
                 let angle = Math.atan2(-(current.y - center), current.x - center) * 180 / Math.PI;
-                if (event.shiftKey) angle = Math.round(angle / 15) * 15;
+                if (event.shiftKey) {
+                    angle = Math.round(angle / 15) * 15;
+                }
                 onChange({angle});
             }
         };
         canvas.onpointerdown = event => {
-            if (event.button !== 0) return;
+            if (event.button !== 0) {
+                return;
+            }
             const current = point(event);
             const amount = values.rollAmount / 89.9;
             const direction = values.rollDirection * Math.PI / 180;
@@ -609,10 +764,14 @@ class EffectConfigDialog {
         };
         canvas.onpointermove = update;
         canvas.onpointerup = canvas.onpointercancel = event => {
-            if (!drag) return;
+            if (!drag) {
+                return;
+            }
             update(event);
             drag = null;
-            if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+            if (canvas.hasPointerCapture(event.pointerId)) {
+                canvas.releasePointerCapture(event.pointerId);
+            }
         };
         canvas.ondblclick = () => onChange({angle: 0, rollDirection: 0, rollAmount: 0});
         return {element: canvas, redraw};
@@ -681,15 +840,21 @@ class EffectConfigDialog {
             });
         };
         canvas.onpointerdown = event => {
-            if (event.button !== 0) return;
+            if (event.button !== 0) {
+                return;
+            }
             canvas.setPointerCapture(event.pointerId);
             update(event);
         };
         canvas.onpointermove = event => {
-            if (canvas.hasPointerCapture(event.pointerId)) update(event);
+            if (canvas.hasPointerCapture(event.pointerId)) {
+                update(event);
+            }
         };
         canvas.onpointerup = canvas.onpointercancel = event => {
-            if (!canvas.hasPointerCapture(event.pointerId)) return;
+            if (!canvas.hasPointerCapture(event.pointerId)) {
+                return;
+            }
             update(event);
             canvas.releasePointerCapture(event.pointerId);
         };
@@ -697,28 +862,108 @@ class EffectConfigDialog {
     }
 
     static createCurvesContent(options, values, notify) {
-        const element = document.createElement("div");
+        let element = document.createElement("div");
         element.className = "effect-specialized-content curves-content";
-        const setters = new Map();
-        const channel = this.createSpecializedSelect(this.findControl(options, "channel"), values, notify, "Transfer Map");
-        channel.element.classList.add("curves-transfer-select");
-        element.appendChild(channel.element);
-        setters.set("channel", channel.setValue);
-        const curve = this.createCurveEditor({...this.findControl(options, "points"), width: 354, height: 312}, values, notify);
-        element.appendChild(curve.element);
-        setters.set("points", curve.setValue);
-        const luminosity = document.createElement("label");
-        luminosity.className = "curves-luminosity-check";
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = true;
-        checkbox.disabled = true;
-        luminosity.append(checkbox, document.createTextNode("Luminosity"));
-        const tip = document.createElement("strong");
-        tip.className = "curves-tip";
-        tip.textContent = "Tip: Right-click to remove control points.";
-        element.append(luminosity, tip);
-        return {element, setters};
+        let setters = new Map();
+        let identity = [[0, 0], [255, 255]];
+        for (const key of ["points", "redPoints", "greenPoints", "bluePoints"]) {
+            if (!Array.isArray(values[key])) {
+                values[key] = identity.map(point => [...point]);
+            }
+        }
+
+        let coordinates = null;
+        let channelOptions = null;
+        let select = null;
+        let editor = new CurveEditor(values, notify, point => {
+            coordinates.textContent = point === null ? "" : "(" + point[0] + ", " + point[1] + ")";
+        });
+        {
+            // Transfer map and coordinates
+            let transfer = document.createElement("div");
+            transfer.className = "curves-transfer-row";
+            {
+                let channel = document.createElement("label");
+                channel.className = "curves-transfer-select";
+                {
+                    channel.appendChild(document.createTextNode("Transfer Map"));
+
+                    select = document.createElement("select");
+                    for (const choice of this.findControl(options, "channel").choices) {
+                        let option = document.createElement("option");
+                        option.value = choice.value;
+                        option.textContent = choice.label;
+                        select.appendChild(option);
+                    }
+                    channel.appendChild(select);
+                }
+
+                coordinates = document.createElement("output");
+                coordinates.className = "curves-coordinates";
+                transfer.append(channel, coordinates);
+            }
+            element.appendChild(transfer);
+
+            // Curve
+            element.appendChild(editor.buildElement());
+
+            // Channels
+            channelOptions = document.createElement("div");
+            channelOptions.className = "curves-channel-options";
+            element.appendChild(channelOptions);
+
+            // Tip
+            let tip = document.createElement("strong");
+            tip.className = "curves-tip";
+            tip.textContent = "Tip: Right-click to remove control points.";
+            element.appendChild(tip);
+        }
+
+        let channelSets = {
+            luminosity: [{key: "points", name: "Luminosity", color: "#f2f2f2"}],
+            rgb: [
+                {key: "redPoints", name: "Red", color: "#ff4b4b"},
+                {key: "greenPoints", name: "Green", color: "#45d65a"},
+                {key: "bluePoints", name: "Blue", color: "#4b83ff"}
+            ]
+        };
+        let setMode = mode => {
+            values.channel = mode;
+            select.value = mode;
+            let channels = channelSets[mode] || channelSets.luminosity;
+            editor.setChannels(channels);
+
+            channelOptions.replaceChildren();
+            for (const channel of channels) {
+                let label = document.createElement("label");
+                label.className = channels.length === 1 ? "disabled" : "";
+                {
+                    let checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.checked = editor.isChannelSelected(channel.key);
+                    checkbox.disabled = channels.length === 1;
+                    checkbox.onchange = () => editor.setChannelSelected(channel.key, checkbox.checked);
+                    label.append(checkbox, document.createTextNode(channel.name));
+                }
+                channelOptions.appendChild(label);
+            }
+        };
+        select.onchange = () => {
+            setMode(select.value);
+            notify(true);
+        };
+        setMode(values.channel);
+
+        setters.set("channel", setMode);
+        for (const key of ["points", "redPoints", "greenPoints", "bluePoints"]) {
+            setters.set(key, points => editor.setCurve(key, points));
+        }
+
+        let reset = document.createElement("button");
+        reset.type = "button";
+        reset.textContent = "Reset";
+        reset.onclick = () => editor.reset();
+        return {element, setters, leftButtons: [reset]};
     }
 
     static createLevelsContent(options, values, notify) {
@@ -732,30 +977,21 @@ class EffectConfigDialog {
             outputHistogram.redraw();
         };
         const redrawOutputHistogram = () => outputHistogram.redraw();
-        const input = this.createLevelsColumn("Input", options, values, notify, setters, true, redrawOutputHistogram);
-        const output = this.createLevelsColumn("Output", options, values, notify, setters, false, redrawOutputHistogram);
-        element.append(inputHistogram.element, input, output, outputHistogram.element);
-        const channels = document.createElement("div");
-        channels.className = "levels-channels";
-        for (const [key, channel] of [["red", "R"], ["green", "G"], ["blue", "B"]]) {
-            const label = document.createElement("label");
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            const set = value => {
-                values[key] = !!value;
-                checkbox.checked = !!value;
-                redrawHistograms();
-            };
-            checkbox.onchange = () => {
-                set(checkbox.checked);
-                notify();
-            };
-            set(values[key]);
-            setters.set(key, set);
-            label.append(checkbox, document.createTextNode(channel));
-            channels.appendChild(label);
+        {
+            // Histograms and value columns
+            const input = this.createLevelsColumn(
+                "Input", options, values, notify, setters, true, redrawOutputHistogram
+            );
+            const output = this.createLevelsColumn(
+                "Output", options, values, notify, setters, false, redrawOutputHistogram
+            );
+            element.append(inputHistogram.element, input, output, outputHistogram.element);
+
+            // Channels
+            element.appendChild(this.createLevelsChannels(values, notify, setters, redrawHistograms));
         }
-        element.appendChild(channels);
+
+        // Automatic levels
         const auto = document.createElement("button");
         auto.type = "button";
         auto.textContent = "Auto";
@@ -772,14 +1008,49 @@ class EffectConfigDialog {
         return {element, setters, leftButtons: [auto]};
     }
 
+    static createLevelsChannels(values, notify, setters, redraw) {
+        const channels = document.createElement("div");
+        channels.className = "levels-channels";
+        {
+            for (const [key, channel] of [["red", "R"], ["green", "G"], ["blue", "B"]]) {
+                const label = document.createElement("label");
+                {
+                    const checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    const set = value => {
+                        values[key] = !!value;
+                        checkbox.checked = !!value;
+                        redraw();
+                    };
+                    checkbox.onchange = () => {
+                        set(checkbox.checked);
+                        notify();
+                    };
+                    set(values[key]);
+                    setters.set(key, set);
+                    label.append(checkbox, document.createTextNode(channel));
+                }
+                channels.appendChild(label);
+            }
+        }
+        return channels;
+    }
+
     static createLevelsHistogram(source, values, output) {
         const wrapper = document.createElement("section");
         wrapper.className = "levels-histogram";
-        const heading = document.createElement("h3");
-        heading.textContent = output ? "Output Histogram" : "Input Histogram";
-        const canvas = document.createElement("canvas");
-        canvas.width = 178;
-        canvas.height = 220;
+        let canvas = null;
+        {
+            // Heading
+            const heading = document.createElement("h3");
+            heading.textContent = output ? "Output Histogram" : "Input Histogram";
+
+            // Histogram
+            canvas = document.createElement("canvas");
+            canvas.width = 178;
+            canvas.height = 220;
+            wrapper.append(heading, canvas);
+        }
         const colors = [[255, 91, 105], [92, 224, 111], [105, 121, 255]];
         const channelKeys = ["red", "green", "blue"];
         const sourceBins = Array.from({length: 3}, () => new Uint32Array(256));
@@ -844,15 +1115,12 @@ class EffectConfigDialog {
                 context.stroke();
             }
         };
-        wrapper.append(heading, canvas);
         return {element: wrapper, redraw};
     }
 
     static createLevelsColumn(title, options, values, notify, setters, input, onChange) {
         const section = document.createElement("section");
         section.className = "levels-column levels-" + (input ? "input" : "output") + "-column";
-        const heading = document.createElement("h3");
-        heading.textContent = title;
         const highKey = input ? "inputHigh" : "outputHigh";
         const lowKey = input ? "inputLow" : "outputLow";
         let gradient = null;
@@ -860,48 +1128,76 @@ class EffectConfigDialog {
         let high;
         let low;
         const redraw = () => {
-            if (gradient !== null) gradient.redraw();
+            if (gradient !== null) {
+                gradient.redraw();
+            }
             onChange();
         };
         high = this.createLevelsNumber(this.findControl(options, highKey), values, notify, () => {
-            if (controlsReady && values[highKey] <= values[lowKey]) low.setValue(values[highKey] - 1);
+            if (controlsReady && values[highKey] <= values[lowKey]) {
+                low.setValue(values[highKey] - 1);
+            }
             redraw();
         });
         low = this.createLevelsNumber(this.findControl(options, lowKey), values, notify, () => {
-            if (controlsReady && values[lowKey] >= values[highKey]) high.setValue(values[lowKey] + 1);
+            if (controlsReady && values[lowKey] >= values[highKey]) {
+                high.setValue(values[lowKey] + 1);
+            }
             redraw();
         });
         controlsReady = true;
         setters.set(highKey, high.setValue);
         setters.set(lowKey, low.setValue);
-        const highSwatch = document.createElement("div");
-        highSwatch.className = "levels-swatch levels-swatch-white";
-        const lowSwatch = document.createElement("div");
-        lowSwatch.className = "levels-swatch levels-swatch-black";
         let gamma = null;
         if (!input) {
             gamma = this.createLevelsNumber(this.findControl(options, "gamma"), values, notify, redraw);
             gamma.element.classList.add("levels-gamma");
             setters.set("gamma", gamma.setValue);
         }
-        gradient = this.createLevelsGradient(values, input, changes => {
-            if (changes[lowKey] !== undefined) low.setValue(changes[lowKey]);
-            if (changes[highKey] !== undefined) high.setValue(changes[highKey]);
-            if (changes.gamma !== undefined) gamma.setValue(changes.gamma);
-            notify();
-        });
-        section.append(heading, high.element, highSwatch, gradient.element);
-        if (gamma !== null) {
-            const middleSwatch = document.createElement("div");
-            middleSwatch.className = "levels-swatch levels-swatch-mid";
-            section.append(gamma.element, middleSwatch);
+        gradient = this.createLevelsGradient(
+            values,
+            input,
+            changes => {
+                if (changes[lowKey] !== undefined) {
+                    low.setValue(changes[lowKey]);
+                }
+                if (changes[highKey] !== undefined) {
+                    high.setValue(changes[highKey]);
+                }
+                if (changes.gamma !== undefined) {
+                    gamma.setValue(changes.gamma);
+                }
+                notify();
+            },
+            () => notify(true)
+        );
+        {
+            // Heading
+            const heading = document.createElement("h3");
+            heading.textContent = title;
+
+            // High value and gradient
+            const highSwatch = document.createElement("div");
+            highSwatch.className = "levels-swatch levels-swatch-white";
+            section.append(heading, high.element, highSwatch, gradient.element);
+
+            // Gamma
+            if (gamma !== null) {
+                const middleSwatch = document.createElement("div");
+                middleSwatch.className = "levels-swatch levels-swatch-mid";
+                section.append(gamma.element, middleSwatch);
+            }
+
+            // Low value
+            const lowSwatch = document.createElement("div");
+            lowSwatch.className = "levels-swatch levels-swatch-black";
+            section.append(lowSwatch, low.element);
         }
-        section.append(lowSwatch, low.element);
         gradient.redraw();
         return section;
     }
 
-    static createLevelsGradient(values, input, onChange) {
+    static createLevelsGradient(values, input, onChange, onCommit) {
         const element = document.createElement("div");
         element.className = "levels-vertical-track";
         const handles = Array.from({length: input ? 2 : 3}, (_, index) => {
@@ -913,7 +1209,9 @@ class EffectConfigDialog {
         });
         let dragging = -1;
         const positions = () => {
-            if (input) return [values.inputLow, values.inputHigh];
+            if (input) {
+                return [values.inputLow, values.inputHigh];
+            }
             const middle = values.outputLow
                 + (values.outputHigh - values.outputLow) * Math.pow(.5, 1 / values.gamma);
             return [values.outputLow, middle, values.outputHigh];
@@ -929,7 +1227,9 @@ class EffectConfigDialog {
             return Math.max(0, Math.min(255, Math.round((bounds.bottom - event.clientY) / bounds.height * 255)));
         };
         const update = event => {
-            if (dragging < 0) return;
+            if (dragging < 0) {
+                return;
+            }
             const current = positions();
             const minimum = dragging === 0 ? 0 : Math.ceil(current[dragging - 1]) + 1;
             const maximum = dragging === current.length - 1 ? 255 : Math.floor(current[dragging + 1]) - 1;
@@ -947,7 +1247,9 @@ class EffectConfigDialog {
             }
         };
         element.onpointerdown = event => {
-            if (event.button !== 0) return;
+            if (event.button !== 0) {
+                return;
+            }
             const value = pointerValue(event);
             const current = positions();
             dragging = current.reduce((closest, position, index) =>
@@ -956,14 +1258,20 @@ class EffectConfigDialog {
             update(event);
         };
         element.onpointermove = event => {
-            if (dragging >= 0) update(event);
+            if (dragging >= 0) {
+                update(event);
+            }
         };
         element.onpointerup = element.onpointercancel = event => {
-            if (dragging < 0) return;
+            if (dragging < 0) {
+                return;
+            }
             update(event);
             dragging = -1;
-            if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId);
-            notify(true);
+            if (element.hasPointerCapture(event.pointerId)) {
+                element.releasePointerCapture(event.pointerId);
+            }
+            onCommit();
         };
         return {element, redraw};
     }
@@ -978,7 +1286,9 @@ class EffectConfigDialog {
             const numeric = Math.max(control.min, Math.min(control.max, Number(value)));
             values[control.key] = numeric;
             input.value = numeric.toFixed(control.step < 1 ? 2 : 0);
-            if (onSet !== null) onSet();
+            if (onSet !== null) {
+                onSet();
+            }
         };
         input.oninput = () => { set(input.value); notify(); };
         input.onchange = () => notify(true);
@@ -1086,7 +1396,9 @@ class EffectConfigDialog {
             movePoint(dragging, point);
         };
         canvas.onpointermove = event => {
-            if (dragging !== -1) movePoint(dragging, eventPoint(event));
+            if (dragging !== -1) {
+                movePoint(dragging, eventPoint(event));
+            }
         };
         canvas.onpointerup = canvas.onpointercancel = () => dragging = -1;
         canvas.oncontextmenu = event => {

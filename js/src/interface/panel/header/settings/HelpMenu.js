@@ -32,8 +32,12 @@ class HelpMenu extends DropMenuItem {
         ActionRegistry.registerCallback(
             "menu.help",
             () => {
-                if (this.isOpen()) this.close();
-                else this.open();
+                if (this.isOpen()) {
+                    this.close();
+                }
+                else {
+                    this.open();
+                }
             },
             "Help",
             () => this.isInitialized(),

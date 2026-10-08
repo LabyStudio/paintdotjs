@@ -55,22 +55,25 @@ class BitmapEffectEngine {
             this.select("channel", "Transfer Map", "luminosity", [
                 ["luminosity", "Luminosity"], ["rgb", "RGB"]
             ]),
-            this.curve("points", [[0, 0], [255, 255]])
-        ], (r, g, b, a, values) => {
-            const map = value => this.interpolateCurve(value, values.points);
+            this.curve("points", [[0, 0], [255, 255]]),
+            this.curve("redPoints", [[0, 0], [255, 255]]),
+            this.curve("greenPoints", [[0, 0], [255, 255]]),
+            this.curve("bluePoints", [[0, 0], [255, 255]])
+        ], (r, g, b, a, values, curves) => {
             switch (values.channel) {
-                case "red": return [map(r), g, b, a];
-                case "green": return [r, map(g), b, a];
-                case "blue": return [r, g, map(b), a];
-                case "alpha": return [r, g, b, map(a)];
-                case "rgb": return [map(r), map(g), map(b), a];
+                case "rgb": return [curves.red[r], curves.green[g], curves.blue[b], a];
                 default: {
                     const luminance = r * .299 + g * .587 + b * .114;
-                    const delta = map(luminance) - luminance;
+                    const delta = curves.luminosity[Math.round(luminance)] - luminance;
                     return [r + delta, g + delta, b + delta, a];
                 }
             }
-        }, null, "curves"),
+        }, (_source, values) => ({
+            luminosity: this.createCurveLookup(values.points),
+            red: this.createCurveLookup(values.redPoints || values.points),
+            green: this.createCurveLookup(values.greenPoints || values.points),
+            blue: this.createCurveLookup(values.bluePoints || values.points)
+        }), "curves"),
         exposureEffect: this.configurable("exposureEffect", "exposure_effect.png",
             [this.range("exposure", "Exposure", -5, 5, 0, 0.1)],
             (r, g, b, a, values) => {
@@ -195,7 +198,8 @@ class BitmapEffectEngine {
             if (values.tiling === "transparent") {
                 context.drawImage(input, -width / 2, -height / 2);
             } else {
-                for (let tileY = -2; tileY <= 2; ++tileY) for (let tileX = -2; tileX <= 2; ++tileX) {
+                for (let tileY = -2; tileY <= 2; ++tileY) {
+                    for (let tileX = -2; tileX <= 2; ++tileX) {
                     context.save();
                     const mirrorX = values.tiling === "mirror" && Math.abs(tileX) % 2 === 1;
                     const mirrorY = values.tiling === "mirror" && Math.abs(tileY) % 2 === 1;
@@ -203,6 +207,7 @@ class BitmapEffectEngine {
                     context.scale(mirrorX ? -1 : 1, mirrorY ? -1 : 1);
                     context.drawImage(input, -width / 2, -height / 2);
                     context.restore();
+                }
                 }
             }
             return context.getImageData(0, 0, width, height);
@@ -282,7 +287,9 @@ class BitmapEffectEngine {
         bulgeEffect: this.distortDefinition("bulgeEffect", "bulge_effect.png", "Amount", -300, 100, 45,
             (dx, dy, radius, value) => {
                 const distance = Math.hypot(dx, dy);
-                if (distance >= radius) return [dx, dy];
+                if (distance >= radius) {
+                    return [dx, dy];
+                }
                 const falloff = 1 - distance / radius;
                 const scale = 1 - value / 100 * falloff * falloff;
                 return [dx * scale, dy * scale];
@@ -482,7 +489,9 @@ class BitmapEffectEngine {
 
         for (let offset = 0, pixel = 0; offset < source.data.length; offset += 4, ++pixel) {
             const coverage = mask === null ? 255 : mask[pixel];
-            if (coverage === 0) continue;
+            if (coverage === 0) {
+                continue;
+            }
             const result = definition.transform(
                 source.data[offset], source.data[offset + 1], source.data[offset + 2],
                 source.data[offset + 3], values, state
@@ -514,9 +523,15 @@ class BitmapEffectEngine {
         const output = new ImageData(new Uint8ClampedArray(source.data), width, height);
         const data = output.data;
         for (let offset = 0; offset < data.length; offset += 4) {
-            if (values.red) data[offset] = lookup[data[offset]];
-            if (values.green) data[offset + 1] = lookup[data[offset + 1]];
-            if (values.blue) data[offset + 2] = lookup[data[offset + 2]];
+            if (values.red) {
+                data[offset] = lookup[data[offset]];
+            }
+            if (values.green) {
+                data[offset + 1] = lookup[data[offset + 1]];
+            }
+            if (values.blue) {
+                data[offset + 2] = lookup[data[offset + 2]];
+            }
         }
         return output;
     }
@@ -525,7 +540,9 @@ class BitmapEffectEngine {
         const mask = selection instanceof Uint8Array
             ? selection
             : this.createSelectionMask(width, height, selection);
-        if (mask === null) return rendered;
+        if (mask === null) {
+            return rendered;
+        }
         const output = new ImageData(new Uint8ClampedArray(source.data), width, height);
         for (let pixel = 0, offset = 0; pixel < mask.length; ++pixel, offset += 4) {
             const amount = mask[pixel] / 255;
@@ -538,12 +555,18 @@ class BitmapEffectEngine {
     }
 
     static createSelectionMask(width, height, selection) {
-        if (selection === null) return null;
+        if (selection === null) {
+            return null;
+        }
         // Effect previews rasterize the document selection once and reuse the
         // resulting mask for each render. Do not treat that byte mask as a live
         // Selection object and try to call Selection methods on it.
-        if (selection instanceof Uint8Array) return selection;
-        if (selection.isEmpty()) return null;
+        if (selection instanceof Uint8Array) {
+            return selection;
+        }
+        if (selection.isEmpty()) {
+            return null;
+        }
         const path = selection.createPath();
         const canvas = document.createElement("canvas");
         canvas.width = width;
@@ -558,7 +581,9 @@ class BitmapEffectEngine {
         let fullySelected = true;
         for (let offset = 3, pixel = 0; offset < rgba.length; offset += 4, ++pixel) {
             mask[pixel] = rgba[offset];
-            if (rgba[offset] !== 255) fullySelected = false;
+            if (rgba[offset] !== 255) {
+                fullySelected = false;
+            }
         }
         return fullySelected ? null : mask;
     }
@@ -567,7 +592,9 @@ class BitmapEffectEngine {
         const min = [255, 255, 255];
         const max = [0, 0, 0];
         for (let offset = 0; offset < data.length; offset += 4) {
-            if (data[offset + 3] === 0) continue;
+            if (data[offset + 3] === 0) {
+                continue;
+            }
             for (let channel = 0; channel < 3; ++channel) {
                 min[channel] = Math.min(min[channel], data[offset + channel]);
                 max[channel] = Math.max(max[channel], data[offset + channel]);
@@ -584,16 +611,48 @@ class BitmapEffectEngine {
         return Math.round(Math.round(value / 255 * (levels - 1)) * 255 / (levels - 1));
     }
 
-    static interpolateCurve(value, points) {
-        if (value <= points[0][0]) return points[0][1];
-        for (let index = 1; index < points.length; ++index) {
-            const right = points[index];
-            if (value > right[0]) continue;
-            const left = points[index - 1];
-            const amount = (value - left[0]) / Math.max(1, right[0] - left[0]);
-            return left[1] + (right[1] - left[1]) * amount;
+    static createCurveLookup(points) {
+        const sorted = points
+            .map(point => [Number(point[0]), Number(point[1])])
+            .sort((a, b) => a[0] - b[0]);
+        const secondDerivatives = new Float64Array(sorted.length);
+        const temporary = new Float64Array(sorted.length);
+
+        // Natural cubic spline, matching Paint.NET's SplineInterpolator.
+        for (let index = 1; index < sorted.length - 1; ++index) {
+            const width = sorted[index + 1][0] - sorted[index - 1][0];
+            const ratio = (sorted[index][0] - sorted[index - 1][0]) / width;
+            const pivot = ratio * secondDerivatives[index - 1] + 2;
+            secondDerivatives[index] = (ratio - 1) / pivot;
+            const rightSlope = (sorted[index + 1][1] - sorted[index][1])
+                / (sorted[index + 1][0] - sorted[index][0]);
+            const leftSlope = (sorted[index][1] - sorted[index - 1][1])
+                / (sorted[index][0] - sorted[index - 1][0]);
+            temporary[index] = (6 * (rightSlope - leftSlope) / width
+                - ratio * temporary[index - 1]) / pivot;
         }
-        return points[points.length - 1][1];
+        for (let index = sorted.length - 2; index >= 0; --index) {
+            secondDerivatives[index] = secondDerivatives[index] * secondDerivatives[index + 1]
+                + temporary[index];
+        }
+
+        const lookup = new Uint8ClampedArray(256);
+        let leftIndex = 0;
+        for (let x = 0; x < lookup.length; ++x) {
+            while (leftIndex < sorted.length - 2 && x > sorted[leftIndex + 1][0]) {
+                ++leftIndex;
+            }
+            const left = sorted[leftIndex];
+            const right = sorted[leftIndex + 1];
+            const width = right[0] - left[0];
+            const leftWeight = (right[0] - x) / width;
+            const rightWeight = (x - left[0]) / width;
+            lookup[x] = leftWeight * left[1] + rightWeight * right[1]
+                + ((leftWeight ** 3 - leftWeight) * secondDerivatives[leftIndex]
+                + (rightWeight ** 3 - rightWeight) * secondDerivatives[leftIndex + 1])
+                * width * width / 6;
+        }
+        return lookup;
     }
 
     static randomState(seed = 0) {
@@ -609,7 +668,9 @@ class BitmapEffectEngine {
     }
 
     static getGaussianNoiseTable() {
-        if (this.gaussianNoiseTable !== null) return this.gaussianNoiseTable;
+        if (this.gaussianNoiseTable !== null) {
+            return this.gaussianNoiseTable;
+        }
         const table = new Float32Array(65536);
         const random = this.randomState(0x4e4f4953);
         for (let index = 0; index < table.length; index += 2) {
@@ -672,7 +733,9 @@ class BitmapEffectEngine {
 
     static boxBlur(source, width, height, radius) {
         radius = Math.max(0, Math.round(radius));
-        if (radius === 0) return new ImageData(new Uint8ClampedArray(source.data), width, height);
+        if (radius === 0) {
+            return new ImageData(new Uint8ClampedArray(source.data), width, height);
+        }
         const horizontal = new Float32Array(source.data.length);
         const output = new ImageData(width, height);
         const diameter = radius * 2 + 1;
@@ -681,11 +744,15 @@ class BitmapEffectEngine {
             for (let x = -radius; x <= radius; ++x) {
                 const sx = Math.max(0, Math.min(width - 1, x));
                 const offset = (y * width + sx) * 4;
-                for (let c = 0; c < 4; ++c) sums[c] += source.data[offset + c];
+                for (let c = 0; c < 4; ++c) {
+                    sums[c] += source.data[offset + c];
+                }
             }
             for (let x = 0; x < width; ++x) {
                 const offset = (y * width + x) * 4;
-                for (let c = 0; c < 4; ++c) horizontal[offset + c] = sums[c] / diameter;
+                for (let c = 0; c < 4; ++c) {
+                    horizontal[offset + c] = sums[c] / diameter;
+                }
                 const removeX = Math.max(0, x - radius);
                 const addX = Math.min(width - 1, x + radius + 1);
                 for (let c = 0; c < 4; ++c) {
@@ -699,11 +766,15 @@ class BitmapEffectEngine {
             for (let y = -radius; y <= radius; ++y) {
                 const sy = Math.max(0, Math.min(height - 1, y));
                 const offset = (sy * width + x) * 4;
-                for (let c = 0; c < 4; ++c) sums[c] += horizontal[offset + c];
+                for (let c = 0; c < 4; ++c) {
+                    sums[c] += horizontal[offset + c];
+                }
             }
             for (let y = 0; y < height; ++y) {
                 const offset = (y * width + x) * 4;
-                for (let c = 0; c < 4; ++c) output.data[offset + c] = sums[c] / diameter;
+                for (let c = 0; c < 4; ++c) {
+                    output.data[offset + c] = sums[c] / diameter;
+                }
                 const removeY = Math.max(0, y - radius);
                 const addY = Math.min(height - 1, y + radius + 1);
                 for (let c = 0; c < 4; ++c) {
@@ -716,7 +787,9 @@ class BitmapEffectEngine {
     }
 
     static withGamma(source, width, height, gamma, operation) {
-        if (!gamma) return operation(source);
+        if (!gamma) {
+            return operation(source);
+        }
         const exponent = 1 / (1 + gamma);
         const linear = new ImageData(width, height);
         for (let offset = 0; offset < source.data.length; offset += 4) {
@@ -740,7 +813,9 @@ class BitmapEffectEngine {
         // keeps rendering O(width * height * passes), regardless of radius.
         const idealWidth = Math.sqrt(12 * sigma * sigma / passes + 1);
         let lowerWidth = Math.floor(idealWidth);
-        if (lowerWidth % 2 === 0) --lowerWidth;
+        if (lowerWidth % 2 === 0) {
+            --lowerWidth;
+        }
         lowerWidth = Math.max(1, lowerWidth);
         const upperWidth = lowerWidth + 2;
         const lowerPasses = Utility.clamp(Math.round(
@@ -753,13 +828,17 @@ class BitmapEffectEngine {
     }
 
     static nativeGaussianBlur(source, width, height, sigma) {
-        if (typeof document === "undefined") return null;
+        if (typeof document === "undefined") {
+            return null;
+        }
         const sourceCanvas = document.createElement("canvas");
         const sourceContext = sourceCanvas.getContext("2d", {alpha: true});
         const outputCanvas = document.createElement("canvas");
         const outputContext = outputCanvas.getContext("2d", {alpha: true});
         if (sourceContext === null || outputContext === null
-            || !("filter" in outputContext)) return null;
+            || !("filter" in outputContext)) {
+            return null;
+        }
 
         // Canvas filters are implemented by Chromium's native graphics stack
         // and are substantially faster than moving millions of samples through
@@ -777,7 +856,9 @@ class BitmapEffectEngine {
         imageCanvas.width = width;
         imageCanvas.height = height;
         const imageContext = imageCanvas.getContext("2d", {alpha: true});
-        if (imageContext === null) return null;
+        if (imageContext === null) {
+            return null;
+        }
         imageContext.putImageData(source, 0, 0);
         sourceContext.drawImage(imageCanvas, padding, padding);
         if (padding > 0) {
@@ -800,7 +881,9 @@ class BitmapEffectEngine {
         }
 
         outputContext.filter = `blur(${sigma}px)`;
-        if (outputContext.filter === "none") return null;
+        if (outputContext.filter === "none") {
+            return null;
+        }
         outputContext.drawImage(sourceCanvas, -padding, -padding);
         outputContext.filter = "none";
         return outputContext.getImageData(0, 0, width, height);
@@ -808,7 +891,9 @@ class BitmapEffectEngine {
 
     static gaussianBlur(source, width, height, radius, gamma = 0, quality = 2) {
         const sigma = Math.max(0, Number(radius)) / 3;
-        if (sigma < .01) return new ImageData(new Uint8ClampedArray(source.data), width, height);
+        if (sigma < .01) {
+            return new ImageData(new Uint8ClampedArray(source.data), width, height);
+        }
         return this.withGamma(source, width, height, gamma, input => {
             let nativeResult = null;
             try {
@@ -817,7 +902,9 @@ class BitmapEffectEngine {
                 // Oversized canvases or constrained devices can reject the
                 // native surface allocation. The bounded CPU path still works.
             }
-            if (nativeResult !== null) return nativeResult;
+            if (nativeResult !== null) {
+                return nativeResult;
+            }
             // Quality 1..4 maps to 2..5 passes. Even the fast setting is a
             // much closer Gaussian approximation than one box, while higher
             // settings smooth the small residual box profile at modest cost.
@@ -837,7 +924,9 @@ class BitmapEffectEngine {
 
     static discBlur(source, width, height, radius, gamma = 0) {
         radius = Math.max(0, Math.round(radius));
-        if (!radius) return new ImageData(new Uint8ClampedArray(source.data), width, height);
+        if (!radius) {
+            return new ImageData(new Uint8ClampedArray(source.data), width, height);
+        }
         return this.withGamma(source, width, height, gamma, input => {
             const output = new ImageData(width, height);
             const inputData = input.data;
@@ -876,7 +965,9 @@ class BitmapEffectEngine {
                     outputData[offset + 1] = totalG / count;
                     outputData[offset + 2] = totalB / count;
                     outputData[offset + 3] = totalA / count;
-                    if (x + 1 >= width) continue;
+                    if (x + 1 >= width) {
+                        continue;
+                    }
                     for (let row = 0; row < diameter; ++row) {
                         const halfWidth = halfWidths[row];
                         const removeX = Math.max(0, x - halfWidth);
@@ -897,7 +988,9 @@ class BitmapEffectEngine {
 
     static percentileBlur(source, width, height, radius, percentile = 50) {
         radius = Math.max(0, Math.round(radius));
-        if (!radius) return new ImageData(new Uint8ClampedArray(source.data), width, height);
+        if (!radius) {
+            return new ImageData(new Uint8ClampedArray(source.data), width, height);
+        }
         const output = new ImageData(width, height);
         const histograms = new Uint32Array(256 * 4);
         const targetRatio = this.clamp01(percentile / 100);
@@ -926,7 +1019,9 @@ class BitmapEffectEngine {
                     }
                     output.data[offset + channel] = value;
                 }
-                if (x + 1 >= width) continue;
+                if (x + 1 >= width) {
+                    continue;
+                }
                 const removeX = Math.max(0, x - radius);
                 const addX = Math.min(width - 1, x + radius + 1);
                 for (let dy = -radius; dy <= radius; ++dy) {
@@ -947,7 +1042,8 @@ class BitmapEffectEngine {
         const radius = Math.max(1, Math.round(values.radius));
         const threshold = values.threshold / 100 * 255;
         const output = new ImageData(width, height);
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
             const offset = (y * width + x) * 4;
             const centers = [source.data[offset], source.data[offset + 1],
                 source.data[offset + 2], source.data[offset + 3]];
@@ -975,6 +1071,7 @@ class BitmapEffectEngine {
                     ? totals[channel] / weightTotals[channel] : centers[channel];
             }
         }
+        }
         return output;
     }
 
@@ -997,7 +1094,8 @@ class BitmapEffectEngine {
         const output = new ImageData(width, height);
         const size = Math.sqrt(kernel.length);
         const radius = Math.floor(size / 2);
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
             const destination = (y * width + x) * 4;
             const totals = [0, 0, 0];
             for (let ky = 0; ky < size; ++ky) {
@@ -1015,6 +1113,7 @@ class BitmapEffectEngine {
             output.data[destination + 1] = totals[1] + bias;
             output.data[destination + 2] = totals[2] + bias;
             output.data[destination + 3] = source.data[destination + 3];
+        }
         }
         return output;
     }
@@ -1058,19 +1157,29 @@ class BitmapEffectEngine {
     static pixelate(source, width, height, cellSize) {
         const cell = Math.max(1, Math.round(cellSize));
         const output = new ImageData(width, height);
-        for (let top = 0; top < height; top += cell) for (let left = 0; left < width; left += cell) {
+        for (let top = 0; top < height; top += cell) {
+            for (let left = 0; left < width; left += cell) {
             const right = Math.min(width, left + cell), bottom = Math.min(height, top + cell);
             const totals = [0, 0, 0, 0];
             let count = 0;
-            for (let y = top; y < bottom; ++y) for (let x = left; x < right; ++x) {
+            for (let y = top; y < bottom; ++y) {
+                for (let x = left; x < right; ++x) {
                 const offset = (y * width + x) * 4;
-                for (let channel = 0; channel < 4; ++channel) totals[channel] += source.data[offset + channel];
+                for (let channel = 0; channel < 4; ++channel) {
+                    totals[channel] += source.data[offset + channel];
+                }
                 ++count;
             }
-            for (let y = top; y < bottom; ++y) for (let x = left; x < right; ++x) {
-                const offset = (y * width + x) * 4;
-                for (let channel = 0; channel < 4; ++channel) output.data[offset + channel] = totals[channel] / count;
             }
+            for (let y = top; y < bottom; ++y) {
+                for (let x = left; x < right; ++x) {
+                const offset = (y * width + x) * 4;
+                for (let channel = 0; channel < 4; ++channel) {
+                    output.data[offset + channel] = totals[channel] / count;
+                }
+            }
+            }
+        }
         }
         return output;
     }
@@ -1078,7 +1187,9 @@ class BitmapEffectEngine {
     static quantize(source, width, height, values) {
         const histogram = new Map();
         for (let offset = 0; offset < source.data.length; offset += 4) {
-            if (source.data[offset + 3] < values.alphaThreshold) continue;
+            if (source.data[offset + 3] < values.alphaThreshold) {
+                continue;
+            }
             const key = (source.data[offset] >> 3) << 10 | (source.data[offset + 1] >> 3) << 5 | source.data[offset + 2] >> 3;
             const entry = histogram.get(key);
             if (entry) {
@@ -1091,7 +1202,9 @@ class BitmapEffectEngine {
         const colors = [...histogram.values()].map(entry => ({
             count: entry.count, r: entry.r / entry.count, g: entry.g / entry.count, b: entry.b / entry.count
         }));
-        if (colors.length === 0) return new ImageData(new Uint8ClampedArray(source.data), width, height);
+        if (colors.length === 0) {
+            return new ImageData(new Uint8ClampedArray(source.data), width, height);
+        }
         const boxes = [colors];
         const bounds = box => {
             let minR=255,minG=255,minB=255,maxR=0,maxG=0,maxB=0,total=0;
@@ -1104,18 +1217,24 @@ class BitmapEffectEngine {
         while (boxes.length < values.colors) {
             let splitIndex = -1, splitScore = -1, splitBounds = null;
             for (let i=0;i<boxes.length;++i) {
-                if (boxes[i].length < 2) continue;
+                if (boxes[i].length < 2) {
+                    continue;
+                }
                 const boxBounds=bounds(boxes[i]);
                 const score=Math.max(...boxBounds.ranges)*boxBounds.total;
                 if(score>splitScore){splitIndex=i;splitScore=score;splitBounds=boxBounds;}
             }
-            if(splitIndex<0) break;
+            if(splitIndex<0) {
+                break;
+            }
             const box=boxes.splice(splitIndex,1)[0];
             const channel=splitBounds.ranges.indexOf(Math.max(...splitBounds.ranges));
             const keys=["r","g","b"];
             box.sort((a,b)=>a[keys[channel]]-b[keys[channel]]);
             let cumulative=0, cut=1;
-            for(;cut<box.length;++cut){cumulative+=box[cut-1].count;if(cumulative>=splitBounds.total/2)break;}
+            for(;cut<box.length;++cut){cumulative+=box[cut-1].count;if(cumulative>=splitBounds.total/2) {
+                break;
+            }}
             boxes.push(box.slice(0,cut),box.slice(cut));
         }
         const palette=boxes.map(box=>{
@@ -1126,7 +1245,8 @@ class BitmapEffectEngine {
         const output = new ImageData(new Uint8ClampedArray(source.data), width, height);
         const errors = new Float32Array(source.data.length);
         const dither = values.dithering / 8;
-        for(let y=0;y<height;++y) for(let x=0;x<width;++x){
+        for(let y=0;y<height;++y) {
+            for(let x=0;x<width;++x){
             const offset=(y*width+x)*4;
             if(source.data[offset+3]<values.alphaThreshold){output.data[offset+3]=0;continue;}
             const rgb=[0,1,2].map(c=>Math.max(0,Math.min(255,source.data[offset+c]+errors[offset+c])));
@@ -1135,9 +1255,16 @@ class BitmapEffectEngine {
             for(let c=0;c<3;++c){
                 output.data[offset+c]=nearest[c];
                 const error=(rgb[c]-nearest[c])*dither;
-                if(x+1<width)errors[offset+4+c]+=error*7/16;
-                if(y+1<height){if(x>0)errors[offset+(width-1)*4+c]+=error*3/16;errors[offset+width*4+c]+=error*5/16;if(x+1<width)errors[offset+(width+1)*4+c]+=error/16;}
+                if(x+1<width) {
+                    errors[offset+4+c]+=error*7/16;
+                }
+                if(y+1<height){if(x>0) {
+                    errors[offset+(width-1)*4+c]+=error*3/16;
+                }errors[offset+width*4+c]+=error*5/16;if(x+1<width) {
+                    errors[offset+(width+1)*4+c]+=error/16;
+                }}
             }
+        }
         }
         return output;
     }
@@ -1161,7 +1288,8 @@ class BitmapEffectEngine {
         return this.mapImage(source, width, height, (x, y, output) => {
             const cx = Math.floor(x / cell), cy = Math.floor(y / cell);
             let bestDistance = Infinity, bestX = x, bestY = y;
-            for (let oy = -1; oy <= 1; ++oy) for (let ox = -1; ox <= 1; ++ox) {
+            for (let oy = -1; oy <= 1; ++oy) {
+                for (let ox = -1; ox <= 1; ++ox) {
                 const gx = cx + ox, gy = cy + oy;
                 const fx = (gx + this.coordinateRandom(seed, gx, gy, 0x51ed)) * cell + .5;
                 const fy = (gy + this.coordinateRandom(seed, gx, gy, 0xa7f3)) * cell + .5;
@@ -1171,6 +1299,7 @@ class BitmapEffectEngine {
                     bestX = fx;
                     bestY = fy;
                 }
+            }
             }
             output[0] = bestX;
             output[1] = bestY;
@@ -1183,7 +1312,8 @@ class BitmapEffectEngine {
         const cosine = Math.cos(radians);
         const sine = Math.sin(radians);
         const samples = Math.min(31, Math.max(2, Math.round(distance) + 1));
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
             const offset = (y * width + x) * 4;
             const totals = [0, 0, 0, 0];
             for (let sample = 0; sample < samples; ++sample) {
@@ -1196,7 +1326,10 @@ class BitmapEffectEngine {
                 totals[2] += source.data[sampleOffset + 2];
                 totals[3] += source.data[sampleOffset + 3];
             }
-            for (let channel = 0; channel < 4; ++channel) output.data[offset + channel] = totals[channel] / samples;
+            for (let channel = 0; channel < 4; ++channel) {
+                output.data[offset + channel] = totals[channel] / samples;
+            }
+        }
         }
         return output;
     }
@@ -1235,7 +1368,8 @@ class BitmapEffectEngine {
     static averageMapped(source, width, height, mapper, samples) {
         const output = new ImageData(width, height);
         const mapped = [0, 0];
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
             const offset = (y * width + x) * 4;
             const totals = [0, 0, 0, 0];
             for (let sample = 0; sample < samples; ++sample) {
@@ -1248,7 +1382,10 @@ class BitmapEffectEngine {
                 totals[2] += source.data[sampleOffset + 2];
                 totals[3] += source.data[sampleOffset + 3];
             }
-            for (let channel = 0; channel < 4; ++channel) output.data[offset + channel] = totals[channel] / samples;
+            for (let channel = 0; channel < 4; ++channel) {
+                output.data[offset + channel] = totals[channel] / samples;
+            }
+        }
         }
         return output;
     }
@@ -1274,7 +1411,9 @@ class BitmapEffectEngine {
             let ry = x * sine + y * cosine;
             const fold = coordinate => {
                 let value = ((coordinate % (size * 2)) + size * 2) % (size * 2);
-                if (value > size) value = size * 2 - value;
+                if (value > size) {
+                    value = size * 2 - value;
+                }
                 return value;
             };
             const bend = values.curvature / 200;
@@ -1305,7 +1444,9 @@ class BitmapEffectEngine {
         const deviation = values.intensity * 1.275;
         const saturation = values.saturation / 100;
         const coverage = Utility.clamp(Number(values.coverage), 0, 100) / 100;
-        if (deviation <= 0 || coverage <= 0) return output;
+        if (deviation <= 0 || coverage <= 0) {
+            return output;
+        }
 
         // The effect visits every pixel in a fixed order, so a seeded stream is
         // deterministic without recalculating seven coordinate hashes per
@@ -1318,7 +1459,9 @@ class BitmapEffectEngine {
         const fullCoverage = coverage >= 1;
         const coverageThreshold = coverage * 4294967296;
         for (let offset = 0; offset < sourceData.length; offset += 4) {
-            if (!fullCoverage && random.nextUint32() >= coverageThreshold) continue;
+            if (!fullCoverage && random.nextUint32() >= coverageThreshold) {
+                continue;
+            }
 
             const redNoise = gaussian[random.nextUint32() & 0xffff];
             const greenNoise = gaussian[random.nextUint32() & 0xffff];
@@ -1387,13 +1530,15 @@ class BitmapEffectEngine {
         const cx = width / 2, cy = height / 2;
         const maximum = Math.hypot(cx, cy) * values.radius;
         const start = maximum * .25;
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
             const amount = this.clamp01((Math.hypot(x - cx, y - cy) - start) / Math.max(1, maximum - start))
                 * values.strength;
             const offset = (y * width + x) * 4;
             for (let channel = 0; channel < 3; ++channel) {
                 output.data[offset + channel] = source.data[offset + channel] * (1 - amount);
             }
+        }
         }
         return output;
     }
@@ -1440,7 +1585,11 @@ class BitmapEffectEngine {
             }
             for (let x = 0; x < width; ++x) {
                 let mode = 0;
-                for (let bin = 1; bin < bins; ++bin) if (counts[bin] > counts[mode]) mode = bin;
+                for (let bin = 1; bin < bins; ++bin) {
+                    if (counts[bin] > counts[mode]) {
+                    mode = bin;
+                }
+                }
                 const destination = (y * width + x) * 4;
                 const count = Math.max(1, counts[mode]);
                 outputData[destination] = sums[mode * 4] / count;
@@ -1448,7 +1597,9 @@ class BitmapEffectEngine {
                 outputData[destination + 2] = sums[mode * 4 + 2] / count;
                 outputData[destination + 3] = sums[mode * 4 + 3] / count;
 
-                if (x + 1 >= width) continue;
+                if (x + 1 >= width) {
+                    continue;
+                }
                 for (let dy = -radius; dy <= radius; ++dy) {
                     const sy = Math.max(0, Math.min(height - 1, y + dy));
                     const halfWidth = halfWidths[dy + radius];
@@ -1496,7 +1647,9 @@ class BitmapEffectEngine {
         for (let offset = 0; offset < source.data.length; offset += 4) {
             const edgeGray = edges.data[offset] * .299 + edges.data[offset + 1] * .587 + edges.data[offset + 2] * .114;
             const line = edgeGray > threshold ? 255 : 0;
-            for (let channel = 0; channel < 3; ++channel) output.data[offset + channel] = Math.min(line, glow.data[offset + channel]);
+            for (let channel = 0; channel < 3; ++channel) {
+                output.data[offset + channel] = Math.min(line, glow.data[offset + channel]);
+            }
             output.data[offset + 3] = source.data[offset + 3];
         }
         return output;
@@ -1528,17 +1681,23 @@ class BitmapEffectEngine {
         const radians = values.angle * Math.PI / 180;
         const offsetX = Math.cos(radians) * values.distance;
         const offsetY = -Math.sin(radians) * values.distance;
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
             const sx = x - offsetX, sy = y - offsetY;
             const offset = (y * width + x) * 4;
             shadow.data[offset + 3] = this.sampleLinear(source.data, width, height, sx, sy, 3) * values.opacity;
         }
+        }
         const blurred = this.gaussianBlur(shadow, width, height, values.blur, 0);
-        if (values.shadowOnly) return blurred;
+        if (values.shadowOnly) {
+            return blurred;
+        }
         const output = new ImageData(new Uint8ClampedArray(blurred.data), width, height);
         for (let offset = 0; offset < source.data.length; offset += 4) {
             const alpha = source.data[offset + 3] / 255;
-            for (let channel = 0; channel < 3; ++channel) output.data[offset + channel] = source.data[offset + channel];
+            for (let channel = 0; channel < 3; ++channel) {
+                output.data[offset + channel] = source.data[offset + channel];
+            }
             output.data[offset + 3] = (alpha + output.data[offset + 3] / 255 * (1 - alpha)) * 255;
         }
         return output;
@@ -1548,7 +1707,8 @@ class BitmapEffectEngine {
         const output = new ImageData(width, height);
         const radiusX = Math.floor((values.width - 1) / 2);
         const radiusY = Math.floor(((values.linked ? values.width : values.height) - 1) / 2);
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
             const offset = (y * width + x) * 4;
             const results = values.mode === "dilate" ? [0, 0, 0, 0] : [255, 255, 255, 255];
             for (let dy = -radiusY; dy <= radiusY; ++dy) {
@@ -1563,7 +1723,10 @@ class BitmapEffectEngine {
                     }
                 }
             }
-            for (let channel = 0; channel < 4; ++channel) output.data[offset + channel] = results[channel];
+            for (let channel = 0; channel < 4; ++channel) {
+                output.data[offset + channel] = results[channel];
+            }
+        }
         }
         return output;
     }
@@ -1572,7 +1735,9 @@ class BitmapEffectEngine {
         const edges = this.convolve(source, width, height, [-1,-1,-1,-1,8,-1,-1,-1,-1], 0);
         const output = values.thickness > 1 ? this.boxBlur(edges, width, height, values.thickness / 2) : edges;
         for (let offset = 0; offset < output.data.length; offset += 4) {
-            for (let channel = 0; channel < 3; ++channel) output.data[offset + channel] *= values.intensity / 100;
+            for (let channel = 0; channel < 3; ++channel) {
+                output.data[offset + channel] *= values.intensity / 100;
+            }
         }
         return output;
     }
@@ -1634,7 +1799,8 @@ class BitmapEffectEngine {
         const latticeHeight = maxCellY - minCellY + 2;
         const gradientX = new Float64Array(latticeWidth * latticeHeight);
         const gradientY = new Float64Array(latticeWidth * latticeHeight);
-        for (let gy = 0; gy < latticeHeight; ++gy) for (let gx = 0; gx < latticeWidth; ++gx) {
+        for (let gy = 0; gy < latticeHeight; ++gy) {
+            for (let gx = 0; gx < latticeWidth; ++gx) {
             const cellX = minCellX + gx;
             const cellY = minCellY + gy;
             const hash = this.hash32((cellX & 0xffff)
@@ -1643,6 +1809,7 @@ class BitmapEffectEngine {
             const index = gy * latticeWidth + gx;
             gradientX[index] = Math.cos(angle);
             gradientY[index] = Math.sin(angle);
+        }
         }
 
         const rootTwo = 1.41421356237;
@@ -1684,11 +1851,14 @@ class BitmapEffectEngine {
 
     static turbulence(width, height, values) {
         const output = new ImageData(width, height);
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
             let sum = 0, amplitude = 1, normalization = 0, frequency = 1 / values.period;
             for (let octave = 0; octave < values.octaves; ++octave) {
                 let noise = this.perlin(x * frequency, y * frequency, values.seed + octave);
-                if (values.noise === "turbulence") noise = Math.abs(noise) * 2 - 1;
+                if (values.noise === "turbulence") {
+                    noise = Math.abs(noise) * 2 - 1;
+                }
                 sum += noise * amplitude;
                 normalization += amplitude;
                 amplitude *= .5;
@@ -1699,6 +1869,7 @@ class BitmapEffectEngine {
             output.data[offset] = output.data[offset + 1] = output.data[offset + 2] = value;
             output.data[offset + 3] = 255;
         }
+        }
         return output;
     }
 
@@ -1706,7 +1877,8 @@ class BitmapEffectEngine {
         const output = new ImageData(width, height);
         const scale = 4 / values.zoom;
         const iterations = Math.min(300, values.iterations);
-        for (let y = 0; y < height; ++y) for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
             const px = (x / width - .5) * scale;
             const py = (y / height - .5) * scale;
             let zx = julia ? px : 0, zy = julia ? py : 0;
@@ -1723,6 +1895,7 @@ class BitmapEffectEngine {
             output.data[offset + 2] = 255 - value;
             output.data[offset + 3] = 255;
         }
+        }
         return output;
     }
 
@@ -1738,24 +1911,42 @@ class BitmapEffectEngine {
         if (max !== min) {
             const d = max - min;
             s = l > .5 ? d / (2 - max - min) : d / (max + min);
-            if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
-            else if (max === g) h = (b - r) / d + 2;
-            else h = (r - g) / d + 4;
+            if (max === r) {
+                h = (g - b) / d + (g < b ? 6 : 0);
+            }
+            else if (max === g) {
+                h = (b - r) / d + 2;
+            }
+            else {
+                h = (r - g) / d + 4;
+            }
             h /= 6;
         }
         return [h, s, l];
     }
 
     static hslToRgb(h, s, l) {
-        if (s === 0) return [l * 255, l * 255, l * 255];
+        if (s === 0) {
+            return [l * 255, l * 255, l * 255];
+        }
         const q = l < .5 ? l * (1 + s) : l + s - l * s;
         const p = 2 * l - q;
         const hue = t => {
-            if (t < 0) ++t;
-            if (t > 1) --t;
-            if (t < 1 / 6) return p + (q - p) * 6 * t;
-            if (t < 1 / 2) return q;
-            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            if (t < 0) {
+                ++t;
+            }
+            if (t > 1) {
+                --t;
+            }
+            if (t < 1 / 6) {
+                return p + (q - p) * 6 * t;
+            }
+            if (t < 1 / 2) {
+                return q;
+            }
+            if (t < 2 / 3) {
+                return p + (q - p) * (2 / 3 - t) * 6;
+            }
             return p;
         };
         return [hue(h + 1 / 3) * 255, hue(h) * 255, hue(h - 1 / 3) * 255];

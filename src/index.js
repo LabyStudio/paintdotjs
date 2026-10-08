@@ -17,7 +17,9 @@ import {deserialize as deserializeNrbf} from 'ms-nrbf-js'
 
 let portableImageCodecPromise = null;
 const getPortableImageCodec = () => {
-    if (portableImageCodecPromise === null) portableImageCodecPromise = import('./portableImageCodec');
+    if (portableImageCodecPromise === null) {
+        portableImageCodecPromise = import('./portableImageCodec');
+    }
     return portableImageCodecPromise;
 };
 

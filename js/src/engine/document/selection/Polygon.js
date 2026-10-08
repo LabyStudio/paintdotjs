@@ -30,7 +30,9 @@ class Polygon {
                 list.push(point);
             }
 
-            if (list.length === 0) continue;
+            if (list.length === 0) {
+                continue;
+            }
 
             let vertexList = new VertexList(
                 list,

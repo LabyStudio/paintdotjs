@@ -67,7 +67,9 @@ class DropMenuItem extends MenuItem {
     }
 
     open() {
-        if (this.isOpen()) return;
+        if (this.isOpen()) {
+            return;
+        }
         if (this.parent !== null && typeof this.parent.onDropMenuOpening === "function") {
             this.parent.onDropMenuOpening(this);
         }
@@ -100,7 +102,9 @@ class DropMenuItem extends MenuItem {
         document.removeEventListener("click", this.closeListener);
 
         for (const entry of this.entries) {
-            if (entry instanceof SubmenuDropEntry) entry.close();
+            if (entry instanceof SubmenuDropEntry) {
+                entry.close();
+            }
         }
 
         this.dropMenuPopup?.close();

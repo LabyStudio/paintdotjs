@@ -37,7 +37,9 @@ class MainMenu extends StripPanel {
     }
 
     onDropMenuClosed(item) {
-        if (this.openDropMenu === item) this.openDropMenu = null;
+        if (this.openDropMenu === item) {
+            this.openDropMenu = null;
+        }
     }
 
     onDropMenuHovered(item) {

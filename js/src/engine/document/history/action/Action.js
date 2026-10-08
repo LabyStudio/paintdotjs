@@ -94,7 +94,9 @@ class Action {
     }
 
     getDisplayName() {
-        if (this.nameTranslationId === null) return this.actionId;
+        if (this.nameTranslationId === null) {
+            return this.actionId;
+        }
         return i18n(this.nameTranslationId);
     }
 
@@ -105,33 +107,13 @@ class Action {
                 return category[0].toUpperCase() + category.slice(1);
             }
         }
-        if (this.actionId.endsWith("Tool")) return "Tools";
-        if (this.actionId.startsWith("measurementUnit.")) return "View";
+        if (this.actionId.endsWith("Tool")) {
+            return "Tools";
+        }
+        if (this.actionId.startsWith("measurementUnit.")) {
+            return "View";
+        }
         return "General";
     }
 
-}
-
-class CallbackAction extends Action {
-
-    constructor(actionId, callback, displayName, executable = null, shortcutKeyCombo = null) {
-        super(actionId, null, null, shortcutKeyCombo);
-        this.callback = callback;
-        this.displayName = displayName;
-        this.executable = executable;
-    }
-
-    runPerformAction() {
-        if (this.runIsActionExecutable()) this.callback();
-    }
-
-    runIsActionExecutable() {
-        return this.executable === null || this.executable();
-    }
-
-    getDisplayName() {
-        return typeof this.displayName === "function"
-            ? this.displayName()
-            : (this.displayName || this.actionId);
-    }
 }

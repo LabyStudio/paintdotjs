@@ -26,7 +26,9 @@ class FillSelectionAction extends EditAction {
 
     performAction(documentWorkspace) {
         const colors = FormRegistry.get("colorsForm");
-        if (colors === null) return;
+        if (colors === null) {
+            return;
+        }
         const color = this.secondary ? colors.secondaryColor : colors.mainColor;
         documentWorkspace.executeFunction(new FillSelectionFunction(
             color,

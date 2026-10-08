@@ -40,7 +40,9 @@ class SaveImageDialog {
     }
 
     static open(options) {
-        if (this.activePromise !== null) return this.activePromise;
+        if (this.activePromise !== null) {
+            return this.activePromise;
+        }
         this.activePromise = this.show(options).finally(() => {
             this.activePromise = null;
         });
@@ -52,113 +54,30 @@ class SaveImageDialog {
             const canvas = options.canvas;
             const backdrop = document.createElement("div");
             backdrop.className = "app-dialog-backdrop save-config-backdrop";
-            if (isApp) backdrop.classList.add("dialog-backdrop-app");
+            if (isApp) {
+                backdrop.classList.add("dialog-backdrop-app");
+            }
             const dialog = document.createElement("form");
             dialog.className = "app-dialog save-config-dialog";
-
-            const titleBar = document.createElement("header");
-            titleBar.className = "app-dialog-title-bar";
-            const titleGroup = document.createElement("div");
-            titleGroup.className = "app-dialog-title";
-            const icon = document.createElement("img");
-            icon.src = "assets/icons/menu_file_save_icon.png";
-            icon.alt = "";
-            const title = document.createElement("strong");
-            title.textContent = "Save Configuration";
-            titleGroup.append(icon, title);
-            const close = document.createElement("button");
-            close.type = "button";
-            close.className = "app-dialog-close";
-            close.textContent = "×";
-            close.title = "Close";
-            titleBar.append(titleGroup, close);
+            const {element: titleBar, close} = this.createTitleBar();
 
             const content = document.createElement("div");
             content.className = "save-config-content";
-            const settings = document.createElement("aside");
-            settings.className = "save-config-settings";
-            settings.appendChild(this.heading("Settings"));
-
-            const typeLabel = document.createElement("label");
-            typeLabel.className = "save-config-label";
-            typeLabel.textContent = "File type";
-            const formatSelect = document.createElement("select");
-            formatSelect.className = "save-config-format";
-            formatSelect.autofocus = true;
-            for (const format of this.FORMATS) {
-                const option = document.createElement("option");
-                option.value = format.id;
-                option.textContent = format.name + " (" + (format.extensions || [format.extension]).join(", ") + ")";
-                formatSelect.appendChild(option);
-            }
-
-            const qualityGroup = document.createElement("section");
-            qualityGroup.className = "save-config-quality";
-            qualityGroup.appendChild(this.heading("Quality"));
-            const qualityControls = document.createElement("div");
-            qualityControls.className = "save-config-quality-controls";
-            const quality = document.createElement("input");
-            quality.type = "range";
-            quality.min = "0";
-            quality.max = "100";
-            quality.step = "1";
-            const qualityNumber = document.createElement("input");
-            qualityNumber.type = "number";
-            qualityNumber.min = "0";
-            qualityNumber.max = "100";
-            qualityNumber.step = "1";
-            qualityControls.append(quality, NumberInput.wrap(qualityNumber));
-            qualityGroup.appendChild(qualityControls);
-
-            const chromaGroup = document.createElement("section");
-            chromaGroup.className = "save-config-chroma-group";
-            chromaGroup.appendChild(this.heading("Chroma Subsampling"));
-            const chroma = document.createElement("select");
-            chroma.className = "save-config-chroma";
-            for (const value of ["4:4:4", "4:2:2", "4:4:0", "4:2:0"]) {
-                const option = document.createElement("option");
-                option.value = value;
-                option.textContent = value;
-                chroma.appendChild(option);
-            }
-            chromaGroup.appendChild(chroma);
-            const defaults = document.createElement("button");
-            defaults.type = "button";
-            defaults.className = "save-config-defaults";
-            defaults.textContent = "Defaults";
-            settings.append(typeLabel, formatSelect, qualityGroup, chromaGroup, defaults);
-
-            const previewSection = document.createElement("section");
-            previewSection.className = "save-config-preview-section";
-            const previewHeading = this.heading("Preview, file size: calculating…");
-            previewHeading.classList.add("save-config-preview-heading");
-            const previewFrame = document.createElement("div");
-            previewFrame.className = "save-config-preview-frame";
-            previewFrame.tabIndex = 0;
-            previewFrame.title = "Mouse wheel to zoom. Double-click to toggle Fit and 100%.";
-            const previewStage = document.createElement("div");
-            previewStage.className = "save-config-preview-stage";
-            const preview = document.createElement("img");
-            preview.alt = "Saved image preview";
-            preview.draggable = false;
-            previewStage.appendChild(preview);
-            previewFrame.appendChild(previewStage);
-            previewSection.append(previewHeading, previewFrame);
+            const settings = this.createSettings();
+            const {
+                formatSelect,
+                qualityGroup,
+                quality,
+                qualityNumber,
+                chromaGroup,
+                chroma,
+                defaults
+            } = settings;
+            const previewSection = this.createPreview();
+            const {heading: previewHeading, frame: previewFrame, stage: previewStage, image: preview} = previewSection;
             content.append(settings, previewSection);
 
-            const footer = document.createElement("footer");
-            footer.className = "app-dialog-footer save-config-footer";
-            const status = document.createElement("span");
-            status.className = "save-config-status";
-            const buttons = document.createElement("div");
-            const ok = document.createElement("button");
-            ok.type = "submit";
-            ok.textContent = "OK";
-            const cancel = document.createElement("button");
-            cancel.type = "button";
-            cancel.textContent = "Cancel";
-            buttons.append(ok, cancel);
-            footer.append(status, buttons);
+            const {element: footer, status, ok, cancel} = this.createFooter();
 
             const initialFormat = this.find(options.initialFormat || "png");
             const initialOptions = {...(options.initialOptions || {})};
@@ -235,8 +154,12 @@ class SaveImageDialog {
                 previewWidth = Math.max(1, preview.naturalWidth || canvas.width);
                 previewHeight = Math.max(1, preview.naturalHeight || canvas.height);
                 fitZoom = calculateFitZoom();
-                if (autoFit) fitPreview();
-                else layoutPreview();
+                if (autoFit) {
+                    fitPreview();
+                }
+                else {
+                    layoutPreview();
+                }
             };
             previewFrame.addEventListener("wheel", event => {
                 event.preventDefault();
@@ -246,20 +169,32 @@ class SaveImageDialog {
             }, {passive: false});
             previewFrame.ondblclick = event => {
                 event.preventDefault();
-                if (Math.abs(zoom - fitZoom) < 0.01) setZoom(1, event.clientX, event.clientY);
-                else fitPreview();
+                if (Math.abs(zoom - fitZoom) < 0.01) {
+                    setZoom(1, event.clientX, event.clientY);
+                }
+                else {
+                    fitPreview();
+                }
             };
             const resizeObserver = new ResizeObserver(() => {
                 // Writing stage dimensions from inside ResizeObserver can resize
                 // the observed viewport again in the same delivery cycle. Defer
                 // and coalesce the layout write to avoid the browser's
                 // "undelivered notifications" loop warning.
-                if (resizeFrame !== null) return;
+                if (resizeFrame !== null) {
+                    return;
+                }
                 resizeFrame = requestAnimationFrame(() => {
                     resizeFrame = null;
-                    if (closed) return;
-                    if (autoFit) fitPreview();
-                    else layoutPreview();
+                    if (closed) {
+                        return;
+                    }
+                    if (autoFit) {
+                        fitPreview();
+                    }
+                    else {
+                        layoutPreview();
+                    }
                 });
             });
             resizeObserver.observe(previewFrame);
@@ -271,10 +206,14 @@ class SaveImageDialog {
                 qualities.set(formatSelect.value, result);
             };
             const formatSize = bytes => {
-                if (bytes < 1024) return bytes.toLocaleString() + " bytes";
-                if (bytes < 1024 * 1024) return (bytes / 1024).toLocaleString(undefined, {
+                if (bytes < 1024) {
+                    return bytes.toLocaleString() + " bytes";
+                }
+                if (bytes < 1024 * 1024) {
+                    return (bytes / 1024).toLocaleString(undefined, {
                     minimumFractionDigits: 1, maximumFractionDigits: 1
                 }) + " KB";
+                }
                 return (bytes / 1024 / 1024).toLocaleString(undefined, {
                     minimumFractionDigits: 1, maximumFractionDigits: 1
                 }) + " MB";
@@ -282,8 +221,12 @@ class SaveImageDialog {
             const selectedOptions = () => {
                 const format = this.find(formatSelect.value);
                 const result = {};
-                if (format.quality !== undefined) result.quality = qualities.get(format.id) ?? format.quality;
-                if (format.id === "jpeg") result.subsampling = chroma.value;
+                if (format.quality !== undefined) {
+                    result.quality = qualities.get(format.id) ?? format.quality;
+                }
+                if (format.id === "jpeg") {
+                    result.subsampling = chroma.value;
+                }
                 return result;
             };
             const refreshControls = () => {
@@ -291,7 +234,9 @@ class SaveImageDialog {
                 qualityGroup.hidden = format.quality === undefined;
                 chromaGroup.hidden = format.id !== "jpeg";
                 defaults.hidden = format.quality === undefined;
-                if (format.quality !== undefined) setQuality(qualities.get(format.id) ?? format.quality);
+                if (format.quality !== undefined) {
+                    setQuality(qualities.get(format.id) ?? format.quality);
+                }
             };
             const render = async () => {
                 const ownGeneration = ++generation;
@@ -301,43 +246,63 @@ class SaveImageDialog {
                 try {
                     const format = this.find(formatSelect.value);
                     const blob = await options.encode(format.id, selectedOptions());
-                    if (closed || ownGeneration !== generation) return;
+                    if (closed || ownGeneration !== generation) {
+                        return;
+                    }
                     currentBlob = blob;
                     let displayBlob = blob;
                     if (!["png", "jpeg", "webp", "gif", "bmp", "avif"].includes(format.id)) {
                         displayBlob = await ImageEncoder.canvasToBlob(canvas, "image/png");
                     }
-                    if (closed || ownGeneration !== generation) return;
-                    if (previewUrl !== null) URL.revokeObjectURL(previewUrl);
+                    if (closed || ownGeneration !== generation) {
+                        return;
+                    }
+                    if (previewUrl !== null) {
+                        URL.revokeObjectURL(previewUrl);
+                    }
                     previewUrl = URL.createObjectURL(displayBlob);
                     preview.src = previewUrl;
                     previewHeading.label.textContent = "Preview, file size: " + formatSize(blob.size);
                     status.textContent = "";
                     ok.disabled = false;
                 } catch (error) {
-                    if (closed || ownGeneration !== generation) return;
+                    if (closed || ownGeneration !== generation) {
+                        return;
+                    }
                     currentBlob = null;
                     status.textContent = error.message;
                     previewHeading.label.textContent = "Preview unavailable";
                 }
             };
             const scheduleRender = () => {
-                if (timer !== null) clearTimeout(timer);
+                if (timer !== null) {
+                    clearTimeout(timer);
+                }
                 timer = setTimeout(() => {
                     timer = null;
                     renderPromise = render();
                 }, 100);
             };
             const finish = value => {
-                if (closed) return;
+                if (closed) {
+                    return;
+                }
                 closed = true;
                 ++generation;
-                if (timer !== null) clearTimeout(timer);
-                if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+                if (timer !== null) {
+                    clearTimeout(timer);
+                }
+                if (resizeFrame !== null) {
+                    cancelAnimationFrame(resizeFrame);
+                }
                 document.removeEventListener("keydown", onKeyDown, true);
                 resizeObserver.disconnect();
-                if (mover !== null) mover.destroy();
-                if (previewUrl !== null) URL.revokeObjectURL(previewUrl);
+                if (mover !== null) {
+                    mover.destroy();
+                }
+                if (previewUrl !== null) {
+                    URL.revokeObjectURL(previewUrl);
+                }
                 backdrop.remove();
                 resolve(value);
             };
@@ -366,13 +331,19 @@ class SaveImageDialog {
             };
             defaults.onclick = () => {
                 const format = this.find(formatSelect.value);
-                if (format.quality !== undefined) setQuality(format.quality);
-                if (format.id === "jpeg") chroma.value = "4:2:0";
+                if (format.quality !== undefined) {
+                    setQuality(format.quality);
+                }
+                if (format.id === "jpeg") {
+                    chroma.value = "4:2:0";
+                }
                 scheduleRender();
             };
             close.onclick = cancel.onclick = () => finish(null);
             backdrop.onclick = event => {
-                if (event.target === backdrop) finish(null);
+                if (event.target === backdrop) {
+                    finish(null);
+                }
             };
             dialog.onsubmit = async event => {
                 event.preventDefault();
@@ -382,7 +353,9 @@ class SaveImageDialog {
                     renderPromise = render();
                 }
                 await renderPromise;
-                if (currentBlob === null || closed) return;
+                if (currentBlob === null || closed) {
+                    return;
+                }
                 const selected = selectedOptions();
                 if (typeof AppSettingsStore !== "undefined") {
                     const saved = AppSettingsStore.get("fileTypes.saveOptions", {});
@@ -406,14 +379,189 @@ class SaveImageDialog {
         });
     }
 
+    static createTitleBar() {
+        const titleBar = document.createElement("header");
+        titleBar.className = "app-dialog-title-bar";
+        let close = null;
+        {
+            // Title
+            const titleGroup = document.createElement("div");
+            titleGroup.className = "app-dialog-title";
+            {
+                const icon = document.createElement("img");
+                icon.src = "assets/icons/menu_file_save_icon.png";
+                icon.alt = "";
+
+                const title = document.createElement("strong");
+                title.textContent = "Save Configuration";
+                titleGroup.append(icon, title);
+            }
+
+            // Close button
+            close = document.createElement("button");
+            close.type = "button";
+            close.className = "app-dialog-close";
+            close.textContent = "×";
+            close.title = "Close";
+            titleBar.append(titleGroup, close);
+        }
+        return {element: titleBar, close};
+    }
+
+    static createSettings() {
+        const settings = document.createElement("aside");
+        settings.className = "save-config-settings";
+        let formatSelect = null;
+        let qualityGroup = null;
+        let quality = null;
+        let qualityNumber = null;
+        let chromaGroup = null;
+        let chroma = null;
+        let defaults = null;
+        {
+            settings.appendChild(this.heading("Settings"));
+
+            // File type
+            const typeLabel = document.createElement("label");
+            typeLabel.className = "save-config-label";
+            typeLabel.textContent = "File type";
+
+            formatSelect = document.createElement("select");
+            formatSelect.className = "save-config-format";
+            formatSelect.autofocus = true;
+            for (const format of this.FORMATS) {
+                const option = document.createElement("option");
+                option.value = format.id;
+                option.textContent = format.name + " (" + (format.extensions || [format.extension]).join(", ") + ")";
+                formatSelect.appendChild(option);
+            }
+
+            // Quality
+            qualityGroup = document.createElement("section");
+            qualityGroup.className = "save-config-quality";
+            {
+                qualityGroup.appendChild(this.heading("Quality"));
+
+                const qualityControls = document.createElement("div");
+                qualityControls.className = "save-config-quality-controls";
+                quality = document.createElement("input");
+                quality.type = "range";
+                quality.min = "0";
+                quality.max = "100";
+                quality.step = "1";
+
+                qualityNumber = document.createElement("input");
+                qualityNumber.type = "number";
+                qualityNumber.min = "0";
+                qualityNumber.max = "100";
+                qualityNumber.step = "1";
+                qualityControls.append(quality, NumberInput.wrap(qualityNumber));
+                qualityGroup.appendChild(qualityControls);
+            }
+
+            // Chroma subsampling
+            chromaGroup = document.createElement("section");
+            chromaGroup.className = "save-config-chroma-group";
+            {
+                chromaGroup.appendChild(this.heading("Chroma Subsampling"));
+                chroma = document.createElement("select");
+                chroma.className = "save-config-chroma";
+                for (const value of ["4:4:4", "4:2:2", "4:4:0", "4:2:0"]) {
+                    const option = document.createElement("option");
+                    option.value = value;
+                    option.textContent = value;
+                    chroma.appendChild(option);
+                }
+                chromaGroup.appendChild(chroma);
+            }
+
+            // Defaults button
+            defaults = document.createElement("button");
+            defaults.type = "button";
+            defaults.className = "save-config-defaults";
+            defaults.textContent = "Defaults";
+            settings.append(typeLabel, formatSelect, qualityGroup, chromaGroup, defaults);
+        }
+        Object.assign(settings, {
+            formatSelect,
+            qualityGroup,
+            quality,
+            qualityNumber,
+            chromaGroup,
+            chroma,
+            defaults
+        });
+        return settings;
+    }
+
+    static createPreview() {
+        const section = document.createElement("section");
+        section.className = "save-config-preview-section";
+        {
+            // Heading
+            section.heading = this.heading("Preview, file size: calculating…");
+            section.heading.classList.add("save-config-preview-heading");
+
+            // Preview frame
+            section.frame = document.createElement("div");
+            section.frame.className = "save-config-preview-frame";
+            section.frame.tabIndex = 0;
+            section.frame.title = "Mouse wheel to zoom. Double-click to toggle Fit and 100%.";
+            {
+                section.stage = document.createElement("div");
+                section.stage.className = "save-config-preview-stage";
+                {
+                    section.image = document.createElement("img");
+                    section.image.alt = "Saved image preview";
+                    section.image.draggable = false;
+                    section.stage.appendChild(section.image);
+                }
+                section.frame.appendChild(section.stage);
+            }
+            section.append(section.heading, section.frame);
+        }
+        return section;
+    }
+
+    static createFooter() {
+        const footer = document.createElement("footer");
+        footer.className = "app-dialog-footer save-config-footer";
+        let status = null;
+        let ok = null;
+        let cancel = null;
+        {
+            // Status
+            status = document.createElement("span");
+            status.className = "save-config-status";
+
+            // Dialog buttons
+            const buttons = document.createElement("div");
+            {
+                ok = document.createElement("button");
+                ok.type = "submit";
+                ok.textContent = "OK";
+
+                cancel = document.createElement("button");
+                cancel.type = "button";
+                cancel.textContent = "Cancel";
+                buttons.append(ok, cancel);
+            }
+            footer.append(status, buttons);
+        }
+        return {element: footer, status, ok, cancel};
+    }
+
     static heading(text) {
         const heading = document.createElement("div");
         heading.className = "save-config-section-heading";
-        const label = document.createElement("strong");
-        label.textContent = text;
-        const line = document.createElement("span");
-        heading.append(label, line);
-        heading.label = label;
+        {
+            const label = document.createElement("strong");
+            label.textContent = text;
+
+            const line = document.createElement("span");
+            heading.append(label, line);
+            heading.label = label;
+        }
         return heading;
     }
 }

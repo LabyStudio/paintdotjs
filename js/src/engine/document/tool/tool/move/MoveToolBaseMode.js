@@ -12,15 +12,8 @@
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
-class HorizontalSeparator extends UIElement {
-
-    constructor() {
-        super("horizontal-separator");
-        this.element = document.createElement("div");
-        this.element.className = "horizontal-separator";
-    }
-
-    getElement() {
-        return this.element;
-    }
+class MoveToolBaseMode {
+    static TRANSLATE = 0;
+    static SCALE = 1;
+    static ROTATE = 2;
 }

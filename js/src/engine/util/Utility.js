@@ -489,14 +489,3 @@ class Utility {
         return radians * (180 / Math.PI);
     }
 }
-
-class UtilityEdge {
-
-    constructor(minY, maxY, x, dxdy) {
-        // getScans follows the original Paint.NET field names.
-        this.miny = minY;
-        this.maxy = maxY;
-        this.x = x;
-        this.dxdy = dxdy;
-    }
-}

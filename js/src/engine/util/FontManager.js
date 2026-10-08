@@ -37,7 +37,9 @@ class FontManager {
     }
 
     static isFontFile(file) {
-        if (file === null || file === undefined) return false;
+        if (file === null || file === undefined) {
+            return false;
+        }
         const extension = String(file.name || "").toLowerCase().split(".").pop();
         return ["ttf", "otf", "woff", "woff2"].includes(extension)
             || /^font\//i.test(String(file.type || ""));
@@ -89,14 +91,20 @@ class FontManager {
         }
         // One event is enough for a batch. Rebuilding the Text toolbar after
         // every file made large imports repeatedly destroy an open picker.
-        if (added.length > 0) this.notifyChanged();
+        if (added.length > 0) {
+            this.notifyChanged();
+        }
         return {added, errors};
     }
 
     static async addFont(file, notify = true) {
-        if (!this.isFontFile(file)) throw new Error("Unsupported font format");
+        if (!this.isFontFile(file)) {
+            throw new Error("Unsupported font format");
+        }
         const data = await file.arrayBuffer();
-        if (data.byteLength === 0) throw new Error("The font file is empty");
+        if (data.byteLength === 0) {
+            throw new Error("The font file is empty");
+        }
 
         const id = typeof crypto.randomUUID === "function"
             ? crypto.randomUUID()
@@ -129,18 +137,24 @@ class FontManager {
         this.records.push(this.toMetadata(record));
         this.faces.set(id, face);
         this.writeMetadataCache();
-        if (notify) this.notifyChanged();
+        if (notify) {
+            this.notifyChanged();
+        }
         return this.toMetadata(record);
     }
 
     static async removeFont(id) {
         await this.initialize();
         const record = this.records.find(font => font.id === id);
-        if (record === undefined) return false;
+        if (record === undefined) {
+            return false;
+        }
         const database = await this.openDatabase();
         await this.runRequest(database, "readwrite", store => store.delete(id));
         const face = this.faces.get(id);
-        if (face !== undefined) document.fonts.delete(face);
+        if (face !== undefined) {
+            document.fonts.delete(face);
+        }
         this.faces.delete(id);
         this.records = this.records.filter(font => font.id !== id);
         this.writeMetadataCache();
@@ -158,14 +172,18 @@ class FontManager {
     static async removeAllFonts() {
         await this.initialize();
         const count = this.records.length;
-        if (count === 0) return 0;
+        if (count === 0) {
+            return 0;
+        }
         const selectedFamily = typeof ToolType === "undefined"
             ? null : ToolType.TEXT.getSetting("fontFamily");
         const selectedWasCustom = this.isCustomFont(selectedFamily);
 
         const database = await this.openDatabase();
         await this.runRequest(database, "readwrite", store => store.clear());
-        for (const face of this.faces.values()) document.fonts.delete(face);
+        for (const face of this.faces.values()) {
+            document.fonts.delete(face);
+        }
         this.faces.clear();
         this.records = [];
         this.writeMetadataCache();
@@ -180,7 +198,9 @@ class FontManager {
     }
 
     static async loadStoredFonts() {
-        if (!("indexedDB" in window) || !("FontFace" in window)) return;
+        if (!("indexedDB" in window) || !("FontFace" in window)) {
+            return;
+        }
         const cached = this.readMetadataCache();
         if (cached !== null) {
             this.records = cached;
@@ -198,10 +218,14 @@ class FontManager {
                 database, "readonly", store => store.getAllKeys(), false);
             const metadata = [];
             for (let index = 0; index < keys.length; ++index) {
-                if (index % 4 === 0) await this.yieldToBrowser(true);
+                if (index % 4 === 0) {
+                    await this.yieldToBrowser(true);
+                }
                 const record = await this.runRequest(
                     database, "readonly", store => store.get(keys[index]), false);
-                if (record !== undefined) metadata.push(this.toMetadata(record));
+                if (record !== undefined) {
+                    metadata.push(this.toMetadata(record));
+                }
             }
             this.records = metadata;
             this.writeMetadataCache();
@@ -236,9 +260,13 @@ class FontManager {
     static readMetadataCache() {
         try {
             const records = JSON.parse(localStorage.getItem(this.metadataCacheKey) || "null");
-            if (!Array.isArray(records)) return null;
+            if (!Array.isArray(records)) {
+                return null;
+            }
             if (!records.every(record => record && typeof record.id === "string"
-                && typeof record.name === "string" && typeof record.family === "string")) return null;
+                && typeof record.name === "string" && typeof record.family === "string")) {
+                return null;
+            }
             return records.map(record => this.toMetadata(record));
         } catch (_) {
             return null;
@@ -266,16 +294,24 @@ class FontManager {
         await this.initialize();
         const record = this.records.find(candidate =>
             candidate.id === familyOrId || candidate.family === familyOrId);
-        if (record === undefined) return null;
-        if (this.faces.has(record.id)) return this.faces.get(record.id);
-        if (this.loadingFaces.has(record.id)) return this.loadingFaces.get(record.id);
+        if (record === undefined) {
+            return null;
+        }
+        if (this.faces.has(record.id)) {
+            return this.faces.get(record.id);
+        }
+        if (this.loadingFaces.has(record.id)) {
+            return this.loadingFaces.get(record.id);
+        }
 
         const queued = this.faceLoadQueue.then(async () => {
             await this.yieldToBrowser();
             const database = await this.openDatabase();
             const stored = await this.runRequest(
                 database, "readonly", store => store.get(record.id));
-            if (stored === undefined) return null;
+            if (stored === undefined) {
+                return null;
+            }
             const face = await this.createFace(stored);
             if (!this.records.some(candidate => candidate.id === record.id)) {
                 document.fonts.delete(face);
@@ -325,10 +361,14 @@ class FontManager {
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error || new Error("Font storage operation failed"));
             transaction.oncomplete = () => {
-                if (closeDatabase) database.close();
+                if (closeDatabase) {
+                    database.close();
+                }
             };
             transaction.onabort = () => {
-                if (closeDatabase) database.close();
+                if (closeDatabase) {
+                    database.close();
+                }
                 reject(transaction.error || new Error("Font storage transaction failed"));
             };
         });

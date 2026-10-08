@@ -55,7 +55,9 @@ class ImageUtil {
         const visibleTop = Math.max(0, dy);
         const visibleRight = Math.min(logicalWidth, dx + dWidth);
         const visibleBottom = Math.min(logicalHeight, dy + dHeight);
-        if (visibleRight <= visibleLeft || visibleBottom <= visibleTop) return;
+        if (visibleRight <= visibleLeft || visibleBottom <= visibleTop) {
+            return;
+        }
 
         const sourceLeft = Math.max(sx,
             Math.floor(sx + (visibleLeft - dx) / scaleX) - 1);
@@ -80,8 +82,12 @@ class ImageUtil {
             this.viewportScaleCaches.set(image, cache);
         }
         if (cache.key !== cacheKey || cache.revision !== revision) {
-            if (cache.canvas.width !== intermediateWidth) cache.canvas.width = intermediateWidth;
-            if (cache.canvas.height !== intermediateHeight) cache.canvas.height = intermediateHeight;
+            if (cache.canvas.width !== intermediateWidth) {
+                cache.canvas.width = intermediateWidth;
+            }
+            if (cache.canvas.height !== intermediateHeight) {
+                cache.canvas.height = intermediateHeight;
+            }
             const intermediateContext = cache.canvas.getContext("2d", {alpha: true});
             intermediateContext.clearRect(0, 0, intermediateWidth, intermediateHeight);
             intermediateContext.imageSmoothingEnabled = false;

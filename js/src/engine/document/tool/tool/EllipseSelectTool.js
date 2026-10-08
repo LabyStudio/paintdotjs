@@ -68,7 +68,9 @@ class EllipseSelectTool extends SelectionTool {
     }
 
     flattenEllipse(bounds, tolerance) {
-        if (bounds.getWidth() <= 0 || bounds.getHeight() <= 0) return [];
+        if (bounds.getWidth() <= 0 || bounds.getHeight() <= 0) {
+            return [];
+        }
 
         const radiusX = bounds.getWidth() / 2;
         const radiusY = bounds.getHeight() / 2;

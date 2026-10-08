@@ -85,7 +85,9 @@ class GradientTool extends PreviewShapeTool {
                 alpha: true, antialias: false, premultipliedAlpha: false,
                 preserveDrawingBuffer: true
             });
-            if (this.gradientGl === null) return false;
+            if (this.gradientGl === null) {
+                return false;
+            }
             const vertexSource = `#version 300 es
                 void main() {
                     vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
@@ -130,7 +132,9 @@ class GradientTool extends PreviewShapeTool {
                 const shader = this.gradientGl.createShader(type);
                 this.gradientGl.shaderSource(shader, source);
                 this.gradientGl.compileShader(shader);
-                if (!this.gradientGl.getShaderParameter(shader, this.gradientGl.COMPILE_STATUS)) return null;
+                if (!this.gradientGl.getShaderParameter(shader, this.gradientGl.COMPILE_STATUS)) {
+                    return null;
+                }
                 return shader;
             };
             const vertex = compile(this.gradientGl.VERTEX_SHADER, vertexSource);
@@ -158,7 +162,9 @@ class GradientTool extends PreviewShapeTool {
     }
 
     renderGradientCanvas(width, height, start, end, primary, secondary, type, repeat) {
-        if (!this.ensureGradientRenderer(width, height)) return null;
+        if (!this.ensureGradientRenderer(width, height)) {
+            return null;
+        }
         const gl = this.gradientGl;
         const program = this.gradientProgram;
         const types = {linear: 0, reflected: 1, diamond: 2, radial: 3, conical: 4, spiral: 5, spiralCounter: 6};

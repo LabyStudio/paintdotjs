@@ -25,7 +25,9 @@ class ToolAction extends Action {
     }
 
     runPerformAction() {
-        if (!this.runIsActionExecutable()) return;
+        if (!this.runIsActionExecutable()) {
+            return;
+        }
         const toolMenu = PanelRegistry.get("toolMenu");
         const selector = toolMenu === null
             ? null
@@ -43,8 +45,12 @@ class ToolAction extends Action {
 
     matchesShortcutEvent(event) {
         const shortcut = this.getShortcutKey();
-        if (shortcut.isEmpty()) return false;
-        if (shortcut.isShift()) return shortcut.isEvent(event);
+        if (shortcut.isEmpty()) {
+            return false;
+        }
+        if (shortcut.isShift()) {
+            return shortcut.isEvent(event);
+        }
         return shortcut.getKey() === ShortcutKey.normalizeKey(event.key)
             && shortcut.isCtrl() === event.ctrlKey
             && shortcut.isAlt() === event.altKey
@@ -66,7 +72,9 @@ class ToolAction extends Action {
 
     getShortcutChord() {
         const shortcut = this.getShortcutKey();
-        if (shortcut.isEmpty()) return "Not assigned";
+        if (shortcut.isEmpty()) {
+            return "Not assigned";
+        }
         const peers = ActionRegistry.getActionList().filter(action =>
             action instanceof ToolAction
             && action.getShortcutKey().equals(shortcut)

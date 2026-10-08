@@ -20,7 +20,9 @@ if (window.paintDotJsAssetsReady !== false) {
     DocumentIO.initialize(app);
 
     const skipWelcome = new URLSearchParams(window.location.search).has("skipWelcome");
-    if (!(isApp && skipWelcome)) app.createBlankDocumentInNewWorkspace(800, 600, 96, true);
+    if (!(isApp && skipWelcome)) {
+        app.createBlankDocumentInNewWorkspace(800, 600, 96, true);
+    }
     if (!skipWelcome) {
         WelcomeDialog.open();
     }

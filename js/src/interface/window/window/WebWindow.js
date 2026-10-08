@@ -98,7 +98,9 @@ class WebWindow extends AbstractWindow {
             }
             this.windowElement.appendChild(this.contentElement);
 
-            if (this.resizable) this.createResizeHandles();
+            if (this.resizable) {
+                this.createResizeHandles();
+            }
         }
         this.overlay.appendChild(this.windowElement);
         WebWindow.focus(this.windowElement);
@@ -143,14 +145,26 @@ class WebWindow extends AbstractWindow {
     }
 
     restoreState() {
-        if (this.persistenceId === null || typeof AppSettingsStore === "undefined") return true;
+        if (this.persistenceId === null || typeof AppSettingsStore === "undefined") {
+            return true;
+        }
         const state = AppSettingsStore.get("windows." + this.persistenceId, null);
-        if (state === null || typeof state !== "object") return true;
+        if (state === null || typeof state !== "object") {
+            return true;
+        }
 
-        if (Number.isFinite(state.width) && state.width > 0) this.width = state.width;
-        if (Number.isFinite(state.height) && state.height > 0) this.height = state.height;
-        if (Number.isFinite(state.anchorX)) this.anchorX = state.anchorX;
-        if (Number.isFinite(state.anchorY)) this.anchorY = state.anchorY;
+        if (Number.isFinite(state.width) && state.width > 0) {
+            this.width = state.width;
+        }
+        if (Number.isFinite(state.height) && state.height > 0) {
+            this.height = state.height;
+        }
+        if (Number.isFinite(state.anchorX)) {
+            this.anchorX = state.anchorX;
+        }
+        if (Number.isFinite(state.anchorY)) {
+            this.anchorY = state.anchorY;
+        }
         this.applyAnchor();
         return state.visible !== false;
     }
@@ -165,7 +179,9 @@ class WebWindow extends AbstractWindow {
 
     saveState(immediate = false) {
         if (!this.persistenceEnabled || this.persistenceId === null
-            || typeof AppSettingsStore === "undefined") return;
+            || typeof AppSettingsStore === "undefined") {
+            return;
+        }
         if (!immediate) {
             clearTimeout(this.persistenceTimer);
             this.persistenceTimer = setTimeout(() => {
@@ -187,7 +203,9 @@ class WebWindow extends AbstractWindow {
     }
 
     static ensureFocusTracking() {
-        if (WebWindow.focusTrackingInstalled) return;
+        if (WebWindow.focusTrackingInstalled) {
+            return;
+        }
         WebWindow.focusTrackingInstalled = true;
 
         const updateFocusedWindow = target => {
@@ -232,18 +250,24 @@ class WebWindow extends AbstractWindow {
             for (const handle of this.windowElement.querySelectorAll(".window-resize-handle")) {
                 handle.remove();
             }
-            if (this.resizable) this.createResizeHandles();
+            if (this.resizable) {
+                this.createResizeHandles();
+            }
         }
     }
 
     createResizeHandles() {
-        if (this.windowElement === null) return;
+        if (this.windowElement === null) {
+            return;
+        }
         this.windowElement.classList.add("window-resizable");
         for (const direction of ["n", "e", "s", "w", "ne", "se", "sw", "nw"]) {
             const handle = document.createElement("div");
             handle.className = "window-resize-handle window-resize-" + direction;
             handle.addEventListener("mousedown", event => {
-                if (event.button !== 0) return;
+                if (event.button !== 0) {
+                    return;
+                }
                 this.dragging = false;
                 this.resizing = true;
                 this.resizeDirection = direction;
@@ -265,7 +289,9 @@ class WebWindow extends AbstractWindow {
     }
 
     resizeToPointer(clientX, clientY) {
-        if (!this.resizing || this.resizeStart === null) return;
+        if (!this.resizing || this.resizeStart === null) {
+            return;
+        }
         const start = this.resizeStart;
         const direction = this.resizeDirection;
         const deltaX = clientX - start.clientX;
@@ -275,8 +301,12 @@ class WebWindow extends AbstractWindow {
         let width = start.width;
         let height = start.height;
 
-        if (direction.includes("e")) width = start.width + deltaX;
-        if (direction.includes("s")) height = start.height + deltaY;
+        if (direction.includes("e")) {
+            width = start.width + deltaX;
+        }
+        if (direction.includes("s")) {
+            height = start.height + deltaY;
+        }
         if (direction.includes("w")) {
             width = start.width - deltaX;
             x = start.x + deltaX;
@@ -288,8 +318,12 @@ class WebWindow extends AbstractWindow {
 
         width = Math.max(this.minWidth, width);
         height = Math.max(this.minHeight, height);
-        if (direction.includes("w")) x = start.x + start.width - width;
-        if (direction.includes("n")) y = start.y + start.height - height;
+        if (direction.includes("w")) {
+            x = start.x + start.width - width;
+        }
+        if (direction.includes("n")) {
+            y = start.y + start.height - height;
+        }
 
         const overlayWidth = this.overlay.clientWidth;
         const overlayHeight = this.overlay.clientHeight;
@@ -345,7 +379,9 @@ class WebWindow extends AbstractWindow {
     }
 
     updateImageOverlap() {
-        if (this.windowElement === null) return;
+        if (this.windowElement === null) {
+            return;
+        }
         const workspace = this.app.getActiveDocumentWorkspace();
         if (workspace === null) {
             this.windowElement.classList.remove("window-over-image");

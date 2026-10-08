@@ -24,6 +24,7 @@ class ScrollSession extends Debounced {
         this.dragPointerId = null;
         this.dragGrabOffset = 0;
         this.dragStartPointerCoordinate = 0;
+        this.dragThresholdPassed = false;
         this.dragSwapPending = false;
         this.dragMoveHandler = null;
         this.dragEndHandler = null;
@@ -54,6 +55,14 @@ class ScrollSession extends Debounced {
         return this.lastPointerCoordinate;
     }
 
+    hasPassedDragThreshold() {
+        return this.dragThresholdPassed;
+    }
+
+    setDragThresholdPassed(passed) {
+        this.dragThresholdPassed = passed;
+    }
+
     setDragOwner(owner) {
         this.dragOwner = owner;
     }
@@ -64,13 +73,18 @@ class ScrollSession extends Debounced {
         this.dragPointerId = pointerId;
         this.dragGrabOffset = grabOffset;
         this.dragStartPointerCoordinate = pointerCoordinate;
+        this.dragThresholdPassed = false;
         this.dragSwapPending = false;
         this.lastPointerCoordinate = pointerCoordinate;
         this.dragMoveHandler = event => {
-            if (event.pointerId === this.dragPointerId) this.dragOwner?.continuePointerDrag(event);
+            if (event.pointerId === this.dragPointerId) {
+                this.dragOwner?.continuePointerDrag(event);
+            }
         };
         this.dragEndHandler = event => {
-            if (event.pointerId === this.dragPointerId) this.dragOwner?.stopPointerDrag();
+            if (event.pointerId === this.dragPointerId) {
+                this.dragOwner?.stopPointerDrag();
+            }
         };
         this.dragBlurHandler = () => this.dragOwner?.stopPointerDrag();
         document.addEventListener("pointermove", this.dragMoveHandler, true);
@@ -91,6 +105,7 @@ class ScrollSession extends Debounced {
         this.dragBlurHandler = null;
         this.dragPointerId = null;
         this.dragOwner = null;
+        this.dragThresholdPassed = false;
         this.dragSwapPending = false;
     }
 

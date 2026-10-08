@@ -252,7 +252,9 @@ class ToolType {
         this.settings = {};
         try {
             const saved = window.localStorage.getItem("paintdotjs.toolSettings." + id);
-            if (saved !== null) this.settings = JSON.parse(saved);
+            if (saved !== null) {
+                this.settings = JSON.parse(saved);
+            }
         } catch (_) {
             // Settings persistence is optional (for example in private mode).
         }

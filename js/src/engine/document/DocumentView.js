@@ -74,7 +74,9 @@ class DocumentView {
 
         // Set new document
         this.document = document;
-        if (onDocumentAssigned !== null) onDocumentAssigned();
+        if (onDocumentAssigned !== null) {
+            onDocumentAssigned();
+        }
 
         // Register for new document
         this.document.invalidated.add(this.onDocumentInvalidated);
@@ -199,7 +201,9 @@ class DocumentView {
     }
 
     setZoomToWindow(zoomToWindow) {
-        if (this.zoomToWindow === zoomToWindow) return;
+        if (this.zoomToWindow === zoomToWindow) {
+            return;
+        }
         if (zoomToWindow) {
             this.zoomToWindow = true;
             this.fitViewport();
@@ -211,7 +215,9 @@ class DocumentView {
     }
 
     zoomToRectangle(rectangle) {
-        if (rectangle === null || rectangle.isEmpty()) return;
+        if (rectangle === null || rectangle.isEmpty()) {
+            return;
+        }
         const center = new Point(
             rectangle.getLeft() + rectangle.getWidth() / 2,
             rectangle.getTop() + rectangle.getHeight() / 2

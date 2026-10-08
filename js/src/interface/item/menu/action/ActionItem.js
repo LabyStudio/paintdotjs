@@ -31,7 +31,9 @@ class ActionItem extends MenuItem {
             ActionRegistry.registerCallback(
                 id,
                 () => {
-                    if (this.pressable !== null) this.pressable();
+                    if (this.pressable !== null) {
+                        this.pressable();
+                    }
                 },
                 () => this.getText(),
                 () => this.isEnabled()
@@ -49,7 +51,9 @@ class ActionItem extends MenuItem {
         const action = this.getAsAction();
         if (action !== null) {
             const tooltip = action.getTooltipText();
-            if (tooltip !== null) element.title = tooltip;
+            if (tooltip !== null) {
+                element.title = tooltip;
+            }
         }
         return element;
     }

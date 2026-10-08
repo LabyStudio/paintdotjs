@@ -176,9 +176,13 @@ class ToolMenu extends StripPanel {
                 slider("Hardness:", "hardness", 0, 100, 1),
                 slider("Spacing:", "spacing", 1, 500, 1)
             ];
-            if (fill) result.push(section(choices("Fill:", "fillStyle", fillStyles, 150)));
+            if (fill) {
+                result.push(section(choices("Fill:", "fillStyle", fillStyles, 150)));
+            }
             result.push(section(smoothing), antialias);
-            if (blending) result.push(blend);
+            if (blending) {
+                result.push(blend);
+            }
             result.push(quality);
             return result;
         };
@@ -424,268 +428,353 @@ class ToolMenu extends StripPanel {
     }
 
     renderOptions(tool) {
-        if (this.optionsElement === null) return;
+        if (this.optionsElement === null) {
+            return;
+        }
         ToolOptionDropdown.closeActive();
         this.closeSizeMenu();
         this.optionsElement.innerHTML = "";
-        if (tool === null) return;
+        if (tool === null) {
+            return;
+        }
 
         const type = tool.getType();
         for (const definition of this.getOptionDefinitions(type)) {
-            // This contains several independent interactive controls. Using a
-            // <label> here makes the browser associate the whole group with
-            // its first button (usually the minus button), causing hover/click
-            // state to leak across the brush-size combo.
             const group = document.createElement("div");
             group.className = "tool-option";
-            if (definition.section) {
-                group.classList.add("tool-option-section");
-            }
-            if (definition.key) group.dataset.optionKey = definition.key;
-
-            const label = document.createElement("span");
-            label.textContent = definition.label;
-            group.appendChild(label);
-
-            let control;
-            if (definition.kind === "select") {
-                control = new ToolOptionDropdown({
-                    values: definition.values,
-                    value: type.getSetting(definition.key),
-                    width: definition.width || 130,
-                    toolbar: definition.toolbar,
-                    leadingIcon: definition.icon,
-                    menuIcons: false,
-                    cycleOnMainClick: definition.split,
-                    menuCheckmarks: definition.split,
-                    menuWidth: definition.menuWidth,
-                    fontPreview: definition.fontPreview,
-                    fitSelected: definition.fitSelected,
-                    onChange: value => this.updateSetting(type, definition.key, value)
-                }).getElement();
-            } else if (definition.kind === "size") {
-                control = document.createElement("div");
-                control.className = "tool-size-control";
-                const sizeName = definition.label || (definition.key === "fontSize" ? "Font size" : "Size");
-
-                const input = document.createElement("input");
-                input.type = definition.presets === null ? "number" : "text";
-                input.inputMode = "decimal";
-                input.className = "tool-size-input";
-                input.value = type.getSetting(definition.key);
-
-                const change = value => {
-                    value = Utility.clamp(Number(value), definition.min, definition.max);
-                    input.value = value;
-                    this.updateSetting(type, definition.key, value);
-                };
-                NumberInput.enableKeyboardStepping(input, direction => {
-                    const entered = Number(input.value);
-                    const value = Number.isFinite(entered)
-                        ? entered : Number(type.getSetting(definition.key));
-                    change(value + direction * definition.step);
-                });
-                input.oninput = () => {
-                    if (input.value !== "" && Number.isFinite(Number(input.value))) {
-                        this.updateSetting(type, definition.key,
-                            Utility.clamp(Number(input.value), definition.min, definition.max));
-                    }
-                };
-                input.onchange = () => change(input.value || definition.min);
-                control.appendChild(this.createImageButton("minus_button_icon.png", "Decrease " + sizeName,
-                    () => change(Number(type.getSetting(definition.key)) - definition.step)));
-                if (definition.presets === null) {
-                    input.min = definition.min;
-                    input.max = definition.max;
-                    input.step = definition.step;
-                    control.appendChild(input);
-                } else {
-                    const combo = document.createElement("div");
-                    combo.className = "tool-size-combo";
-                    combo.appendChild(input);
-                    const arrow = document.createElement("button");
-                    arrow.type = "button";
-                    arrow.className = "tool-size-arrow";
-                    arrow.title = "Choose " + sizeName.toLowerCase();
-                    arrow.setAttribute("aria-label", arrow.title);
-                    arrow.setAttribute("aria-expanded", "false");
-                    arrow.onclick = event => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        this.toggleSizeMenu(combo, arrow, input, definition, type, change);
-                    };
-                    input.onkeydown = event => {
-                        if (event.key === "ArrowDown" && event.altKey) {
-                            event.preventDefault();
-                            this.toggleSizeMenu(combo, arrow, input, definition, type, change);
-                        } else if (event.key === "Escape") {
-                            this.closeSizeMenu();
-                        } else if (event.key === "Enter") {
-                            change(input.value || definition.min);
-                            input.select();
-                        }
-                    };
-                    combo.appendChild(arrow);
-                    control.appendChild(combo);
+            {
+                if (definition.section) {
+                    group.classList.add("tool-option-section");
                 }
-                control.appendChild(this.createImageButton("plus_button_icon.png", "Increase " + sizeName,
-                    () => change(Number(type.getSetting(definition.key)) + definition.step)));
-            } else if (definition.kind === "slider") {
-                control = document.createElement("div");
-                control.className = "tool-slider-control";
-                const meter = document.createElement("div");
-                meter.className = "tool-slider-meter";
-                const fill = document.createElement("div");
+                if (definition.key) {
+                    group.dataset.optionKey = definition.key;
+                }
+
+                // Label
+                const label = document.createElement("span");
+                label.textContent = definition.label;
+                group.appendChild(label);
+
+                // Control
+                const control = this.createOptionControl(type, definition, label);
+                if (!definition.fitSelected
+                    && definition.width !== null && definition.width !== undefined) {
+                    control.style.width = definition.width + "px";
+                    control.style.minWidth = definition.width + "px";
+                }
+                if (!control.title) {
+                    control.title = definition.label;
+                }
+                group.appendChild(control);
+
+                // Suffix
+                if (definition.suffix) {
+                    const suffix = document.createElement("span");
+                    suffix.textContent = definition.suffix;
+                    group.appendChild(suffix);
+                }
+            }
+            this.optionsElement.appendChild(group);
+        }
+    }
+
+    createOptionControl(type, definition, label) {
+        switch (definition.kind) {
+            case "select":
+                return this.createSelectControl(type, definition);
+            case "size":
+                return this.createSizeControl(type, definition);
+            case "slider":
+                return this.createSliderControl(type, definition);
+            case "iconGroup":
+                return this.createIconGroupControl(type, definition);
+            case "iconChoice":
+            case "shapeChoice":
+                return this.createIconChoiceControl(type, definition);
+            case "action":
+                label.textContent = "";
+                return this.createActionControl(definition);
+            case "number":
+                return this.createNumberControl(type, definition);
+            case "fontStyleToggle":
+                label.textContent = "";
+                return this.createFontStyleControl(type, definition);
+            default:
+                throw new Error("Unknown tool option kind: " + definition.kind);
+        }
+    }
+
+    createSelectControl(type, definition) {
+        return new ToolOptionDropdown({
+            values: definition.values,
+            value: type.getSetting(definition.key),
+            width: definition.width || 130,
+            toolbar: definition.toolbar,
+            leadingIcon: definition.icon,
+            menuIcons: false,
+            cycleOnMainClick: definition.split,
+            menuCheckmarks: definition.split,
+            menuWidth: definition.menuWidth,
+            fontPreview: definition.fontPreview,
+            fitSelected: definition.fitSelected,
+            onChange: value => this.updateSetting(type, definition.key, value)
+        }).getElement();
+    }
+
+    createSizeControl(type, definition) {
+        const control = document.createElement("div");
+        control.className = "tool-size-control";
+        {
+            const sizeName = definition.label || (definition.key === "fontSize" ? "Font size" : "Size");
+            const input = document.createElement("input");
+            input.type = definition.presets === null ? "number" : "text";
+            input.inputMode = "decimal";
+            input.className = "tool-size-input";
+            input.value = type.getSetting(definition.key);
+            const change = value => {
+                value = Utility.clamp(Number(value), definition.min, definition.max);
+                input.value = value;
+                this.updateSetting(type, definition.key, value);
+            };
+            NumberInput.enableKeyboardStepping(input, direction => {
+                const entered = Number(input.value);
+                const value = Number.isFinite(entered) ? entered : Number(type.getSetting(definition.key));
+                change(value + direction * definition.step);
+            });
+            input.oninput = () => {
+                if (input.value !== "" && Number.isFinite(Number(input.value))) {
+                    this.updateSetting(type, definition.key,
+                        Utility.clamp(Number(input.value), definition.min, definition.max));
+                }
+            };
+            input.onchange = () => change(input.value || definition.min);
+
+            // Decrease
+            control.appendChild(this.createImageButton("minus_button_icon.png", "Decrease " + sizeName,
+                () => change(Number(type.getSetting(definition.key)) - definition.step)));
+
+            // Value
+            if (definition.presets === null) {
+                input.min = definition.min;
+                input.max = definition.max;
+                input.step = definition.step;
+                control.appendChild(input);
+            } else {
+                control.appendChild(this.createSizeCombo(type, definition, input, change, sizeName));
+            }
+
+            // Increase
+            control.appendChild(this.createImageButton("plus_button_icon.png", "Increase " + sizeName,
+                () => change(Number(type.getSetting(definition.key)) + definition.step)));
+        }
+        return control;
+    }
+
+    createSizeCombo(type, definition, input, change, sizeName) {
+        const combo = document.createElement("div");
+        combo.className = "tool-size-combo";
+        {
+            combo.appendChild(input);
+
+            const arrow = document.createElement("button");
+            arrow.type = "button";
+            arrow.className = "tool-size-arrow";
+            arrow.title = "Choose " + sizeName.toLowerCase();
+            arrow.setAttribute("aria-label", arrow.title);
+            arrow.setAttribute("aria-expanded", "false");
+            arrow.onclick = event => {
+                event.preventDefault();
+                event.stopPropagation();
+                this.toggleSizeMenu(combo, arrow, input, definition, type, change);
+            };
+            input.onkeydown = event => {
+                if (event.key === "ArrowDown" && event.altKey) {
+                    event.preventDefault();
+                    this.toggleSizeMenu(combo, arrow, input, definition, type, change);
+                } else if (event.key === "Escape") {
+                    this.closeSizeMenu();
+                } else if (event.key === "Enter") {
+                    change(input.value || definition.min);
+                    input.select();
+                }
+            };
+            combo.appendChild(arrow);
+        }
+        return combo;
+    }
+
+    createSliderControl(type, definition) {
+        const control = document.createElement("div");
+        control.className = "tool-slider-control";
+        {
+            const meter = document.createElement("div");
+            meter.className = "tool-slider-meter";
+            let fill = null;
+            let fillValueLabel = null;
+            let valueLabel = null;
+            let input = null;
+            {
+                fill = document.createElement("div");
                 fill.className = "tool-slider-fill";
-                const fillValueLabel = document.createElement("span");
-                fillValueLabel.className = "tool-slider-fill-value";
-                fill.appendChild(fillValueLabel);
-                const valueLabel = document.createElement("span");
+                {
+                    fillValueLabel = document.createElement("span");
+                    fillValueLabel.className = "tool-slider-fill-value";
+                    fill.appendChild(fillValueLabel);
+                }
+                valueLabel = document.createElement("span");
                 valueLabel.className = "tool-slider-value";
-                const input = document.createElement("input");
+                input = document.createElement("input");
                 input.type = "range";
                 input.min = definition.min;
                 input.max = definition.max;
                 input.step = definition.step;
                 input.value = type.getSetting(definition.key);
                 input.title = `${definition.label} ${input.value}`;
-                const updateMeter = value => {
-                    const progress = (value - definition.min) / (definition.max - definition.min) * 100;
-                    fill.style.width = Utility.clamp(progress, 0, 100) + "%";
-                    const text = value + "%";
-                    valueLabel.textContent = text;
-                    fillValueLabel.textContent = text;
-                };
-                const change = value => {
-                    value = Utility.clamp(Number(value), definition.min, definition.max);
-                    input.value = value;
-                    input.title = `${definition.label} ${value}`;
-                    updateMeter(value);
-                    this.updateSetting(type, definition.key, value);
-                };
-                input.oninput = () => change(input.value);
-                control.appendChild(this.createImageButton("minus_button_icon.png", "Decrease " + definition.label,
-                    () => change(Number(type.getSetting(definition.key)) - definition.step)));
-                meter.appendChild(fill);
-                meter.appendChild(valueLabel);
-                meter.appendChild(input);
-                control.appendChild(meter);
-                control.appendChild(this.createImageButton("plus_button_icon.png", "Increase " + definition.label,
-                    () => change(Number(type.getSetting(definition.key)) + definition.step)));
-                updateMeter(Number(input.value));
-            } else if (definition.kind === "iconGroup") {
-                control = document.createElement("div");
-                control.className = "tool-icon-group";
-                const update = () => {
-                    for (let i = 0; i < control.children.length; ++i) {
-                        control.children[i].toggleAttribute("active",
-                            definition.values[i][0] === type.getSetting(definition.key));
-                    }
-                };
-                for (const [value, text, iconName] of definition.values) {
-                    const button = this.createImageButton(iconName, text, () => {
-                        this.updateSetting(type, definition.key, value);
-                        update();
-                    });
-                    control.appendChild(button);
-                }
-                update();
-            } else if (definition.kind === "iconChoice" || definition.kind === "shapeChoice") {
-                control = new ToolOptionDropdown({
-                    values: definition.values,
-                    value: type.getSetting(definition.key),
-                    width: definition.width,
-                    toolbar: true,
-                    iconOnly: definition.kind === "iconChoice" && !definition.showText,
-                    menuIcons: true,
-                    menuWidth: definition.kind === "shapeChoice" ? 338 : 174,
-                    shapeGrid: definition.kind === "shapeChoice",
-                    shapeGroups: definition.groups,
-                    cycleOnMainClick: definition.split,
-                    menuCheckmarks: definition.split,
-                    onChange: value => this.updateSetting(type, definition.key, value)
-                }).getElement();
-            } else if (definition.kind === "action") {
-                control = this.createImageButton(definition.icon, definition.label, () => {
-                    const activeTool = this.app.getActiveTool();
-                    if (activeTool !== null && typeof activeTool.commitPending === "function"
-                        && (activeTool.pending || activeTool.tracking)) {
-                        activeTool.commitPending();
-                    } else if (activeTool !== null && activeTool.tracking && typeof activeTool.commitStroke === "function") {
-                        activeTool.commitStroke();
-                    } else if (activeTool !== null && activeTool.context?.lifted
-                        && typeof activeTool.drop === "function") {
-                        activeTool.drop();
-                    }
-                });
-                control.classList.add("tool-finish-button");
-                const text = document.createElement("span");
-                text.textContent = definition.label;
-                control.appendChild(text);
-                label.textContent = "";
-            } else if (definition.kind === "number") {
-                const numberInput = document.createElement("input");
-                numberInput.type = "number";
-                numberInput.min = definition.min;
-                numberInput.max = definition.max;
-                numberInput.step = definition.step;
-                numberInput.value = type.getSetting(definition.key);
-                numberInput.oninput = () => {
-                    if (numberInput.value === "") return;
-                    const value = Number(numberInput.value);
-                    if (Number.isFinite(value)) {
-                        this.updateSetting(type, definition.key,
-                            Utility.clamp(value, definition.min, definition.max));
-                    }
-                };
-                numberInput.onchange = () => {
-                    const entered = Number(numberInput.value);
-                    const value = Utility.clamp(Number.isFinite(entered) ? entered : definition.min,
-                        definition.min, definition.max);
-                    numberInput.value = value;
-                    this.updateSetting(type, definition.key, value);
-                };
-                control = NumberInput.wrap(numberInput);
-            } else if (definition.kind === "fontStyleToggle") {
-                control = document.createElement("button");
-                control.type = "button";
-                control.className = "tool-option-toggle tool-font-style-toggle";
-                control.title = definition.title;
-                control.setAttribute("aria-label", definition.title);
-                const icon = document.createElement("span");
-                icon.className = "tool-font-style-icon";
-                icon.textContent = definition.text;
-                icon.setAttribute("aria-hidden", "true");
-                control.appendChild(icon);
-                label.textContent = "";
-                const updatePressed = () => {
-                    const pressed = !!type.getSetting(definition.key);
-                    control.toggleAttribute("active", pressed);
-                    control.setAttribute("aria-pressed", String(pressed));
-                };
-                updatePressed();
-                control.onclick = () => {
-                    this.updateSetting(type, definition.key, !type.getSetting(definition.key));
-                    updatePressed();
-                };
-            } else {
-                throw new Error("Unknown tool option kind: " + definition.kind);
+                meter.append(fill, valueLabel, input);
             }
-            if (!definition.fitSelected
-                && definition.width !== null && definition.width !== undefined) {
-                control.style.width = definition.width + "px";
-                control.style.minWidth = definition.width + "px";
-            }
-            if (!control.title) control.title = definition.label;
-            group.appendChild(control);
-
-            if (definition.suffix) {
-                const suffix = document.createElement("span");
-                suffix.textContent = definition.suffix;
-                group.appendChild(suffix);
-            }
-            this.optionsElement.appendChild(group);
+            const updateMeter = value => {
+                const progress = (value - definition.min) / (definition.max - definition.min) * 100;
+                fill.style.width = Utility.clamp(progress, 0, 100) + "%";
+                const text = value + "%";
+                valueLabel.textContent = text;
+                fillValueLabel.textContent = text;
+            };
+            const change = value => {
+                value = Utility.clamp(Number(value), definition.min, definition.max);
+                input.value = value;
+                input.title = `${definition.label} ${value}`;
+                updateMeter(value);
+                this.updateSetting(type, definition.key, value);
+            };
+            input.oninput = () => change(input.value);
+            control.append(
+                this.createImageButton("minus_button_icon.png", "Decrease " + definition.label,
+                    () => change(Number(type.getSetting(definition.key)) - definition.step)),
+                meter,
+                this.createImageButton("plus_button_icon.png", "Increase " + definition.label,
+                    () => change(Number(type.getSetting(definition.key)) + definition.step))
+            );
+            updateMeter(Number(input.value));
         }
+        return control;
+    }
+
+    createIconGroupControl(type, definition) {
+        const control = document.createElement("div");
+        control.className = "tool-icon-group";
+        {
+            const update = () => {
+                for (let i = 0; i < control.children.length; ++i) {
+                    control.children[i].toggleAttribute("active",
+                        definition.values[i][0] === type.getSetting(definition.key));
+                }
+            };
+            for (const [value, text, iconName] of definition.values) {
+                const button = this.createImageButton(iconName, text, () => {
+                    this.updateSetting(type, definition.key, value);
+                    update();
+                });
+                control.appendChild(button);
+            }
+            update();
+        }
+        return control;
+    }
+
+    createIconChoiceControl(type, definition) {
+        return new ToolOptionDropdown({
+            values: definition.values,
+            value: type.getSetting(definition.key),
+            width: definition.width,
+            toolbar: true,
+            iconOnly: definition.kind === "iconChoice" && !definition.showText,
+            menuIcons: true,
+            menuWidth: definition.kind === "shapeChoice" ? 338 : 174,
+            shapeGrid: definition.kind === "shapeChoice",
+            shapeGroups: definition.groups,
+            cycleOnMainClick: definition.split,
+            menuCheckmarks: definition.split,
+            onChange: value => this.updateSetting(type, definition.key, value)
+        }).getElement();
+    }
+
+    createActionControl(definition) {
+        const control = this.createImageButton(definition.icon, definition.label, () => {
+            const activeTool = this.app.getActiveTool();
+            if (activeTool !== null && typeof activeTool.commitPending === "function"
+                && (activeTool.pending || activeTool.tracking)) {
+                activeTool.commitPending();
+            } else if (activeTool !== null && activeTool.tracking
+                && typeof activeTool.commitStroke === "function") {
+                activeTool.commitStroke();
+            } else if (activeTool !== null && activeTool.context?.lifted
+                && typeof activeTool.drop === "function") {
+                activeTool.drop();
+            }
+        });
+        control.classList.add("tool-finish-button");
+        {
+            const text = document.createElement("span");
+            text.textContent = definition.label;
+            control.appendChild(text);
+        }
+        return control;
+    }
+
+    createNumberControl(type, definition) {
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = definition.min;
+        input.max = definition.max;
+        input.step = definition.step;
+        input.value = type.getSetting(definition.key);
+        input.oninput = () => {
+            if (input.value === "") {
+                return;
+            }
+            const value = Number(input.value);
+            if (Number.isFinite(value)) {
+                this.updateSetting(type, definition.key,
+                    Utility.clamp(value, definition.min, definition.max));
+            }
+        };
+        input.onchange = () => {
+            const entered = Number(input.value);
+            const value = Utility.clamp(
+                Number.isFinite(entered) ? entered : definition.min,
+                definition.min,
+                definition.max
+            );
+            input.value = value;
+            this.updateSetting(type, definition.key, value);
+        };
+        return NumberInput.wrap(input);
+    }
+
+    createFontStyleControl(type, definition) {
+        const control = document.createElement("button");
+        control.type = "button";
+        control.className = "tool-option-toggle tool-font-style-toggle";
+        control.title = definition.title;
+        control.setAttribute("aria-label", definition.title);
+        {
+            const icon = document.createElement("span");
+            icon.className = "tool-font-style-icon";
+            icon.textContent = definition.text;
+            icon.setAttribute("aria-hidden", "true");
+            control.appendChild(icon);
+        }
+        const updatePressed = () => {
+            const pressed = !!type.getSetting(definition.key);
+            control.toggleAttribute("active", pressed);
+            control.setAttribute("aria-pressed", String(pressed));
+        };
+        updatePressed();
+        control.onclick = () => {
+            this.updateSetting(type, definition.key, !type.getSetting(definition.key));
+            updatePressed();
+        };
+        return control;
     }
 
     updateSetting(type, key, value) {
@@ -698,7 +787,9 @@ class ToolMenu extends StripPanel {
         }
         if (key === "fontFamily") {
             FontManager.ensureLoaded(value).then(face => {
-                if (face === null) return;
+                if (face === null) {
+                    return;
+                }
                 const currentTool = this.app.getActiveTool();
                 if (currentTool !== null && currentTool.getType() === type
                     && type.getSetting(key) === value
@@ -708,7 +799,9 @@ class ToolMenu extends StripPanel {
                 }
             }).catch(error => console.warn(`Could not load selected font`, error));
         }
-        if (key === "selectionMode" || key === "shape") this.renderOptions(activeTool);
+        if (key === "selectionMode" || key === "shape") {
+            this.renderOptions(activeTool);
+        }
     }
 
     toggleSizeMenu(combo, arrow, input, definition, type, change) {
@@ -731,7 +824,9 @@ class ToolMenu extends StripPanel {
             button.type = "button";
             button.textContent = value;
             button.toggleAttribute("active", value === selectedValue);
-            if (value === selectedValue) selectedButton = button;
+            if (value === selectedValue) {
+                selectedButton = button;
+            }
             button.onclick = event => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -759,7 +854,9 @@ class ToolMenu extends StripPanel {
         this.sizeMenuArrow = arrow;
         arrow.setAttribute("aria-expanded", "true");
         document.addEventListener("pointerdown", this.sizeMenuOutsideListener, true);
-        if (selectedButton !== null) selectedButton.scrollIntoView({block: "nearest"});
+        if (selectedButton !== null) {
+            selectedButton.scrollIntoView({block: "nearest"});
+        }
     }
 
     closeSizeMenu() {
@@ -767,7 +864,9 @@ class ToolMenu extends StripPanel {
         if (this.sizeMenuArrow !== undefined && this.sizeMenuArrow !== null) {
             this.sizeMenuArrow.setAttribute("aria-expanded", "false");
         }
-        if (this.sizeMenu !== null) this.sizeMenu.remove();
+        if (this.sizeMenu !== null) {
+            this.sizeMenu.remove();
+        }
         this.sizeMenu = null;
         this.sizeMenuOwner = null;
         this.sizeMenuArrow = null;

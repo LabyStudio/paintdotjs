@@ -90,19 +90,25 @@ class AppWorkspace extends AppView {
 
         this.fire("app:create_document", documentWorkspace);
 
-        if (isInitial) this.initialWorkspace = documentWorkspace;
+        if (isInitial) {
+            this.initialWorkspace = documentWorkspace;
+        }
 
         return documentWorkspace;
     }
 
     isInitialWorkspaceUntouched(workspace = this.initialWorkspace) {
         if (workspace === null || !this.documentWorkspaces.includes(workspace)
-            || workspace.isDirty()) return false;
+            || workspace.isDirty()) {
+            return false;
+        }
         // A tool preview (notably editable text) has not reached history yet,
         // but it is still user work and must not be discarded as an untouched
         // startup image.
         if (workspace === this.activeDocumentWorkspace
-            && this.activeTool?.bitmapTransaction !== null) return false;
+            && this.activeTool?.bitmapTransaction !== null) {
+            return false;
+        }
 
         const history = workspace.getHistory();
         const undo = history.getUndoStack();
@@ -123,7 +129,9 @@ class AppWorkspace extends AppView {
 
         const index = this.documentWorkspaces.indexOf(documentWorkspace);
         const wasActive = this.activeDocumentWorkspace === documentWorkspace;
-        if (this.initialWorkspace === documentWorkspace) this.initialWorkspace = null;
+        if (this.initialWorkspace === documentWorkspace) {
+            this.initialWorkspace = null;
+        }
         documentWorkspace.isInitialWorkspace = false;
         this.documentWorkspaces.splice(index, 1);
         if (wasActive) {
@@ -176,7 +184,9 @@ class AppWorkspace extends AppView {
             let title = i18n("mainForm.title.format")
                 .replace("{0}", name)
                 .replace("{1}", appName);
-            if (workspace.isDirty()) title = "*" + title;
+            if (workspace.isDirty()) {
+                title = "*" + title;
+            }
             setTitle(title);
         }
     }
@@ -277,11 +287,15 @@ class AppWorkspace extends AppView {
     }
 
     setMeasurementUnit(unit) {
-        if (!["pixel", "inch", "centimeter"].includes(unit)) return;
+        if (!["pixel", "inch", "centimeter"].includes(unit)) {
+            return;
+        }
         this.measurementUnit = unit;
         if (typeof AppSettingsStore !== "undefined") {
             AppSettingsStore.set("workspace.measurementUnit", unit);
-            if (unit !== "pixel") AppSettingsStore.set("workspace.lastNonPixelUnit", unit);
+            if (unit !== "pixel") {
+                AppSettingsStore.set("workspace.lastNonPixelUnit", unit);
+            }
         }
         this.fire("app:update_measurement_unit", unit);
         this.fire("document:mousemove", this.getLastMouseX(), this.getLastMouseY());
@@ -292,7 +306,9 @@ class AppWorkspace extends AppView {
     }
 
     toUnit(pixels) {
-        if (this.measurementUnit === "pixel") return pixels;
+        if (this.measurementUnit === "pixel") {
+            return pixels;
+        }
 
         const documentModel = this.activeDocumentWorkspace?.getDocument();
         const value = documentModel === undefined || documentModel === null

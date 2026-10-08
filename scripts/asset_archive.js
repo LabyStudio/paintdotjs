@@ -49,7 +49,9 @@ async function downloadArchive({url, destination, expectedSha256, onProgress = (
     const temporary = `${destination}.part`;
     await fsp.rm(temporary, {force: true});
     const response = await fetch(url, {redirect: 'follow'});
-    if (!response.ok || !response.body) throw new Error(`Asset download failed (${response.status})`);
+    if (!response.ok || !response.body) {
+        throw new Error(`Asset download failed (${response.status})`);
+    }
     const total = Number(response.headers.get('content-length')) || 0;
     const hash = crypto.createHash('sha256');
     let downloaded = 0;
@@ -78,15 +80,21 @@ function extractArchive(archive, destination) {
     return new Promise((resolve, reject) => {
         let settled = false;
         const fail = error => {
-            if (settled) return;
+            if (settled) {
+                return;
+            }
             settled = true;
             reject(error instanceof Error ? error : new Error(String(error)));
         };
         yauzl.open(archive, {lazyEntries: true, autoClose: true}, (openError, zip) => {
-            if (openError) return fail(openError);
+            if (openError) {
+                return fail(openError);
+            }
             zip.on('error', fail);
             zip.on('end', () => {
-                if (settled) return;
+                if (settled) {
+                    return;
+                }
                 settled = true;
                 resolve();
             });
@@ -102,15 +110,21 @@ function extractArchive(archive, destination) {
                 const target = path.join(destination, ...relative.split('/'));
                 if (normalized.endsWith('/')) {
                     fs.mkdir(target, {recursive: true}, error => {
-                        if (error) return fail(error);
+                        if (error) {
+                            return fail(error);
+                        }
                         zip.readEntry();
                     });
                     return;
                 }
                 fs.mkdir(path.dirname(target), {recursive: true}, mkdirError => {
-                    if (mkdirError) return fail(mkdirError);
+                    if (mkdirError) {
+                        return fail(mkdirError);
+                    }
                     zip.openReadStream(entry, (streamError, stream) => {
-                        if (streamError) return fail(streamError);
+                        if (streamError) {
+                            return fail(streamError);
+                        }
                         pipeline(stream, fs.createWriteStream(target))
                             .then(() => zip.readEntry())
                             .catch(fail);

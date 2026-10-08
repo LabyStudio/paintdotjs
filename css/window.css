@@ -2620,6 +2620,12 @@ html.effect-rendering * {
     gap: 11px;
 }
 
+.curves-transfer-row {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+}
+
 .curves-transfer-select {
     display: grid;
     justify-items: start;
@@ -2641,10 +2647,26 @@ html.effect-rendering * {
     border-color: var(--pdn-control-border);
 }
 
-.curves-luminosity-check {
+.curves-coordinates {
+    min-width: 72px;
+    padding: 0 5px 6px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.curves-channel-options {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+}
+
+.curves-channel-options label {
     display: flex;
     align-items: center;
     gap: 6px;
+}
+
+.curves-channel-options .disabled {
     color: var(--color-subtle-text);
 }
 

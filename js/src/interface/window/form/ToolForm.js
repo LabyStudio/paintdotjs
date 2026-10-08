@@ -47,7 +47,9 @@ class ToolForm extends Form {
             let button = document.createElement("div");
             button.className = "menu-item clickable";
             const toolType = ToolType.getById(entry.id);
-            if (toolType !== null) button.title = toolType.getTooltipText();
+            if (toolType !== null) {
+                button.title = toolType.getTooltipText();
+            }
             button.onclick = () => {
                 if (implemented) {
                     toolStripChooser.setSelectedId(entry.id);

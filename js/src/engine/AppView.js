@@ -52,13 +52,20 @@ class AppView {
         this.lastViewHeight = null;
         this.renderDirty = true;
 
-        this.horizontalRuler = document.createElement("canvas");
-        this.horizontalRuler.className = "editor-ruler horizontal";
-        this.verticalRuler = document.createElement("canvas");
-        this.verticalRuler.className = "editor-ruler vertical";
-        this.rulerCorner = document.createElement("div");
-        this.rulerCorner.className = "editor-ruler-corner";
-        this.editor.append(this.horizontalRuler, this.verticalRuler, this.rulerCorner);
+        {
+            // Horizontal ruler
+            this.horizontalRuler = document.createElement("canvas");
+            this.horizontalRuler.className = "editor-ruler horizontal";
+
+            // Vertical ruler
+            this.verticalRuler = document.createElement("canvas");
+            this.verticalRuler.className = "editor-ruler vertical";
+
+            // Ruler corner
+            this.rulerCorner = document.createElement("div");
+            this.rulerCorner.className = "editor-ruler-corner";
+            this.editor.append(this.horizontalRuler, this.verticalRuler, this.rulerCorner);
+        }
     }
 
     initialize() {
@@ -157,12 +164,16 @@ class AppView {
             };
         };
         const finishInterruptedPointer = event => {
-            if (!this.pointerDown) return;
+            if (!this.pointerDown) {
+                return;
+            }
             try {
                 const point = event === null
                     ? this.autoScrollPointer
                     : getPointerPosition(event);
-                if (point === null) return;
+                if (point === null) {
+                    return;
+                }
                 const input = event === null ? {
                     pressure: point.pressure,
                     pointerType: point.pointerType,
@@ -211,7 +222,9 @@ class AppView {
         });
 
         this.editor.addEventListener('pointermove', event => {
-            if (this.pointerDown && event.pointerId !== this.activePointerId) return;
+            if (this.pointerDown && event.pointerId !== this.activePointerId) {
+                return;
+            }
             try {
                 rememberAutoScrollPointer(event);
 
@@ -228,7 +241,9 @@ class AppView {
         });
 
         this.editor.addEventListener('pointerup', event => {
-            if (!this.pointerDown || event.pointerId !== this.activePointerId) return;
+            if (!this.pointerDown || event.pointerId !== this.activePointerId) {
+                return;
+            }
             try {
                 rememberAutoScrollPointer(event);
                 const point = getPointerPosition(event);
@@ -246,7 +261,9 @@ class AppView {
         });
 
         this.editor.addEventListener('pointercancel', event => {
-            if (event.pointerId === this.activePointerId) finishInterruptedPointer(event);
+            if (event.pointerId === this.activePointerId) {
+                finishInterruptedPointer(event);
+            }
         });
         this.editor.addEventListener('lostpointercapture', event => {
             if (this.pointerDown && event.pointerId === this.activePointerId) {
@@ -298,7 +315,9 @@ class AppView {
                 modifierChanged = modifierChanged || !this.altKeyDown;
                 this.altKeyDown = true;
             }
-            if (modifierChanged) this.onModifierKeysChanged();
+            if (modifierChanged) {
+                this.onModifierKeysChanged();
+            }
 
             // Keep native editing and clipboard shortcuts inside text controls and
             // for selected page text. Otherwise Ctrl+C would copy the canvas
@@ -353,7 +372,9 @@ class AppView {
                 modifierChanged = modifierChanged || this.altKeyDown;
                 this.altKeyDown = false;
             }
-            if (modifierChanged) this.onModifierKeysChanged();
+            if (modifierChanged) {
+                this.onModifierKeysChanged();
+            }
         });
     }
 
@@ -424,7 +445,9 @@ class AppView {
         const documentWorkspace = this.getActiveDocumentWorkspace();
         const selectionRenderer = documentWorkspace?.getSelectionRenderer?.();
         const animationActive = selectionRenderer?.isAnimationActive?.() === true;
-        if (!this.renderDirty && !animationActive) return;
+        if (!this.renderDirty && !animationActive) {
+            return;
+        }
 
         // Clear this before painting so an invalidation raised during the draw
         // is retained for the following frame.
@@ -509,8 +532,12 @@ class AppView {
                         const pixel = offset / 4;
                         const x = pixel % canvas.width;
                         const y = Math.floor(pixel / canvas.width);
-                        if (x === canvas.width - 1) hotspotY = y;
-                        if (y === canvas.height - 1) hotspotX = x;
+                        if (x === canvas.width - 1) {
+                            hotspotY = y;
+                        }
+                        if (y === canvas.height - 1) {
+                            hotspotX = x;
+                        }
                         pixels.data[offset + 3] = 0;
                     }
                 }
@@ -547,7 +574,9 @@ class AppView {
 
     startAutoScroll() {
         this.lastAutoScrollTime = performance.now();
-        if (this.autoScrollFrame !== null) return;
+        if (this.autoScrollFrame !== null) {
+            return;
+        }
         this.autoScrollFrame = requestAnimationFrame(time => this.runAutoScrollFrame(time));
     }
 
@@ -555,13 +584,17 @@ class AppView {
         this.pointerDown = false;
         this.activePointerId = null;
         this.autoScrollPointer = null;
-        if (this.autoScrollFrame !== null) cancelAnimationFrame(this.autoScrollFrame);
+        if (this.autoScrollFrame !== null) {
+            cancelAnimationFrame(this.autoScrollFrame);
+        }
         this.autoScrollFrame = null;
     }
 
     runAutoScrollFrame(time) {
         this.autoScrollFrame = null;
-        if (!this.pointerDown || this.autoScrollPointer === null) return;
+        if (!this.pointerDown || this.autoScrollPointer === null) {
+            return;
+        }
 
         const elapsedSeconds = Math.min(Math.max((time - this.lastAutoScrollTime) / 1000, 0), 0.1);
         this.lastAutoScrollTime = time;
@@ -576,7 +609,9 @@ class AppView {
         const activeTool = this.getActiveTool();
         if (!enabled || elapsedSeconds <= 0 || documentWorkspace === null
             || documentWorkspace.isZoomToWindow() || activeTool === null
-            || !activeTool.isActive() || this.panTool.isTracking()) return false;
+            || !activeTool.isActive() || this.panTool.isTracking()) {
+            return false;
+        }
 
         const pointer = this.autoScrollPointer;
         const viewportBounds = this.view.getBoundingClientRect();
@@ -592,7 +627,9 @@ class AppView {
         const directionY = projectedY < viewportBounds.top
             ? -1
             : (projectedY > viewportBounds.bottom ? 1 : 0);
-        if (directionX === 0 && directionY === 0) return false;
+        if (directionX === 0 && directionY === 0) {
+            return false;
+        }
 
         const speed = 2000;
         let deltaX = directionX * speed * elapsedSeconds;
@@ -601,14 +638,18 @@ class AppView {
         const maxScrollY = Math.max(0, this.view.scrollHeight - this.view.clientHeight);
         deltaX = Utility.clamp(deltaX, -this.getViewX(), maxScrollX - this.getViewX());
         deltaY = Utility.clamp(deltaY, -this.getViewY(), maxScrollY - this.getViewY());
-        if (deltaX === 0 && deltaY === 0) return false;
+        if (deltaX === 0 && deltaY === 0) {
+            return false;
+        }
 
         const oldX = this.getViewX();
         const oldY = this.getViewY();
         this.view.scrollBy(deltaX, deltaY);
         const newX = this.getViewX();
         const newY = this.getViewY();
-        if (newX === oldX && newY === oldY) return false;
+        if (newX === oldX && newY === oldY) {
+            return false;
+        }
 
         // Synchronize the document transform before re-emitting the stationary
         // pointer. Its document coordinate changes as the viewport moves.
@@ -714,7 +755,9 @@ class AppView {
     }
 
     toDocumentPointerInput(documentWorkspace, input) {
-        if (input === null || input === undefined) return null;
+        if (input === null || input === undefined) {
+            return null;
+        }
         const tool = typeof this.getActiveTool === "function" ? this.getActiveTool() : null;
         const continuous = tool !== null
             && typeof tool.usesContinuousPointerCoordinates === "function"
@@ -827,7 +870,9 @@ class AppView {
 
     setGridVisible(visible) {
         const activeDocumentWorkspace = this.getActiveDocumentWorkspace();
-        if (activeDocumentWorkspace === null) return;
+        if (activeDocumentWorkspace === null) {
+            return;
+        }
         visible = !!visible;
         this.gridVisible = visible;
         activeDocumentWorkspace.setGridVisible(visible);
@@ -840,7 +885,9 @@ class AppView {
 
     setRulersVisible(visible) {
         const activeDocumentWorkspace = this.getActiveDocumentWorkspace();
-        if (activeDocumentWorkspace === null) return;
+        if (activeDocumentWorkspace === null) {
+            return;
+        }
         visible = !!visible;
         this.rulersVisible = visible;
         activeDocumentWorkspace.setRulersVisible(visible);
@@ -872,7 +919,9 @@ class AppView {
     }
 
     renderRulers(documentWorkspace) {
-        if (!this.rulersVisible || documentWorkspace === null) return;
+        if (!this.rulersVisible || documentWorkspace === null) {
+            return;
+        }
 
         const bounds = documentWorkspace.getRenderBounds();
         const zoom = documentWorkspace.getZoom();
@@ -881,7 +930,9 @@ class AppView {
             this.getViewWidth(), this.getViewHeight(), bounds.x, bounds.y,
             bounds.width, bounds.height, zoom, this.getMeasurementUnit(), resolution
         ].join(":");
-        if (signature === this.rulerRenderSignature) return;
+        if (signature === this.rulerRenderSignature) {
+            return;
+        }
         this.rulerRenderSignature = signature;
 
         this.drawRuler(this.horizontalRuler, bounds.x, zoom, false);
@@ -910,7 +961,9 @@ class AppView {
         const available = vertical ? cssHeight : cssWidth;
         const start = documentStart;
         let pixelStep = 1;
-        while (pixelStep * zoom < 35) pixelStep *= pixelStep === 2 ? 2.5 : 2;
+        while (pixelStep * zoom < 35) {
+            pixelStep *= pixelStep === 2 ? 2.5 : 2;
+        }
         const first = Math.ceil((-start / zoom) / pixelStep) * pixelStep;
         const last = Math.floor(((available - start) / zoom) / pixelStep) * pixelStep;
 
@@ -943,9 +996,13 @@ class AppView {
     }
 
     off(event, callback) {
-        if (typeof this.listeners[event] === "undefined") return;
+        if (typeof this.listeners[event] === "undefined") {
+            return;
+        }
         const index = this.listeners[event].indexOf(callback);
-        if (index !== -1) this.listeners[event].splice(index, 1);
+        if (index !== -1) {
+            this.listeners[event].splice(index, 1);
+        }
     }
 
     fire(event, ...args) {

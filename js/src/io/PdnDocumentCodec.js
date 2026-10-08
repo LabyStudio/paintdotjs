@@ -36,7 +36,9 @@ class PdnDocumentCodec {
         if (typeof Nrbf === "undefined" || typeof Nrbf.deserialize !== "function") {
             throw new Error("The Paint.NET document decoder is unavailable");
         }
-        if (bytes.length < 11) throw new Error("The .pdn file is truncated");
+        if (bytes.length < 11) {
+            throw new Error("The .pdn file is truncated");
+        }
 
         const headerLength = bytes[4] | (bytes[5] << 8) | (bytes[6] << 16);
         const graphMarker = 7 + headerLength;
@@ -55,7 +57,9 @@ class PdnDocumentCodec {
             // precisely identifiable layout so those documents remain usable.
             const layerCount = this.readLayerCountFromHeader(bytes.subarray(7, graphMarker));
             const repaired = await this.repairLegacyBlendModeRecords(graph, layerCount);
-            if (repaired === null) throw error;
+            if (repaired === null) {
+                throw error;
+            }
             graph = repaired;
             root = Nrbf.deserialize(graph);
         }
@@ -110,7 +114,9 @@ class PdnDocumentCodec {
         const width = documentModel.getWidth();
         const height = documentModel.getHeight();
         const response = await fetch("assets/pdn/templates/" + layers.length + ".bin");
-        if (!response.ok) throw new Error("Could not load the Paint.NET document template");
+        if (!response.ok) {
+            throw new Error("Could not load the Paint.NET document template");
+        }
 
         const template = new Uint8Array(await response.arrayBuffer());
         const graph = this.patchTemplate(template, width, height, layers);
@@ -128,7 +134,9 @@ class PdnDocumentCodec {
             '<pdnImage width="' + width + '" height="' + height + '" layers="' + layerCount
             + '" savedWithVersion="5.112.9563.32325"><custom></custom></pdnImage>'
         );
-        if (xml.length > 0xffffff) throw new Error("Paint.NET header is too large");
+        if (xml.length > 0xffffff) {
+            throw new Error("Paint.NET header is too large");
+        }
 
         const header = new Uint8Array(9 + xml.length);
         header.set(this.MAGIC, 0);
@@ -165,15 +173,25 @@ class PdnDocumentCodec {
         // accept only a complete chain with exactly one block per layer.
         for (let start = searchStart; start + 13 <= bytes.length; ++start) {
             const format = bytes[start];
-            if (format !== 0 && format !== 1) continue;
+            if (format !== 0 && format !== 1) {
+                continue;
+            }
 
             const chunkSize = this.readUint32BE(bytes, start + 1);
-            if (chunkSize < 512 || chunkSize > 64 * 1024 * 1024) continue;
-            if (this.readUint32BE(bytes, start + 5) !== 0) continue;
+            if (chunkSize < 512 || chunkSize > 64 * 1024 * 1024) {
+                continue;
+            }
+            if (this.readUint32BE(bytes, start + 5) !== 0) {
+                continue;
+            }
 
             const firstSize = this.readUint32BE(bytes, start + 9);
-            if (firstSize < 1 || start + 13 + firstSize > bytes.length) continue;
-            if (format === 0 && (bytes[start + 13] !== 0x1f || bytes[start + 14] !== 0x8b)) continue;
+            if (firstSize < 1 || start + 13 + firstSize > bytes.length) {
+                continue;
+            }
+            if (format === 0 && (bytes[start + 13] !== 0x1f || bytes[start + 14] !== 0x8b)) {
+                continue;
+            }
 
             try {
                 const blocks = [];
@@ -217,7 +235,9 @@ class PdnDocumentCodec {
             const payload = bytes.subarray(position, position + dataSize);
             const raw = format === 0 ? await this.gunzip(payload) : payload;
             const expectedChunkLength = Math.min(chunkSize, expectedLength - chunk * chunkSize);
-            if (raw.length !== expectedChunkLength) throw new Error("Invalid pixel chunk size");
+            if (raw.length !== expectedChunkLength) {
+                throw new Error("Invalid pixel chunk size");
+            }
 
             pixels.set(raw, chunk * chunkSize);
             position += dataSize;
@@ -309,10 +329,14 @@ class PdnDocumentCodec {
     }
 
     static async repairLegacyBlendModeRecords(graph, layerCount) {
-        if (!Number.isInteger(layerCount) || layerCount < 1 || layerCount > 64) return null;
+        if (!Number.isInteger(layerCount) || layerCount < 1 || layerCount > 64) {
+            return null;
+        }
 
         const response = await fetch("assets/pdn/templates/" + layerCount + ".bin");
-        if (!response.ok) return null;
+        if (!response.ok) {
+            return null;
+        }
         const template = new Uint8Array(await response.arrayBuffer());
         const repaired = graph.slice();
         const encoder = new TextEncoder();
@@ -321,25 +345,33 @@ class PdnDocumentCodec {
         for (let index = 0; index < layerCount; ++index) {
             const marker = encoder.encode("PDJ_LAYER_" + String(index).padStart(4, "0"));
             const markerOffset = this.findByteSequence(template, marker);
-            if (markerOffset < 6 || template[markerOffset - 6] !== 6) return null;
+            if (markerOffset < 6 || template[markerOffset - 6] !== 6) {
+                return null;
+            }
 
             // BinaryObjectString + object id uniquely identifies the layer-name
             // record even after the placeholder has been replaced by any name.
             const nameRecordSignature = template.subarray(markerOffset - 6, markerOffset - 1);
             const nameRecordOffset = this.findByteSequence(repaired, nameRecordSignature);
-            if (nameRecordOffset < 0) return null;
+            if (nameRecordOffset < 0) {
+                return null;
+            }
 
             const nameEnd = this.skipLengthPrefixedString(repaired, nameRecordOffset + 5);
             const propertyOffset = nameEnd + 5; // MemberReference for metadata items.
             const recordOffset = propertyOffset + 3; // visible, background, opacity.
-            if (recordOffset + 4 > repaired.length) return null;
+            if (recordOffset + 4 > repaired.length) {
+                return null;
+            }
 
             const brokenBlendMode = new DataView(
                 repaired.buffer,
                 repaired.byteOffset + recordOffset,
                 4
             ).getInt32(0, true);
-            if (brokenBlendMode < 0 || brokenBlendMode > 13) return null;
+            if (brokenBlendMode < 0 || brokenBlendMode > 13) {
+                return null;
+            }
 
             const templatePropertyOffset = markerOffset + marker.length + 5;
             const templateRecordOffset = templatePropertyOffset + 3;
@@ -371,7 +403,9 @@ class PdnDocumentCodec {
         const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         const memberCount = view.getInt32(offset, true);
         offset += 4;
-        if (memberCount !== 1) throw new Error("Invalid Paint.NET blend mode enum");
+        if (memberCount !== 1) {
+            throw new Error("Invalid Paint.NET blend mode enum");
+        }
 
         for (let index = 0; index < memberCount; ++index) {
             offset = this.skipLengthPrefixedString(bytes, offset);
@@ -395,12 +429,16 @@ class PdnDocumentCodec {
         let length = 0;
         let shift = 0;
         for (let index = 0; index < 5; ++index) {
-            if (offset >= bytes.length) throw new Error("Truncated NRBF string");
+            if (offset >= bytes.length) {
+                throw new Error("Truncated NRBF string");
+            }
             const value = bytes[offset++];
             length |= (value & 0x7f) << shift;
             if ((value & 0x80) === 0) {
                 const end = offset + length;
-                if (end > bytes.length) throw new Error("Truncated NRBF string");
+                if (end > bytes.length) {
+                    throw new Error("Truncated NRBF string");
+                }
                 return end;
             }
             shift += 7;
@@ -455,7 +493,9 @@ class PdnDocumentCodec {
         const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         let count = 0;
         for (let offset = 0; offset + 4 <= bytes.length; ++offset) {
-            if (view.getUint32(offset, true) !== oldValue) continue;
+            if (view.getUint32(offset, true) !== oldValue) {
+                continue;
+            }
             view.setUint32(offset, newValue, true);
             ++count;
             offset += 3;
@@ -467,7 +507,9 @@ class PdnDocumentCodec {
         const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         let count = 0;
         for (let offset = 0; offset + 8 <= bytes.length; ++offset) {
-            if (view.getBigUint64(offset, true) !== oldValue) continue;
+            if (view.getBigUint64(offset, true) !== oldValue) {
+                continue;
+            }
             view.setBigUint64(offset, newValue, true);
             ++count;
             offset += 7;
@@ -478,7 +520,9 @@ class PdnDocumentCodec {
     static findByteSequence(bytes, sequence) {
         outer: for (let offset = 0; offset + sequence.length <= bytes.length; ++offset) {
             for (let index = 0; index < sequence.length; ++index) {
-                if (bytes[offset + index] !== sequence[index]) continue outer;
+                if (bytes[offset + index] !== sequence[index]) {
+                    continue outer;
+                }
             }
             return offset;
         }
@@ -490,7 +534,9 @@ class PdnDocumentCodec {
         do {
             let next = value & 0x7f;
             value >>>= 7;
-            if (value !== 0) next |= 0x80;
+            if (value !== 0) {
+                next |= 0x80;
+            }
             bytes.push(next);
         } while (value !== 0);
         return new Uint8Array(bytes);

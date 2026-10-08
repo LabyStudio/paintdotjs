@@ -36,7 +36,9 @@ const headerLines = [
 const managedHeaderPattern = /^\/\*\r?\n \* paint\.js, an unofficial JavaScript port of Paint\.NET[^\r\n]*\r?\n[\s\S]*?\r?\n \*\/\r?\n(?:\r?\n)?/;
 
 function isFirstPartySource(filename) {
-    if (!/\.(?:c?js)$/.test(filename)) return false;
+    if (!/\.(?:c?js)$/.test(filename)) {
+        return false;
+    }
     return filename === 'webpack.config.js'
         || filename.startsWith('js/')
         || filename.startsWith('src/')
@@ -45,12 +47,19 @@ function isFirstPartySource(filename) {
 }
 
 function trackedFiles() {
-    const output = execFileSync('git', ['ls-files', '-z'], {cwd: root, encoding: 'utf8'});
+    const output = execFileSync(
+        'git',
+        ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+        {cwd: root, encoding: 'utf8'}
+    );
     const files = output.split('\0').filter(Boolean);
     if (!files.includes('scripts/sync_source_headers.js')) {
         files.push('scripts/sync_source_headers.js');
     }
-    return files.filter(isFirstPartySource).sort();
+    return files
+        .filter(isFirstPartySource)
+        .filter(filename => fs.existsSync(path.join(root, filename)))
+        .sort();
 }
 
 function updateHeader(source) {
@@ -60,7 +69,9 @@ function updateHeader(source) {
     let body = source;
     if (body.startsWith('#!')) {
         const lineEnd = body.indexOf('\n');
-        if (lineEnd === -1) return body + newline + header;
+        if (lineEnd === -1) {
+            return body + newline + header;
+        }
         prefix = body.slice(0, lineEnd + 1);
         body = body.slice(lineEnd + 1).replace(/^\r?\n/, '');
     }
@@ -73,14 +84,20 @@ for (const filename of trackedFiles()) {
     const absolutePath = path.join(root, filename);
     const source = fs.readFileSync(absolutePath, 'utf8');
     const updated = updateHeader(source);
-    if (updated === source) continue;
+    if (updated === source) {
+        continue;
+    }
     outdated.push(filename);
-    if (!checkOnly) fs.writeFileSync(absolutePath, updated);
+    if (!checkOnly) {
+        fs.writeFileSync(absolutePath, updated);
+    }
 }
 
 if (checkOnly && outdated.length > 0) {
     console.error('Missing or outdated paint.js source headers:');
-    for (const filename of outdated) console.error(`  ${filename}`);
+    for (const filename of outdated) {
+        console.error(`  ${filename}`);
+    }
     process.exitCode = 1;
 } else if (checkOnly) {
     console.log('All first-party JavaScript files have the current paint.js source header.');

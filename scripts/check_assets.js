@@ -43,7 +43,9 @@ function requiredFilesExist() {
 }
 
 function fileHasHash(filename, expected) {
-    if (!fs.existsSync(filename)) return false;
+    if (!fs.existsSync(filename)) {
+        return false;
+    }
     return crypto.createHash('sha256').update(fs.readFileSync(filename)).digest('hex') === expected;
 }
 
@@ -61,9 +63,13 @@ function markerIsCurrent() {
 }
 
 function generatedFilesExist() {
-    if (!requiredFilesExist()) return false;
+    if (!requiredFilesExist()) {
+        return false;
+    }
     if (!Object.values(manifest.files).flat().every(relativePath =>
-        fs.existsSync(path.join(assets, relativePath)))) return false;
+        fs.existsSync(path.join(assets, relativePath)))) {
+        return false;
+    }
     try {
         const {locales} = JSON.parse(fs.readFileSync(path.join(assets, 'lang', 'languages.json'), 'utf8'));
         return Array.isArray(locales) && locales.length > 0
@@ -74,13 +80,19 @@ function generatedFilesExist() {
 }
 
 function mappedAssetsAreCurrent() {
-    if (!requiredFilesExist() || !officialIconsAreCurrent() || manifest.paintDotNetVersion !== version) return false;
+    if (!requiredFilesExist() || !officialIconsAreCurrent() || manifest.paintDotNetVersion !== version) {
+        return false;
+    }
     for (const [hash, relativePaths] of Object.entries(manifest.files)) {
         for (const relativePath of relativePaths) {
             const filename = path.join(assets, relativePath);
-            if (!fs.existsSync(filename)) return false;
+            if (!fs.existsSync(filename)) {
+                return false;
+            }
             const actual = crypto.createHash('sha256').update(fs.readFileSync(filename)).digest('hex');
-            if (actual !== hash) return false;
+            if (actual !== hash) {
+                return false;
+            }
         }
     }
     return true;
@@ -90,7 +102,9 @@ async function ensureAssets() {
     const refreshManifest = process.argv.includes('--refresh-manifest');
     const versionUpdate = manifest.paintDotNetVersion !== version;
     await fsp.mkdir(assets, {recursive: true});
-    if (!refreshManifest && !versionUpdate && markerIsCurrent() && generatedFilesExist() && officialIconsAreCurrent()) return false;
+    if (!refreshManifest && !versionUpdate && markerIsCurrent() && generatedFilesExist() && officialIconsAreCurrent()) {
+        return false;
+    }
     if (!refreshManifest && mappedAssetsAreCurrent()) {
         await fsp.writeFile(markerPath, JSON.stringify({
             paintDotNetVersion: version,
@@ -115,7 +129,9 @@ async function ensureAssets() {
                     process.stdout.write('Using the cached archive.\n');
                 } else if (total) {
                     const percent = Math.round(downloaded / total * 100);
-                    if (percent !== lastPercent) process.stdout.write(`\rDownloaded ${percent}%`);
+                    if (percent !== lastPercent) {
+                        process.stdout.write(`\rDownloaded ${percent}%`);
+                    }
                     lastPercent = percent;
                 }
             }

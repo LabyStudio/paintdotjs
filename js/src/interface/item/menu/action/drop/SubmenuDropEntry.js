@@ -23,7 +23,9 @@ class SubmenuDropEntry extends DropEntry {
 
     initialize(parent) {
         super.initialize(parent);
-        for (const entry of this.entries) entry.initialize(this);
+        for (const entry of this.entries) {
+            entry.initialize(this);
+        }
         this.getElement().addEventListener("mouseenter", () => this.open());
         this.getElement().setAttribute("aria-haspopup", "menu");
         this.getElement().setAttribute("aria-expanded", "false");
@@ -44,28 +46,40 @@ class SubmenuDropEntry extends DropEntry {
     }
 
     setEnabledFromActionExecutable() {
-        for (const entry of this.entries) entry.setEnabledFromActionExecutable();
+        for (const entry of this.entries) {
+            entry.setEnabledFromActionExecutable();
+        }
         const enabled = this.entries.some(entry => entry.isEnabled());
         this.setEnabled(enabled);
-        if (!enabled) this.close();
+        if (!enabled) {
+            this.close();
+        }
     }
 
     onPress(event) {
-        if (!this.isEnabled()) return;
+        if (!this.isEnabled()) {
+            return;
+        }
         event.stopPropagation();
         this.open();
     }
 
     open() {
-        if (this.submenuElement !== null || !this.isEnabled()) return;
+        if (this.submenuElement !== null || !this.isEnabled()) {
+            return;
+        }
         if (this.parent !== null) {
             for (const sibling of this.parent.entries) {
-                if (sibling !== this && sibling instanceof SubmenuDropEntry) sibling.close();
+                if (sibling !== this && sibling instanceof SubmenuDropEntry) {
+                    sibling.close();
+                }
             }
         }
 
         this.setEnabledFromActionExecutable();
-        if (!this.isEnabled()) return;
+        if (!this.isEnabled()) {
+            return;
+        }
 
         this.submenuPopup = new DropMenuPopup(this.id, {
             className: "effect-submenu",
@@ -90,6 +104,8 @@ class SubmenuDropEntry extends DropEntry {
         this.submenuPopup = null;
         this.submenuElement = null;
         this.removeClass("open");
-        if (this.isInitialized()) this.getElement().setAttribute("aria-expanded", "false");
+        if (this.isInitialized()) {
+            this.getElement().setAttribute("aria-expanded", "false");
+        }
     }
 }

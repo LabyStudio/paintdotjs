@@ -110,8 +110,12 @@ class Document {
     }
 
     pixelToPhysical(pixels, unit) {
-        if (unit === "inch") return pixels / this.resolution;
-        if (unit === "centimeter") return pixels / this.resolution * 2.54;
+        if (unit === "inch") {
+            return pixels / this.resolution;
+        }
+        if (unit === "centimeter") {
+            return pixels / this.resolution * 2.54;
+        }
         return pixels;
     }
 

@@ -40,7 +40,9 @@ class PencilTool extends DrawingTool {
         let error = dx + dy;
         while (true) {
             context.fillRect(x0, y0, 1, 1);
-            if (x0 === x1 && y0 === y1) break;
+            if (x0 === x1 && y0 === y1) {
+                break;
+            }
             const doubled = error * 2;
             if (doubled >= dy) { error += dy; x0 += sx; }
             if (doubled <= dx) { error += dx; y0 += sy; }

@@ -38,14 +38,18 @@ class MagicWandTool extends Tool {
     }
 
     onDeactivate() {
-        if (this.pending) this.commitPending();
+        if (this.pending) {
+            this.commitPending();
+        }
         this.destroyNub();
         this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(false);
         super.onDeactivate();
     }
 
     onMouseDown(x, y, button) {
-        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) return false;
+        if (button !== MouseButton.LEFT && button !== MouseButton.RIGHT) {
+            return false;
+        }
         const point = new Point(x, y);
         if (this.pending && this.originNub !== null && this.originNub.isPointTouching(point, true)) {
             this.tracking = true;
@@ -54,11 +58,15 @@ class MagicWandTool extends Tool {
             this.app.setCursorImg("hand_closed_cursor");
             return true;
         }
-        if (this.pending) this.commitPending();
+        if (this.pending) {
+            this.commitPending();
+        }
         const sampleSurface = this.getSetting("sampleMode", "layer") === "image"
             ? this.getDocumentWorkspace().getCompositionSurface()
             : this.getActiveLayer().getSurface();
-        if (!sampleSurface.getBounds().contains(point)) return false;
+        if (!sampleSurface.getBounds().contains(point)) {
+            return false;
+        }
         this.baseSelectionData = this.getSelection().save();
         this.combineModeOverride = this.getCombineModeOverride(button);
         this.floodModeOverride = this.app.isShiftKeyDown() ? "global" : null;
@@ -78,7 +86,9 @@ class MagicWandTool extends Tool {
     }
 
     onMouseMove(x, y) {
-        if (!this.tracking) return false;
+        if (!this.tracking) {
+            return false;
+        }
         this.origin = new Point(
             this.originStart.x + x - this.dragStart.x,
             this.originStart.y + y - this.dragStart.y
@@ -89,7 +99,9 @@ class MagicWandTool extends Tool {
     }
 
     onMouseUp(x, y) {
-        if (!this.tracking) return false;
+        if (!this.tracking) {
+            return false;
+        }
         this.onMouseMove(x, y);
         this.tracking = false;
         this.app.setCursorImg("magic_wand_tool_cursor");
@@ -97,14 +109,22 @@ class MagicWandTool extends Tool {
     }
 
     onKeyPress(key) {
-        if (!this.pending) return false;
-        if (key === "Enter") return this.commitPending();
-        if (key === "Escape") return this.cancelPending();
+        if (!this.pending) {
+            return false;
+        }
+        if (key === "Enter") {
+            return this.commitPending();
+        }
+        if (key === "Escape") {
+            return this.cancelPending();
+        }
         return false;
     }
 
     onSettingChanged(key) {
-        if (!this.pending) return;
+        if (!this.pending) {
+            return;
+        }
         if (key === "sampleMode") {
             this.disposeSampleSnapshot();
             const surface = this.getSetting("sampleMode", "layer") === "image"
@@ -116,7 +136,9 @@ class MagicWandTool extends Tool {
     }
 
     renderPending() {
-        if (!this.pending || this.sampleSnapshot === null) return false;
+        if (!this.pending || this.sampleSnapshot === null) {
+            return false;
+        }
         const surface = this.sampleSnapshot;
         const x = Math.floor(this.origin.x);
         const y = Math.floor(this.origin.y);
@@ -132,9 +154,13 @@ class MagicWandTool extends Tool {
             const visited = new Uint8Array(surface.width * surface.height);
             const stack = [x, y];
             const matches = (px, py) => {
-                if (px < 0 || py < 0 || px >= surface.width || py >= surface.height) return false;
+                if (px < 0 || py < 0 || px >= surface.width || py >= surface.height) {
+                    return false;
+                }
                 const pixel = py * surface.width + px;
-                if (visited[pixel]) return false;
+                if (visited[pixel]) {
+                    return false;
+                }
                 return this.matchesColorTolerance(image, pixel * 4, target, tolerance, premultiplied);
             };
             const floodMode = this.floodModeOverride ?? this.getSetting("floodMode", "contiguous");
@@ -151,15 +177,23 @@ class MagicWandTool extends Tool {
                 while (stack.length > 0) {
                     const seedY = stack.pop();
                     const seedX = stack.pop();
-                    if (!matches(seedX, seedY)) continue;
+                    if (!matches(seedX, seedY)) {
+                        continue;
+                    }
                     let left = seedX;
-                    while (matches(left - 1, seedY)) --left;
+                    while (matches(left - 1, seedY)) {
+                        --left;
+                    }
                     let right = left;
                     while (matches(right, seedY)) {
                         visited[seedY * surface.width + right] = 1;
                         stencil.set(right, seedY, true);
-                        if (matches(right, seedY - 1)) stack.push(right, seedY - 1);
-                        if (matches(right, seedY + 1)) stack.push(right, seedY + 1);
+                        if (matches(right, seedY - 1)) {
+                            stack.push(right, seedY - 1);
+                        }
+                        if (matches(right, seedY + 1)) {
+                            stack.push(right, seedY + 1);
+                        }
                         ++right;
                     }
                 }
@@ -189,15 +223,25 @@ class MagicWandTool extends Tool {
     }
 
     getCombineModeOverride(button) {
-        if (this.app.isControlKeyDown() && button === MouseButton.LEFT) return CombineMode.UNION;
-        if (this.app.isAltKeyDown() && button === MouseButton.LEFT) return CombineMode.EXCLUDE;
-        if (this.app.isControlKeyDown() && button === MouseButton.RIGHT) return CombineMode.XOR;
-        if (this.app.isAltKeyDown() && button === MouseButton.RIGHT) return CombineMode.INTERSECT;
+        if (this.app.isControlKeyDown() && button === MouseButton.LEFT) {
+            return CombineMode.UNION;
+        }
+        if (this.app.isAltKeyDown() && button === MouseButton.LEFT) {
+            return CombineMode.EXCLUDE;
+        }
+        if (this.app.isControlKeyDown() && button === MouseButton.RIGHT) {
+            return CombineMode.XOR;
+        }
+        if (this.app.isAltKeyDown() && button === MouseButton.RIGHT) {
+            return CombineMode.INTERSECT;
+        }
         return null;
     }
 
     static combineStencils(stencil, baseStencil, combineMode) {
-        if (baseStencil === null) return;
+        if (baseStencil === null) {
+            return;
+        }
         const data = stencil.bitArray;
         const base = baseStencil.bitArray;
         for (let i = 0; i < data.length; ++i) {
@@ -212,16 +256,22 @@ class MagicWandTool extends Tool {
 
     static createSelectionStencil(path, width, height) {
         const cached = path.getPixelStencil(width, height);
-        if (cached !== null) return cached;
+        if (cached !== null) {
+            return cached;
+        }
 
         const stencil = new BitVector2D(width, height);
         for (const vertexList of path.getVertexLists()) {
             const vertices = vertexList.getVertices();
-            if (vertices.length < 3) continue;
+            if (vertices.length < 3) {
+                continue;
+            }
             const scans = Utility.getScans(vertices);
             for (const scan of scans) {
                 const y = scan.getY();
-                if (y < 0 || y >= height) continue;
+                if (y < 0 || y >= height) {
+                    continue;
+                }
                 const start = Math.max(0, scan.getX());
                 const end = Math.min(width, scan.getX() + scan.getLength());
                 const row = y * width;
@@ -244,7 +294,9 @@ class MagicWandTool extends Tool {
     }
 
     commitPending() {
-        if (!this.pending) return false;
+        if (!this.pending) {
+            return false;
+        }
         this.pending = false;
         this.tracking = false;
         this.historyStack.pushNewMemento(this.historyMemento);
@@ -255,7 +307,9 @@ class MagicWandTool extends Tool {
     }
 
     cancelPending() {
-        if (!this.pending) return false;
+        if (!this.pending) {
+            return false;
+        }
         this.getSelection().restore(this.baseSelectionData);
         this.pending = false;
         this.tracking = false;
@@ -268,7 +322,9 @@ class MagicWandTool extends Tool {
     disposePendingResources() {
         this.destroyNub();
         this.disposeSampleSnapshot();
-        if (this.baseSelectionData !== null) this.baseSelectionData.dispose();
+        if (this.baseSelectionData !== null) {
+            this.baseSelectionData.dispose();
+        }
         this.baseSelectionData = null;
         this.baseSelectionStencil = null;
         this.combineModeOverride = null;
@@ -276,7 +332,9 @@ class MagicWandTool extends Tool {
     }
 
     disposeSampleSnapshot() {
-        if (this.sampleSnapshot !== null) this.sampleSnapshot.dispose();
+        if (this.sampleSnapshot !== null) {
+            this.sampleSnapshot.dispose();
+        }
         this.sampleSnapshot = null;
     }
 
@@ -291,7 +349,9 @@ class MagicWandTool extends Tool {
     }
 
     destroyNub() {
-        if (this.originNub === null) return;
+        if (this.originNub === null) {
+            return;
+        }
         this.getSurfaceBox().removeRenderer(this.originNub);
         this.originNub.dispose();
         this.originNub = null;

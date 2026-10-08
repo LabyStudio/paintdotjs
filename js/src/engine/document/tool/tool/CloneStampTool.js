@@ -117,7 +117,9 @@ class CloneStampTool extends DrawingTool {
             anchor.layerIndex = this.getActiveLayerIndex();
         }
         this.updatePreviews(x, y, input);
-        if (this.settingAnchor) return true;
+        if (this.settingAnchor) {
+            return true;
+        }
         return super.onMouseMove(x, y, input);
     }
 
@@ -145,7 +147,9 @@ class CloneStampTool extends DrawingTool {
     }
 
     showMissingAnchorWarning() {
-        if (this.missingAnchorDialogOpen) return;
+        if (this.missingAnchorDialogOpen) {
+            return;
+        }
         this.missingAnchorDialogOpen = true;
         void TaskDialog.show({
             title: "paint.js",
@@ -165,7 +169,9 @@ class CloneStampTool extends DrawingTool {
     }
 
     updatePreviews(x, y, input = null) {
-        if (this.destinationPreview === null) return;
+        if (this.destinationPreview === null) {
+            return;
+        }
         const point = new Point(x, y);
         this.previewPoint = point;
         this.previewPressure = input && Number.isFinite(Number(input.pressure))
@@ -189,7 +195,9 @@ class CloneStampTool extends DrawingTool {
     }
 
     updateSourcePreview() {
-        if (this.sourcePreview === null) return;
+        if (this.sourcePreview === null) {
+            return;
+        }
         const anchor = this.getAnchor();
         if (anchor === null || !this.getActiveLayer().getBounds().contains(anchor.point)) {
             this.sourcePreview.setVisible(false);
@@ -217,12 +225,16 @@ class CloneStampTool extends DrawingTool {
     }
 
     disposeStrokeSource() {
-        if (this.strokeSourceSurface !== null) this.strokeSourceSurface.dispose();
+        if (this.strokeSourceSurface !== null) {
+            this.strokeSourceSurface.dispose();
+        }
         this.strokeSourceSurface = null;
     }
 
     disposeCloneMask() {
-        if (this.cloneMaskSurface !== null) this.cloneMaskSurface.dispose();
+        if (this.cloneMaskSurface !== null) {
+            this.cloneMaskSurface.dispose();
+        }
         this.cloneMaskSurface = null;
     }
 
@@ -270,7 +282,9 @@ class CloneStampTool extends DrawingTool {
 
         const dirtyBounds = Rectangle.intersect(
             Utility.roundRectangle(bounds), surface.getBounds());
-        if (dirtyBounds.isEmpty()) return;
+        if (dirtyBounds.isEmpty()) {
+            return;
+        }
 
         // Rebuild the cloned content for this part of the stroke from the
         // immutable mouse-down snapshot, then apply the accumulated brush mask.

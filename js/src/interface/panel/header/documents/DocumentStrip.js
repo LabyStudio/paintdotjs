@@ -41,12 +41,18 @@ class DocumentStrip extends Panel {
         });
         this.app.on("document:dirty_changed", (documentWorkspace) => {
             const item = this.getItemByDocumentWorkspace(documentWorkspace);
-            if (item !== null) item.updateDirtyIndicator();
+            if (item !== null) {
+                item.updateDirtyIndicator();
+            }
         });
         this.app.on("document:file_changed", (documentWorkspace) => {
             const item = this.getItemByDocumentWorkspace(documentWorkspace);
-            if (item !== null) item.reinitialize();
-            if (this.documentListOpen) this.populateDocumentList();
+            if (item !== null) {
+                item.reinitialize();
+            }
+            if (this.documentListOpen) {
+                this.populateDocumentList();
+            }
         });
         this.app.on("document:render_layer_region", (layer, region) => {
             if (!(layer instanceof BitmapLayer)) {
@@ -77,14 +83,18 @@ class DocumentStrip extends Panel {
         this.documentsListItem.setItemSwapper((item1, item2) => {
             const index1 = this.documentsListItem.items.indexOf(item1);
             const index2 = this.documentsListItem.items.indexOf(item2);
-            if (index1 < 0 || index2 < 0) return;
+            if (index1 < 0 || index2 < 0) {
+                return;
+            }
 
             const documentWorkspaces = this.app.getDocumentWorkspaces();
             const workspace1 = item1.getDocumentWorkspace();
             const workspace2 = item2.getDocumentWorkspace();
             const workspaceIndex1 = documentWorkspaces.indexOf(workspace1);
             const workspaceIndex2 = documentWorkspaces.indexOf(workspace2);
-            if (workspaceIndex1 < 0 || workspaceIndex2 < 0) return;
+            if (workspaceIndex1 < 0 || workspaceIndex2 < 0) {
+                return;
+            }
 
             [this.documentsListItem.items[index1], this.documentsListItem.items[index2]] =
                 [this.documentsListItem.items[index2], this.documentsListItem.items[index1]];
@@ -127,12 +137,16 @@ class DocumentStrip extends Panel {
         this.updatePreferredWidth();
 
         this.element.addEventListener("scroll", event => {
-            if (event.target === this.documentsListItem.getElement()) this.scheduleNavigationUpdate();
+            if (event.target === this.documentsListItem.getElement()) {
+                this.scheduleNavigationUpdate();
+            }
         }, true);
         this.resizeObserver = new ResizeObserver(() => this.scheduleNavigationUpdate());
         this.resizeObserver.observe(this.element);
         document.addEventListener("pointerdown", event => {
-            if (this.documentListOpen && !this.element.contains(event.target)) this.hideDocumentList();
+            if (this.documentListOpen && !this.element.contains(event.target)) {
+                this.hideDocumentList();
+            }
         }, true);
         document.addEventListener("keydown", event => {
             if (event.key === "Escape" && this.documentListOpen) {
@@ -149,23 +163,32 @@ class DocumentStrip extends Panel {
         button.className = "document-strip-button " + className;
         button.title = title;
         button.setAttribute("aria-label", title);
-        const image = document.createElement("img");
-        image.src = imageSource;
-        image.alt = "";
-        image.draggable = false;
-        button.appendChild(image);
+        {
+            // Icon
+            const image = document.createElement("img");
+            image.src = imageSource;
+            image.alt = "";
+            image.draggable = false;
+            button.appendChild(image);
+        }
 
         let delay = null;
         let interval = null;
         const stop = () => {
-            if (delay !== null) clearTimeout(delay);
-            if (interval !== null) clearInterval(interval);
+            if (delay !== null) {
+                clearTimeout(delay);
+            }
+            if (interval !== null) {
+                clearInterval(interval);
+            }
             delay = null;
             interval = null;
         };
         if (repeat) {
             button.onpointerdown = event => {
-                if (event.button !== 0 || button.disabled) return;
+                if (event.button !== 0 || button.disabled) {
+                    return;
+                }
                 event.preventDefault();
                 button.setPointerCapture(event.pointerId);
                 action();
@@ -174,7 +197,9 @@ class DocumentStrip extends Panel {
             button.onpointerup = button.onpointercancel = stop;
             button.onlostpointercapture = stop;
             button.onclick = event => {
-                if (event.detail === 0) action();
+                if (event.detail === 0) {
+                    action();
+                }
                 event.preventDefault();
             };
         } else {
@@ -190,7 +215,9 @@ class DocumentStrip extends Panel {
         this.documentsListItem.reinitialize();
         this.updatePreferredWidth();
         this.scheduleNavigationUpdate();
-        if (this.documentListOpen) this.populateDocumentList();
+        if (this.documentListOpen) {
+            this.populateDocumentList();
+        }
     }
 
     updatePreferredWidth() {
@@ -206,7 +233,9 @@ class DocumentStrip extends Panel {
     }
 
     scheduleNavigationUpdate() {
-        if (this.navigationFrame !== null) cancelAnimationFrame(this.navigationFrame);
+        if (this.navigationFrame !== null) {
+            cancelAnimationFrame(this.navigationFrame);
+        }
         this.navigationFrame = requestAnimationFrame(() => {
             this.navigationFrame = null;
             this.updateNavigation();
@@ -214,7 +243,9 @@ class DocumentStrip extends Panel {
     }
 
     updateNavigation() {
-        if (this.documentsListItem === null || this.previousButton === undefined) return;
+        if (this.documentsListItem === null || this.previousButton === undefined) {
+            return;
+        }
         const list = this.documentsListItem.getElement();
         const maximum = Math.max(0, list.scrollWidth - list.clientWidth);
         const canScrollLeft = list.scrollLeft > 1;
@@ -225,7 +256,9 @@ class DocumentStrip extends Panel {
         list.classList.toggle("document-overflow-right", canScrollRight);
         const hasDocuments = this.documentsListItem.items.length > 0;
         this.documentListButton.hidden = !hasDocuments;
-        if (!hasDocuments) this.hideDocumentList();
+        if (!hasDocuments) {
+            this.hideDocumentList();
+        }
     }
 
     scrollByDocument(direction) {
@@ -236,11 +269,17 @@ class DocumentStrip extends Panel {
     }
 
     toggleDocumentList() {
-        if (this.documentListOpen) this.hideDocumentList(); else this.showDocumentList();
+        if (this.documentListOpen) {
+            this.hideDocumentList();
+        } else {
+            this.showDocumentList();
+        }
     }
 
     showDocumentList() {
-        if (this.documentsListItem.items.length === 0) return;
+        if (this.documentsListItem.items.length === 0) {
+            return;
+        }
         this.populateDocumentList();
         this.documentListOpen = true;
         this.documentListPopup.hidden = false;
@@ -252,7 +291,9 @@ class DocumentStrip extends Panel {
     }
 
     hideDocumentList() {
-        if (this.documentListPopup === undefined) return;
+        if (this.documentListPopup === undefined) {
+            return;
+        }
         this.documentListOpen = false;
         this.documentListPopup.hidden = true;
         this.documentListButton.classList.remove("pushed");
@@ -267,6 +308,7 @@ class DocumentStrip extends Panel {
         textContext.font = "14px Segoe UI, sans-serif";
         for (const item of this.documentsListItem.items) {
             const workspace = item.getDocumentWorkspace();
+
             const entry = document.createElement("button");
             entry.type = "button";
             entry.className = "document-list-entry";
@@ -274,19 +316,27 @@ class DocumentStrip extends Panel {
             entry.setAttribute("role", "option");
             entry.setAttribute("aria-selected", String(workspace === activeWorkspace));
             entry.dataset.documentIndex = String(this.documentsListItem.items.indexOf(item));
+            {
+                // Thumbnail
+                const preview = document.createElement("span");
+                preview.className = "document-list-preview";
+                {
+                    const thumbnail = document.createElement("canvas");
+                    thumbnail.className = "document-list-thumbnail";
+                    this.copyThumbnail(item, thumbnail);
+                    preview.appendChild(thumbnail);
+                }
 
-            const preview = document.createElement("span");
-            preview.className = "document-list-preview";
-            const thumbnail = document.createElement("canvas");
-            thumbnail.className = "document-list-thumbnail";
-            this.copyThumbnail(item, thumbnail);
-            preview.appendChild(thumbnail);
-            const name = document.createElement("span");
-            name.className = "document-list-name";
-            name.textContent = workspace.getFriendlyName();
-            longestNameWidth = Math.max(longestNameWidth, textContext.measureText(name.textContent).width);
-            entry.title = workspace.getFriendlyName();
-            entry.append(preview, name);
+                // Document name
+                const name = document.createElement("span");
+                name.className = "document-list-name";
+                name.textContent = workspace.getFriendlyName();
+                longestNameWidth = Math.max(longestNameWidth, textContext.measureText(name.textContent).width);
+
+                entry.title = workspace.getFriendlyName();
+                entry.append(preview, name);
+            }
+
             entry.onclick = () => {
                 this.app.setActiveDocumentWorkspace(workspace);
                 this.hideDocumentList();
@@ -302,7 +352,9 @@ class DocumentStrip extends Panel {
 
     copyThumbnail(item, destination) {
         const source = item.thumbnail;
-        if (source === null || source.width === 0 || source.height === 0) return;
+        if (source === null || source.width === 0 || source.height === 0) {
+            return;
+        }
         destination.width = source.width;
         destination.height = source.height;
         const scale = Math.min(88 / source.width, 64 / source.height);
@@ -312,13 +364,19 @@ class DocumentStrip extends Panel {
     }
 
     updatePopupThumbnail(documentWorkspace) {
-        if (!this.documentListOpen) return;
+        if (!this.documentListOpen) {
+            return;
+        }
         const index = this.documentsListItem.items.findIndex(item =>
             item.getDocumentWorkspace() === documentWorkspace);
-        if (index < 0) return;
+        if (index < 0) {
+            return;
+        }
         const destination = this.documentListPopup.querySelector(
             `.document-list-entry[data-document-index="${index}"] canvas`);
-        if (destination !== null) this.copyThumbnail(this.documentsListItem.items[index], destination);
+        if (destination !== null) {
+            this.copyThumbnail(this.documentsListItem.items[index], destination);
+        }
     }
 
     createDocumentItem(documentWorkspace) {
@@ -340,7 +398,9 @@ class DocumentStrip extends Panel {
             this.documentsListItem.setSelected(item);
             this.documentsListItem.scrollToSelected();
             this.scheduleNavigationUpdate();
-            if (this.documentListOpen) this.populateDocumentList();
+            if (this.documentListOpen) {
+                this.populateDocumentList();
+            }
         }
     }
 

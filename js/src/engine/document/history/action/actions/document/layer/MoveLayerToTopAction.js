@@ -26,7 +26,9 @@ class MoveLayerToTopAction extends LayerAction {
     performAction(documentWorkspace) {
         const index = documentWorkspace.getActiveLayerIndex();
         const topIndex = documentWorkspace.getDocument().getLayers().size() - 1;
-        if (index === topIndex) return null;
+        if (index === topIndex) {
+            return null;
+        }
 
         const memento = new SwapLayerHistoryMemento(
             i18n("moveLayerToTop.historyMementoName"),

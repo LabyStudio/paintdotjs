@@ -24,10 +24,14 @@ class FillSelectionFunction extends HistoryFunction {
 
     onExecute(documentWorkspace) {
         const selection = documentWorkspace.getSelection();
-        if (selection.isEmpty()) return null;
+        if (selection.isEmpty()) {
+            return null;
+        }
 
         const layer = documentWorkspace.getActiveLayer();
-        if (!(layer instanceof BitmapLayer)) return null;
+        if (!(layer instanceof BitmapLayer)) {
+            return null;
+        }
 
         const path = selection.createPath();
         const surface = layer.getSurface();
@@ -80,7 +84,9 @@ class FillSelectionFunction extends HistoryFunction {
         context.beginPath();
         for (const vertexList of path.getVertexLists()) {
             const vertices = vertexList.getVertices();
-            if (vertices.length === 0) continue;
+            if (vertices.length === 0) {
+                continue;
+            }
             context.moveTo(vertices[0].x, vertices[0].y);
             for (let i = 1; i < vertices.length; ++i) {
                 context.lineTo(vertices[i].x, vertices[i].y);

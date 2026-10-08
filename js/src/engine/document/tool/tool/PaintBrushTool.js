@@ -65,7 +65,9 @@ class PaintBrushTool extends DrawingTool {
     }
 
     updateBrushPreview(x, y, input, pressed) {
-        if (this.brushPreview === null) return;
+        if (this.brushPreview === null) {
+            return;
+        }
         const point = new Point(x, y);
         const bounds = this.getActiveLayer().getBounds();
         if (!bounds.contains(point)) {
@@ -87,7 +89,9 @@ class PaintBrushTool extends DrawingTool {
     }
 
     destroyBrushPreview() {
-        if (this.brushPreview === null) return;
+        if (this.brushPreview === null) {
+            return;
+        }
         this.getSurfaceBox().removeRenderer(this.brushPreview);
         this.brushPreview.dispose();
         this.brushPreview = null;

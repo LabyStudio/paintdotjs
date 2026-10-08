@@ -183,7 +183,9 @@ class DocumentWorkspace extends DocumentView {
     }
 
     setDirty(dirty) {
-        if (this.dirty === dirty) return;
+        if (this.dirty === dirty) {
+            return;
+        }
         this.dirty = dirty;
         this.app.fire("document:dirty_changed", this);
         this.app.updateTitle();
@@ -228,7 +230,9 @@ class DocumentWorkspace extends DocumentView {
     }
 
     setActiveLayer(layer) {
-        if (this.activeLayer === layer) return;
+        if (this.activeLayer === layer) {
+            return;
+        }
         this.activeLayer = layer;
         this.app.fire("document:active_layer_changed", this, layer);
     }

@@ -63,8 +63,12 @@ class CommonMenu extends StripPanel {
     updateToggleStates() {
         const grid = this.get("menu.view.grid");
         const rulers = this.get("menu.view.rulers");
-        if (grid !== undefined) grid.setActive(this.app.isGridVisible());
-        if (rulers !== undefined) rulers.setActive(this.app.isRulersVisible());
+        if (grid !== undefined) {
+            grid.setActive(this.app.isGridVisible());
+        }
+        if (rulers !== undefined) {
+            rulers.setActive(this.app.isRulersVisible());
+        }
     }
 
     static ref(menu, item, callback = null) {

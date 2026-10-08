@@ -16,73 +16,28 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-
-class ResourceReader {
-    constructor(buffer, filename) {
-        this.buffer = buffer;
-        this.filename = filename;
-        this.offset = 0;
-    }
-
-    require(length) {
-        if (this.offset + length > this.buffer.length) {
-            throw new Error(`Unexpected end of .resources file: ${this.filename}`);
-        }
-    }
-
-    bytes(length) {
-        this.require(length);
-        const value = this.buffer.subarray(this.offset, this.offset + length);
-        this.offset += length;
-        return value;
-    }
-
-    int32() {
-        this.require(4);
-        const value = this.buffer.readInt32LE(this.offset);
-        this.offset += 4;
-        return value;
-    }
-
-    uint32() {
-        this.require(4);
-        const value = this.buffer.readUInt32LE(this.offset);
-        this.offset += 4;
-        return value;
-    }
-
-    sevenBitInt() {
-        let value = 0;
-        for (let shift = 0; shift < 35; shift += 7) {
-            const byte = this.bytes(1)[0];
-            value |= (byte & 0x7f) << shift;
-            if (byte < 0x80) return value >>> 0;
-        }
-        throw new Error(`Invalid 7-bit integer in ${this.filename}`);
-    }
-
-    string(encoding = 'utf8') {
-        return this.bytes(this.sevenBitInt()).toString(encoding);
-    }
-
-    seek(offset, relative = false) {
-        this.offset = relative ? this.offset + offset : offset;
-        if (this.offset < 0 || this.offset > this.buffer.length) {
-            throw new Error(`Invalid seek in ${this.filename}`);
-        }
-    }
-}
+const ResourceReader = require('./resource/ResourceReader');
 
 function readStringResources(filename) {
     const reader = new ResourceReader(fs.readFileSync(filename), filename);
-    if (reader.uint32() !== 0xbeefcace) throw new Error(`Not a .NET resources file: ${filename}`);
-    if (reader.int32() < 1) throw new Error(`Unsupported resource manager header: ${filename}`);
+    if (reader.uint32() !== 0xbeefcace) {
+        throw new Error(`Not a .NET resources file: ${filename}`);
+    }
+    if (reader.int32() < 1) {
+        throw new Error(`Unsupported resource manager header: ${filename}`);
+    }
     reader.seek(reader.int32(), true);
-    if (reader.int32() !== 2) throw new Error(`Unsupported .resources version: ${filename}`);
+    if (reader.int32() !== 2) {
+        throw new Error(`Unsupported .resources version: ${filename}`);
+    }
     const resourceCount = reader.int32();
     const typeCount = reader.int32();
-    for (let index = 0; index < typeCount; index++) reader.string();
-    while (reader.offset % 8) reader.bytes(1);
+    for (let index = 0; index < typeCount; index++) {
+        reader.string();
+    }
+    while (reader.offset % 8) {
+        reader.bytes(1);
+    }
     reader.seek(resourceCount * 4, true);
     const namePositions = Array.from({length: resourceCount}, () => reader.int32());
     const dataSectionOffset = reader.int32();
@@ -94,8 +49,12 @@ function readStringResources(filename) {
         const valuePosition = dataSectionOffset + reader.int32();
         reader.seek(valuePosition);
         const typeCode = reader.sevenBitInt();
-        if (typeCode === 0) entries[name] = '';
-        else if (typeCode === 1) entries[name] = reader.string();
+        if (typeCode === 0) {
+            entries[name] = '';
+        }
+        else if (typeCode === 1) {
+            entries[name] = reader.string();
+        }
     }
     return entries;
 }
@@ -103,7 +62,9 @@ function readStringResources(filename) {
 function decodeEntities(value) {
     const named = {amp: '&', lt: '<', gt: '>', quot: '"', apos: "'"};
     return value.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi, (_, entity) => {
-        if (entity[0] !== '#') return named[entity.toLowerCase()];
+        if (entity[0] !== '#') {
+            return named[entity.toLowerCase()];
+        }
         const hexadecimal = entity[1].toLowerCase() === 'x';
         return String.fromCodePoint(parseInt(entity.slice(hexadecimal ? 2 : 1), hexadecimal ? 16 : 10));
     });
@@ -117,11 +78,17 @@ function nestedStrings(entries) {
     const result = {};
     for (const key of Object.keys(entries).sort((left, right) => left.localeCompare(right))) {
         const parts = key.split('.').filter(Boolean).map(part => part[0].toLowerCase() + part.slice(1));
-        if (!parts.length) continue;
+        if (!parts.length) {
+            continue;
+        }
         let current = result;
         for (const part of parts.slice(0, -1)) {
-            if (typeof current[part] === 'string') current[part] = {text: current[part]};
-            else if (!current[part] || typeof current[part] !== 'object') current[part] = {};
+            if (typeof current[part] === 'string') {
+                current[part] = {text: current[part]};
+            }
+            else if (!current[part] || typeof current[part] !== 'object') {
+                current[part] = {};
+            }
             current = current[part];
         }
         const leaf = parts.at(-1);
@@ -137,16 +104,24 @@ function walk(directory) {
     const result = [];
     for (const entry of fs.readdirSync(directory, {withFileTypes: true})) {
         const filename = path.join(directory, entry.name);
-        if (entry.isDirectory()) result.push(...walk(filename));
-        else if (entry.isFile()) result.push(filename);
+        if (entry.isDirectory()) {
+            result.push(...walk(filename));
+        }
+        else if (entry.isFile()) {
+            result.push(filename);
+        }
     }
     return result;
 }
 
 function canonicalLocale(locale) {
-    if (!locale) return 'en';
+    if (!locale) {
+        return 'en';
+    }
     return locale.replaceAll('_', '-').split('-').map((part, index) => {
-        if (index === 0) return part.toLowerCase();
+        if (index === 0) {
+            return part.toLowerCase();
+        }
         return part.length === 2 || part.length === 3 ? part.toUpperCase() : part[0].toUpperCase() + part.slice(1);
     }).join('-');
 }
@@ -160,7 +135,9 @@ function findPngs(buffer) {
         let complete = false;
         while (cursor + 12 <= buffer.length) {
             const length = buffer.readUInt32BE(cursor);
-            if (length > 50_000_000 || cursor + length + 12 > buffer.length) break;
+            if (length > 50_000_000 || cursor + length + 12 > buffer.length) {
+                break;
+            }
             const type = buffer.toString('ascii', cursor + 4, cursor + 8);
             cursor += length + 12;
             if (type === 'IEND') {
@@ -188,7 +165,9 @@ function extractLargestPngFromIco(buffer, filename) {
         throw new Error(`Invalid ICO file: ${filename}`);
     }
     const imageCount = buffer.readUInt16LE(4);
-    if (buffer.length < 6 + imageCount * 16) throw new Error(`Truncated ICO directory: ${filename}`);
+    if (buffer.length < 6 + imageCount * 16) {
+        throw new Error(`Truncated ICO directory: ${filename}`);
+    }
 
     let largest = null;
     for (let index = 0; index < imageCount; index++) {
@@ -197,12 +176,20 @@ function extractLargestPngFromIco(buffer, filename) {
         const height = buffer[entry + 1] || 256;
         const length = buffer.readUInt32LE(entry + 8);
         const offset = buffer.readUInt32LE(entry + 12);
-        if (offset + length > buffer.length) throw new Error(`Invalid ICO image offset: ${filename}`);
+        if (offset + length > buffer.length) {
+            throw new Error(`Invalid ICO image offset: ${filename}`);
+        }
         const image = buffer.subarray(offset, offset + length);
-        if (!image.subarray(0, pngSignature.length).equals(pngSignature)) continue;
-        if (!largest || width * height > largest.area) largest = {area: width * height, image};
+        if (!image.subarray(0, pngSignature.length).equals(pngSignature)) {
+            continue;
+        }
+        if (!largest || width * height > largest.area) {
+            largest = {area: width * height, image};
+        }
     }
-    if (!largest) throw new Error(`ICO file does not contain an embedded PNG: ${filename}`);
+    if (!largest) {
+        throw new Error(`ICO file does not contain an embedded PNG: ${filename}`);
+    }
     return largest.image;
 }
 
@@ -210,9 +197,13 @@ function installAssets({source, output, manifestPath}) {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     const sourceFiles = walk(source);
     const resourcesDll = sourceFiles.find(file => path.basename(file).toLowerCase() === 'paintdotnet.resources.dll');
-    if (!resourcesDll) throw new Error('PaintDotNet.Resources.dll was not found in the official archive');
+    if (!resourcesDll) {
+        throw new Error('PaintDotNet.Resources.dll was not found in the official archive');
+    }
     const iconFile = sourceFiles.find(file => path.basename(file).toLowerCase() === 'paintdotnet.ico');
-    if (!iconFile) throw new Error('paintdotnet.ico was not found in the official archive');
+    if (!iconFile) {
+        throw new Error('paintdotnet.ico was not found in the official archive');
+    }
 
     fs.mkdirSync(output, {recursive: true});
     const discovered = findPngs(fs.readFileSync(resourcesDll));
@@ -229,13 +220,17 @@ function installAssets({source, output, manifestPath}) {
             fs.writeFileSync(filename, image);
         }
     }
-    if (missing.length) throw new Error(`The official archive did not contain ${missing.length} expected assets`);
+    if (missing.length) {
+        throw new Error(`The official archive did not contain ${missing.length} expected assets`);
+    }
 
     const resourcePattern = /^PaintDotNet\.Strings\.3(?:\.([A-Za-z0-9-]+))?\.resources$/i;
     const locales = [];
     for (const filename of sourceFiles) {
         const match = resourcePattern.exec(path.basename(filename));
-        if (!match) continue;
+        if (!match) {
+            continue;
+        }
         const locale = canonicalLocale(match[1]);
         writeJson(path.join(output, 'lang', `${locale}.json`), nestedStrings(readStringResources(filename)));
         locales.push(locale);
@@ -261,11 +256,15 @@ function parseArguments(argv) {
     const values = {};
     for (let index = 0; index < argv.length; index += 2) {
         const key = argv[index];
-        if (!key.startsWith('--') || argv[index + 1] === undefined) throw new Error(`Invalid argument: ${key}`);
+        if (!key.startsWith('--') || argv[index + 1] === undefined) {
+            throw new Error(`Invalid argument: ${key}`);
+        }
         values[key.slice(2)] = path.resolve(argv[index + 1]);
     }
     for (const required of ['source', 'output', 'manifest']) {
-        if (!values[required]) throw new Error(`Missing --${required}`);
+        if (!values[required]) {
+            throw new Error(`Missing --${required}`);
+        }
     }
     return values;
 }

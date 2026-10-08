@@ -182,7 +182,9 @@ class ActionRegistry {
         // map directly here; get() intentionally reports genuinely missing
         // actions to callers once initialization is complete.
         const existing = this.actions.get(actionId);
-        if (existing !== undefined) return existing;
+        if (existing !== undefined) {
+            return existing;
+        }
         const defaultShortcut = shortcutKeyCombo === null
             ? this.getBuiltInDefaultShortcut(actionId)
             : shortcutKeyCombo;
@@ -256,7 +258,9 @@ class ActionRegistry {
 
     static setShortcut(actionId, shortcutKey) {
         const action = this.get(actionId);
-        if (action === null) return null;
+        if (action === null) {
+            return null;
+        }
         const shortcut = shortcutKey instanceof ShortcutKey
             ? shortcutKey
             : ShortcutKey.fromCombo(shortcutKey);
@@ -273,7 +277,9 @@ class ActionRegistry {
                     }
                     candidate.setShortcutKey(null);
                     this.shortcutOverrides[candidate.getActionId()] = null;
-                    if (replacedAction === null) replacedAction = candidate;
+                    if (replacedAction === null) {
+                        replacedAction = candidate;
+                    }
                     this.notifyChanged(candidate);
                 }
             }
@@ -292,13 +298,17 @@ class ActionRegistry {
 
     static resetShortcut(actionId) {
         const action = this.get(actionId);
-        if (action === null) return;
+        if (action === null) {
+            return;
+        }
         this.setShortcut(actionId, action.getDefaultShortcutKey());
     }
 
     static resetAllShortcuts() {
         this.shortcutOverrides = {};
-        for (const action of this.actions.values()) action.resetShortcutKey();
+        for (const action of this.actions.values()) {
+            action.resetShortcutKey();
+        }
         this.saveOverrides();
         this.notifyChanged(null);
     }
@@ -312,7 +322,9 @@ class ActionRegistry {
     }
 
     static notifyChanged(action) {
-        for (const listener of this.listeners) listener(action);
+        for (const listener of this.listeners) {
+            listener(action);
+        }
         if (typeof window.app !== "undefined" && window.app !== null) {
             window.app.fire("app:shortcut_changed", action);
         }

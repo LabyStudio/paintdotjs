@@ -19,7 +19,9 @@ let window = null;
 let initialized = false;
 
 function send(state, detail = null) {
-    if (window && !window.isDestroyed()) window.webContents.send('desktop:update-state', {state, detail});
+    if (window && !window.isDestroyed()) {
+        window.webContents.send('desktop:update-state', {state, detail});
+    }
 }
 
 function updatesSupported() {
@@ -29,7 +31,9 @@ function updatesSupported() {
 function initializeUpdater(mainWindow) {
     window = mainWindow;
     if (initialized || !updatesSupported()) {
-        if (!updatesSupported()) send('managed');
+        if (!updatesSupported()) {
+            send('managed');
+        }
         return;
     }
     initialized = true;
@@ -45,13 +49,17 @@ function initializeUpdater(mainWindow) {
 }
 
 async function checkForUpdates() {
-    if (!updatesSupported()) return {supported: false};
+    if (!updatesSupported()) {
+        return {supported: false};
+    }
     const result = await autoUpdater.checkForUpdates();
     return {supported: true, version: result?.updateInfo?.version || null};
 }
 
 function installUpdate() {
-    if (updatesSupported()) autoUpdater.quitAndInstall(false, true);
+    if (updatesSupported()) {
+        autoUpdater.quitAndInstall(false, true);
+    }
 }
 
 module.exports = {checkForUpdates, initializeUpdater, installUpdate, updatesSupported};

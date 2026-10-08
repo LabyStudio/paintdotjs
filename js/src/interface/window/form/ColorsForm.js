@@ -487,7 +487,9 @@ class ColorsForm extends Form {
             const saved = window.localStorage.getItem("paintdotjs.colors.currentPalette");
             if (saved !== null) {
                 const palette = this.parsePalette(saved);
-                if (palette.length > 0) return palette;
+                if (palette.length > 0) {
+                    return palette;
+                }
             }
         } catch (_) {
             // Palette persistence is optional in private browsing modes.
@@ -499,8 +501,12 @@ class ColorsForm extends Form {
         const colors = [];
         for (const sourceLine of String(text).split(/\r?\n/)) {
             let line = sourceLine.split(";", 1)[0].trim();
-            if (line.startsWith("#")) line = line.substring(1);
-            if (!/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(line)) continue;
+            if (line.startsWith("#")) {
+                line = line.substring(1);
+            }
+            if (!/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(line)) {
+                continue;
+            }
             let alpha = 255;
             let red;
             let green;
@@ -517,10 +523,16 @@ class ColorsForm extends Form {
                 blue = parseInt(line.substring(4, 6), 16);
             }
             colors.push(Color.fromRGBA(red, green, blue, alpha));
-            if (colors.length === 96) break;
+            if (colors.length === 96) {
+                break;
+            }
         }
-        if (colors.length === 0) return colors;
-        while (colors.length < 96) colors.push(Color.WHITE.copy());
+        if (colors.length === 0) {
+            return colors;
+        }
+        while (colors.length < 96) {
+            colors.push(Color.WHITE.copy());
+        }
         return colors;
     }
 
@@ -558,9 +570,13 @@ class ColorsForm extends Form {
     }
 
     setPalette(palette, name = null) {
-        if (!Array.isArray(palette) || palette.length === 0) return false;
+        if (!Array.isArray(palette) || palette.length === 0) {
+            return false;
+        }
         this.palette = palette.slice(0, 96).map(color => color.copy());
-        while (this.palette.length < 96) this.palette.push(Color.WHITE.copy());
+        while (this.palette.length < 96) {
+            this.palette.push(Color.WHITE.copy());
+        }
         this.currentPaletteName = name;
         this.persistCurrentPalette();
         this.updatePaletteElements();
@@ -571,7 +587,9 @@ class ColorsForm extends Form {
         for (let i = 0; i < this.paletteElements.length; ++i) {
             const element = this.paletteElements[i];
             element.hidden = i >= this.palette.length;
-            if (!element.hidden) element.style.backgroundImage = this.paletteColor(i);
+            if (!element.hidden) {
+                element.style.backgroundImage = this.paletteColor(i);
+            }
         }
     }
 
@@ -584,7 +602,9 @@ class ColorsForm extends Form {
     }
 
     onPaletteColorClick(index, button) {
-        if (index < 0 || index >= this.palette.length) return;
+        if (index < 0 || index >= this.palette.length) {
+            return;
+        }
         if (this.colorAddMode) {
             this.palette[index] = this.getSelectedColor().copy();
             this.currentPaletteName = null;
@@ -609,9 +629,15 @@ class ColorsForm extends Form {
         const entry = new DropEntry(id, callback);
         entry.getText = () => text;
         entry.getShortcut = () => null;
-        if (checked) entry.withIconPathKey("tool_strip_checked", true);
-        else if (icon === null) entry.withNoIcon();
-        else entry.withIconPathKey(icon, true);
+        if (checked) {
+            entry.withIconPathKey("tool_strip_checked", true);
+        }
+        else if (icon === null) {
+            entry.withNoIcon();
+        }
+        else {
+            entry.withIconPathKey(icon, true);
+        }
         return entry;
     }
 
@@ -628,7 +654,9 @@ class ColorsForm extends Form {
 
     createSmallPalette() {
         const palette = this.defaultPalette.slice(0, 32).map(color => color.copy());
-        while (palette.length < 96) palette.push(Color.WHITE.copy());
+        while (palette.length < 96) {
+            palette.push(Color.WHITE.copy());
+        }
         return palette;
     }
 
@@ -645,7 +673,9 @@ class ColorsForm extends Form {
                 this.paletteEquals(this.palette, palette)
             ));
         }
-        if (entries.length > 0) entries.push(new VerticalSeparator());
+        if (entries.length > 0) {
+            entries.push(new VerticalSeparator());
+        }
         entries.push(this.createPaletteMenuEntry(
             "colors.palette.saveAs", "Save Current Palette As...", "menu_file_save_as_icon",
             () => this.saveCurrentPaletteAs()
@@ -678,15 +708,20 @@ class ColorsForm extends Form {
 
     async saveCurrentPaletteAs() {
         const preview = document.createElement("div");
-        const label = document.createElement("label");
-        label.textContent = "Palette name:";
-        const input = document.createElement("input");
-        input.type = "text";
-        input.value = this.currentPaletteName || "My Palette";
-        input.style.width = "260px";
-        input.style.marginLeft = "10px";
-        label.appendChild(input);
-        preview.appendChild(label);
+        let input = null;
+        {
+            const label = document.createElement("label");
+            label.textContent = "Palette name:";
+            {
+                input = document.createElement("input");
+                input.type = "text";
+                input.value = this.currentPaletteName || "My Palette";
+                input.style.width = "260px";
+                input.style.marginLeft = "10px";
+                label.appendChild(input);
+            }
+            preview.appendChild(label);
+        }
         const pending = TaskDialog.show({
             title: "Save Current Palette As",
             icon: "assets/icons/swatch_icon.png",
@@ -700,9 +735,13 @@ class ColorsForm extends Form {
             input.focus();
             input.select();
         });
-        if (await pending !== "save") return;
+        if (await pending !== "save") {
+            return;
+        }
         const name = input.value.trim().replace(/\.txt$/i, "");
-        if (name.length === 0) return;
+        if (name.length === 0) {
+            return;
+        }
         const palettes = this.getUserPalettes();
         palettes[name] = this.serializePalette();
         this.saveUserPalettes(palettes);
@@ -713,14 +752,20 @@ class ColorsForm extends Form {
         const palettes = this.getUserPalettes();
         let imported = 0;
         for (const file of files) {
-            if (!file.name.toLowerCase().endsWith(".txt")) continue;
+            if (!file.name.toLowerCase().endsWith(".txt")) {
+                continue;
+            }
             const palette = this.parsePalette(await file.text());
-            if (palette.length === 0) continue;
+            if (palette.length === 0) {
+                continue;
+            }
             const name = file.name.replace(/\.txt$/i, "") || "Imported Palette";
             palettes[name] = this.serializePalette(palette);
             ++imported;
         }
-        if (imported > 0) this.saveUserPalettes(palettes);
+        if (imported > 0) {
+            this.saveUserPalettes(palettes);
+        }
         return imported;
     }
 
@@ -736,7 +781,9 @@ class ColorsForm extends Form {
                 }
                 await this.importPaletteFiles(files);
             } catch (error) {
-                if (error.name !== "AbortError") throw error;
+                if (error.name !== "AbortError") {
+                    throw error;
+                }
             }
             return;
         }
@@ -840,7 +887,9 @@ class ColorsForm extends Form {
         // The Colors window is bottom-anchored. Reapplying its anchor after
         // changing height makes the compact form move down and retain the same
         // bottom edge, matching the desktop application.
-        if (typeof this.window.applyAnchor === "function") this.window.applyAnchor();
+        if (typeof this.window.applyAnchor === "function") {
+            this.window.applyAnchor();
+        }
     }
 
     updateElements(initiator = null) {

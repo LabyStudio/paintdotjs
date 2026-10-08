@@ -49,7 +49,9 @@ if (typeof isApp !== 'undefined' && !isApp && 'serviceWorker' in navigator) {
 
                 // A waiting worker only takes control while this page is open
                 // after the user chooses Install Now.
-                if (!updateAccepted) return;
+                if (!updateAccepted) {
+                    return;
+                }
                 isRefreshing = true;
                 location.reload();
             });
@@ -78,7 +80,9 @@ if (typeof isApp !== 'undefined' && !isApp && 'serviceWorker' in navigator) {
                     const url = new URL('./assets/update.json', document.baseURI);
                     url.searchParams.set('v', Date.now().toString());
                     const response = await fetch(url, {cache: 'no-store'});
-                    if (!response.ok) return null;
+                    if (!response.ok) {
+                        return null;
+                    }
                     const metadata = await response.json();
                     return typeof metadata.version === 'string' ? metadata.version : null;
                 } catch (_) {
@@ -89,28 +93,34 @@ if (typeof isApp !== 'undefined' && !isApp && 'serviceWorker' in navigator) {
             const createUpdatePreview = version => {
                 const preview = document.createElement('div');
                 preview.className = 'update-prompt-preview';
+                {
+                    // Artwork
+                    const image = document.createElement('img');
+                    image.src = 'assets/images/update_prompt_task_dialog_task_image.png';
+                    image.alt = '';
 
-                const image = document.createElement('img');
-                image.src = 'assets/images/update_prompt_task_dialog_task_image.png';
-                image.alt = '';
+                    // Version
+                    const versionLabel = document.createElement('strong');
+                    versionLabel.textContent = version === null
+                        ? 'A newer version is ready'
+                        : 'paint.js ' + version;
 
-                const versionLabel = document.createElement('strong');
-                versionLabel.textContent = version === null
-                    ? 'A newer version is ready'
-                    : 'paint.js ' + version;
+                    // Release link
+                    const moreInfo = document.createElement('a');
+                    moreInfo.href = 'https://github.com/LabyStudio/paintdotjs/releases';
+                    moreInfo.target = '_blank';
+                    moreInfo.rel = 'noopener';
+                    moreInfo.textContent = 'More info';
 
-                const moreInfo = document.createElement('a');
-                moreInfo.href = 'https://github.com/LabyStudio/paintdotjs/releases';
-                moreInfo.target = '_blank';
-                moreInfo.rel = 'noopener';
-                moreInfo.textContent = 'More info';
-
-                preview.append(image, versionLabel, moreInfo);
+                    preview.append(image, versionLabel, moreInfo);
+                }
                 return preview;
             };
 
             const confirmUnsavedUpdate = async () => {
-                if (!window.app?.hasUnsavedDocuments?.()) return true;
+                if (!window.app?.hasUnsavedDocuments?.()) {
+                    return true;
+                }
 
                 const choice = await TaskDialog.show({
                     title: 'Save before updating',
@@ -135,12 +145,16 @@ if (typeof isApp !== 'undefined' && !isApp && 'serviceWorker' in navigator) {
                     }]
                 });
 
-                if (choice === 'save') return await DocumentIO.saveAll();
+                if (choice === 'save') {
+                    return await DocumentIO.saveAll();
+                }
                 return choice === 'discard';
             };
 
             const showUpdatePrompt = async worker => {
-                if (worker === null || updatePromptOpen) return;
+                if (worker === null || updatePromptOpen) {
+                    return;
+                }
                 updatePromptOpen = true;
 
                 try {
@@ -166,8 +180,12 @@ if (typeof isApp !== 'undefined' && !isApp && 'serviceWorker' in navigator) {
                         }]
                     });
 
-                    if (result !== 'now') return;
-                    if (!await confirmUnsavedUpdate()) return;
+                    if (result !== 'now') {
+                        return;
+                    }
+                    if (!await confirmUnsavedUpdate()) {
+                        return;
+                    }
 
                     updateAccepted = true;
                     worker.postMessage({type: 'SKIP_WAITING'});
@@ -177,7 +195,9 @@ if (typeof isApp !== 'undefined' && !isApp && 'serviceWorker' in navigator) {
             };
 
             const watchInstallingWorker = worker => {
-                if (worker === null) return;
+                if (worker === null) {
+                    return;
+                }
                 worker.addEventListener('statechange', () => {
                     if (worker.state === 'installed' && navigator.serviceWorker.controller !== null) {
                         void showUpdatePrompt(registration.waiting || worker);
@@ -195,7 +215,9 @@ if (typeof isApp !== 'undefined' && !isApp && 'serviceWorker' in navigator) {
 
             let lastUpdateCheck = 0;
             const checkForUpdate = async () => {
-                if (Date.now() - lastUpdateCheck < 5 * 60 * 1000) return;
+                if (Date.now() - lastUpdateCheck < 5 * 60 * 1000) {
+                    return;
+                }
                 lastUpdateCheck = Date.now();
                 try {
                     await registration.update();
@@ -205,7 +227,9 @@ if (typeof isApp !== 'undefined' && !isApp && 'serviceWorker' in navigator) {
             };
 
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') void checkForUpdate();
+                if (document.visibilityState === 'visible') {
+                    void checkForUpdate();
+                }
             });
             setInterval(() => void checkForUpdate(), 60 * 60 * 1000);
             await checkForUpdate();

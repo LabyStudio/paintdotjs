@@ -257,7 +257,9 @@ class MoveToolBase extends Tool {
         const dx = end.x - start.x;
         const dy = end.y - start.y;
         const lengthSquared = dx * dx + dy * dy;
-        if (lengthSquared === 0) return Utility.distance(point, start);
+        if (lengthSquared === 0) {
+            return Utility.distance(point, start);
+        }
         const t = Utility.clamp(((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared, 0, 1);
         return Math.hypot(point.x - (start.x + t * dx), point.y - (start.y + t * dy));
     }
@@ -269,9 +271,13 @@ class MoveToolBase extends Tool {
             const end = corners[(i + 1) % corners.length];
             const cross = (end.x - start.x) * (point.y - start.y)
                 - (end.y - start.y) * (point.x - start.x);
-            if (Math.abs(cross) < 1e-7) continue;
+            if (Math.abs(cross) < 1e-7) {
+                continue;
+            }
             const nextSign = Math.sign(cross);
-            if (sign !== 0 && nextSign !== sign) return false;
+            if (sign !== 0 && nextSign !== sign) {
+                return false;
+            }
             sign = nextSign;
         }
         return true;
@@ -279,7 +285,9 @@ class MoveToolBase extends Tool {
 
     updateRotationIndicator(point) {
         if (this.rotateIndicator === null || this.tracking || !this.hasNubTarget()) {
-            if (this.rotateIndicator !== null) this.rotateIndicator.setVisible(false);
+            if (this.rotateIndicator !== null) {
+                this.rotateIndicator.setVisible(false);
+            }
             return false;
         }
 
@@ -309,7 +317,9 @@ class MoveToolBase extends Tool {
         const zoom = Math.max(0.0001, this.getSurfaceBox().getScaleFactorRatio());
         const visible = !inside && edgeDistance <= 32 / zoom;
         this.rotateIndicator.setVisible(visible);
-        if (!visible) return false;
+        if (!visible) {
+            return false;
+        }
 
         const center = new Point(
             (corners[0].x + corners[2].x) / 2,
@@ -621,7 +631,9 @@ class MoveToolBase extends Tool {
         let consumed = super.onMouseMove(mouseX, mouseY);
 
         if (this.tracking) {
-            if (this.rotateIndicator !== null) this.rotateIndicator.setVisible(false);
+            if (this.rotateIndicator !== null) {
+                this.rotateIndicator.setVisible(false);
+            }
             let newMouseXY = new Point(mouseX, mouseY);
             let newOffset = new Point(
                 newMouseXY.getX() - this.context.startMouseXY.getX(),
@@ -873,7 +885,9 @@ class MoveToolBase extends Tool {
                 let nub = this.moveNubs[i];
 
                 if (nub.isVisible() && nub.isPointTouching(new Point(mouseX, mouseY), true)) {
-                    if (this.rotateIndicator !== null) this.rotateIndicator.setVisible(false);
+                    if (this.rotateIndicator !== null) {
+                        this.rotateIndicator.setVisible(false);
+                    }
                     this.app.setCursorImg("hand_open_cursor");
                     return;
                 }
@@ -894,85 +908,5 @@ class MoveToolBase extends Tool {
     onMouseUp(mouseX, mouseY, button) {
         this.getDocumentWorkspace().getSelectionRenderer().setSelectionOutline(true);
         return super.onMouseUp(mouseX, mouseY, button);
-    }
-}
-
-class MoveToolBaseMode {
-    static TRANSLATE = 0;
-    static SCALE = 1;
-    static ROTATE = 2;
-}
-
-class MoveToolBaseEdge {
-    static TOP_LEFT = 0;
-    static TOP = 1;
-    static TOP_RIGHT = 2;
-    static RIGHT = 3;
-    static BOTTOM_RIGHT = 4;
-    static BOTTOM = 5;
-    static BOTTOM_LEFT = 6;
-    static LEFT = 7;
-    static NONE = 99;
-}
-
-class MoveToolBaseContext {
-
-    constructor() {
-        this.lifted = false;
-        this.seriesGuid = null;
-        this.baseTransform = null; // a copy of the selection's interim transform at the time of mouse-down
-        this.liftTransform = null; // a copy of the selection's interim transform at the time of lifting
-        this.deltaTransform = null; // the transformations made since lifting
-        this.liftedBounds = null;
-        this.startBounds = null;
-        this.startAngle = 0;
-        this.startPath = null;
-        this.currentMode = null;
-        this.startEdge = null;
-        this.startMouseXY = null;
-        this.offset = null;
-    }
-
-    getMatrixElements(matrix) {
-        if (matrix === null) {
-            return null;
-        } else {
-            return matrix.getElements();
-        }
-    }
-
-    clone() {
-        let clone = new MoveToolBaseContext();
-        clone.lifted = this.lifted;
-        clone.seriesGuid = this.seriesGuid;
-        if (this.baseTransform !== null) {
-            clone.baseTransform = this.baseTransform.clone();
-        }
-        if (this.liftTransform !== null) {
-            clone.liftTransform = this.liftTransform.clone();
-        }
-        if (this.deltaTransform !== null) {
-            clone.deltaTransform = this.deltaTransform.clone();
-        }
-
-        clone.liftedBounds = this.liftedBounds;
-        clone.startBounds = this.startBounds;
-        clone.startAngle = this.startAngle;
-
-        if (this.startPath !== null) {
-            clone.startPath = this.startPath.clone();
-        }
-
-        clone.currentMode = this.currentMode;
-        clone.startEdge = this.startEdge;
-
-        clone.startMouseXY = this.startMouseXY;
-        clone.offset = this.offset;
-
-        return clone;
-    }
-
-    dispose() {
-        // TODO dispose
     }
 }

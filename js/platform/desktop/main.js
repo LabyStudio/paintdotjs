@@ -45,8 +45,12 @@ function readWindowState() {
     try {
         const state = JSON.parse(fs.readFileSync(windowStatePath(), 'utf8'));
         const bounds = state?.bounds;
-        if (!bounds || !['x', 'y', 'width', 'height'].every(key => Number.isFinite(bounds[key]))) return null;
-        if (bounds.width <= 0 || bounds.height <= 0) return null;
+        if (!bounds || !['x', 'y', 'width', 'height'].every(key => Number.isFinite(bounds[key]))) {
+            return null;
+        }
+        if (bounds.width <= 0 || bounds.height <= 0) {
+            return null;
+        }
         return {
             bounds: Object.fromEntries(
                 ['x', 'y', 'width', 'height'].map(key => [key, Math.round(bounds[key])])
@@ -65,7 +69,9 @@ function intersectionArea(first, second) {
 }
 
 function restoreWindowBounds(savedBounds) {
-    if (!savedBounds) return null;
+    if (!savedBounds) {
+        return null;
+    }
 
     const displays = screen.getAllDisplays();
     let display = screen.getPrimaryDisplay();
@@ -90,7 +96,9 @@ function restoreWindowBounds(savedBounds) {
 }
 
 function writeWindowState(window) {
-    if (!window || window.isDestroyed()) return;
+    if (!window || window.isDestroyed()) {
+        return;
+    }
     try {
         fs.mkdirSync(path.dirname(windowStatePath()), {recursive: true});
         fs.writeFileSync(windowStatePath(), JSON.stringify({
@@ -145,14 +153,20 @@ function commandLineFiles(argv) {
 function queueFiles(files) {
     for (const filename of files) {
         const resolved = path.resolve(filename);
-        if (!pendingFiles.includes(resolved)) pendingFiles.push(resolved);
+        if (!pendingFiles.includes(resolved)) {
+            pendingFiles.push(resolved);
+        }
     }
     deliverPendingFiles();
 }
 
 function deliverPendingFiles() {
-    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isLoading()) return;
-    if (pendingFiles.length) mainWindow.webContents.send('desktop:open-files', pendingFiles.splice(0));
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isLoading()) {
+        return;
+    }
+    if (pendingFiles.length) {
+        mainWindow.webContents.send('desktop:open-files', pendingFiles.splice(0));
+    }
 }
 
 app.on('open-file', (event, filename) => {
@@ -167,7 +181,9 @@ if (!gotSingleInstanceLock) {
     app.on('second-instance', (_event, argv) => {
         queueFiles(commandLineFiles(argv));
         if (mainWindow) {
-            if (mainWindow.isMinimized()) mainWindow.restore();
+            if (mainWindow.isMinimized()) {
+                mainWindow.restore();
+            }
             mainWindow.show();
             mainWindow.focus();
         }
@@ -177,14 +193,20 @@ if (!gotSingleInstanceLock) {
 function resolveAppRequest(requestUrl) {
     const url = new URL(requestUrl);
     let relative = decodeURIComponent(url.pathname).replace(/^\/+/, '');
-    if (!relative) relative = 'index.html';
+    if (!relative) {
+        relative = 'index.html';
+    }
     const normalized = path.normalize(relative);
-    if (path.isAbsolute(normalized) || normalized.startsWith('..')) return null;
+    if (path.isAbsolute(normalized) || normalized.startsWith('..')) {
+        return null;
+    }
 
     const candidates = [];
     if (normalized === 'assets' || normalized.startsWith(`assets${path.sep}`)) {
         const assetRelative = normalized.slice('assets'.length).replace(/^[/\\]+/, '');
-        if (activeAssets) candidates.push(path.join(activeAssets, assetRelative));
+        if (activeAssets) {
+            candidates.push(path.join(activeAssets, assetRelative));
+        }
         candidates.push(path.join(process.resourcesPath, 'assets', assetRelative));
         candidates.push(path.join(app.getAppPath(), 'assets', assetRelative));
     } else {
@@ -196,7 +218,9 @@ function resolveAppRequest(requestUrl) {
 async function registerAppProtocol() {
     await protocol.handle('paintjs', request => {
         const filename = resolveAppRequest(request.url);
-        if (!filename) return new Response('Not found', {status: 404});
+        if (!filename) {
+            return new Response('Not found', {status: 404});
+        }
         return net.fetch(pathToFileURL(filename).toString());
     });
 }
@@ -231,7 +255,9 @@ function createWindow() {
     const startupQuery = pendingFiles.length ? '?skipWelcome=1' : '';
     void mainWindow.loadURL(`paintjs://app/index.html${startupQuery}`);
     mainWindow.once('ready-to-show', () => {
-        if (savedWindowState?.maximized) mainWindow.maximize();
+        if (savedWindowState?.maximized) {
+            mainWindow.maximize();
+        }
         mainWindow.show();
     });
     mainWindow.webContents.on('did-finish-load', () => setImmediate(deliverPendingFiles));
@@ -252,10 +278,16 @@ function createWindow() {
     });
     mainWindow.on('close', event => {
         writeWindowState(mainWindow);
-        if (quittingForUpdate) return;
-        if (!closeDialogReady) return;
+        if (quittingForUpdate) {
+            return;
+        }
+        if (!closeDialogReady) {
+            return;
+        }
         event.preventDefault();
-        if (closeDialogPending) return;
+        if (closeDialogPending) {
+            return;
+        }
         closeDialogPending = true;
         mainWindow.webContents.send('desktop:request-close');
     });
@@ -272,15 +304,21 @@ function createWindow() {
 }
 
 ipcMain.on('resize-window', (_event, {width, height}) => {
-    if (!mainWindow) return;
+    if (!mainWindow) {
+        return;
+    }
     const bounds = mainWindow.getBounds();
     mainWindow.setBounds({...bounds, width: Math.max(width, 100), height: Math.max(height, 100)});
 });
 ipcMain.on('desktop:close-dialog-ready', event => {
-    if (mainWindow !== null && event.sender === mainWindow.webContents) closeDialogReady = true;
+    if (mainWindow !== null && event.sender === mainWindow.webContents) {
+        closeDialogReady = true;
+    }
 });
 ipcMain.on('desktop:close-response', (event, shouldClose) => {
-    if (mainWindow === null || event.sender !== mainWindow.webContents) return;
+    if (mainWindow === null || event.sender !== mainWindow.webContents) {
+        return;
+    }
     closeDialogPending = false;
     if (shouldClose) {
         writeWindowState(mainWindow);
@@ -304,7 +342,9 @@ async function prepareApplication() {
                 defaultId: 0,
                 cancelId: 1
             });
-            if (result.response === 1) return app.quit();
+            if (result.response === 1) {
+                return app.quit();
+            }
         }
     }
     await registerAppProtocol();
@@ -315,10 +355,14 @@ async function prepareApplication() {
 if (gotSingleInstanceLock) {
     app.whenReady().then(prepareApplication);
     app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0 && activeAssets) createWindow();
+        if (BrowserWindow.getAllWindows().length === 0 && activeAssets) {
+            createWindow();
+        }
     });
 }
 
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin' && activeAssets) app.quit();
+    if (process.platform !== 'darwin' && activeAssets) {
+        app.quit();
+    }
 });

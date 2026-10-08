@@ -25,7 +25,9 @@ class MoveLayerToBottomAction extends LayerAction {
 
     performAction(documentWorkspace) {
         const index = documentWorkspace.getActiveLayerIndex();
-        if (index === 0) return null;
+        if (index === 0) {
+            return null;
+        }
 
         const memento = new SwapLayerHistoryMemento(
             i18n("moveLayerToBottom.historyMementoName"),

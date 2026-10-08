@@ -34,9 +34,13 @@ class BrushPreviewRenderer extends SurfaceBoxRenderer {
 
     render(destination, renderBounds) {
         super.render(destination, renderBounds);
-        if (this.location === null) return;
+        if (this.location === null) {
+            return;
+        }
         const surface = this.surfaceBox.getSurface();
-        if (surface === null) return;
+        if (surface === null) {
+            return;
+        }
 
         const scaleX = renderBounds.getWidth() / surface.getWidth();
         const scaleY = renderBounds.getHeight() / surface.getHeight();

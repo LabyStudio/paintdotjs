@@ -40,8 +40,12 @@ class DropMenuPopup {
 
         const element = document.createElement("div");
         element.className = "drop-menu icon-drop-menu";
-        if (this.commandMenu) element.classList.add("command-drop-menu");
-        if (this.className) element.classList.add(this.className);
+        if (this.commandMenu) {
+            element.classList.add("command-drop-menu");
+        }
+        if (this.className) {
+            element.classList.add(this.className);
+        }
         element.dataset.ownerId = this.ownerId;
 
         for (const item of items) {
@@ -55,12 +59,16 @@ class DropMenuPopup {
 
         document.body.appendChild(element);
         this.element = element;
-        if (this.exclusive) DropMenuPopup.activePopup = this;
+        if (this.exclusive) {
+            DropMenuPopup.activePopup = this;
+        }
         return element;
     }
 
     positionAt(x, y) {
-        if (this.element === null) return;
+        if (this.element === null) {
+            return;
+        }
         const margin = 2;
         this.element.style.left = Math.max(
             margin,
@@ -73,23 +81,35 @@ class DropMenuPopup {
     }
 
     positionAtAnchor(bounds, {alignEnd = false, dropUp = false} = {}) {
-        if (this.element === null) return;
+        if (this.element === null) {
+            return;
+        }
         const x = alignEnd ? bounds.right - this.element.offsetWidth : bounds.left;
         const y = dropUp ? bounds.top - this.element.offsetHeight : bounds.bottom;
         this.positionAt(x, y);
     }
 
     close() {
-        if (this.element === null) return;
+        if (this.element === null) {
+            return;
+        }
         this.element.remove();
         this.element = null;
-        if (DropMenuPopup.activePopup === this) DropMenuPopup.activePopup = null;
-        if (this.onClose !== null) this.onClose();
+        if (DropMenuPopup.activePopup === this) {
+            DropMenuPopup.activePopup = null;
+        }
+        if (this.onClose !== null) {
+            this.onClose();
+        }
     }
 
     requestClose() {
-        if (this.closeOwner !== null) this.closeOwner();
-        else this.close();
+        if (this.closeOwner !== null) {
+            this.closeOwner();
+        }
+        else {
+            this.close();
+        }
     }
 }
 

@@ -34,7 +34,9 @@ class ImageEncoder {
 
     static canvasToBlob(canvas, type, quality) {
         return new Promise((resolve, reject) => canvas.toBlob(blob => {
-            if (blob === null) return reject(new Error("Could not encode " + type));
+            if (blob === null) {
+                return reject(new Error("Could not encode " + type));
+            }
             if (type !== "image/png" && blob.type !== type) {
                 return reject(new Error(type + " encoding is not available in this browser"));
             }
@@ -183,8 +185,12 @@ class ImageEncoder {
             view.setUint16(offset, tag, true);
             view.setUint16(offset + 2, type, true);
             view.setUint32(offset + 4, count, true);
-            if (type === 3 && count === 1) view.setUint16(offset + 8, value, true);
-            else view.setUint32(offset + 8, value, true);
+            if (type === 3 && count === 1) {
+                view.setUint16(offset + 8, value, true);
+            }
+            else {
+                view.setUint32(offset + 8, value, true);
+            }
             offset += 12;
         };
         entry(256, 4, 1, image.width);
@@ -199,7 +205,9 @@ class ImageEncoder {
         entry(284, 3, 1, 1);
         entry(338, 3, 1, 2);
         view.setUint32(offset, 0, true);
-        for (let i = 0; i < 4; ++i) view.setUint16(bitsOffset + i * 2, 8, true);
+        for (let i = 0; i < 4; ++i) {
+            view.setUint16(bitsOffset + i * 2, 8, true);
+        }
         bytes.set(image.data, dataOffset);
         return new Blob([buffer], {type: "image/tiff"});
     }
@@ -270,7 +278,9 @@ class ImageEncoder {
                     // The decoder builds its table one emitted code behind the
                     // encoder. Grow the code width only after emitting the code
                     // that lets the decoder reach the current table boundary.
-                    if (nextCode === (1 << codeSize) && codeSize < 12) ++codeSize;
+                    if (nextCode === (1 << codeSize) && codeSize < 12) {
+                        ++codeSize;
+                    }
                     dictionary.set(key, nextCode++);
                 } else {
                     write(256);
@@ -283,7 +293,9 @@ class ImageEncoder {
             write(prefix);
         }
         write(257);
-        if (bitCount > 0) output.push(currentByte & 255);
+        if (bitCount > 0) {
+            output.push(currentByte & 255);
+        }
         return Uint8Array.from(output);
     }
 }
