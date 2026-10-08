@@ -111,10 +111,10 @@ class ColorCircleItem extends Item {
 
             if (distance <= radius) {
                 let hue = angle / (2 * Math.PI);
-                let saturation = distance / radius;
-                let lightness = 1 - Math.min(distance / (radius * 1.7), 0.5);
-
-                let color = Color.fromHSL(hue, saturation, lightness);
+                // Paint.NET's color wheel is an HSV wheel. Its radial mapping
+                // uses a 1.4 gamma so the selector has the same feel as v5.
+                let saturation = Math.pow(distance / radius, 1.4);
+                let color = Color.fromHSV(hue, saturation, 1);
                 let alpha = Math.min(radius - distance, 1) * 255;
 
                 data[i] = color.getRed();
@@ -144,23 +144,28 @@ class ColorCircleItem extends Item {
         }
 
         let hue = angle / (2 * Math.PI);
-        let saturation = distance / radius;
-        let lightness = 1 - Math.min(distance / (radius * 1.7), 0.5);
+        let saturation = Math.pow(distance / radius, 1.4);
 
         if (hue < 0) {
             hue += 1;
         }
 
-        return Color.fromHSL(hue, saturation, lightness, this.color.getAlpha());
+        // Selecting from the wheel changes hue and saturation, while keeping
+        // the current value and alpha, exactly like ColorWheelControl in v5.
+        let value = this.color.getValue();
+        if (value === 0) {
+            value = 1;
+        }
+        return Color.fromHSV(hue, saturation, value, this.color.getAlpha());
     }
 
     getPositionOfColor(color) {
         let radius = this.canvas.width / 2;
         let hue = color.getHue() * 2 * Math.PI;
-        let saturation = color.getSaturation();
+        let saturation = color.getHsvSaturation();
 
         let angle = hue;
-        let distance = saturation * radius;
+        let distance = Math.pow(saturation, 1 / 1.4) * radius;
 
         let x = radius + distance * Math.cos(angle);
         let y = radius + distance * Math.sin(angle);

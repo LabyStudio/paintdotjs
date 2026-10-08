@@ -73,6 +73,12 @@ class ColorSliderItem extends Item {
         return this.percentage;
     }
 
+    refresh() {
+        if (this.canvas !== null) {
+            this.renderSpectrum(this.canvas);
+        }
+    }
+
     renderSpectrum(canvas) {
         let ctx = canvas.getContext("2d");
         let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -81,7 +87,9 @@ class ColorSliderItem extends Item {
         for (let i = 0; i < data.length; i += 4) {
             let x = (i / 4) % canvas.width;
             let y = Math.floor((i / 4) / canvas.width);
-            let color = this.colorProvider(x / canvas.width);
+            // Include both endpoints so the final pixel matches the far end
+            // of Paint.NET's gradient controls (including hue = 360).
+            let color = this.colorProvider(x / Math.max(1, canvas.width - 1));
             let minOpacity = 1 - y / canvas.height;
 
             data[i] = color.getRed();

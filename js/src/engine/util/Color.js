@@ -91,6 +91,22 @@ class Color {
         return (max + min) / 2;
     }
 
+    getHsvSaturation() {
+        let red = this.red / 255;
+        let green = this.green / 255;
+        let blue = this.blue / 255;
+        let max = Math.max(red, green, blue);
+        if (max === 0) {
+            return 0;
+        }
+        let min = Math.min(red, green, blue);
+        return (max - min) / max;
+    }
+
+    getValue() {
+        return Math.max(this.red, this.green, this.blue) / 255;
+    }
+
     toHex() {
         let red = this.red.toString(16).padStart(2, "0");
         let green = this.green.toString(16).padStart(2, "0");
@@ -147,6 +163,30 @@ class Color {
         let hue = this.getHue();
         let saturation = this.getSaturation();
         let color = Color.fromHSL(hue, saturation, lightness);
+        this.red = color.getRed();
+        this.green = color.getGreen();
+        this.blue = color.getBlue();
+        return this;
+    }
+
+    setHsvHue(hue) {
+        let color = Color.fromHSV(hue, this.getHsvSaturation(), this.getValue(), this.alpha);
+        this.red = color.getRed();
+        this.green = color.getGreen();
+        this.blue = color.getBlue();
+        return this;
+    }
+
+    setHsvSaturation(saturation) {
+        let color = Color.fromHSV(this.getHue(), saturation, this.getValue(), this.alpha);
+        this.red = color.getRed();
+        this.green = color.getGreen();
+        this.blue = color.getBlue();
+        return this;
+    }
+
+    setValue(value) {
+        let color = Color.fromHSV(this.getHue(), this.getHsvSaturation(), value, this.alpha);
         this.red = color.getRed();
         this.green = color.getGreen();
         this.blue = color.getBlue();
@@ -221,6 +261,39 @@ class Color {
         blue = Utility.clamp(Math.round(blue * 255), 0, 255);
 
         return new Color(red, green, blue, alpha);
+    }
+
+    static fromHSV(hue, saturation, value, alpha = 255) {
+        hue = ((hue % 1) + 1) % 1;
+        saturation = Math.max(0, Math.min(1, saturation));
+        value = Math.max(0, Math.min(1, value));
+
+        if (saturation === 0) {
+            let channel = Math.round(value * 255);
+            return Color.fromRGBA(channel, channel, channel, alpha);
+        }
+
+        let sector = hue * 6;
+        let index = Math.floor(sector);
+        let fraction = sector - index;
+        let p = value * (1 - saturation);
+        let q = value * (1 - saturation * fraction);
+        let t = value * (1 - saturation * (1 - fraction));
+        let channels;
+        switch (index % 6) {
+            case 0: channels = [value, t, p]; break;
+            case 1: channels = [q, value, p]; break;
+            case 2: channels = [p, value, t]; break;
+            case 3: channels = [p, q, value]; break;
+            case 4: channels = [t, p, value]; break;
+            default: channels = [value, p, q]; break;
+        }
+        return Color.fromRGBA(
+            Math.round(channels[0] * 255),
+            Math.round(channels[1] * 255),
+            Math.round(channels[2] * 255),
+            alpha
+        );
     }
 }
 

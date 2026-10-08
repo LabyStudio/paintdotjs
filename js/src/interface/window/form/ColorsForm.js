@@ -330,70 +330,94 @@ class ColorsForm extends Form {
             // Hue
             this.sliderPanel.appendChild(this.createChannel(
                 "hueLabel",
-                v => Color.fromHSL(v, 1, 0.5),
+                v => Color.fromHSV(v, 1, 1),
                 (slider, field) => {
                     this.hueSlider = slider;
                     this.hueField = field;
 
                     this.hueSlider.setChangeCallback(value => {
-                        let color = this.getSelectedColor().copy();
-                        color.setHue(value);
+                        let color = this.createHsvColor(
+                            Math.floor(value * 360),
+                            this.saturationField.getValue(),
+                            this.lightnessField.getValue()
+                        );
                         this.setSelectedColor(color, "hueSlider");
                     });
 
                     this.hueField.setChangeCallback(value => {
-                        let color = this.getSelectedColor().copy();
-                        color.setHue(value / 360);
+                        let color = this.createHsvColor(
+                            value,
+                            this.saturationField.getValue(),
+                            this.lightnessField.getValue()
+                        );
                         this.setSelectedColor(color, "hueField");
                     });
-                }
+                },
+                360
             ));
 
             // Saturation
             this.sliderPanel.appendChild(this.createChannel(
                 "saturationLabel",
-                v => Color.fromHSL(0, v, 0.5),
+                v => {
+                    let color = this.getSelectedColor();
+                    return Color.fromHSV(color.getHue(), v, color.getValue());
+                },
                 (slider, field) => {
                     this.saturationSlider = slider;
                     this.saturationField = field;
 
                     this.saturationSlider.setChangeCallback(value => {
-                        let color = this.getSelectedColor().copy();
-                        color.setSaturation(value);
+                        let color = this.createHsvColor(
+                            this.hueField.getValue(),
+                            Math.floor(value * 100),
+                            this.lightnessField.getValue()
+                        );
                         this.setSelectedColor(color, "saturationSlider");
                     });
 
                     this.saturationField.setChangeCallback(value => {
-                        let color = this.getSelectedColor().copy();
-                        color.setSaturation(value / 100);
+                        let color = this.createHsvColor(
+                            this.hueField.getValue(),
+                            value,
+                            this.lightnessField.getValue()
+                        );
                         this.setSelectedColor(color, "saturationField");
                     });
-                }
+                },
+                100
             ));
 
-            // Lightness
+            // Value
             this.sliderPanel.appendChild(this.createChannel(
                 "valueLabel",
-                ColorSliderItem.rangeProvider(
-                    Color.fromRGB(0, 0, 0),
-                    Color.fromRGB(255, 255, 255)
-                ),
+                v => {
+                    let color = this.getSelectedColor();
+                    return Color.fromHSV(color.getHue(), color.getHsvSaturation(), v);
+                },
                 (slider, field) => {
                     this.lightnessSlider = slider;
                     this.lightnessField = field;
 
                     this.lightnessSlider.setChangeCallback(value => {
-                        let color = this.getSelectedColor().copy();
-                        color.setLightness(value);
+                        let color = this.createHsvColor(
+                            this.hueField.getValue(),
+                            this.saturationField.getValue(),
+                            Math.floor(value * 100)
+                        );
                         this.setSelectedColor(color, "lightnessSlider");
                     });
 
                     this.lightnessField.setChangeCallback(value => {
-                        let color = this.getSelectedColor().copy();
-                        color.setLightness(value / 100);
+                        let color = this.createHsvColor(
+                            this.hueField.getValue(),
+                            this.saturationField.getValue(),
+                            value
+                        );
                         this.setSelectedColor(color, "lightnessField");
                     });
-                }
+                },
+                100
             ));
 
             // Alpha Header
@@ -458,7 +482,7 @@ class ColorsForm extends Form {
         })
     }
 
-    createChannel(id, colorProvider, itemCallback) {
+    createChannel(id, colorProvider, itemCallback, max = 255) {
         return this.createEntry(id, "channel", () => {
             // Row
             let row = document.createElement("div");
@@ -472,7 +496,7 @@ class ColorsForm extends Form {
                 // Value
                 let field = new NumberItem(id);
                 field.initialize(this);
-                field.setMax(255);
+                field.setMax(max);
                 row.appendChild(field.getElement());
 
                 itemCallback(slider, field);
@@ -639,6 +663,11 @@ class ColorsForm extends Form {
             entry.withIconPathKey(icon, true);
         }
         return entry;
+    }
+
+    createHsvColor(hue, saturation, value) {
+        let alpha = this.getSelectedColor().getAlpha();
+        return Color.fromHSV(hue / 360, saturation / 100, value / 100, alpha);
     }
 
     createRainbowPalette() {
@@ -946,6 +975,8 @@ class ColorsForm extends Form {
         if (initiator !== "blueSlider") {
             this.blueSlider.setPercentage(selectedColor.getBlue() / 255);
         }
+        this.saturationSlider.refresh();
+        this.lightnessSlider.refresh();
         if (isHSVInitiator) {
             // Take the HSV values from the fields, so we are not losing any data when converting back and forth
             if (initiator === "hueField") {
@@ -963,10 +994,10 @@ class ColorsForm extends Form {
                 this.hueSlider.setPercentage(selectedColor.getHue());
             }
             if (initiator !== "saturationSlider") {
-                this.saturationSlider.setPercentage(selectedColor.getSaturation());
+                this.saturationSlider.setPercentage(selectedColor.getHsvSaturation());
             }
             if (initiator !== "lightnessSlider") {
-                this.lightnessSlider.setPercentage(selectedColor.getLightness());
+                this.lightnessSlider.setPercentage(selectedColor.getValue());
             }
         }
         if (initiator !== "alphaSlider") {
@@ -1000,10 +1031,10 @@ class ColorsForm extends Form {
                 this.hueField.setText(Math.floor(selectedColor.getHue() * 360));
             }
             if (initiator !== "saturationField") {
-                this.saturationField.setText(Math.floor(selectedColor.getSaturation() * 100));
+                this.saturationField.setText(Math.floor(selectedColor.getHsvSaturation() * 100));
             }
             if (initiator !== "lightnessField") {
-                this.lightnessField.setText(Math.floor(selectedColor.getLightness() * 100));
+                this.lightnessField.setText(Math.floor(selectedColor.getValue() * 100));
             }
         }
         if (initiator !== "alphaField") {

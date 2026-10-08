@@ -16,7 +16,12 @@ const isApp = typeof require !== 'undefined';
 const windowTop = () => document.getElementsByTagName("header")[0].getClientRects()[0].y;
 
 const setTitle = (string) => {
-    document.title = string;
+    // Keep the public web document title stable for search engines. The
+    // editor still shows the document name in its document strip, while
+    // Electron continues to use the native window title dynamically.
+    if (isApp) {
+        document.title = string;
+    }
     window.updatePlatformTitle?.(string);
 }
 
