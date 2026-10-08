@@ -497,9 +497,9 @@ body.window-resizing * {
 }
 
 .project-info-welcome .project-info-dialog-footer {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .project-info-about .project-info-dialog-footer {
@@ -507,7 +507,8 @@ body.window-resizing * {
 }
 
 .project-info-welcome .project-info-primary-button {
-    justify-self: end;
+    flex: 0 0 auto;
+    margin-left: auto;
 }
 
 .project-info-preference {

@@ -214,7 +214,7 @@ ProjectInfoDialog.instance = null;
 class WelcomeDialog {
 
     static open(force = false) {
-        //if (ProjectInfoDialog.instance !== null || (!force && this.isDismissed())) return;
+        if (isApp || ProjectInfoDialog.instance !== null || (!force && this.isDismissed())) return;
         ProjectInfoDialog.instance = new ProjectInfoDialog(true);
         ProjectInfoDialog.instance.show();
     }

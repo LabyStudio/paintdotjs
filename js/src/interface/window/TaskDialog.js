@@ -109,8 +109,6 @@ class TaskDialog {
             document.body.appendChild(backdrop);
             mover = new DialogMover(dialog, titleBar, backdrop);
             document.addEventListener("keydown", onKeyDown, true);
-            const first = choices.querySelector("button");
-            if (first !== null) first.focus();
         });
     }
 }
