@@ -49,17 +49,6 @@
   </screenshots>
 
   <releases>
-    <release version="2.1.14" date="2026-10-11">
-      <url type="details">https://github.com/LabyStudio/paintdotjs/releases/tag/v2.1.14</url>
-      <description>
-        <p>Added standalone Flatpak packaging and update notifications for managed installations.</p>
-      </description>
-    </release>
-    <release version="2.1.13" date="2026-10-08">
-      <url type="details">https://github.com/LabyStudio/paintdotjs/releases/tag/v2.1.13</url>
-      <description>
-        <p>Corrected the HSV color controls and polished the application title.</p>
-      </description>
-    </release>
+@RELEASE@
   </releases>
 </component>

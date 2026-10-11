@@ -124,8 +124,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y flatpak flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-      - name: Validate Flatpak release metadata
-        run: grep -F '<release version="${{ needs.version.outputs.version }}"' flatpak/net.paintjs.Paintjs.metainfo.xml
       - name: Build Flatpak
         run: |
           flatpak-builder --user --repo=flatpak-repo --force-clean \

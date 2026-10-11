@@ -33,6 +33,7 @@ modules:
     build-commands:
       - mkdir -p ../paintdotnet-source
       - bsdtar -xf ../paintdotnet-source.zip -C ../paintdotnet-source
+      - node flatpak/generate-metainfo.js
       - node scripts/install_desktop_assets.js --source ../paintdotnet-source --output assets --manifest desktop-resources/asset-manifest.json
       - npm ci --offline --ignore-scripts
       - node flatpak/resize-icon.js desktop-resources/icon.png flatpak/net.paintjs.Paintjs.png
