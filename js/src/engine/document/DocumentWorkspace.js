@@ -233,8 +233,24 @@ class DocumentWorkspace extends DocumentView {
         if (this.activeLayer === layer) {
             return;
         }
+
+        // Move tools keep layer-specific preview state while they are active.
+        // Finish that state against the old layer before changing the active
+        // layer, then reactivate the tool so it captures the new layer.
+        let activeTool = this.app.getActiveTool();
+        let reactivateTool = activeTool !== null
+            && activeTool.isActive()
+            && activeTool.deactivateOnLayerChange === true;
+        if (reactivateTool) {
+            activeTool.onDeactivate();
+        }
+
         this.activeLayer = layer;
         this.app.fire("document:active_layer_changed", this, layer);
+
+        if (reactivateTool) {
+            activeTool.onActivate();
+        }
     }
 
     setDocumentAndActiveLayer(document, activeLayer) {
