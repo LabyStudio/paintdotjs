@@ -1,7 +1,7 @@
 {
   "name": "paintdotjs",
   "version": "2.1.14",
-  "description": "paint.js is an open source general-purpose raster graphics editor program, developed with javascript.",
+  "description": "An open source general-purpose raster graphics editor program.",
   "main": "js/platform/desktop/main.js",
   "desktopName": "paintdotjs.desktop",
   "license": "MIT",
@@ -17,16 +17,17 @@
   "scripts": {
     "lint": "eslint js src scripts webpack.config.js",
     "check-assets": "node ./scripts/check_assets.js",
+    "check-version-info": "node ./scripts/check_version_info.js",
     "headers": "node ./scripts/sync_source_headers.js",
     "check-headers": "node ./scripts/sync_source_headers.js --check",
-    "preweb": "npm run lint && npm run check-assets && npm run check-headers",
+    "preweb": "npm run lint && npm run check-assets && npm run check-version-info && npm run check-headers",
     "web": "webpack --config webpack.config.js",
     "pages": "npm run web && node ./scripts/build_pages.js && node ./scripts/generate_pwa.js",
-    "preweb-watch": "npm run lint && npm run check-assets && npm run check-headers",
+    "preweb-watch": "npm run lint && npm run check-assets && npm run check-version-info && npm run check-headers",
     "web-watch": "webpack --config webpack.config.js --watch",
     "preapp": "npm run desktop:build",
     "app": "electron .",
-    "predesktop:build": "npm run lint && npm run check-assets && npm run check-headers",
+    "predesktop:build": "npm run lint && npm run check-assets && npm run check-version-info && npm run check-headers",
     "desktop:build": "webpack --config webpack.config.js",
     "dist": "npm run desktop:build && electron-builder",
     "dist:linux": "npm run desktop:build && electron-builder --linux AppImage",
@@ -84,6 +85,7 @@
       "!pages-dist/**/*",
       "!dist/**/*",
       "!run/**/*",
+      "!flatpak/**/*",
       "!.tmp/**/*",
       "!scripts/__pycache__/**/*",
       "!**/*.map"
@@ -270,8 +272,8 @@
         "AppImage"
       ],
       "syncDesktopName": true,
-      "synopsis": "Raster image editor",
-      "description": "A desktop port of Paint.NET for Linux and macOS"
+      "synopsis": "An open source raster graphics editor",
+      "description": "An open source general-purpose raster graphics editor with support for multiple documents, layers, and common image formats."
     }
   }
 }

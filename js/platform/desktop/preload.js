@@ -13,3 +13,4 @@
  */
 
 window.PDJVERSION = require('../../../package.json').version;
+window.PDJDISTRIBUTION = process.env.PAINTDOTJS_DISTRIBUTION || (process.env.APPIMAGE ? 'AppImage' : null);

@@ -15,7 +15,19 @@
 class PdjInfo {
 
     static version() {
-        return PDJVERSION;
+        const version = typeof window.PDJVERSION === 'string' ? window.PDJVERSION : 'Unknown version';
+        return this.formatVersion(version);
+    }
+
+    static formatVersion(version) {
+        const distribution = this.distribution();
+        return distribution === null ? version : `${version} (${distribution})`;
+    }
+
+    static distribution() {
+        return typeof window.PDJDISTRIBUTION === 'string' && window.PDJDISTRIBUTION.length > 0
+            ? window.PDJDISTRIBUTION
+            : null;
     }
 
     static productName() {

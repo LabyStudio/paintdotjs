@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>net.paintjs.Paintjs</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT AND CC-BY-NC-ND-2.5 AND LicenseRef-proprietary</project_license>
+  <name>paint.js</name>
+  <summary>An open source general-purpose raster graphics editor program</summary>
+  <developer id="net.paintjs">
+    <name>LabyStudio</name>
+  </developer>
+
+  <description>
+    <p>
+      An open source general-purpose raster graphics editor program. It is inspired by the classic
+      Paint.NET interface and provides a familiar desktop workspace on Linux and macOS.
+    </p>
+    <p>
+      Work with multiple documents and layers, zoom and pan around the canvas, and use
+      selection, movement, drawing, color, and image-adjustment tools. A complete undo
+      and redo history lets you experiment without losing earlier work.
+    </p>
+    <p>
+      The editor supports common raster formats as well as layered Paint.NET documents.
+      paint.js is an independent project and is not affiliated with or endorsed by
+      dotPDN LLC or Paint.NET.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">net.paintjs.Paintjs.desktop</launchable>
+  <url type="homepage">https://paintjs.net/</url>
+  <url type="bugtracker">https://github.com/LabyStudio/paintdotjs/issues</url>
+  <url type="vcs-browser">https://github.com/LabyStudio/paintdotjs</url>
+  <provides>
+    <binary>paintdotjs</binary>
+    <mediatype>application/x-paintdotnet</mediatype>
+  </provides>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </supports>
+  <content_rating type="oars-1.1" />
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/LabyStudio/paintdotjs/v2.1.13/.github/assets/app.png</image>
+      <caption>Edit images in a layered desktop workspace</caption>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="2.1.13" date="2026-10-08">
+      <url type="details">https://github.com/LabyStudio/paintdotjs/releases/tag/v2.1.13</url>
+      <description>
+        <p>Corrected the HSV color controls and polished the application title.</p>
+      </description>
+    </release>
+  </releases>
+</component>

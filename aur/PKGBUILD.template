@@ -1,7 +1,7 @@
 pkgname=paintdotjs-bin
 pkgver=@VERSION@
 pkgrel=1
-pkgdesc='A desktop port of Paint.NET for Linux and macOS'
+pkgdesc='An open source general-purpose raster graphics editor program.'
 arch=('x86_64')
 url='https://paintjs.net/'
 license=('MIT')

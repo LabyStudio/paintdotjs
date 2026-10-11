@@ -96,6 +96,8 @@ const openLocalFiles = async filenames => {
 ipcRenderer.on('desktop:open-files', (_event, filenames) => void openLocalFiles(filenames));
 
 let updatePromptOpen = false;
+let manualUpdateCheck = false;
+const managedUpdateDismissalKey = 'paintdotjs.managedUpdate.dismissedVersion';
 const showDownloadedUpdate = async version => {
     if (updatePromptOpen) {
         return;
@@ -106,7 +108,7 @@ const showDownloadedUpdate = async version => {
         const choice = await TaskDialog.show({
             title: 'paint.js update ready',
             icon: 'assets/icons/update_prompt_task_dialog_form_icon.png',
-            message: `paint.js ${version} has been downloaded. Restart to install it?`,
+            message: `paint.js ${PdjInfo.formatVersion(version)} has been downloaded. Restart to install it?`,
             cancelValue: 'later',
             choices: [{
                 value: 'restart',
@@ -128,10 +130,56 @@ const showDownloadedUpdate = async version => {
     }
 };
 
+const showManagedUpdate = async ({version, url}, force = false) => {
+    if (updatePromptOpen || (!force && localStorage.getItem(managedUpdateDismissalKey) === version)) {
+        return;
+    }
+    updatePromptOpen = true;
+    try {
+        await waitForApplication();
+        const choice = await TaskDialog.show({
+            title: 'paint.js update available',
+            icon: 'assets/icons/update_prompt_task_dialog_form_icon.png',
+            message: `paint.js ${PdjInfo.formatVersion(version)} is available. Download the latest package to update this installation.`,
+            cancelValue: 'later',
+            choices: [{
+                value: 'download',
+                title: 'Open Download Page',
+                description: 'Download the latest paint.js package from GitHub.',
+                icon: 'assets/icons/update_prompt_task_dialog_install_now.png'
+            }, {
+                value: 'later',
+                title: 'Remind Me Later',
+                description: 'Show this notification again the next time paint.js starts.',
+                icon: 'assets/icons/update_prompt_task_dialog_install_at_exit.png'
+            }, {
+                value: 'dismiss',
+                title: `Don't Show ${PdjInfo.formatVersion(version)} Again`,
+                description: 'Notify me again when a newer version is released.',
+                icon: 'assets/icons/cancel_icon.png'
+            }]
+        });
+        if (choice === 'download') {
+            await shell.openExternal(url);
+        } else if (choice === 'dismiss') {
+            localStorage.setItem(managedUpdateDismissalKey, version);
+        }
+    } finally {
+        updatePromptOpen = false;
+    }
+};
+
 window.desktopUpdater = {
     state: 'idle',
     detail: null,
-    check: () => ipcRenderer.invoke('desktop:check-for-updates'),
+    check: async () => {
+        manualUpdateCheck = true;
+        try {
+            return await ipcRenderer.invoke('desktop:check-for-updates');
+        } finally {
+            manualUpdateCheck = false;
+        }
+    },
     onStateChanged: null
 };
 ipcRenderer.on('desktop:update-state', (_event, update) => {
@@ -140,6 +188,8 @@ ipcRenderer.on('desktop:update-state', (_event, update) => {
     window.desktopUpdater.onStateChanged?.(update);
     if (update.state === 'downloaded') {
         void showDownloadedUpdate(update.detail);
+    } else if (update.state === 'managed-available') {
+        void showManagedUpdate(update.detail, manualUpdateCheck);
     }
 });
 

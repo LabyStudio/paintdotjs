@@ -63,7 +63,8 @@ module.exports = {
             Buffer: ['buffer', 'Buffer']
         }),
         new DefinePlugin({
-            PDJVERSION: `"${require('./package.json').version}"`
+            PDJVERSION: `"${require('./package.json').version}"`,
+            PDJDISTRIBUTION: '"Web"'
         })
     ]
 }

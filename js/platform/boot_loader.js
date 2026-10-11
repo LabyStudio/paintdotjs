@@ -103,7 +103,7 @@ if (typeof isApp !== 'undefined' && !isApp && 'serviceWorker' in navigator) {
                     const versionLabel = document.createElement('strong');
                     versionLabel.textContent = version === null
                         ? 'A newer version is ready'
-                        : 'paint.js ' + version;
+                        : 'paint.js ' + PdjInfo.formatVersion(version);
 
                     // Release link
                     const moreInfo = document.createElement('a');

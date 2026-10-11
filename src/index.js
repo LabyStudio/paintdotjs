@@ -29,6 +29,7 @@ window.portableImageCodec = {
 };
 
 window.PDJVERSION = PDJVERSION;
+window.PDJDISTRIBUTION = PDJDISTRIBUTION;
 window.Nrbf = {
     deserialize: deserializeNrbf
 };

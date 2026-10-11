@@ -12,8 +12,10 @@
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
-const {app} = require('electron');
+const {app, net} = require('electron');
 const {autoUpdater} = require('electron-updater');
+
+const releaseApiUrl = 'https://api.github.com/repos/LabyStudio/paintdotjs/releases/latest';
 
 let window = null;
 let initialized = false;
@@ -24,19 +26,60 @@ function send(state, detail = null) {
     }
 }
 
+function isManagedInstall() {
+    return process.env.PAINTDOTJS_MANAGED_INSTALL === '1';
+}
+
 function updatesSupported() {
-    return app.isPackaged && process.env.PAINTDOTJS_PACKAGE_MANAGER !== 'aur';
+    return app.isPackaged && !isManagedInstall();
+}
+
+function isNewerVersion(candidate, current) {
+    const parts = version => version.split('-', 1)[0].split('.').map(part => Number.parseInt(part, 10) || 0);
+    const candidateParts = parts(candidate);
+    const currentParts = parts(current);
+    for (let index = 0; index < Math.max(candidateParts.length, currentParts.length); index++) {
+        const difference = (candidateParts[index] || 0) - (currentParts[index] || 0);
+        if (difference !== 0) {
+            return difference > 0;
+        }
+    }
+    return false;
+}
+
+async function checkManagedUpdate() {
+    const response = await net.fetch(releaseApiUrl, {
+        headers: {'Accept': 'application/vnd.github+json'}
+    });
+    if (!response.ok) {
+        throw new Error(`GitHub returned HTTP ${response.status}`);
+    }
+    const release = await response.json();
+    const version = String(release.tag_name || '').replace(/^v/, '');
+    if (!/^\d+(?:\.\d+)+([+-][0-9A-Za-z.-]+)?$/.test(version)) {
+        throw new Error('GitHub returned an invalid release version');
+    }
+    const updateAvailable = isNewerVersion(version, app.getVersion());
+    const url = `https://github.com/LabyStudio/paintdotjs/releases/tag/v${encodeURIComponent(version)}`;
+    send(updateAvailable ? 'managed-available' : 'managed-current', {version, url});
+    return {supported: false, managed: true, updateAvailable, version, url};
 }
 
 function initializeUpdater(mainWindow) {
     window = mainWindow;
-    if (initialized || !updatesSupported()) {
-        if (!updatesSupported()) {
-            send('managed');
-        }
+    if (initialized) {
         return;
     }
     initialized = true;
+    if (!app.isPackaged) {
+        send('development');
+        return;
+    }
+    if (isManagedInstall()) {
+        send('managed');
+        setTimeout(() => void checkManagedUpdate().catch(() => send('managed')), 10_000);
+        return;
+    }
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
     autoUpdater.on('checking-for-update', () => send('checking'));
@@ -49,8 +92,11 @@ function initializeUpdater(mainWindow) {
 }
 
 async function checkForUpdates() {
-    if (!updatesSupported()) {
-        return {supported: false};
+    if (!app.isPackaged) {
+        return {supported: false, managed: false};
+    }
+    if (isManagedInstall()) {
+        return checkManagedUpdate();
     }
     const result = await autoUpdater.checkForUpdates();
     return {supported: true, version: result?.updateInfo?.version || null};

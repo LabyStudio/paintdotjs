@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=paint.js
+Comment=An open source general-purpose raster graphics editor program.
+Exec=paintdotjs %F
+Icon=net.paintjs.Paintjs
+Terminal=false
+Type=Application
+Categories=Graphics;2DGraphics;RasterGraphics;
+MimeType=application/x-paintdotnet;image/png;image/jpeg;image/webp;image/gif;image/bmp;image/tiff;image/jxl;image/avif;image/heic;image/heif;image/vnd-ms.dds;image/x-tga;image/vnd.ms-photo;
+StartupWMClass=net.paintjs.Paintjs
+Keywords=paint;image;editor;graphics;

@@ -37,6 +37,18 @@ yay -S paintdotjs-bin
 During installation, the AUR package fetches the required artwork and translations from the official
 Paint.NET download.
 
+### Flatpak
+
+Download the latest `.flatpak` bundle from
+[GitHub Releases](https://github.com/LabyStudio/paintdotjs/releases/latest), then install it with:
+
+```bash
+flatpak install --user ./paintdotjs-*-linux-x86_64.flatpak
+```
+
+The bundle uses the Freedesktop runtime from Flathub, but paint.js itself is installed directly from
+the downloaded file.
+
 ### macOS
 
 Download the latest universal `.dmg` from [GitHub Releases](https://github.com/LabyStudio/paintdotjs/releases/latest),
@@ -130,6 +142,18 @@ The repository does not redistribute Paint.NET's modern artwork and translations
 not part of the MIT-compatible Paint.NET 3.36.7 source release on which this project is based. On the
 first build, paint.js fetches the required assets from the official Paint.NET download. This lets the
 interface follow Paint.NET v5.1.12+ without redistributing those files in this repository.
+
+### Build the Flatpak
+
+The Flatpak manifest is in [`flatpak/net.paintjs.Paintjs.yml`](flatpak/net.paintjs.Paintjs.yml).
+It builds the checked-out paint.js source with pinned dependencies, bundles the assets needed for
+offline use, and keeps the application inside the Flatpak sandbox.
+
+```bash
+flatpak-builder --user --install --force-clean \
+  --install-deps-from=flathub flatpak-build flatpak/net.paintjs.Paintjs.yml
+flatpak run net.paintjs.Paintjs
+```
 
 ## License
 

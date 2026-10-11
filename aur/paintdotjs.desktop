@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=paint.js
-Comment=Edit raster and layered Paint.NET images
+Comment=An open source general-purpose raster graphics editor program.
 Exec=paintdotjs %F
 Icon=paintdotjs
 Terminal=false

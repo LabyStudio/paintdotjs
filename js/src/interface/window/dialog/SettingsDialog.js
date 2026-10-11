@@ -625,9 +625,15 @@ class SettingsDialog {
             try {
                 const result = await window.desktopUpdater.check();
                 if (!result.supported) {
-                    this.setStatus("Updates for this installation are managed by your package manager.");
+                    if (!result.managed) {
+                        this.setStatus("Update checks are available in packaged desktop releases.");
+                    } else {
+                        this.setStatus(result.updateAvailable
+                            ? `paint.js ${PdjInfo.formatVersion(result.version)} is available from GitHub Releases.`
+                            : "You are using the latest version. Updates for this installation are installed manually.");
+                    }
                 } else if (result.version && result.version !== window.PDJVERSION) {
-                    this.setStatus(`Downloading paint.js ${result.version} in the background...`);
+                    this.setStatus(`Downloading paint.js ${PdjInfo.formatVersion(result.version)} in the background...`);
                 } else {
                     this.setStatus("You are using the latest version of paint.js.");
                 }

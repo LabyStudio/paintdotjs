@@ -1,0 +1,80 @@
+app-id: net.paintjs.Paintjs
+runtime: org.freedesktop.Platform
+runtime-version: '26.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '26.08'
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node24
+command: paintdotjs
+separate-locales: false
+
+finish-args:
+  - --device=dri
+  - --share=network
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
+
+build-options:
+  append-path: /usr/lib/sdk/node24/bin
+  env:
+    NPM_CONFIG_LOGLEVEL: info
+
+modules:
+  - name: paintdotjs
+    buildsystem: simple
+    build-options:
+      env:
+        XDG_CACHE_HOME: /run/build/paintdotjs/flatpak-node/cache
+        npm_config_cache: /run/build/paintdotjs/flatpak-node/npm-cache
+        npm_config_offline: 'true'
+    build-commands:
+      - node scripts/install_desktop_assets.js --source ../paintdotnet-source --output assets --manifest desktop-resources/asset-manifest.json
+      - npm ci --offline --ignore-scripts
+      - node flatpak/resize-icon.js desktop-resources/icon.png flatpak/net.paintjs.Paintjs.png
+      - npm run lint
+      - npm run check-assets
+      - npx webpack --config webpack.config.js
+      - |
+        . ../flatpak-node/electron-builder-arch-args.sh
+        electron_zip=$(echo ../flatpak-node/cache/electron/electron-v44.5.1-linux-*.zip)
+        npx electron-builder $ELECTRON_BUILDER_ARCH_ARGS --linux dir --publish never \
+          --config.electronDist="$electron_zip"
+      - cp -a dist/linux*unpacked /app/main
+      - install -Dm755 flatpak/run.sh /app/bin/paintdotjs
+      - install -Dm644 flatpak/net.paintjs.Paintjs.desktop /app/share/applications/net.paintjs.Paintjs.desktop
+      - install -Dm644 flatpak/net.paintjs.Paintjs.metainfo.xml /app/share/metainfo/net.paintjs.Paintjs.metainfo.xml
+      - install -Dm644 flatpak/net.paintjs.Paintjs.png /app/share/icons/hicolor/512x512/apps/net.paintjs.Paintjs.png
+      - install -Dm644 desktop-resources/file-icon.svg /app/share/icons/hicolor/scalable/mimetypes/net.paintjs.Paintjs.application-x-paintdotnet.svg
+      - install -Dm644 flatpak/net.paintjs.Paintjs-mime.xml /app/share/mime/packages/net.paintjs.Paintjs.xml
+      - mkdir -p /app/share/paintdotjs
+      - cp -a assets /app/share/paintdotjs/assets
+      - install -Dm644 LICENSE.md /app/share/licenses/net.paintjs.Paintjs/LICENSE.md
+      - install -Dm644 NOTICE.md /app/share/licenses/net.paintjs.Paintjs/NOTICE.md
+    subdir: main
+    sources:
+      - type: dir
+        path: ..
+        dest: main
+        skip:
+          - .flatpak-builder
+          - .git
+          - .idea
+          - .tmp
+          - assets/codecs
+          - assets/cursors
+          - assets/icons
+          - assets/images
+          - assets/lang
+          - build
+          - dist
+          - node_modules
+          - pages-dist
+          - scripts/__pycache__
+      - type: archive
+        url: https://github.com/paintdotnet/release/releases/download/v5.1.12/paint.net.5.1.12.portable.x64.zip
+        sha256: d5ae7043f2fb9d365b48dfe243a2aca1c74924de99b04b6445916c95354aefa3
+        dest: paintdotnet-source
+      - generated-sources.json

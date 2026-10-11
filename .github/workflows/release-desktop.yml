@@ -112,8 +112,40 @@ jobs:
             dist/latest-mac.yml
           if-no-files-found: error
 
+  flatpak:
+    needs: version
+    if: needs.version.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Flatpak tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+      - name: Validate Flatpak release metadata
+        run: grep -F '<release version="${{ needs.version.outputs.version }}"' flatpak/net.paintjs.Paintjs.metainfo.xml
+      - name: Build Flatpak
+        run: |
+          flatpak-builder --user --repo=flatpak-repo --force-clean \
+            --install-deps-from=flathub flatpak-build flatpak/net.paintjs.Paintjs.yml
+      - name: Create standalone bundle
+        run: |
+          mkdir -p dist
+          flatpak build-bundle \
+            --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
+            flatpak-repo \
+            "dist/paintdotjs-${{ needs.version.outputs.version }}-linux-x86_64.flatpak" \
+            net.paintjs.Paintjs master
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-flatpak
+          path: dist/*.flatpak
+          if-no-files-found: error
+
   release:
-    needs: [version, linux, macos]
+    needs: [version, linux, macos, flatpak]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
