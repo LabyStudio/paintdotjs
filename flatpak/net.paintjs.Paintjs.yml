@@ -31,6 +31,8 @@ modules:
         npm_config_cache: /run/build/paintdotjs/flatpak-node/npm-cache
         npm_config_offline: 'true'
     build-commands:
+      - mkdir -p ../paintdotnet-source
+      - bsdtar -xf ../paintdotnet-source.zip -C ../paintdotnet-source
       - node scripts/install_desktop_assets.js --source ../paintdotnet-source --output assets --manifest desktop-resources/asset-manifest.json
       - npm ci --offline --ignore-scripts
       - node flatpak/resize-icon.js desktop-resources/icon.png flatpak/net.paintjs.Paintjs.png
@@ -73,8 +75,8 @@ modules:
           - node_modules
           - pages-dist
           - scripts/__pycache__
-      - type: archive
+      - type: file
         url: https://github.com/paintdotnet/release/releases/download/v5.1.12/paint.net.5.1.12.portable.x64.zip
         sha256: d5ae7043f2fb9d365b48dfe243a2aca1c74924de99b04b6445916c95354aefa3
-        dest: paintdotnet-source
+        dest-filename: paintdotnet-source.zip
       - generated-sources.json
