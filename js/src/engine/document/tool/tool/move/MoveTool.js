@@ -293,7 +293,10 @@ class MoveTool extends MoveToolBase {
     }
 
     renderInternal(renderOffset, useNewOffset, saveRegion) {
-        let sourceBounds = Utility.roundRectangle(this.context.liftedBounds);
+        // liftedBounds is expressed before the selection's interim transform.
+        // The lifted bitmap tracks the actual source footprint, including a
+        // transform left behind by a move on another layer.
+        let sourceBounds = this.context.liftedPixels.getBounds();
         sourceBounds.inflate(2, 2);
         sourceBounds.intersect(this.activeLayer.getBounds());
 
@@ -427,7 +430,7 @@ class MoveTool extends MoveToolBase {
             ? (surface, rectangle) => surface.copyRegionFromExact(this.scratchSurface, rectangle)
             : (surface, rectangle) => surface.copyRegionFrom(this.scratchSurface, rectangle);
         const surface = this.activeLayer.getSurface();
-        let sourceBounds = Utility.roundRectangle(this.context.liftedBounds);
+        let sourceBounds = this.context.liftedPixels.getBounds();
         sourceBounds.inflate(2, 2);
         sourceBounds.intersect(this.activeLayer.getBounds());
         restore(surface, sourceBounds);

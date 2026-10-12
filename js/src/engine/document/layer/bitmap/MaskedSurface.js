@@ -116,6 +116,10 @@ class MaskedSurface {
         return isRectangle ? pathBounds : null;
     }
 
+    getBounds() {
+        return this.bounds.clone();
+    }
+
     eraseFrom(targetSurface) {
         if (this.surface === null) {
             return;
