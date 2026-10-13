@@ -14,6 +14,8 @@
 
 class MoveNubRenderer extends CanvasControl {
 
+    static compassRadius = 7;
+
     constructor(surfaceBox) {
         super(surfaceBox);
 
@@ -42,14 +44,60 @@ class MoveNubRenderer extends CanvasControl {
         let y = renderBounds.getY() + point.getY() * scaleY;
 
 
-        // Draw circle
-        if (this.shape === MoveNubShape.CIRCLE || this.shape === MoveNubShape.SQUARE) {
+        if (this.shape === MoveNubShape.COMPASS) {
+            this.drawCompass(context, x, y);
+        } else if (this.shape === MoveNubShape.CIRCLE || this.shape === MoveNubShape.SQUARE) {
             context.save();
             this.drawCircle(context, x, y, ourSize - 1, "white");
             this.drawCircle(context, x, y, ourSize - 2, "black");
             this.drawCircle(context, x, y, ourSize - 3, "white");
             context.restore();
         }
+    }
+
+    drawCompass(context, x, y) {
+        const radius = MoveNubRenderer.compassRadius;
+        const inner = radius - 3.5;
+        const narrow = 0.5;
+        const shoulder = 2;
+
+        context.save();
+        context.fillStyle = "white";
+        context.strokeStyle = "black";
+        context.lineWidth = 1;
+        context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+        context.strokeRect(x - radius + 0.5, y - radius + 0.5,
+            radius * 2 - 1, radius * 2 - 1);
+
+        context.fillStyle = "black";
+        context.beginPath();
+        context.moveTo(x - radius, y);
+        context.lineTo(x - inner, y + shoulder);
+        context.lineTo(x - inner, y + narrow);
+        context.lineTo(x - narrow, y + narrow);
+        context.lineTo(x - narrow, y + inner);
+        context.lineTo(x - shoulder, y + inner);
+        context.lineTo(x, y + radius);
+        context.lineTo(x + shoulder, y + inner);
+        context.lineTo(x + narrow, y + inner);
+        context.lineTo(x + narrow, y + narrow);
+        context.lineTo(x + inner, y + narrow);
+        context.lineTo(x + inner, y + shoulder);
+        context.lineTo(x + radius, y);
+        context.lineTo(x + inner, y - shoulder);
+        context.lineTo(x + inner, y - narrow);
+        context.lineTo(x + narrow, y - narrow);
+        context.lineTo(x + narrow, y - inner);
+        context.lineTo(x + shoulder, y - inner);
+        context.lineTo(x, y - radius);
+        context.lineTo(x - shoulder, y - inner);
+        context.lineTo(x - narrow, y - inner);
+        context.lineTo(x - narrow, y - narrow);
+        context.lineTo(x - inner, y - narrow);
+        context.lineTo(x - inner, y - shoulder);
+        context.closePath();
+        context.fill();
+        context.restore();
     }
 
     drawCircle(context, x, y, radius, color) {
@@ -72,7 +120,7 @@ class MoveNubRenderer extends CanvasControl {
     getOurRectangle(pad = false) {
         const center = this.getTransformedLocation();
         const zoom = Math.max(0.0001, this.surfaceBox.getScaleFactorRatio());
-        const paintedRadius = Math.min(this.size.getWidth(), this.size.getHeight()) - 1;
+        const paintedRadius = this.getPaintedRadius();
         const radius = (paintedRadius + (pad ? this.hitTestPadding : 0)) / zoom;
         const rect = new Rectangle(center.getX(), center.getY(), 0, 0);
         rect.inflate(radius, radius);
@@ -82,13 +130,22 @@ class MoveNubRenderer extends CanvasControl {
     isPointTouching(point, pad) {
         const center = this.getTransformedLocation();
         const zoom = Math.max(0.0001, this.surfaceBox.getScaleFactorRatio());
-        const paintedRadius = Math.min(this.size.getWidth(), this.size.getHeight()) - 1;
+        const paintedRadius = this.getPaintedRadius();
         // Paint.NET 5's TransformControl uses 8 device-independent pixels of
         // hit-test padding around each painted handle.
         const radius = (paintedRadius + (pad ? this.hitTestPadding : 0)) / zoom;
         const dx = point.getX() - center.getX();
         const dy = point.getY() - center.getY();
+        if (this.shape === MoveNubShape.COMPASS) {
+            return Math.abs(dx) <= radius && Math.abs(dy) <= radius;
+        }
         return dx * dx + dy * dy <= radius * radius;
+    }
+
+    getPaintedRadius() {
+        return this.shape === MoveNubShape.COMPASS
+            ? MoveNubRenderer.compassRadius
+            : Math.min(this.size.getWidth(), this.size.getHeight()) - 1;
     }
 
     getShape() {

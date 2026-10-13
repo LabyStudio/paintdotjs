@@ -83,7 +83,7 @@ class ToolMenu extends StripPanel {
         );
         const slider = (label, key, min, max, step = 1) => ({kind: "slider", label, key, min, max, step});
         const iconChoice = (label, key, values, width = 35, showText = false) => (
-            {kind: "iconChoice", label, key, values, width, showText}
+            {kind: "iconChoice", label, key, values, width, showText, split: true}
         );
         const shapeChoice = (values, groups) => ({
             kind: "shapeChoice", label: "", key: "shape", values, groups, width: 126
