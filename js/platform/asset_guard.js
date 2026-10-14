@@ -13,6 +13,15 @@
  */
 
 (function checkRequiredAssets() {
+    if (typeof isApp !== 'undefined' && !isApp) {
+        // Pages builds always include the default asset pack. Avoid a synchronous
+        // request here because Chromium cannot reliably complete it while a
+        // service worker controls the page.
+        window.paintDotJsBundledWebAssets = true;
+        window.paintDotJsAssetsReady = true;
+        return;
+    }
+
     const assetUrl = new URL('assets/lang/en.json', document.baseURI);
     let assetsReady = false;
 
