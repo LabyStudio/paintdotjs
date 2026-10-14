@@ -172,20 +172,30 @@ class AboutDialog {
                 const project = document.createElement("section");
                 {
                     const projectHeading = document.createElement("h3");
-                    projectHeading.textContent = "Why porting it to the web?";
-
                     const projectCopy = document.createElement("p");
-                    projectCopy.append(
-                        "Paint.NET is one of the best image editors available on Windows, combining powerful features with a simple, intuitive interface. After switching to Linux, it became the application I missed most and one I had relied on every day.",
-                        document.createElement("br"),
-                        document.createElement("br"),
-                        "I have been developing paint.js since February 2024, with the goal of bringing that familiar editing experience to Linux, macOS, and the web."
-                    );
+                    if (this.welcome) {
+                        projectHeading.textContent = "Why porting it to the web?";
+                        projectCopy.append(
+                            "Paint.NET is one of the best image editors available on Windows, combining powerful features with a simple, intuitive interface. After switching to Linux, it became the application I missed most and one I had relied on every day.",
+                            document.createElement("br"),
+                            document.createElement("br"),
+                            "I have been developing paint.js since February 2024, with the goal of bringing that familiar editing experience to Linux, macOS, and the web."
+                        );
 
-                    const contact = this.createLink("contact@paintjs.net", "mailto:contact@paintjs.net");
-                    contact.className = "project-info-detail-contact";
+                        const contact = this.createLink("contact@paintjs.net", "mailto:contact@paintjs.net");
+                        contact.className = "project-info-detail-contact";
 
-                    project.append(projectHeading, projectCopy, contact);
+                        project.append(projectHeading, projectCopy, contact);
+                    } else {
+                        project.classList.add("project-info-font-licenses");
+                        projectHeading.textContent = "Bundled font licenses";
+                        projectCopy.className = "project-info-font-license-list";
+                        projectCopy.setAttribute("role", "list");
+                        projectCopy.tabIndex = 0;
+                        this.appendBundledFontLicenseList(projectCopy);
+
+                        project.append(projectHeading, projectCopy);
+                    }
                 }
                 details.appendChild(project);
             }
@@ -202,6 +212,20 @@ class AboutDialog {
             information.append(heading, credits, details, links);
         }
         return information;
+    }
+
+    appendBundledFontLicenseList(container) {
+        const fonts = [...FontManager.getBundledFonts()].sort((left, right) =>
+            left.family.localeCompare(right.family, undefined, {sensitivity: "base"}));
+        for (const font of fonts) {
+            const entry = document.createElement("span");
+            entry.setAttribute("role", "listitem");
+            entry.append(
+                "• " + font.family + " – " + font.license + " ",
+                this.createLink("View license", font.licensePath)
+            );
+            container.appendChild(entry);
+        }
     }
 
     createFooter() {

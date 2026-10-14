@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24.0 24"><title>unfocus effect icon</title><defs>
-<linearGradient id="gray"><stop stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="reflected"><stop stop-color="#596772"/><stop offset=".5" stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="color" x2="1" y2="1"><stop stop-color="#528bb9"/><stop offset="1" stop-color="#9868b2"/></linearGradient>
-<radialGradient id="radial"><stop stop-color="#f6f7f5"/><stop offset=".4" stop-color="#d5d9d9"/><stop offset="1" stop-color="#46525c"/></radialGradient>
-</defs><ellipse cx="12" cy="12" rx="3" ry="2.0999999999999996" fill="none" stroke="#528bb9" stroke-width="1.2" /><ellipse cx="12" cy="12" rx="6" ry="4.199999999999999" fill="none" stroke="#528bb9" stroke-width="1.2" /><ellipse cx="12" cy="12" rx="10" ry="7.0" fill="none" stroke="#528bb9" stroke-width="1.2" /></svg>

@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24.0 24"><title>menu edit paste in to new image icon</title><defs>
-<linearGradient id="gray"><stop stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="reflected"><stop stop-color="#596772"/><stop offset=".5" stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="color" x2="1" y2="1"><stop stop-color="#528bb9"/><stop offset="1" stop-color="#9868b2"/></linearGradient>
-<radialGradient id="radial"><stop stop-color="#f6f7f5"/><stop offset=".4" stop-color="#d5d9d9"/><stop offset="1" stop-color="#46525c"/></radialGradient>
-</defs><rect x="4" y="4" width="16" height="18" rx="1" fill="#e4b662" stroke="#ae8d56" stroke-width="1.1" /><rect x="6" y="7" width="12" height="13" rx="0.5" fill="#f6f7f5" stroke="none" stroke-width="1.1" /><rect x="8" y="2" width="8" height="5" rx="1" fill="#90999f" stroke="none" stroke-width="1.1" /><path d="M9 11h6M9 14h6M9 17h4" fill="none" stroke="#90999f" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" /><circle cx="18" cy="18" r="5" fill="#f6f7f5" stroke="none" stroke-width="1.1" /><path d="M15 18h6M18 15v6" fill="none" stroke="#68a58c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" /></svg>

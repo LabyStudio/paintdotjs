@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24.0 24"><title>enum gradient type linear clamped</title><defs>
-<linearGradient id="gray"><stop stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="reflected"><stop stop-color="#596772"/><stop offset=".5" stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="color" x2="1" y2="1"><stop stop-color="#528bb9"/><stop offset="1" stop-color="#9868b2"/></linearGradient>
-<radialGradient id="radial"><stop stop-color="#f6f7f5"/><stop offset=".4" stop-color="#d5d9d9"/><stop offset="1" stop-color="#46525c"/></radialGradient>
-</defs><rect x="2.5" y="2.5" width="19" height="19" rx="0.5" fill="#f6f7f5" stroke="#90999f" stroke-width="1.1" /><rect x="4" y="4" width="16" height="16" rx="0" fill="url(#gray)" stroke="none" stroke-width="1.1" /></svg>

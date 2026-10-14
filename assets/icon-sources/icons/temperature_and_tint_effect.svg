@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24.0 24"><title>temperature and tint effect</title><defs>
-<linearGradient id="gray"><stop stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="reflected"><stop stop-color="#596772"/><stop offset=".5" stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="color" x2="1" y2="1"><stop stop-color="#528bb9"/><stop offset="1" stop-color="#9868b2"/></linearGradient>
-<radialGradient id="radial"><stop stop-color="#f6f7f5"/><stop offset=".4" stop-color="#d5d9d9"/><stop offset="1" stop-color="#46525c"/></radialGradient>
-</defs><path d="M8 14V5a3 3 0 0 1 6 0v9a5 5 0 1 1-6 0Z" fill="#f6f7f5" stroke="#90999f" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" /><circle cx="11" cy="18" r="3" fill="#528bb9" stroke="none" stroke-width="1.1" /><path d="M11 6v11" fill="none" stroke="#cb7158" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round" /><path d="M17 6h4m-4 4h3m-3 4h4" fill="none" stroke="#90999f" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" /></svg>

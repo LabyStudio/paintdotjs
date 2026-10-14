@@ -377,7 +377,7 @@ header {
     border-bottom: 1px solid var(--pdn-menu-border);
     margin-left: 2px;
     overflow: hidden;
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-family);
     font-size: 12px;
     font-weight: 400;
     flex-wrap: nowrap;
@@ -499,7 +499,7 @@ header {
     border-radius: 0;
     box-sizing: border-box;
     padding: 0;
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-family);
     font-size: 12px;
     font-weight: 400;
     text-align: left;
@@ -641,7 +641,7 @@ header {
     outline: none;
     padding: 1px 3px;
     text-align: left;
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-family);
     font-size: 12px;
     color: var(--pdn-text);
     background: var(--pdn-control-background);
@@ -968,7 +968,7 @@ header {
     background: var(--pdn-menu-background);
     border: 1px solid var(--pdn-menu-border);
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-family);
     font-size: 15px;
     font-weight: 400;
 }
@@ -1214,7 +1214,7 @@ header {
     width: 16px;
     height: 16px;
     color: var(--pdn-text);
-    font-family: Calibri, "Segoe UI", sans-serif;
+    font-family: var(--font-family);
     font-size: 16px;
     font-style: normal;
     font-weight: 400;

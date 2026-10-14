@@ -24,6 +24,128 @@ class FontManager {
     static initialization = null;
     static metadataReady = false;
     static metadataCacheKey = "paintdotjs-user-font-metadata-v1";
+    static bundledFonts = [
+        {
+            family: "Noto Sans",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/noto-sans/LICENSE.txt"
+        },
+        {
+            family: "Inter",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/inter/LICENSE.txt"
+        },
+        {
+            family: "Atkinson Hyperlegible",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/atkinson-hyperlegible/LICENSE.txt"
+        },
+        {
+            family: "Lato",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/lato/LICENSE.txt"
+        },
+        {
+            family: "Montserrat",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/montserrat/LICENSE.txt"
+        },
+        {
+            family: "Open Sans",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/open-sans/LICENSE.txt"
+        },
+        {
+            family: "Raleway",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/raleway/LICENSE.txt"
+        },
+        {
+            family: "Source Sans 3",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/source-sans-3/LICENSE.txt"
+        },
+        {
+            family: "Noto Serif",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/noto-serif/LICENSE.txt"
+        },
+        {
+            family: "Roboto Slab",
+            license: "Apache License 2.0",
+            licensePath: "assets/font/roboto-slab/LICENSE.txt"
+        },
+        {
+            family: "Playfair Display",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/playfair-display/LICENSE.txt"
+        },
+        {
+            family: "Merriweather",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/merriweather/LICENSE.txt"
+        },
+        {
+            family: "Libre Baskerville",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/libre-baskerville/LICENSE.txt"
+        },
+        {
+            family: "Source Serif 4",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/source-serif-4/LICENSE.txt"
+        },
+        {
+            family: "Cinzel",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/cinzel/LICENSE.txt"
+        },
+        {
+            family: "Oswald",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/oswald/LICENSE.txt"
+        },
+        {
+            family: "Bebas Neue",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/bebas-neue/LICENSE.txt"
+        },
+        {
+            family: "Caveat",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/caveat/LICENSE.txt"
+        },
+        {
+            family: "Pacifico",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/pacifico/LICENSE.txt"
+        },
+        {
+            family: "Dancing Script",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/dancing-script/LICENSE.txt"
+        },
+        {
+            family: "Comic Neue",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/comic-neue/LICENSE.txt"
+        },
+        {
+            family: "Noto Sans Mono",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/noto-sans-mono/LICENSE.txt"
+        },
+        {
+            family: "JetBrains Mono",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/jetbrains-mono/LICENSE.txt"
+        },
+        {
+            family: "Inconsolata",
+            license: "SIL Open Font License 1.1",
+            licensePath: "assets/font/inconsolata/LICENSE.txt"
+        }
+    ];
 
     static initialize() {
         if (this.initialization === null) {
@@ -54,10 +176,15 @@ class FontManager {
             left.name.localeCompare(right.name, undefined, {sensitivity: "base"}));
     }
 
+    static getBundledFonts() {
+        return this.bundledFonts;
+    }
+
     static getTextToolChoices() {
         const builtIn = [
-            ["Calibri", "Calibri"], ["Segoe UI", "Segoe UI"], ["Arial", "Arial"],
-            ["serif", "Serif"], ["monospace", "Monospace"]
+            ...this.getBundledFonts().map(font => [font.family, font.family]),
+            ["sans-serif", "System Sans Serif"], ["serif", "System Serif"],
+            ["monospace", "System Monospace"]
         ];
         return [...builtIn, ...this.getFonts().map(font => [font.family, font.name])];
     }
@@ -161,9 +288,13 @@ class FontManager {
 
         if (typeof ToolType !== "undefined"
             && ToolType.TEXT.getSetting("fontFamily") === record.family) {
-            ToolType.TEXT.setSetting("fontFamily", "Segoe UI");
+            ToolType.TEXT.setSetting("fontFamily", "Noto Sans");
             window.app?.fire?.("app:tool_setting_changed", ToolType.TEXT,
-                "fontFamily", "Segoe UI");
+                "fontFamily", "Noto Sans");
+        }
+        if (typeof AppSettingsStore !== "undefined"
+            && AppSettingsStore.get("ui.fontFamily", "Noto Sans") === record.family) {
+            AppSettingsStore.set("ui.fontFamily", "Noto Sans");
         }
         this.notifyChanged();
         return true;
@@ -178,6 +309,9 @@ class FontManager {
         const selectedFamily = typeof ToolType === "undefined"
             ? null : ToolType.TEXT.getSetting("fontFamily");
         const selectedWasCustom = this.isCustomFont(selectedFamily);
+        const selectedUiFamily = typeof AppSettingsStore === "undefined"
+            ? null : AppSettingsStore.get("ui.fontFamily", "Noto Sans");
+        const selectedUiWasCustom = this.isCustomFont(selectedUiFamily);
 
         const database = await this.openDatabase();
         await this.runRequest(database, "readwrite", store => store.clear());
@@ -189,9 +323,12 @@ class FontManager {
         this.writeMetadataCache();
 
         if (selectedWasCustom) {
-            ToolType.TEXT.setSetting("fontFamily", "Segoe UI");
+            ToolType.TEXT.setSetting("fontFamily", "Noto Sans");
             window.app?.fire?.("app:tool_setting_changed", ToolType.TEXT,
-                "fontFamily", "Segoe UI");
+                "fontFamily", "Noto Sans");
+        }
+        if (selectedUiWasCustom) {
+            AppSettingsStore.set("ui.fontFamily", "Noto Sans");
         }
         this.notifyChanged();
         return count;

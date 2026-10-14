@@ -41,6 +41,8 @@ class SettingsDialog {
         this.fontImporting = false;
         this.fontRenderToken = 0;
         this.fontPreviewObserver = null;
+        this.uiFontSelect = null;
+        this.uiAssetPackSelect = null;
         this.assetPackList = null;
         this.assetPackImporting = false;
         this.assetPackPreviewUrls = [];
@@ -48,12 +50,16 @@ class SettingsDialog {
         this.fontsChangedListener = () => {
             if (this.backdrop !== null && this.activeSection === "fonts") {
                 this.renderFontRows();
+            } else if (this.backdrop !== null && this.activeSection === "ui") {
+                this.updateUiFontSelect();
             }
         };
         window.addEventListener("paintdotjs:fonts-changed", this.fontsChangedListener);
         this.assetPacksChangedListener = () => {
             if (this.backdrop !== null && this.activeSection === "assets") {
                 this.renderAssetPackRows();
+            } else if (this.backdrop !== null && this.activeSection === "ui") {
+                this.updateUiAssetPackSelect();
             }
         };
         window.addEventListener("paintdotjs:asset-packs-changed", this.assetPacksChangedListener);
@@ -211,6 +217,8 @@ class SettingsDialog {
         this.shortcutList = null;
         this.fontList = null;
         this.assetPackList = null;
+        this.uiFontSelect = null;
+        this.uiAssetPackSelect = null;
         this.page.className = "settings-page settings-page-" + section;
         this.page.innerHTML = "";
         const render = this["render" + section[0].toUpperCase() + section.slice(1)];
@@ -274,8 +282,14 @@ class SettingsDialog {
                 option.textContent = name;
                 select.appendChild(option);
             }
-            select.value = AppSettingsStore.get(path, choices[0][0]);
-            select.onchange = () => AppSettingsStore.set(path, select.value);
+            const fallback = choices.length > 0 ? choices[0][0] : "";
+            select.value = options.value ?? (path === null
+                ? fallback : AppSettingsStore.get(path, fallback));
+            if (typeof options.onChange === "function") {
+                select.onchange = () => options.onChange(select.value, select);
+            } else if (path !== null) {
+                select.onchange = () => AppSettingsStore.set(path, select.value);
+            }
             row.append(text, select);
         }
         this.page.appendChild(row);
@@ -324,6 +338,30 @@ class SettingsDialog {
         this.addSelect("ui.colorScheme", "Color Scheme:", [
             ["default", "Default (system)"], ["blue", "Blue"], ["light", "Light"], ["dark", "Dark"]
         ]);
+        this.uiAssetPackSelect = this.addSelect(null, "Icon pack:",
+            this.getUiAssetPackChoices(), {
+                value: AssetPackManager.getActivePackId(),
+                onChange: async (value, select) => {
+                    select.disabled = true;
+                    try {
+                        await AssetPackManager.activate(value);
+                        this.setStatus("Icon pack changed. Reload to apply included translations.");
+                    } catch (error) {
+                        console.error("Could not activate icon pack", error);
+                        this.setStatus("Could not activate the selected icon pack.");
+                    } finally {
+                        this.updateUiAssetPackSelect();
+                    }
+                }
+            });
+        this.uiFontSelect = this.addSelect("ui.fontFamily", "UI font:",
+            FontManager.getTextToolChoices(), {
+                onChange: value => {
+                    AppSettingsStore.set("ui.fontFamily", value);
+                    this.setStatus("UI font changed.");
+                }
+            });
+        void FontManager.initialize().then(() => this.updateUiFontSelect());
         const languages = [["auto", "Automatic (browser language)"],
             ...Object.entries(Language.options).map(([code, name]) => [code, name])];
         const language = this.addSelect("ui.language", "Language:", languages);
@@ -352,6 +390,40 @@ class SettingsDialog {
             updateLanguageState();
         };
         updateLanguageState();
+    }
+
+    getUiAssetPackChoices() {
+        return AssetPackManager.getPacks().map(pack => [pack.id, pack.name]);
+    }
+
+    updateUiAssetPackSelect() {
+        if (this.uiAssetPackSelect === null || !this.uiAssetPackSelect.isConnected) {
+            return;
+        }
+        this.replaceSelectOptions(this.uiAssetPackSelect, this.getUiAssetPackChoices(),
+            AssetPackManager.getActivePackId());
+        this.uiAssetPackSelect.disabled = false;
+    }
+
+    updateUiFontSelect() {
+        if (this.uiFontSelect === null || !this.uiFontSelect.isConnected) {
+            return;
+        }
+        const selected = AppSettingsStore.get("ui.fontFamily", "Noto Sans");
+        const choices = FontManager.getTextToolChoices();
+        const available = choices.some(([value]) => value === selected);
+        this.replaceSelectOptions(this.uiFontSelect, choices, available ? selected : "Noto Sans");
+    }
+
+    replaceSelectOptions(select, choices, selected) {
+        select.innerHTML = "";
+        for (const [value, name] of choices) {
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = name;
+            select.appendChild(option);
+        }
+        select.value = selected;
     }
 
     renderCanvas() {
@@ -969,10 +1041,20 @@ class SettingsDialog {
 
                 let remove = document.createElement("button");
                 remove.type = "button";
-                remove.className = "settings-font-remove";
-                remove.textContent = "Remove";
-                remove.disabled = pack.builtIn;
-                if (!pack.builtIn) {
+                remove.className = "settings-font-remove settings-asset-remove";
+                remove.setAttribute("aria-label", `Remove ${pack.name}`);
+                {
+                    const removeIcon = document.createElement("img");
+                    removeIcon.src = "assets/icons/cancel_icon.png";
+                    removeIcon.alt = "";
+                    remove.appendChild(removeIcon);
+                }
+                const removable = pack.id !== "default" && !pack.builtIn;
+                remove.disabled = !removable;
+                if (!removable) {
+                    remove.title = "Built-in icon packs cannot be removed";
+                } else {
+                    remove.title = `Remove ${pack.name}`;
                     remove.onclick = async () => {
                         await AssetPackManager.remove(pack.id);
                         this.setStatus(`Removed ${pack.name}.`);
@@ -1413,6 +1495,8 @@ class SettingsDialog {
         this.shortcutList = null;
         this.fontList = null;
         this.assetPackList = null;
+        this.uiFontSelect = null;
+        this.uiAssetPackSelect = null;
         this.fontAddButton = null;
         this.fontClearButton = null;
         this.fontDropZone = null;

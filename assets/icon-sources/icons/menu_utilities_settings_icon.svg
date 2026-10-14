@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24.0 24"><title>menu utilities settings icon</title><defs>
-<linearGradient id="gray"><stop stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="reflected"><stop stop-color="#596772"/><stop offset=".5" stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="color" x2="1" y2="1"><stop stop-color="#528bb9"/><stop offset="1" stop-color="#9868b2"/></linearGradient>
-<radialGradient id="radial"><stop stop-color="#f6f7f5"/><stop offset=".4" stop-color="#d5d9d9"/><stop offset="1" stop-color="#46525c"/></radialGradient>
-</defs><polygon points="20.000,12.000 21.808,13.951 21.239,15.827 18.652,16.445 17.657,17.657 17.556,20.315 15.827,21.239 13.561,19.846 12.000,20.000 10.049,21.808 8.173,21.239 7.555,18.652 6.343,17.657 3.685,17.556 2.761,15.827 4.154,13.561 4.000,12.000 2.192,10.049 2.761,8.173 5.348,7.555 6.343,6.343 6.444,3.685 8.173,2.761 10.439,4.154 12.000,4.000 13.951,2.192 15.827,2.761 16.445,5.348 17.657,6.343 20.315,6.444 21.239,8.173 19.846,10.439" fill="#90999f" stroke="#f6f7f5" stroke-width=".6"/><circle cx="12" cy="12" r="4" fill="#f6f7f5" stroke="#596772" stroke-width="1.1" /></svg>

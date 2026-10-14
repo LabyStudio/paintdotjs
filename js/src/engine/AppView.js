@@ -967,7 +967,7 @@ class AppView {
         context.fillRect(0, 0, cssWidth, cssHeight);
         context.strokeStyle = "#a8a8a8";
         context.fillStyle = "#e5e5e5";
-        context.font = "10px Segoe UI, sans-serif";
+        context.font = `10px ${AppSettingsStore.getUiFontStack()}`;
 
         const available = vertical ? cssHeight : cssWidth;
         const start = documentStart;

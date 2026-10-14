@@ -336,6 +336,10 @@ body.window-resizing * {
     line-height: 1.45;
 }
 
+.project-info-about .project-info-dialog-content {
+    padding-inline: 8px;
+}
+
 .project-info-banner {
     position: relative;
     height: 88px;
@@ -362,7 +366,7 @@ body.window-resizing * {
 
 .project-info-banner-artwork span {
     color: var(--color-menu-item-text);
-    font-family: "Segoe UI Light", "Segoe UI", Arial, sans-serif;
+    font-family: "Noto Sans", "Segoe UI Light", "Segoe UI", Arial, sans-serif;
     font-size: 47px;
     font-weight: 300;
     letter-spacing: -2px;
@@ -411,15 +415,32 @@ body.window-resizing * {
     height: 72px;
 }
 
-.project-info-about .project-info-banner-artwork img,
 .project-info-welcome .project-info-banner-artwork img {
     width: 54px;
     height: 54px;
 }
 
-.project-info-about .project-info-banner-artwork span,
 .project-info-welcome .project-info-banner-artwork span {
     font-size: 40px;
+}
+
+.project-info-about .project-info-banner-artwork {
+    gap: 6px;
+    padding: 5px 2px;
+}
+
+.project-info-about .project-info-banner-artwork img {
+    width: 62px;
+    height: 62px;
+    filter: none;
+}
+
+.project-info-about .project-info-banner-artwork span {
+    font-family: "Inter", "Segoe UI Light", "Segoe UI", Arial, sans-serif;
+    font-size: 50px;
+    font-weight: 300;
+    letter-spacing: -2.5px;
+    text-shadow: none;
 }
 
 .project-info-summary-copy {
@@ -454,6 +475,41 @@ body.window-resizing * {
     margin: 0 0 5px;
     color: var(--color-menu-item-text);
     font-size: inherit;
+}
+
+.project-info-summary-details .project-info-font-licenses {
+    padding: 0;
+    background: transparent;
+    border: 0;
+}
+
+.project-info-font-license-list {
+    height: 200px;
+    overflow-y: scroll;
+    box-sizing: border-box;
+    padding: 5px 7px;
+    color: #000;
+    background: #fff;
+    border: 1px solid #7a7a7a;
+    font-family: var(--font-family);
+    line-height: 1.55;
+}
+
+.project-info-font-license-list:focus-visible {
+    outline: 1px solid var(--color-link);
+    outline-offset: 1px;
+}
+
+.project-info-font-license-list span {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.project-info-font-license-list a,
+.project-info-font-license-list a:hover,
+.project-info-font-license-list a:focus-visible {
+    color: #06c;
+    text-decoration: underline;
 }
 
 .project-info-detail-contact {
@@ -899,6 +955,11 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
     padding: 3px 10px;
 }
 
+.settings-font-remove:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
 .settings-page-assets {
     overflow: hidden;
 }
@@ -958,7 +1019,7 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
 .settings-asset-row {
     min-width: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 112px 112px;
+    grid-template-columns: minmax(0, 1fr) 112px 29px;
     gap: 6px;
     align-items: center;
     padding: 6px;
@@ -973,6 +1034,19 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
     align-self: start;
     margin: 0;
     padding: 3px 10px;
+}
+
+.settings-asset-row > .settings-asset-remove {
+    width: 29px;
+    min-width: 29px;
+    padding: 3px;
+}
+
+.settings-asset-remove img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
 }
 
 .settings-asset-details {
@@ -2948,7 +3022,7 @@ html.effect-rendering * {
    as layer thumbnails, color swatches, histograms, or editor canvases. */
 
 .window {
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-family);
     font-size: 14px;
     font-weight: 400;
 }
@@ -3103,7 +3177,7 @@ html.effect-rendering * {
 
 /* Dialogs use the same typography and action-icon scale as the app chrome. */
 .app-dialog {
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-family);
     font-size: 14px;
     font-weight: 400;
 }

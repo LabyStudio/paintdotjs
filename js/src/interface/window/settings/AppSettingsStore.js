@@ -26,6 +26,7 @@ class AppSettingsStore {
             autoScrollWhileDrawing: true,
             autoSelectVisibleLayer: false,
             colorScheme: "default",
+            fontFamily: "Noto Sans",
             language: "auto"
         },
         canvas: {
@@ -123,6 +124,7 @@ class AppSettingsStore {
         const colorSchemePreference = this.get("ui.colorScheme", "default");
         root.dataset.colorSchemePreference = colorSchemePreference;
         root.dataset.colorScheme = this.resolveColorScheme(colorSchemePreference);
+        this.applyUiFont();
         root.style.setProperty("--custom-canvas-border", this.get("canvas.borderColor", "#808080"));
         const checkerboardBrightness = Math.max(0.25, Math.min(1,
             Number(this.get("canvas.checkerboardBrightness", 75)) / 100));
@@ -134,6 +136,25 @@ class AppSettingsStore {
         if (view !== null) {
             view.style.overscrollBehavior = this.get("ui.overscroll", true) ? "auto" : "none";
         }
+    }
+
+    static applyUiFont() {
+        const family = this.get("ui.fontFamily", "Noto Sans");
+        document.documentElement.style.setProperty("--font-family", this.getUiFontStack(family));
+        if (typeof FontManager !== "undefined") {
+            void FontManager.ensureLoaded(family).catch(error => {
+                console.warn(`Could not load UI font "${family}"`, error);
+            });
+        }
+    }
+
+    static getUiFontStack(family = this.get("ui.fontFamily", "Noto Sans")) {
+        const genericFamilies = ["sans-serif", "serif", "monospace"];
+        if (genericFamilies.includes(family)) {
+            return family;
+        }
+        const escaped = String(family).replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+        return `"${escaped}", "Segoe UI", system-ui, sans-serif`;
     }
 
     static createCheckerboardDataUrl(brightness) {

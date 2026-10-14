@@ -492,7 +492,7 @@ class ToolOptionDropdown {
         const body = paths[shape] || paths.rectangle;
         const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
             + '<g fill="#4f86b8" stroke="#b9dcff" stroke-width="1.7" stroke-linejoin="round">'
-            + body + '</g><style>text{fill:white;stroke:none;font:bold 11px Segoe UI;text-anchor:middle}</style></svg>';
+            + body + '</g><style>text{fill:white;stroke:none;font:bold 11px Noto Sans,Segoe UI,sans-serif;text-anchor:middle}</style></svg>';
         return "data:image/svg+xml," + encodeURIComponent(svg);
     }
 
