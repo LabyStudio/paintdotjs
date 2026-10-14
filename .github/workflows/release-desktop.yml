@@ -255,4 +255,15 @@ jobs:
           git config user.email 'release@paintjs.net'
           git add PKGBUILD .SRCINFO
           git commit -m "Update to ${VERSION}"
-          git push
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "AUR push failed after $attempt attempts" >&2
+              exit 1
+            fi
+            delay=$((attempt * 30))
+            echo "AUR connection failed; retrying push in ${delay}s" >&2
+            sleep "$delay"
+          done
