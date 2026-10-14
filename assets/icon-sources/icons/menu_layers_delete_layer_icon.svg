@@ -1,6 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24.0 24"><title>menu layers delete layer icon</title><defs>
-<linearGradient id="gray"><stop stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="reflected"><stop stop-color="#596772"/><stop offset=".5" stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
-<linearGradient id="color" x2="1" y2="1"><stop stop-color="#528bb9"/><stop offset="1" stop-color="#9868b2"/></linearGradient>
-<radialGradient id="radial"><stop stop-color="#f6f7f5"/><stop offset=".4" stop-color="#d5d9d9"/><stop offset="1" stop-color="#46525c"/></radialGradient>
-</defs><rect x="3" y="2" width="16" height="18" rx="0" fill="#c6dfef" stroke="#528bb9" stroke-width="1.1" /><circle cx="18" cy="18" r="5" fill="#f6f7f5" stroke="none" stroke-width="1.1" /><path d="M15 15l6 6m0 -6l-6 6" fill="none" stroke="#cb7158" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" /></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 32 32"><title>delete layer</title><rect x="2.5" y="2.5" width="21" height="21" rx=".35" fill="#6293bd" fill-opacity=".68" stroke="#4784b7" stroke-width="1.8"/><path d="M19 19l10 10M29 19L19 29" fill="none" stroke="#fbfcfd" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19l10 10M29 19L19 29" fill="none" stroke="#ce573a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
