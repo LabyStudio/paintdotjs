@@ -1,5 +1,11 @@
 # paint.js code style
 
+## Release flow
+
+- Make release changes on `develop`.
+- Merge `develop` into `master`; do not cherry-pick release or hotfix commits directly onto `master`.
+- After the merge is pushed, switch back to `develop` and bump it to the next development version.
+
 ## Control flow
 
 - Always use braces for `if`, `else`, loops, and every other control-flow body, including one-line bodies.
