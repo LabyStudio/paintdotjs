@@ -20,8 +20,6 @@ jobs:
       release: ${{ steps.version.outputs.changed }}
       previous_sha: ${{ steps.version.outputs.previous_sha }}
       version: ${{ steps.version.outputs.version }}
-      paintdotnet: ${{ steps.version.outputs.paintdotnet }}
-      paintdotnet_sha256: ${{ steps.version.outputs.paintdotnet_sha256 }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -216,8 +214,6 @@ jobs:
       - name: Render package metadata
         env:
           VERSION: ${{ needs.version.outputs.version }}
-          PAINTDOTNET_VERSION: ${{ needs.version.outputs.paintdotnet }}
-          PAINTDOTNET_SHA256: ${{ needs.version.outputs.paintdotnet_sha256 }}
         run: |
           curl -fL --retry 5 --retry-all-errors "https://github.com/LabyStudio/paintdotjs/releases/download/v${VERSION}/paintdotjs-${VERSION}-linux-x86_64.AppImage" -o paintdotjs.AppImage
           curl -fL --retry 5 --retry-all-errors "https://github.com/LabyStudio/paintdotjs/archive/refs/tags/v${VERSION}.tar.gz" -o source.tar.gz
@@ -227,10 +223,8 @@ jobs:
           const fs = require('fs');
           const replacements = {
             VERSION: process.env.VERSION,
-            PAINTDOTNET_VERSION: process.env.PAINTDOTNET_VERSION,
             APPIMAGE_SHA256: process.env.APPIMAGE_SHA256,
-            SOURCE_SHA256: process.env.SOURCE_SHA256,
-            PAINTDOTNET_SHA256: process.env.PAINTDOTNET_SHA256
+            SOURCE_SHA256: process.env.SOURCE_SHA256
           };
           for (const [source, target] of [['aur/PKGBUILD.template', 'PKGBUILD'], ['aur/.SRCINFO.template', '.SRCINFO']]) {
             let value = fs.readFileSync(source, 'utf8');

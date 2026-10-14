@@ -13,7 +13,8 @@
     <meta name="theme-color" content="#202020">
 
     <link rel="canonical" href="https://paintjs.net/">
-    <link rel="icon" href="./assets/icon.png" type="image/png" sizes="256x256">
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="./assets/icon.png" type="image/png" sizes="1024x1024">
     <link rel="apple-touch-icon" href="./assets/icon.png">
 
     <meta property="og:type" content="website">
@@ -26,16 +27,16 @@
     <meta property="og:image" content="https://paintjs.net/assets/social-preview.png">
     <meta property="og:image:secure_url" content="https://paintjs.net/assets/social-preview.png">
     <meta property="og:image:type" content="image/png">
-    <meta property="og:image:width" content="1337">
-    <meta property="og:image:height" content="964">
-    <meta property="og:image:alt" content="The paint.js image editor displaying a mountain photograph with its editing tools, colors, history, and layers windows.">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="The paint.js application icon.">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="paint.js: A Paint.NET port for the web">
     <meta name="twitter:description"
           content="An unofficial, free and open-source JavaScript port of Paint.NET for the web.">
     <meta name="twitter:image" content="https://paintjs.net/assets/social-preview.png">
-    <meta name="twitter:image:alt" content="The paint.js image editor displaying a mountain photograph with its editing tools, colors, history, and layers windows.">
+    <meta name="twitter:image:alt" content="The paint.js application icon.">
 
     <script type="application/ld+json">
     {
@@ -109,7 +110,7 @@
     <link href="./css/footer.css" rel="stylesheet">
 </head>
 
-<body>
+<body class="asset-pack-loading">
 <div id="content">
     <!-- Header -->
     <header>
@@ -206,6 +207,7 @@
 <script src="./js/src/interface/window/dialog/AboutDialog.js"></script>
 <script src="./js/src/interface/window/dialog/WelcomeDialog.js"></script>
 <script src="./js/src/engine/util/FontManager.js"></script>
+<script src="./js/src/engine/util/AssetPackManager.js"></script>
 <script src="./js/src/interface/window/settings/AppSettingsStore.js"></script>
 <script src="./js/src/interface/window/dialog/SettingsDialog.js"></script>
 <script src="./js/src/interface/panel/header/settings/HelpMenu.js"></script>

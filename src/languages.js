@@ -15,7 +15,20 @@
 import en from '../assets/lang/en.json';
 import manifest from '../assets/lang/languages.json';
 
-const codes = manifest.locales.filter(code => typeof code === 'string');
+let packTranslations = {};
+let packLocales = [];
+try {
+    packTranslations = JSON.parse(localStorage.getItem('paintdotjs.assetPack.translations.v1') || '{}');
+    packLocales = JSON.parse(localStorage.getItem('paintdotjs.assetPack.locales.v1') || '[]');
+} catch (_) {
+    // Use the built-in English dictionary when local storage is unavailable.
+}
+
+const codes = Array.from(new Set([
+    ...manifest.locales.filter(code => typeof code === 'string'),
+    ...packLocales.filter(code => typeof code === 'string'),
+    ...Object.keys(packTranslations).filter(code => typeof code === 'string')
+]));
 
 const findSupportedCode = requested => {
     if (!requested) {
@@ -38,6 +51,9 @@ const requestedCode = preference === 'auto' ? navigator.language : preference;
 const selectedCode = findSupportedCode(requestedCode) || 'en';
 
 const loadLanguage = code => {
+    if (packTranslations[code] !== undefined) {
+        return packTranslations[code];
+    }
     if (code === 'en') {
         return en;
     }
@@ -71,7 +87,7 @@ const resolve = (object, path) => {
 };
 
 window.i18n = function (path, variables) {
-    let translation = resolve(Language.data, path) ?? resolve(en, path) ?? path;
+    let translation = resolve(Language.data, path) ?? resolve(packTranslations.en, path) ?? resolve(en, path) ?? path;
     if (variables) {
         if (!Array.isArray(variables)) {
             variables = [variables];
@@ -87,12 +103,23 @@ const displayNames = typeof Intl.DisplayNames === 'function'
     ? new Intl.DisplayNames([navigator.language || 'en'], {type: 'language'})
     : null;
 
+const createLanguageOptions = packCodes => {
+    const availableCodes = Array.from(new Set([
+        ...manifest.locales.filter(code => typeof code === 'string'),
+        ...packCodes.filter(code => typeof code === 'string')
+    ]));
+    return Object.fromEntries(availableCodes.map(code => [code, displayNames?.of(code) || code]));
+};
+
 window.Language = {
     data: selectedData,
-    fallbackData: en,
+    fallbackData: packTranslations.en || en,
     code: selectedData === en && selectedCode !== 'en' ? 'en' : selectedCode,
     preference,
-    options: Object.fromEntries(codes.map(code => [code, displayNames?.of(code) || code])),
+    options: createLanguageOptions(codes),
+    setPackLocales: packCodes => {
+        Language.options = createLanguageOptions(packCodes);
+    },
     toString: () => Language.code
 };
 

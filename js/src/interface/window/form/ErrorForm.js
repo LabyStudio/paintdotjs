@@ -187,16 +187,10 @@ class ErrorForm extends Form {
         }
         this.installed = true;
         this.originalConsoleError = console.error.bind(console);
-
-        console.error = (...args) => {
-            this.originalConsoleError(...args);
-            this.show(this.fromConsoleArguments(args, "Console error"));
+        window.onerror = (message, source, line, column, error) => {
+            this.report(error || message, "Uncaught error");
+            return true;
         };
-
-        window.addEventListener("error", event => {
-            this.report(event.error || event.message, "Uncaught error");
-            event.preventDefault();
-        });
         window.addEventListener("unhandledrejection", event => {
             this.report(event.reason, "Unhandled promise rejection");
             event.preventDefault();

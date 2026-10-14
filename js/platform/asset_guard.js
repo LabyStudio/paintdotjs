@@ -54,21 +54,13 @@
 
                 // Explanation
                 const explanation = document.createElement('p');
-                explanation.textContent = 'This paint.js checkout has not prepared the Paint.NET assets yet.';
+                explanation.textContent = 'This paint.js checkout is missing its built-in asset pack.';
 
-                // Setup command
+                // Recovery instruction
                 const instruction = document.createElement('p');
-                instruction.textContent = 'Run this command from the project directory, then reload the page:';
+                instruction.textContent = 'Restore the assets directory from the repository or reinstall paint.js, then reload the page.';
 
-                const command = document.createElement('code');
-                command.textContent = 'npm run check-assets';
-
-                // Note
-                const note = document.createElement('p');
-                note.className = 'missing-assets-note';
-                note.textContent = 'The assets are downloaded separately because they cannot be included in the repository.';
-
-                dialog.append(title, explanation, instruction, command, note);
+                dialog.append(title, explanation, instruction);
             }
             page.appendChild(dialog);
         }

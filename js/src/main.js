@@ -12,18 +12,29 @@
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
-if (window.paintDotJsAssetsReady !== false) {
-    FontManager.initialize();
-    window.app = new AppWorkspace();
-    ErrorForm.install();
-    app.initialize();
-    DocumentIO.initialize(app);
+async function startPaintDotJs() {
+    try {
+        await AssetPackManager.initialize();
+        FontManager.initialize();
+        window.app = new AppWorkspace();
+        ErrorForm.install();
+        app.initialize();
+        DocumentIO.initialize(app);
 
-    const skipWelcome = new URLSearchParams(window.location.search).has("skipWelcome");
-    if (!(isApp && skipWelcome)) {
-        app.createBlankDocumentInNewWorkspace(800, 600, 96, true);
+        const skipWelcome = new URLSearchParams(window.location.search).has("skipWelcome");
+        if (!(isApp && skipWelcome)) {
+            app.createBlankDocumentInNewWorkspace(800, 600, 96, true);
+        }
+        if (!skipWelcome) {
+            WelcomeDialog.open();
+        }
+    } catch (error) {
+        console.error("Could not start paint.js", error);
+    } finally {
+        document.body.classList.remove("asset-pack-loading");
     }
-    if (!skipWelcome) {
-        WelcomeDialog.open();
-    }
+}
+
+if (window.paintDotJsAssetsReady !== false) {
+    void startPaintDotJs();
 }

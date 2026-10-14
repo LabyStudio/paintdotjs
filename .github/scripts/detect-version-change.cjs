@@ -42,9 +42,7 @@ fs.appendFileSync(
     process.env.GITHUB_OUTPUT,
     `changed=${changed}\n` +
     `previous_sha=${previousSha}\n` +
-    `version=${current.version}\n` +
-    `paintdotnet=${current.paintdotjs.paintDotNetVersion}\n` +
-    `paintdotnet_sha256=${current.paintdotjs.paintDotNetSha256}\n`
+    `version=${current.version}\n`
 );
 
 console.log(manual

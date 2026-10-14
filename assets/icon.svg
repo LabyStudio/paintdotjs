@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Simplified landscape picture and red paintbrush</title>
+  <!-- Picture frame and simple landscape -->
+  <path fill="#ececec" d="M40 30h358v452H40z"/>
+  <path fill="#3489dc" d="M66 55h305v345H66z"/>
+  <path fill="#cce8fa" d="M208 55h163v118l-64 26-65-31-61-13 37-51z"/>
+  <path fill="#fff" d="m66 282 48 9 39-10 51 30 51-6 48 20 37-11 31 13v73H66z"/>
+  <path fill="#16365f" d="m66 331 58-9 67 30 59-14 66 27 55-9v44H66z"/>
+  <!-- Brush handle -->
+  <path fill="#e51e32" stroke="#192430" stroke-width="3" stroke-linejoin="round" d="m197 345 259-185q9-7 15 2t-2 15L223 372z"/>
+  <!-- Metal ferrule -->
+  <path fill="#d9dce0" stroke="#192430" stroke-width="3" stroke-linejoin="round" d="m197 345 26 27-25 26-27-34z"/>
+  <!-- Bristles and blue paint -->
+  <path fill="#fff" stroke="#192430" stroke-width="3" stroke-linejoin="round" d="M171 364q-23 7-33 34l-31 41 42-15q23 4 34-13l15-23q-8-17-27-24z"/>
+  <path fill="#267ed0" d="m132 408-25 31 42-15-11-4 5-10z"/>
+</svg>

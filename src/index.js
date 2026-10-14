@@ -14,6 +14,7 @@
 
 import './languages'
 import {deserialize as deserializeNrbf} from 'ms-nrbf-js'
+import {unzipSync} from 'fflate'
 
 let portableImageCodecPromise = null;
 const getPortableImageCodec = () => {
@@ -33,3 +34,4 @@ window.PDJDISTRIBUTION = PDJDISTRIBUTION;
 window.Nrbf = {
     deserialize: deserializeNrbf
 };
+window.ZipArchive = {unzipSync};
