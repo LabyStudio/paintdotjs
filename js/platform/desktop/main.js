@@ -232,8 +232,8 @@ function createWindow() {
     const restoredBounds = restoreWindowBounds(savedWindowState?.bounds);
     mainWindow = new BrowserWindow({
         icon: app.isPackaged
-            ? path.join(process.resourcesPath, 'desktop', 'icon.png')
-            : path.join(app.getAppPath(), 'desktop-resources', 'icon.png'),
+            ? path.join(process.resourcesPath, 'assets', 'icon.png')
+            : path.join(app.getAppPath(), 'assets', 'icon.png'),
         backgroundColor: '#21252b',
         show: false,
         frame: false,

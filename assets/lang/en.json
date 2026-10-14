@@ -1,0 +1,4054 @@
+{
+    "aboutDialog": {
+        "contributionsLabel": {
+            "text": "Software libraries and contributions:"
+        },
+        "text": {
+            "format": "About {0}"
+        },
+        "translationCredit": {
+            "text": "English translation provided by Rick Brewster",
+            "visible": "0"
+        }
+    },
+    "acquireImageAction": {
+        "name": "Acquire Image"
+    },
+    "addNewBlankLayer": {
+        "historyMementoName": "New Layer",
+        "layerName": {
+            "format": "Layer {0}"
+        }
+    },
+    "addNoiseEffect": {
+        "amount1Label": "Intensity",
+        "amount2Label": "Color Saturation",
+        "coverage": "Coverage",
+        "name": "Add Noise",
+        "randomize": "Randomize"
+    },
+    "alphaBlending": {
+        "false": "Overwrite",
+        "true": "Normal Blending"
+    },
+    "anchorEdge": {
+        "bottom": "Bottom",
+        "bottomLeft": "Bottom Left",
+        "bottomRight": "Bottom Right",
+        "left": "Left",
+        "middle": "Middle",
+        "right": "Right",
+        "top": "Top",
+        "topLeft": "Top Left",
+        "topRight": "Top Right"
+    },
+    "angleChooserConfigDialog": {
+        "angleHeader": {
+            "text": "Angle"
+        },
+        "degreeLabel": {
+            "text": "°"
+        }
+    },
+    "antiAliasing": {
+        "false": "Aliased rendering",
+        "true": "Antialiased rendering"
+    },
+    "application": {
+        "copyright": {
+            "allRightsReserved": "All Rights Reserved."
+        },
+        "productName": {
+            "format": "{0} {1}{2}",
+            "tag": {
+                "format": " {0}"
+            }
+        }
+    },
+    "applyRendererToBitmapLayerHistoryFunction": {
+        "progressDialog": {
+            "headerText": {
+                "text": "Committing changes...",
+                "format": "Committing changes... {0}%"
+            }
+        }
+    },
+    "autoLevel": {
+        "name": "Auto-Level"
+    },
+    "avifFileType": {
+        "chromaSubsampling_420_DisplayName": "4:2:0 (Best Compression)",
+        "chromaSubsampling_422_DisplayName": "4:2:2",
+        "chromaSubsampling_444_DisplayName": "4:4:4 (Best Quality)",
+        "chromaSubsampling_DisplayName": "Chroma Subsampling",
+        "encoderPreset_DisplayName": "Encoder Preset",
+        "encoderPreset_Fast_DisplayName": "Fast",
+        "encoderPreset_Medium_DisplayName": "Medium",
+        "encoderPreset_Slow_DisplayName": "Slow",
+        "encoderPreset_VerySlow_DisplayName": "Very Slow",
+        "forumLink_Description": "Forum Discussion",
+        "forumLink_DisplayName": "More Info",
+        "lossless_Description": "Lossless",
+        "losslessAlphaCompression_Description": "Lossless Alpha Compression",
+        "premultipliedAlpha_Description": "Premultiplied Alpha",
+        "preserveExistingTileSize_Description": "Preserve Existing Tile Size",
+        "quality_DisplayName": "Quality"
+    },
+    "bitmapLayerPropertiesDialog": {
+        "blendModeHeader": {
+            "text": "Blend Mode:"
+        },
+        "opacityLabel": {
+            "text": "Opacity"
+        }
+    },
+    "blockArrowShape": {
+        "name": "Arrow"
+    },
+    "blurEffect": {
+        "configDialog": {
+            "gammaBoost": {
+                "displayName": "Gamma Boost"
+            },
+            "quality": {
+                "description": "Quality"
+            },
+            "sliderLabel": "Radius",
+            "sliderUnitsName": "pixels"
+        },
+        "name": "Gaussian Blur"
+    },
+    "bmpFileType": {
+        "configUI": {
+            "bitDepth": {
+                "autoDetect": {
+                    "displayName": "Auto-detect"
+                },
+                "bpp1": {
+                    "displayName": "1-bit"
+                },
+                "bpp24": {
+                    "displayName": "24-bit"
+                },
+                "bpp32": {
+                    "displayName": "32-bit"
+                },
+                "bpp4": {
+                    "displayName": "4-bit"
+                },
+                "bpp8": {
+                    "displayName": "8-bit"
+                },
+                "displayName": "Bit Depth"
+            },
+            "convertToSrgb": {
+                "description": "Convert to sRGB"
+            },
+            "ditherLevel": {
+                "displayName": "Dithering level"
+            },
+            "quantizationAlgorithm": {
+                "displayName": "Quantization algorithm"
+            }
+        },
+        "name": "Bitmap (BMP)"
+    },
+    "bokehEffect": {
+        "gammaBoost": {
+            "displayName": "Gamma Boost"
+        },
+        "name": "Bokeh Blur",
+        "quality": {
+            "displayName": "Quality"
+        },
+        "radius": {
+            "displayName": "Radius"
+        }
+    },
+    "brightnessAndContrastAdjustment": {
+        "brightness": "Brightness",
+        "contrast": "Contrast",
+        "name": "Brightness / Contrast"
+    },
+    "brushCategory": {
+        "basic": "Basic"
+    },
+    "brushConfigWidget": {
+        "brushSizeLabel": "Brush size:",
+        "error": {
+            "invalidNumber": "Invalid number",
+            "tooLarge": {
+                "text": "Size is larger than 500",
+                "format": "Size is larger than {0}"
+            },
+            "tooSmall": {
+                "text": "Size is smaller than 1",
+                "format": "Size is smaller than {0}"
+            }
+        },
+        "fillStyleLabel": {
+            "text": "Fill:"
+        },
+        "solidBrush": {
+            "text": "Solid Color"
+        }
+    },
+    "bulgeEffect": {
+        "bulgeAmount": {
+            "text": "Bulge"
+        },
+        "name": "Bulge",
+        "offset": {
+            "text": "Center"
+        }
+    },
+    "canvasSizeAction": {
+        "name": "Canvas Size"
+    },
+    "canvasSizeDialog": {
+        "anchorEdgeLabel": {
+            "text": "Anchor:"
+        },
+        "anchorHeader": {
+            "text": "Anchor"
+        },
+        "fillColorLabel": {
+            "text": "Fill:"
+        },
+        "newSpaceLabel": {
+            "text": "The new space will be filled with the secondary color."
+        },
+        "text": "Canvas Size"
+    },
+    "canvasSizeFillColor": {
+        "black": "Black",
+        "primaryColor": "Primary Color",
+        "secondaryColor": "Secondary Color",
+        "transparent": "Transparent",
+        "white": "White"
+    },
+    "checkMarkShape": {
+        "name": "Check mark"
+    },
+    "chevronArrowShape": {
+        "name": "Chevron arrow"
+    },
+    "clearOpenRecentList": {
+        "dialog": {
+            "text": "Are you sure you want to clear the Open Recent list?"
+        }
+    },
+    "cloneStampTool": {
+        "error": {
+            "triedToDrawWithoutAnchor": {
+                "text": "Could not use the Clone Stamp because the area to clone has not been set.\r\n    \r\nUse Ctrl+Click to set the anchor point."
+            }
+        },
+        "helpText": "Ctrl+click to set the anchor point. Then, left click and draw to copy from it.",
+        "name": "Clone Stamp"
+    },
+    "closeWorkspaceAction": {
+        "cancelButton": {
+            "actionText": "Cancel",
+            "explanationText": "Go back to Paint.NET."
+        },
+        "dontSaveButton": {
+            "actionText": "Don't Save",
+            "explanationText": "Discard the unsaved changes."
+        },
+        "introText": {
+            "format": "{0} has unsaved changes. What would you like to do?"
+        },
+        "saveButton": {
+            "actionText": "Save",
+            "explanationText": "Save the image, and then close it."
+        },
+        "title": "Unsaved Changes"
+    },
+    "cloudCalloutShape": {
+        "name": "Cloud callout"
+    },
+    "cloudsEffect": {
+        "configDialog": {
+            "blendModeHeader": {
+                "text": "Blend Mode:"
+            },
+            "color1Label": "Color 1",
+            "color2Label": "Color 2",
+            "colorTabLabel": "Colors",
+            "reseedButton": {
+                "text": "Randomize"
+            },
+            "roughnessLabel": "Roughness",
+            "scaleLabel": "Scale",
+            "usageLabel": "To change the color that the clouds are drawn in, you can set the primary and secondary colors in the Colors window."
+        },
+        "name": "Clouds"
+    },
+    "colorDisplayWidget": {
+        "swapIconBox": {
+            "toolTipText": "Swap colors\r\nShortcut key: X"
+        }
+    },
+    "colorPalette": {
+        "saveHeader": "; Paint.NET Palette File\r\n; Lines that start with a semicolon are comments\r\n; Colors are written as 8-digit hexadecimal numbers: aarrggbb\r\n; For example, this would specify green: FF00FF00\r\n; The alpha ('aa') value specifies how transparent a color is. FF is fully opaque, 00 is fully transparent.\r\n; A palette must consist of ninety six (96) colors. If there are less than this, the remaining color\r\n; slots will be set to white (FFFFFFFF). If there are more, then the remaining colors will be ignored."
+    },
+    "colorPalettes": {
+        "userDataSubDirName": "Palettes"
+    },
+    "colorPickerClickBehavior": {
+        "noToolSwitch": "Do not switch tool",
+        "switchToLastTool": "Switch to previous tool",
+        "switchToPencilTool": "Switch to Pencil tool"
+    },
+    "colorPickerTool": {
+        "helpText": "Left click to set primary color, right click to set secondary color. Hold Ctrl to sample from all layers (merged).",
+        "name": "Color Picker"
+    },
+    "colorProfileAction": {
+        "assign": {
+            "displayName": "Assign Color Profile"
+        },
+        "convert": {
+            "invalidProfileError": {
+                "text": "The chosen color profile cannot be used for conversion."
+            },
+            "name": "Convert Color Profile"
+        }
+    },
+    "colorProfileDialog": {
+        "assignButton": {
+            "text": "Assign"
+        },
+        "convertButton": {
+            "text": "Convert"
+        },
+        "currentProfileLabel": {
+            "text": "Current:"
+        },
+        "exportButton": {
+            "toolTipText": "Export"
+        },
+        "fileDialog": {
+            "colorProfileFilterEntry": {
+                "description": "Color Profile"
+            }
+        },
+        "importButton": {
+            "toolTipText": "Import"
+        },
+        "newProfileLabel": {
+            "text": "New:"
+        },
+        "text": "Color Profile"
+    },
+    "colorsForm": {
+        "alphaHeader": {
+            "text": "Opacity - Alpha"
+        },
+        "alphaLabel": {
+            "text": "A:"
+        },
+        "blueLabel": {
+            "text": "B:"
+        },
+        "colorDeleteButton": {
+            "toolTipText": "Delete color from palette"
+        },
+        "colorPalettesButton": {
+            "openPalettesFolder": {
+                "text": "Open Palettes Folder"
+            },
+            "resetToDefaultPalette": {
+                "text": "Reset to Default Palette"
+            },
+            "saveCurrentPaletteAs": {
+                "text": "Save Current Palette As..."
+            }
+        },
+        "greenLabel": {
+            "text": "G:"
+        },
+        "hexLabel": {
+            "text": "Hex:"
+        },
+        "hsvHeader": {
+            "text": "HSV"
+        },
+        "hueLabel": {
+            "text": "H:"
+        },
+        "moreLessButton": {
+            "text": {
+                "less": "Less",
+                "more": "More"
+            }
+        },
+        "redLabel": {
+            "text": "R:"
+        },
+        "rgbHeader": {
+            "text": "RGB"
+        },
+        "saturationLabel": {
+            "text": "S:"
+        },
+        "text": "Colors",
+        "valueLabel": {
+            "text": "V:"
+        }
+    },
+    "colorTransferMode": {
+        "luminosity": "Luminosity",
+        "rgb": "RGB"
+    },
+    "commonAction": {
+        "copy": "Copy",
+        "cropToSelection": "Crop to Selection",
+        "cut": "Cut",
+        "deselect": "Deselect",
+        "new": "New",
+        "open": "Open",
+        "paste": "Paste",
+        "print": "Print",
+        "redo": "Redo",
+        "save": "Save",
+        "saveAll": "Save All",
+        "undo": "Undo",
+        "zoomIn": "Zoom In",
+        "zoomOut": "Zoom Out"
+    },
+    "confirmLanguageDialog": {
+        "cancelTB": {
+            "actionText": "Cancel",
+            "explanationText": "Does not close Paint.NET. Your language choice will be cancelled."
+        },
+        "introText": "Changing the language requires that Paint.NET be restarted.",
+        "restartTB": {
+            "actionText": "Restart Paint.NET",
+            "explanationText": {
+                "format": "Closes Paint.NET and then restarts it in {0}. You will be asked to save your changes if necessary."
+            }
+        },
+        "title": "Language Choice Confirmation"
+    },
+    "contentBlendMode": {
+        "additive": "Additive",
+        "colorBurn": "Color Burn",
+        "colorDodge": "Color Dodge",
+        "darken": "Darken",
+        "difference": "Difference",
+        "glow": "Glow",
+        "lighten": "Lighten",
+        "multiply": "Multiply",
+        "negation": "Negation",
+        "normal": "Normal",
+        "overlay": "Overlay",
+        "overwrite": "Overwrite",
+        "reflect": "Reflect",
+        "screen": "Screen",
+        "xor": "Xor"
+    },
+    "copyAction": {
+        "error": {
+            "generic": "There was an error copying to the clipboard.",
+            "outOfMemory": "There was not enough memory to complete the clipboard operation."
+        }
+    },
+    "crashLog": {
+        "headerText": {
+            "format": "This text file was created because Paint.NET crashed. Please e-mail this to {0} so we can diagnose and fix the problem.\r\n"
+        }
+    },
+    "crashLogDialog": {
+        "mayBeCausedBy": {
+            "dieboldWarsaw": "Diebold Warsaw",
+            "eVGAPrecisionX": "EVGA Precision X",
+            "macType": "MacType",
+            "mirillisAction": "Mirillis Action!"
+        },
+        "message": {
+            "text": "Sorry, but Paint.NET has encountered an unhandled exception and must close.",
+            "causedBy": {
+                "noHardwareDeviceException": {
+                    "nVIDIA": "Paint.NET is unable to start because of a bug in the currently installed NVIDIA GPU driver.\r\n\r\nTo fix this:\r\n\r\n1) Open the NVIDIA Control Panel, which you can do by right-clicking on the Desktop and choosing \"NVIDIA Control Panel\"\r\n\r\n2) Navigate to \"3D Settings Management\"\r\n\r\n3) Within the \"Global Settings\" tab, find \"Preferred graphics processor\" at the top and make sure it is set to \"Auto-select\"\r\n\r\nYou can also configure this on a per-application basis by using the \"Program Settings\" tab instead of \"Global Settings\" in step 3."
+                }
+            },
+            "mayBeCausedBy": {
+                "disableOrRemove": {
+                    "format": "NOTE: This may be caused by '{0}'. If you disable or remove it then Paint.NET should work again. We recommend you contact the publisher of '{0}' for a fix."
+                },
+                "discordOverlay": "NOTE: This crash is caused by a bug in the Discord Overlay. This can be fixed by excluding or removing Paint.NET from the overlay within Discord's settings."
+            }
+        },
+        "quitButton": {
+            "text": "Quit"
+        },
+        "restartButton": {
+            "text": "Restart Paint.NET"
+        },
+        "title": {
+            "text": "Paint.NET Crash"
+        }
+    },
+    "cropAction": {
+        "name": "Crop to Selection"
+    },
+    "crystalizeEffect": {
+        "configUI": {
+            "quality": {
+                "displayName": "Quality"
+            },
+            "seed": {
+                "buttonText": "Randomize"
+            },
+            "size": {
+                "displayName": "Cell Size"
+            }
+        },
+        "name": "Crystalize"
+    },
+    "curveControlLuminosity": {
+        "luminosity": "Luminosity"
+    },
+    "curveControlRgb": {
+        "blue": "Blue",
+        "green": "Green",
+        "red": "Red"
+    },
+    "curvesEffect": {
+        "name": "Curves"
+    },
+    "curvesEffectConfigDialog": {
+        "coordinates": {
+            "format": "({0}, {1})"
+        },
+        "helpText": {
+            "text": "Tip: Right-click to remove control points."
+        },
+        "inputHeader": {
+            "text": "Input Histogram"
+        },
+        "outputHeader": {
+            "text": "Output Histogram"
+        },
+        "resetButton": {
+            "text": "Reset"
+        },
+        "text": "Curves",
+        "transferHeader": {
+            "text": "Transfer Map"
+        }
+    },
+    "curveType": {
+        "bezier": "Bezier",
+        "spline": "Spline",
+        "straight": "Straight"
+    },
+    "cutAction": {
+        "name": "Cut"
+    },
+    "dashStyle": {
+        "custom": "Custom_NotUsed",
+        "dash": "Dashes",
+        "dashDot": "Dash, Dot",
+        "dashDotDot": "Dash, Dot, Dot",
+        "dot": "Dotted",
+        "solid": "Solid"
+    },
+    "ddsFileType": {
+        "name": "DirectDraw Surface (DDS)"
+    },
+    "ddsFileTypePlus": {
+        "bC7CompressionSpeed_DisplayName": "BC6H / BC7 Compression Speed",
+        "bC7CompressionSpeed_Fast": "Fast",
+        "bC7CompressionSpeed_Medium": "Medium",
+        "bC7CompressionSpeed_Slow": "Slow",
+        "cubeMap_Description": "Cube Map from crossed image",
+        "ddsFileFormat_B4G4R4A4": "B4G4R4A4 (Linear, A4R4G4B4)",
+        "ddsFileFormat_B5G5R5A1": "B5G5R5A1 (Linear, A1R5G5B5)",
+        "ddsFileFormat_B5G6R5": "B5G6R5 (Linear, R5G6B5)",
+        "ddsFileFormat_B8G8R8": "B8G8R8 (Linear, R8G8B8)",
+        "ddsFileFormat_B8G8R8A8": "B8G8R8A8 (Linear, A8R8G8B8)",
+        "ddsFileFormat_B8G8R8A8Srgb": "B8G8R8A8 (sRGB, DX 10+)",
+        "ddsFileFormat_B8G8R8X8": "B8G8R8X8 (Linear, X8R8G8B8)",
+        "ddsFileFormat_B8G8R8X8Srgb": "B8G8R8X8 (sRGB, DX 10+)",
+        "ddsFileFormat_BC1": "BC1 (Linear, DXT1)",
+        "ddsFileFormat_BC1Srgb": "BC1 (sRGB, DX 10+)",
+        "ddsFileFormat_BC2": "BC2 (Linear, DXT3)",
+        "ddsFileFormat_BC2Srgb": "BC2 (sRGB, DX 10+)",
+        "ddsFileFormat_BC3": "BC3 (Linear, DXT5)",
+        "ddsFileFormat_BC3Rxgb": "BC3 (Linear, RXGB)",
+        "ddsFileFormat_BC3Srgb": "BC3 (sRGB, DX 10+)",
+        "ddsFileFormat_BC4ATI1": "BC4 (Linear, Unsigned, ATI1)",
+        "ddsFileFormat_BC4Unsigned": "BC4 (Linear, Unsigned)",
+        "ddsFileFormat_BC5ATI2": "BC5 (Linear, Unsigned, ATI2)",
+        "ddsFileFormat_BC5Signed": "BC5 (Linear, Signed)",
+        "ddsFileFormat_BC5Unsigned": "BC5 (Linear, Unsigned)",
+        "ddsFileFormat_BC6HUnsigned": "BC6H (Linear, Unsigned, DX 11+)",
+        "ddsFileFormat_BC7": "BC7 (Linear, DX 11+)",
+        "ddsFileFormat_BC7Srgb": "BC7 (sRGB, DX 11+)",
+        "ddsFileFormat_R32Float": "R32 (Linear, Float)",
+        "ddsFileFormat_R8G8B8A8": "R8G8B8A8 (Linear, A8B8G8R8)",
+        "ddsFileFormat_R8G8B8A8Srgb": "R8G8B8A8 (sRGB, DX 10+)",
+        "ddsFileFormat_R8G8B8X8": "R8G8B8X8 (Linear, X8B8G8R8)",
+        "ddsFileFormat_R8G8Signed": "R8G8 (Linear, Signed, V8U8)",
+        "ddsFileFormat_R8G8Unsigned": "R8G8 (Linear, Unsigned, A8L8)",
+        "ddsFileFormat_R8Unsigned": "R8 (Linear, Unsigned, L8)",
+        "errorDiffusionDithering_Description": "Error diffusion dithering",
+        "errorMetric_DisplayName": "Error Metric",
+        "errorMetric_Perceptual": "Perceptual",
+        "errorMetric_Uniform": "Uniform",
+        "fileType_Name": "DirectDraw Surface (DDS)",
+        "forumLink_Description": "Forum Discussion",
+        "forumLink_DisplayName": "More Info",
+        "generateMipMaps_Description": "Generate Mip Maps",
+        "resamplingAlgorithm_AdaptiveHighQuality": "Adaptive (Sharp)",
+        "resamplingAlgorithm_Cubic": "Bicubic",
+        "resamplingAlgorithm_CubicSmooth": "Bicubic (Smooth)",
+        "resamplingAlgorithm_Fant": "Fant",
+        "resamplingAlgorithm_Lanczos3": "Lanczos",
+        "resamplingAlgorithm_Linear": "Bilinear",
+        "resamplingAlgorithm_LinearLowQuality": "Bilinear (Low Quality)",
+        "resamplingAlgorithm_NearestNeighbor": "Nearest Neighbor",
+        "useGammaCorrection_Description": "Use gamma correction"
+    },
+    "deleteLayer": {
+        "historyMementoName": "Delete Layer"
+    },
+    "dentsEffect": {
+        "configDialog": {
+            "angleLabel": "Angle",
+            "detailLabel": "Detail",
+            "qualityLabel": "Quality",
+            "refractionLabel": "Refraction",
+            "scaleLabel": "Scale",
+            "seedButtonText": "Randomize",
+            "turbulenceLabel": "Turbulence"
+        },
+        "name": "Dents"
+    },
+    "desaturateEffect": {
+        "name": "Black and White"
+    },
+    "deselectAction": {
+        "name": "Deselect"
+    },
+    "diamondShape": {
+        "name": "Diamond"
+    },
+    "documentWorkspace": {
+        "deleteLayerButtonClicked": {
+            "confirmation": "Delete layer?",
+            "mustHaveOneLayer": "There must be at least one layer in an image."
+        },
+        "initializeEffects": {
+            "dllLoadFailed": {
+                "format": "There was an error loading {0}. It may be corrupt, or it may need to be recompiled."
+            }
+        },
+        "showFileDialog": {
+            "cancelTB": {
+                "actionText": "Cancel",
+                "explanationText": "Cancels the transfer, and lets you reselect which images to open."
+            },
+            "itemFailureDialog": {
+                "introText": {
+                    "format": "There was an error transferring the image:\r\n\r\n{0}"
+                },
+                "title": "Transfer Error"
+            },
+            "itemText": {
+                "canceling": "Canceling...",
+                "initializing": "Initializing..."
+            },
+            "progressText": {
+                "format": "{0} of {1}"
+            },
+            "retryTB": {
+                "actionText": "Retry",
+                "explanationText": "Retries transferring the image."
+            },
+            "skipTB": {
+                "actionText": "Skip",
+                "explanationText": "Skips this image, and moves on to the next one."
+            },
+            "transferProgress": {
+                "title": "Transferring..."
+            }
+        }
+    },
+    "downloadAndUnzipUpdateDialog": {
+        "description": {
+            "downloading": "Downloading...",
+            "extracting": "Extracting..."
+        },
+        "error": {
+            "generic": "There was an error downloading and installing the new version. Please try again later by going to Settings → Updates → Check Now."
+        },
+        "text": "Paint.NET Updates"
+    },
+    "dragDrop": {
+        "openOrImport": {
+            "importLayers": {
+                "actionText": {
+                    "plural": "Add layers",
+                    "singular": "Add layer"
+                },
+                "explanationText": {
+                    "noImagesYet": {
+                        "plural": "Loads the images and adds them as new layers in a new image."
+                    },
+                    "plural": "Loads the images and adds them as new layers in the current image.",
+                    "singular": "Loads the image and adds it as a new layer in the current image."
+                }
+            },
+            "infoText": {
+                "plural": "What would you like to do with the files?",
+                "singular": "What would you like to do with the file?"
+            },
+            "openButton": {
+                "actionText": "Open",
+                "explanationText": {
+                    "plural": "Opens each image.",
+                    "singular": "Opens the image."
+                }
+            },
+            "title": "Drag and Drop"
+        }
+    },
+    "dropShadowEffect": {
+        "angle": {
+            "displayName": "Angle"
+        },
+        "blurRadius": {
+            "displayName": "Shadow Radius"
+        },
+        "color": {
+            "displayName": "Color"
+        },
+        "distance": {
+            "displayName": "Distance"
+        },
+        "footnote": "This effect requires a layer with transparency. Make sure that the object you want a drop shadow for is on its own layer.",
+        "name": "Drop Shadow",
+        "opacity": {
+            "displayName": "Opacity"
+        },
+        "shadowOnly": {
+            "displayName": "Only draw shadow"
+        }
+    },
+    "duplicateLayer": {
+        "historyMementoName": "Duplicate Layer"
+    },
+    "dxgiAdapterIdentity": {
+        "displayName": {
+            "format": "{0} ({1})"
+        }
+    },
+    "edgeDetectEffect": {
+        "algorithm": {
+            "displayName": "Algorithm:",
+            "prewitt": {
+                "displayName": "Prewitt"
+            },
+            "sobel": {
+                "displayName": "Sobel"
+            }
+        },
+        "blurRadius": {
+            "displayName": "Blurring"
+        },
+        "name": "Edge Detect",
+        "overlayEdges": {
+            "displayName": "Overlay Edges"
+        },
+        "strength": {
+            "displayName": "Strength"
+        }
+    },
+    "effect": {
+        "pluginErrorDialog": {
+            "auxButton1": {
+                "text": "Error Details"
+            },
+            "doNotRestartTB": {
+                "actionText": "Do not restart Paint.NET (not recommended)",
+                "explanationText": "Closes the plugin, but does not close or restart Paint.NET."
+            },
+            "introText": "This plugin has encountered an error, and must be closed.\r\n\r\nBecause of the unpredictable nature of these types of errors, it is strongly recommended that you restart Paint.NET before proceeding. Otherwise, there could be further stability problems or data corruption.",
+            "restartTB": {
+                "actionText": "Restart Paint.NET (recommended)",
+                "explanationText": "Closes the plugin, and then closes your opened images and restarts Paint.NET. You will be asked to save changes if necessary."
+            },
+            "title": "Plugin Error"
+        },
+        "pluginToolTip": {
+            "author": {
+                "format": "Author: {0}"
+            },
+            "displayName": {
+                "format": "Plugin: {0}"
+            },
+            "displayNameAndVersion": {
+                "format": "Plugin: {0}, v{1}"
+            },
+            "location": {
+                "format": "Location: {0}"
+            },
+            "version": {
+                "format": "Plugin v{0}"
+            }
+        }
+    },
+    "effectErrorMessage": {
+        "fullFormat": "File: {0}\r\nName: {1}\r\nVersion: {2}\r\nAuthor: {3}\r\nCopyright: {4}\r\nWebsite: {5}\r\nFull error message: {6}\r\n",
+        "headerFormat": "{0} of {1}\r\n--------------",
+        "infoNotSupplied": "(Not Supplied)",
+        "shortFormat": "File: {0}\r\nEffect Name: {1}\r\nFull error message: {2}\r\n"
+    },
+    "effects": {
+        "applyingDialog": {
+            "description": {
+                "text": "Rendering...",
+                "withPercent": {
+                    "format": "Rendering... {0}%"
+                }
+            }
+        },
+        "artistic": {
+            "submenu": {
+                "name": "Artistic"
+            }
+        },
+        "blurring": {
+            "submenu": {
+                "name": "Blurs"
+            }
+        },
+        "color": {
+            "submenu": {
+                "name": "Color"
+            }
+        },
+        "distort": {
+            "submenu": {
+                "name": "Distort"
+            }
+        },
+        "name": {
+            "format": {
+                "configurable": "{0}..."
+            }
+        },
+        "noise": {
+            "submenu": {
+                "name": "Noise"
+            }
+        },
+        "object": {
+            "submenu": {
+                "name": "Object"
+            }
+        },
+        "photo": {
+            "submenu": {
+                "name": "Photo"
+            }
+        },
+        "pluginLoadErrorsDialog": {
+            "message": {
+                "text": "The following plugins were not loaded. They may have been written for an older or newer version of Paint.NET, or may have known stability or compatibility problems. If you already have the most up-to-date version of Paint.NET, then you should check to see if there is an updated version of each plugin."
+            },
+            "text": "Plugin Load Errors"
+        },
+        "render": {
+            "submenu": {
+                "name": "Render"
+            }
+        },
+        "repeatMenuItem": {
+            "format": "Repeat {0}"
+        },
+        "stylize": {
+            "submenu": {
+                "name": "Stylize"
+            }
+        }
+    },
+    "ellipseSelectTool": {
+        "helpText": "Click and drag to draw an elliptical selection. Hold shift to constrain to a circle.",
+        "name": "Ellipse Select"
+    },
+    "ellipseShape": {
+        "name": "Ellipse"
+    },
+    "ellipseTool": {
+        "helpText": "Click and drag to draw an ellipse (right click for secondary color). Hold shift to constrain to a circle.",
+        "name": "Ellipse",
+        "statusText": {
+            "format": "Size: {0}{1} × {2}{3}, Area: {4} {5}"
+        }
+    },
+    "ellipticalCalloutShape": {
+        "name": "Elliptical callout"
+    },
+    "embossEffect": {
+        "height": {
+            "displayName": "Height"
+        },
+        "name": "Emboss"
+    },
+    "eraserTool": {
+        "helpText": "Click and drag to erase a portion of the image",
+        "name": "Eraser"
+    },
+    "eraseSelectionAction": {
+        "name": "Erase Selection"
+    },
+    "error": {
+        "cantQueue2ndRestart": "Paint.NET can't be restarted because something else has already been scheduled to occur when it exits.",
+        "fXRequirement": ".NET Framework 4.7 is required.",
+        "memoryRequirement": {
+            "mB": {
+                "format": "A minimum of {0}MB of memory (RAM) is required."
+            }
+        },
+        "oSRequirement": "Paint.NET requires Windows 10 (version 21H2), or Windows 11, or newer.",
+        "sSERequirement": "A processor (CPU) with SSE2 support is required."
+    },
+    "exceptionDialog": {
+        "copyToClipboardButton": {
+            "text": "Copy to clipboard"
+        },
+        "detailsButton": {
+            "hide": {
+                "text": "Hide Details"
+            },
+            "show": {
+                "text": "Show Details"
+            }
+        },
+        "genericErrorMessage": "There was an error while performing the action.",
+        "openFolderLink": {
+            "text": "Open crash log folder"
+        }
+    },
+    "executeFunction": {
+        "genericError": "There was an error performing the action.",
+        "genericOutOfMemory": "There was not enough memory to perform the action.",
+        "progressDialog": {
+            "description": {
+                "text": "Please wait..."
+            }
+        }
+    },
+    "expandCanvasQuestion": {
+        "cancelTB": {
+            "actionText": "Cancel",
+            "explanationText": "Cancels the paste action."
+        },
+        "introText": "The image being pasted is larger than the canvas size. What do you want to do?",
+        "noTB": {
+            "actionText": "Keep canvas size",
+            "explanationText": "Does not expand the canvas. You will have to move the pasted image around to make sure that the part you want is within the canvas boundaries."
+        },
+        "title": "Paste",
+        "yesTB": {
+            "actionText": "Expand canvas",
+            "explanationText": "Automatically expands the canvas to fit the image being pasted."
+        }
+    },
+    "expiredDialog": {
+        "message": "This pre-release version of Paint.NET has expired.\r\n\r\nClick OK to go to the Paint.NET website where you may download a newer version."
+    },
+    "expiredTaskDialog": {
+        "checkForUpdatesTB": {
+            "actionText": "Check for an Update",
+            "explanationText": "Check to see if an update is available, and then install it."
+        },
+        "doNotCheckForUpdatesTB": {
+            "actionText": "Exit",
+            "explanationText": "Exit Paint.NET without checking for updates."
+        },
+        "goToWebSiteTB": {
+            "actionText": "Go to the Paint.NET website",
+            "explanationText": "If checking for updates does not work, you may try going to the website to manually find an update."
+        },
+        "infoText": "This pre-release version of Paint.NET has expired. To continue using Paint.NET, you must update to the latest version."
+    },
+    "exposureEffect": {
+        "name": "Exposure"
+    },
+    "fileChooserControl": {
+        "allFiles": "All Files",
+        "allSupportedFiles": "All Supported Files",
+        "selectFile": "Select File"
+    },
+    "fileDialog": {
+        "pathTooLongException": {
+            "message": "The file name is too long. Please try a shorter name."
+        },
+        "types": {
+            "allImages": "All image types"
+        }
+    },
+    "fillSelectionAction": {
+        "name": "Fill Selection"
+    },
+    "flattenAction": {
+        "question": {
+            "discardHiddenLayers": "Discard hidden layers?"
+        }
+    },
+    "flattenFunction": {
+        "name": "Flatten"
+    },
+    "flipDocumentHorizontalAction": {
+        "name": "Flip Horizontal (all)"
+    },
+    "flipDocumentVerticalAction": {
+        "name": "Flip Vertical (all)"
+    },
+    "flipLayerHorizontalAction": {
+        "name": "Flip Horizontal"
+    },
+    "flipLayerVerticalAction": {
+        "name": "Flip Vertical"
+    },
+    "floodFillToolBase": {
+        "changed": {
+            "originPoint": {
+                "historyMementoName": "Move Origin"
+            }
+        }
+    },
+    "floodMode": {
+        "global": "Global",
+        "local": "Contiguous"
+    },
+    "folderChooserControl": {
+        "selectFolder": "Select Folder"
+    },
+    "fontSizeMetric": {
+        "fixed96Dpi": "Fixed (96 DPI)\r\nConversion from font size to pixels uses a fixed 96 DPI.",
+        "points": "Points (image DPI)\r\nConversion from font size to pixels uses industry-standard points defined by the image's resolution metadata (DPI)."
+    },
+    "fontSmoothing": {
+        "none": "None",
+        "sharp": "Sharp",
+        "smooth": "Smooth"
+    },
+    "fontStyle": {
+        "bold": "Bold",
+        "italic": "Italics",
+        "strikeout": "Strikeout",
+        "underline": "Underline"
+    },
+    "form": {
+        "cancelButton": {
+            "text": "Cancel"
+        },
+        "closeButton": {
+            "text": "Close"
+        },
+        "okButton": {
+            "text": "OK"
+        },
+        "resetButton": {
+            "text": "Reset"
+        },
+        "saveButton": {
+            "text": "Save"
+        }
+    },
+    "fragmentEffect": {
+        "configDialog": {
+            "distance": {
+                "displayName": "Distance"
+            },
+            "fragments": {
+                "displayName": "Fragment Count"
+            },
+            "rotation": {
+                "displayName": "Rotation"
+            }
+        },
+        "name": "Fragment Blur"
+    },
+    "frostedGlassEffect": {
+        "configDialog": {
+            "diffusionExponent": {
+                "displayName": "Diffusion"
+            },
+            "maxScatterRadius": {
+                "displayName": "Maximum Scatter Radius"
+            },
+            "minScatterRadius": {
+                "displayName": "Minimum Scatter Radius"
+            },
+            "numSamples": {
+                "displayName": "Smoothness"
+            },
+            "randomize": {
+                "buttonText": "Randomize"
+            }
+        },
+        "name": "Frosted Glass"
+    },
+    "gearShape": {
+        "name": "Gear"
+    },
+    "generic": {
+        "outOfMemory": "There was not enough memory to complete the operation."
+    },
+    "gifFileType": {
+        "configUI": {
+            "convertToSrgb": {
+                "description": "Convert to sRGB"
+            },
+            "ditherLevel": {
+                "displayName": "Dithering level"
+            },
+            "quantizationAlgorithm": {
+                "displayName": "Quantization algorithm"
+            },
+            "threshold": {
+                "description": "Pixels with an alpha value less than the threshold will be fully transparent.",
+                "displayName": "Transparency threshold"
+            }
+        }
+    },
+    "glowEffect": {
+        "amount1": {
+            "name": "Radius"
+        },
+        "amount2": {
+            "name": "Brightness"
+        },
+        "amount3": {
+            "name": "Contrast"
+        },
+        "name": "Glow"
+    },
+    "gpuChoice": {
+        "default": {
+            "text": "⚙️ Windows Default",
+            "format": "⚙️ Windows Default ({0})"
+        },
+        "highPerformance": {
+            "text": "🚀 Performance",
+            "format": "🚀 Performance ({0})"
+        },
+        "minimumPower": {
+            "text": "🔋 Power Saving",
+            "format": "🔋 Power Saving ({0})"
+        },
+        "software": {
+            "text": "🐌 CPU",
+            "format": "🐌 CPU ({0})"
+        }
+    },
+    "gradientIsAlphaOnly": {
+        "false": "Color Mode",
+        "true": "Transparency Mode"
+    },
+    "gradientRepeatType": {
+        "noRepeat": "No Repeat",
+        "repeatReflected": "Repeat Reflected",
+        "repeatWrapped": "Repeat Wrapped"
+    },
+    "gradientTool": {
+        "changed": {
+            "generic": {
+                "historyMementoName": "Edit Gradient"
+            },
+            "gradientRepeatType": {
+                "historyMementoName": "Change Repeat Type"
+            },
+            "gradientType": {
+                "historyMementoName": "Change Gradient Type"
+            },
+            "isAlphaOnly": {
+                "historyMementoName": "Toggle Alpha Mode"
+            },
+            "moved": {
+                "historyMementoName": "Move Gradient"
+            },
+            "reverseColors": {
+                "historyMementoName": "Reverse Colors"
+            }
+        },
+        "commitChanges": {
+            "historyMementoName": "Finish Gradient"
+        },
+        "endDrawing": {
+            "historyMementoName": "Gradient"
+        },
+        "helpText": {
+            "text": "Click and drag to start drawing. Hold shift while drawing to constrain the angle.",
+            "adjustable": {
+                "format": "Offset: {0}{1} × {2}{3}, Diagonal: {4} {5}, Angle: {6}°. Right click a handle to swap colors. Press Enter to finish."
+            },
+            "whileAdjusting": {
+                "format": "Offset: {0}{1} × {2}{3}, Diagonal: {4} {5}, Angle: {6}°. Hold shift to constrain the angle."
+            }
+        },
+        "name": "Gradient"
+    },
+    "gradientType": {
+        "conical": "Conical",
+        "linearClamped": "Linear",
+        "linearDiamond": "Diamond",
+        "linearReflected": "Linear (Reflected)",
+        "radial": "Radial",
+        "spiral": "Spiral (Clockwise)",
+        "spiralCounterClockwise": "Spiral (Counter Clockwise)"
+    },
+    "hatchStyle": {
+        "backwardDiagonal": "Backward Diagonal",
+        "cross": "Cross",
+        "darkDownwardDiagonal": "Dark Downward Diagonal",
+        "darkHorizontal": "Dark Horizontal",
+        "darkUpwardDiagonal": "Dark Upward Diagonal",
+        "darkVertical": "Dark Vertical",
+        "dashedDownwardDiagonal": "Dashed Downward Diagonal",
+        "dashedHorizontal": "Dashed Horizontal",
+        "dashedUpwardDiagonal": "Dashed Upward Diagonal",
+        "dashedVertical": "Dashed Vertical",
+        "diagonalBrick": "Diagonal Brick",
+        "diagonalCross": "Diagonal Cross",
+        "divot": "Divot",
+        "dottedDiamond": "Dotted Diamond",
+        "dottedGrid": "Dotted Grid",
+        "forwardDiagonal": "Forward Diagonal",
+        "horizontal": "Horizontal",
+        "horizontalBrick": "Horizontal Brick",
+        "largeCheckerBoard": "Large Checker Board",
+        "largeConfetti": "Large Confetti",
+        "largeGrid": "Large Grid",
+        "lightDownwardDiagonal": "Light Downward Diagonal",
+        "lightHorizontal": "Light Horizontal",
+        "lightUpwardDiagonal": "Light Upward Diagonal",
+        "lightVertical": "Light Vertical",
+        "max": "Max",
+        "min": "Min",
+        "narrowHorizontal": "Narrow Horizontal",
+        "narrowVertical": "Narrow Vertical",
+        "outlinedDiamond": "Outlined Diamond",
+        "percent05": "Percent 05",
+        "percent10": "Percent 10",
+        "percent20": "Percent 20",
+        "percent25": "Percent 25",
+        "percent30": "Percent 30",
+        "percent40": "Percent 40",
+        "percent50": "Percent 50",
+        "percent60": "Percent 60",
+        "percent70": "Percent 70",
+        "percent75": "Percent 75",
+        "percent80": "Percent 80",
+        "percent90": "Percent 90",
+        "plaid": "Plaid",
+        "shingle": "Shingle",
+        "smallCheckerBoard": "Small Checker Board",
+        "smallConfetti": "Small Confetti",
+        "smallGrid": "Small Grid",
+        "solidDiamond": "Solid Diamond",
+        "sphere": "Sphere",
+        "trellis": "Trellis",
+        "vertical": "Vertical",
+        "wave": "Wave",
+        "weave": "Weave",
+        "wideDownwardDiagonal": "Wide Downward Diagonal",
+        "wideUpwardDiagonal": "Wide Upward Diagonal",
+        "zigZag": "Zig Zag"
+    },
+    "heartShape": {
+        "name": "Heart"
+    },
+    "heifFileType": {
+        "codecRequiredFromStoreError": {
+            "format": "Working with this file type requires the installation of a codec from the Microsoft Store: {0}"
+        },
+        "configUI": {
+            "quality": {
+                "displayName": "Quality"
+            }
+        }
+    },
+    "heptagonShape": {
+        "name": "Heptagon"
+    },
+    "hexagonShape": {
+        "name": "Hexagon"
+    },
+    "highlightsAndShadowsEffect": {
+        "clarity": {
+            "displayName": "Clarity"
+        },
+        "highlights": {
+            "displayName": "Highlights"
+        },
+        "name": "Highlights / Shadows",
+        "radius": {
+            "displayName": "Radius"
+        },
+        "shadows": {
+            "displayName": "Shadows"
+        }
+    },
+    "highlightsAndShadowsInputGamma": {
+        "linear": "Linear",
+        "srgb": "sRGB"
+    },
+    "historyForm": {
+        "fastForwardButton": {
+            "toolTipText": "Redo All (Fast Forward)"
+        },
+        "redoButton": {
+            "toolTipText": "Redo (Step Forward)\r\nShortcut key: Ctrl+Y"
+        },
+        "rewindButton": {
+            "toolTipText": "Undo All (Rewind)"
+        },
+        "text": "History",
+        "undoButton": {
+            "toolTipText": "Undo (Step Backward)\r\nShortcut key: Ctrl+Z"
+        }
+    },
+    "hueAndSaturationAdjustment": {
+        "amount1Label": "Hue",
+        "amount2Label": "Saturation",
+        "amount3Label": "Lightness",
+        "name": "Hue / Saturation"
+    },
+    "importFromFileAction": {
+        "askForCanvasResize": {
+            "outOfMemory": "Ran out of memory while trying to resize the image."
+        },
+        "importOneFile": {
+            "newLayer": {
+                "format": "{0}: {1}"
+            }
+        },
+        "importOneLayer": {
+            "outOfMemory": "Ran out of memory while trying to resize the layer."
+        },
+        "name": "Import From File"
+    },
+    "inkSketchEffect": {
+        "configDialog": {
+            "coloringLabel": "Coloring",
+            "inkOutlineLabel": "Ink Outline"
+        },
+        "name": "Ink Sketch"
+    },
+    "inputPathSmoothing": {
+        "disabled": "Unsmoothed path\r\nThe brush stroke will use the raw data coming in from the input device.",
+        "enabled": "Smoothed path\r\nThe brush stroke will be smoothed using a centripetal Catmull-Rom spline."
+    },
+    "interpolationMode": {
+        "anisotropic": "Anisotropic",
+        "cubic": "Bicubic",
+        "fant": "Fant",
+        "highQualityCubic": "Bicubic (High Quality)",
+        "linear": "Bilinear",
+        "mipmapLinear": "Mipmap Linear",
+        "multisampleLinear": "Multisample Bilinear",
+        "nearestNeighbor": "Nearest Neighbor"
+    },
+    "invertAlphaEffect": {
+        "name": "Invert Alpha"
+    },
+    "invertColorsEffect": {
+        "name": "Invert Colors"
+    },
+    "invertSelectionAction": {
+        "name": "Invert Selection"
+    },
+    "isoscelesTriangleShape": {
+        "name": "Triangle"
+    },
+    "jpegFileType": {
+        "configUI": {
+            "quality": {
+                "displayName": "Quality"
+            },
+            "yCrCbSubsampling": {
+                "displayName": "Chroma Subsampling",
+                "subsample420": {
+                    "displayName": "4:2:0 (Best Compression)"
+                },
+                "subsample422": {
+                    "displayName": "4:2:2"
+                },
+                "subsample440": {
+                    "displayName": "4:4:0"
+                },
+                "subsample444": {
+                    "displayName": "4:4:4 (Best Quality)"
+                }
+            }
+        }
+    },
+    "jpegXLFileType": {
+        "effort_Description": "Lower values are faster, but may reduce image quality.",
+        "effort_DisplayName": "Effort",
+        "forumLink_Description": "Forum Discussion",
+        "forumLink_DisplayName": "More Info",
+        "lossless_Description": "Lossless",
+        "quality_DisplayName": "Quality"
+    },
+    "juliaFractalEffect": {
+        "configDialog": {
+            "angle": {
+                "displayName": "Angle"
+            },
+            "blendMode": {
+                "displayName": "Blend Mode:"
+            },
+            "factor": {
+                "displayName": "Factor"
+            },
+            "quality": {
+                "displayName": "Quality"
+            },
+            "zoom": {
+                "displayName": "Zoom"
+            }
+        },
+        "name": "Julia Fractal"
+    },
+    "lassoSelectTool": {
+        "helpText": "Click and drag to draw the outline for a selection area.",
+        "name": "Lasso Select"
+    },
+    "launchLink": {
+        "error": {
+            "text": "There was an error launching the link.",
+            "format": "There was an error launching the link: {0}"
+        }
+    },
+    "layer": {
+        "backgroundLayer": {
+            "defaultName": "Background"
+        },
+        "properties": {
+            "blendMode": {
+                "name": "Blend Mode"
+            },
+            "isBackground": {
+                "name": "Background"
+            },
+            "name": {
+                "name": "Name"
+            },
+            "opacity": {
+                "name": "Opacity"
+            },
+            "visible": {
+                "name": "Visibility"
+            }
+        }
+    },
+    "layerBlendMode": {
+        "additive": "Additive",
+        "colorBurn": "Color Burn",
+        "colorDodge": "Color Dodge",
+        "darken": "Darken",
+        "difference": "Difference",
+        "glow": "Glow",
+        "lighten": "Lighten",
+        "multiply": "Multiply",
+        "negation": "Negation",
+        "normal": "Normal",
+        "overlay": "Overlay",
+        "reflect": "Reflect",
+        "screen": "Screen",
+        "xor": "Xor"
+    },
+    "layerForm": {
+        "addNewLayerButton": {
+            "toolTipText": "Add New Layer\r\nShortcut key: Ctrl+Shift+N"
+        },
+        "deleteLayerButton": {
+            "toolTipText": "Delete Layer\r\nShortcut key: Ctrl+Shift+Del"
+        },
+        "duplicateLayerButton": {
+            "toolTipText": "Duplicate Layer\r\nShortcut key: Ctrl+Shift+D"
+        },
+        "mergeLayerDownButton": {
+            "toolTipText": "Merge Layer Down\r\nShortcut key: Ctrl+M"
+        },
+        "moveLayerDownButton": {
+            "toolTipText": "Move Layer Down\r\nCtrl+Click: Move Layer to Bottom"
+        },
+        "moveLayerUpButton": {
+            "toolTipText": "Move Layer Up\r\nCtrl+Click: Move Layer to Top"
+        },
+        "propertiesButton": {
+            "toolTipText": "Properties\r\nShortcut key: F4"
+        },
+        "text": "Layers"
+    },
+    "layerPropertiesDialog": {
+        "generalHeader": {
+            "text": "General"
+        },
+        "nameLabel": {
+            "text": "Name"
+        },
+        "text": "Layer Properties",
+        "visibleCheckBox": {
+            "text": "Visible"
+        }
+    },
+    "layerPropertyChanging": {
+        "historyMementoNameFormat": "Layer {0}"
+    },
+    "levelsEffect": {
+        "name": "Levels"
+    },
+    "levelsEffectConfigDialog": {
+        "autoButton": {
+            "text": "Auto",
+            "toolTipText": "Automatically adjusts the input white point, black point, and output gamma to equalize the image"
+        },
+        "blueMaskCheckBox": {
+            "text": "B",
+            "toolTipText": "Toggle manipulation of the blue channel"
+        },
+        "greenMaskCheckBox": {
+            "text": "G",
+            "toolTipText": "Toggle manipulation of the green channel"
+        },
+        "histogramInput": {
+            "toolTipText": "This histogram shows the distribution of color in the original image."
+        },
+        "histogramOutput": {
+            "toolTipText": "This histogram shows a preview of the distribution of color in the resultant image"
+        },
+        "inputGroupBox": {
+            "text": "Input"
+        },
+        "inputHistogramGroupBox": {
+            "text": "Input Histogram"
+        },
+        "outputGammaUpDown": {
+            "toolTipText": "Output Gamma"
+        },
+        "outputGroupBox": {
+            "text": "Output"
+        },
+        "outputHistogramGroupBox": {
+            "text": "Output Histogram"
+        },
+        "redMaskCheckBox": {
+            "text": "R",
+            "toolTipText": "Toggle manipulation of the red channel"
+        },
+        "resetButton": {
+            "text": "Reset"
+        },
+        "swatchInHigh": {
+            "toolTipText": "Input White Point (double click to choose)"
+        },
+        "swatchInLow": {
+            "toolTipText": "Input Black Point (double click to choose)"
+        },
+        "swatchOutHigh": {
+            "toolTipText": "Output White Point (double click to choose)"
+        },
+        "swatchOutLow": {
+            "toolTipText": "Output Black Point (double click to choose)"
+        },
+        "text": "Levels Adjustment"
+    },
+    "lightningBoltShape": {
+        "name": "Lightning bolt"
+    },
+    "lineCurveCap": {
+        "arrow": "Arrow",
+        "arrowFilled": "Filled Arrow",
+        "flat": "Flat",
+        "rounded": "Rounded"
+    },
+    "lineTool": {
+        "curvingHelpText": "Press Enter to finish the curve, or draw elsewhere for a new line. Tap Ctrl to toggle handles.",
+        "helpText": "Left click to draw with primary color, right click to use secondary color. Hold Shift to constrain. Hold Alt to draw centered.",
+        "name": "Line / Curve",
+        "preCurveHelpText": "Drag handles to curve line (right button for Bezier), or press Enter to finish line, or draw elsewhere for a new line.",
+        "statusText": {
+            "format": "Offset: {0}{1} × {2}{3}, Length: {4} {5}, Angle: {6}°",
+            "notAdjusting": {
+                "format": "Offset: {0}{1} × {2}{3}, Length: {4} {5}, Angle: {6}°. Press Enter to finish, or draw elsewhere for a new line/curve."
+            }
+        }
+    },
+    "loadImage": {
+        "error": {
+            "argumentException": "There was an error opening the file.",
+            "blankFileName": "The filename is blank.",
+            "directoryNotFoundException": "The directory could not be found.",
+            "exception": "There was an error while opening the file.",
+            "fileNotFoundException": "The file could not be found.",
+            "imageTypeNotRecognized": "The image type is not recognized, and cannot be opened.",
+            "invalidFileName": "The file name is invalid.",
+            "iOException": "There was an error reading the file from the media.",
+            "outOfMemoryException": "Not enough memory to load the image.",
+            "pathTooLongException": "The file name is too long.",
+            "securityException": "Access was denied to the requested file (security exception).",
+            "serializationException": "The file is corrupt or was saved with a newer version of Paint.NET.",
+            "unauthorizedAccessException": "Access was denied to the requested file (unauthorized access).",
+            "unsupportedPdnFileVersionException": "The image was saved with a newer version of Paint.NET. You will need to install the latest update to open this image."
+        }
+    },
+    "magicWandTool": {
+        "changed": {
+            "generic": {
+                "historyMementoName": "Edit Selection"
+            }
+        },
+        "commitChanges": {
+            "historyMementoName": "Finish Magic Wand"
+        },
+        "endDrawing": {
+            "historyMementoName": "Magic Wand"
+        },
+        "helpText": "Click to select an area of similar color. Hold Shift for Global mode.",
+        "name": "Magic Wand"
+    },
+    "mainForm": {
+        "title": {
+            "format": "{0} - {1}"
+        }
+    },
+    "mainToolBarForm": {
+        "text": "Tools"
+    },
+    "mandelbrotFractalEffect": {
+        "configDialog": {
+            "angle": {
+                "displayName": "Angle"
+            },
+            "blendMode": {
+                "displayName": "Blend Mode:"
+            },
+            "factor": {
+                "displayName": "Factor"
+            },
+            "invertColors": {
+                "description": "Invert Colors"
+            },
+            "offset": {
+                "displayName": "Offset"
+            },
+            "quality": {
+                "displayName": "Quality"
+            },
+            "zoom": {
+                "displayName": "Zoom"
+            }
+        },
+        "name": "Mandelbrot Fractal"
+    },
+    "measurementUnit": {
+        "centimeter": {
+            "text": "Centimeter",
+            "abbreviation": "cm",
+            "plural": "Centimeters",
+            "ratio": "pixels/cm"
+        },
+        "inch": {
+            "text": "Inch",
+            "abbreviation": "in",
+            "plural": "Inches",
+            "ratio": "pixels/inch"
+        },
+        "pixel": {
+            "text": "Pixel",
+            "abbreviation": "px",
+            "plural": "Pixels",
+            "ratio": "pixels"
+        }
+    },
+    "medianBlurEffect": {
+        "name": "Median Blur",
+        "quality": {
+            "displayName": "Quality"
+        }
+    },
+    "medianEffect": {
+        "configDialog": {
+            "percentileLabel": "Percentile",
+            "radiusLabel": "Radius"
+        },
+        "name": "Median"
+    },
+    "menu": {
+        "edit": {
+            "copy": {
+                "text": "Copy"
+            },
+            "copyMerged": {
+                "text": "Copy Merged"
+            },
+            "copySelection": {
+                "text": "Copy Selection"
+            },
+            "cut": {
+                "text": "Cut"
+            },
+            "deselect": {
+                "text": "Deselect"
+            },
+            "eraseSelection": {
+                "text": "Erase Selection"
+            },
+            "fillSelection": {
+                "shortcutKeysDisplayString": "Backspace",
+                "text": "Fill Selection"
+            },
+            "invertSelection": {
+                "text": "Invert Selection"
+            },
+            "paste": {
+                "text": "Paste"
+            },
+            "pasteInToNewImage": {
+                "text": "Paste into New Image"
+            },
+            "pasteInToNewLayer": {
+                "text": "Paste into New Layer"
+            },
+            "pasteSelection": {
+                "exclude": {
+                    "text": "Exclude"
+                },
+                "intersect": {
+                    "text": "Intersect"
+                },
+                "replace": {
+                    "text": "Replace"
+                },
+                "text": "Paste Selection",
+                "union": {
+                    "text": "Add (union)"
+                },
+                "xor": {
+                    "text": "Invert (\"xor\")"
+                }
+            },
+            "redo": {
+                "text": "Redo"
+            },
+            "selectAll": {
+                "text": "Select All"
+            },
+            "text": "Edit",
+            "undo": {
+                "text": "Undo"
+            }
+        },
+        "effects": {
+            "pluginErrors": {
+                "text": "Plugin Errors..."
+            },
+            "text": "Effects"
+        },
+        "file": {
+            "acquire": {
+                "fromScannerOrCamera": {
+                    "text": "From Scanner..."
+                },
+                "text": "Acquire"
+            },
+            "close": {
+                "text": "Close"
+            },
+            "exit": {
+                "text": "Exit"
+            },
+            "new": {
+                "text": "New..."
+            },
+            "open": {
+                "text": "Open..."
+            },
+            "openRecent": {
+                "clearThisList": "Clear this list",
+                "none": "(none)",
+                "text": "Open Recent"
+            },
+            "print": {
+                "text": "Print..."
+            },
+            "save": {
+                "text": "Save"
+            },
+            "saveAll": {
+                "text": "Save All"
+            },
+            "saveAs": {
+                "text": "Save As..."
+            },
+            "text": "File"
+        },
+        "help": {
+            "about": {
+                "text": "About"
+            },
+            "donate": {
+                "text": "Donate"
+            },
+            "forum": {
+                "text": "Forum"
+            },
+            "helpTopics": {
+                "text": "Documentation"
+            },
+            "pdnSearch": {
+                "text": "Paint.NET Search..."
+            },
+            "pdnWebsite": {
+                "text": "Paint.NET Website"
+            },
+            "plugins": {
+                "text": "Plugins"
+            },
+            "sendFeedback": {
+                "text": "Send feedback or bug report..."
+            },
+            "text": "Help (Alt+H)",
+            "tutorials": {
+                "text": "Tutorials"
+            }
+        },
+        "image": {
+            "canvasSize": {
+                "text": "Canvas Size..."
+            },
+            "colorProfile": {
+                "text": "Color Profile..."
+            },
+            "crop": {
+                "text": "Crop to Selection"
+            },
+            "flatten": {
+                "text": "Flatten"
+            },
+            "flipHorizontal": {
+                "text": "Flip Horizontal"
+            },
+            "flipVertical": {
+                "text": "Flip Vertical"
+            },
+            "resize": {
+                "text": "Resize..."
+            },
+            "rotate180": {
+                "text": "Rotate 180°"
+            },
+            "rotate90CCW": {
+                "text": "Rotate 90° Counter-Clockwise"
+            },
+            "rotate90CW": {
+                "text": "Rotate 90° Clockwise"
+            },
+            "text": "Image"
+        },
+        "layers": {
+            "addNewLayer": {
+                "text": "Add New Layer"
+            },
+            "adjustments": {
+                "text": "Adjustments"
+            },
+            "deleteLayer": {
+                "text": "Delete Layer"
+            },
+            "duplicateLayer": {
+                "text": "Duplicate Layer"
+            },
+            "flipHorizontal": {
+                "text": "Flip Horizontal"
+            },
+            "flipVertical": {
+                "text": "Flip Vertical"
+            },
+            "goToBottomLayer": {
+                "text": "Go to Bottom Layer"
+            },
+            "goToLayerAbove": {
+                "text": "Go to Layer Above"
+            },
+            "goToLayerBelow": {
+                "text": "Go to Layer Below"
+            },
+            "goToTopLayer": {
+                "text": "Go to Top Layer"
+            },
+            "importFromFile": {
+                "text": "Import From File..."
+            },
+            "layerProperties": {
+                "text": "Layer Properties..."
+            },
+            "mergeLayerDown": {
+                "text": "Merge Layer Down"
+            },
+            "moveLayerDown": {
+                "text": "Move Layer Down"
+            },
+            "moveLayerToBottom": {
+                "text": "Move Layer to Bottom"
+            },
+            "moveLayerToTop": {
+                "text": "Move Layer to Top"
+            },
+            "moveLayerUp": {
+                "text": "Move Layer Up"
+            },
+            "rotate180": {
+                "text": "Rotate 180°"
+            },
+            "text": "Layers",
+            "toggleLayerVisibility": {
+                "shortcutKeyDisplayString": "Ctrl+,",
+                "text": "Toggle Layer Visibility"
+            }
+        },
+        "settings": {
+            "text": "Settings (Alt+X)"
+        },
+        "tab": {
+            "copyPath": {
+                "text": "Copy Path"
+            },
+            "openContainingFolder": {
+                "text": "Open Containing Folder"
+            }
+        },
+        "view": {
+            "actualSize": {
+                "text": "Actual Size"
+            },
+            "centimeters": {
+                "text": "Centimeters"
+            },
+            "grid": {
+                "text": "Pixel grid"
+            },
+            "inches": {
+                "text": "Inches"
+            },
+            "pixels": {
+                "text": "Pixels"
+            },
+            "rulers": {
+                "text": "Rulers"
+            },
+            "text": "View",
+            "zoomIn": {
+                "shortcutKeyDisplayString": "Ctrl++",
+                "text": "Zoom In"
+            },
+            "zoomOut": {
+                "shortcutKeyDisplayString": "Ctrl+-",
+                "text": "Zoom Out"
+            },
+            "zoomToSelection": {
+                "text": "Zoom to Selection"
+            },
+            "zoomToWindow": {
+                "text": "Zoom to Window"
+            }
+        },
+        "window": {
+            "colors": {
+                "text": "Colors (F8)\r\nCtrl+Shift+F8 or Ctrl+Shift+Click to Reset"
+            },
+            "glassDialogButtons": {
+                "text": "Glass Dialog Buttons"
+            },
+            "history": {
+                "text": "History (F6)\r\nCtrl+Shift+F6 or Ctrl+Shift+Click to Reset"
+            },
+            "layers": {
+                "text": "Layers (F7)\r\nCtrl+Shift+F7 or Ctrl+Shift+Click to Reset"
+            },
+            "nextTab": {
+                "text": "Next Image"
+            },
+            "openMdiList": {
+                "text": "Show Image List"
+            },
+            "previousTab": {
+                "text": "Previous Image"
+            },
+            "resetWindowLocations": {
+                "text": "Reset Window Locations"
+            },
+            "text": "Window (Alt+W)",
+            "tools": {
+                "text": "Tools (F5)\r\nCtrl+Shift+F5 or Ctrl+Shift+Click to Reset"
+            },
+            "translucent": {
+                "text": "Translucent"
+            }
+        }
+    },
+    "mergeLayerDown": {
+        "historyMementoName": "Merge Layer Down"
+    },
+    "messageConsoleDialog": {
+        "text": "Message Console"
+    },
+    "mixMode": {
+        "alphaMask": "Alpha Mask",
+        "blend2Additive": "Additive",
+        "blend2Glow": "Glow",
+        "blend2Max": "Max",
+        "blend2Min": "Min",
+        "blend2Negation": "Negation",
+        "blend2Reflect": "Reflect",
+        "blend2XorInt16": "Xor (16-bit)",
+        "blend2XorInt8": "Xor (8-bit)",
+        "blendColor": "Color",
+        "blendColorBurn": "Color Burn",
+        "blendColorDodge": "Color Dodge",
+        "blendDarken": "Darken",
+        "blendDarkerColor": "Darker Color",
+        "blendDifference": "Difference",
+        "blendDissolve": "Dissolve",
+        "blendDivision": "Division",
+        "blendExclusion": "Exclusion",
+        "blendHardLight": "Hard Light",
+        "blendHardMix": "Hard Mix",
+        "blendHue": "Hue",
+        "blendLighten": "Lighten",
+        "blendLighterColor": "Lighter Color",
+        "blendLinearBurn": "Linear Burn",
+        "blendLinearDodge": "Linear Dodge",
+        "blendLinearLight": "Linear Light",
+        "blendLuminosity": "Luminosity",
+        "blendMultiply": "Multiply",
+        "blendOverlay": "Overlay",
+        "blendPinLight": "Pin Light",
+        "blendSaturation": "Saturation",
+        "blendScreen": "Screen",
+        "blendSoftLight": "Soft Light",
+        "blendSubtract": "Subtract",
+        "blendVividLight": "Vivid Light",
+        "compositeBoundedSourceCopy": "Bounded Copy",
+        "compositeDestinationAtop": "Destination Atop",
+        "compositeDestinationIn": "Destination In",
+        "compositeDestinationOut": "Destination Out",
+        "compositeDestinationOver": "Under",
+        "compositeMaskInvert": "Mask Invert",
+        "compositePlus": "Plus",
+        "compositeSourceAtop": "Atop",
+        "compositeSourceCopy": "Overwrite",
+        "compositeSourceIn": "In",
+        "compositeSourceOut": "Out",
+        "compositeSourceOver": "Over (Normal)",
+        "compositeXor": "Xor (Composite)"
+    },
+    "morphologyEffect": {
+        "height": {
+            "displayName": "Height"
+        },
+        "linked": {
+            "description": "Linked"
+        },
+        "mode": {
+            "displayName": "Mode:"
+        },
+        "name": "Morphology",
+        "width": {
+            "displayName": "Width"
+        }
+    },
+    "morphologyMode": {
+        "dilate": "Dilate",
+        "erode": "Erode"
+    },
+    "motionBlurEffect": {
+        "name": "Motion Blur"
+    },
+    "motionBlurEffectConfigDialog": {
+        "angleHeader": {
+            "text": "Angle"
+        },
+        "centeredCheckBox": {
+            "text": "Centered"
+        },
+        "distanceHeader": {
+            "text": "Distance"
+        },
+        "edgeMode": {
+            "clamp": {
+                "text": "Clamp"
+            },
+            "mirror": {
+                "text": "Mirror"
+            },
+            "text": "Edge Behavior:",
+            "transparent": {
+                "text": "Transparent"
+            },
+            "wrap": {
+                "text": "Wrap"
+            }
+        },
+        "text": "Motion Blur"
+    },
+    "moveLayerDown": {
+        "historyMementoName": "Move Layer Down"
+    },
+    "moveLayerFunction": {
+        "name": "Move Layer"
+    },
+    "moveLayerToBottom": {
+        "historyMementoName": "Move Layer to Bottom"
+    },
+    "moveLayerToTop": {
+        "historyMementoName": "Move Layer to Top"
+    },
+    "moveLayerUp": {
+        "historyMementoName": "Move Layer Up"
+    },
+    "moveSelectionTool": {
+        "helpText": "Drag the selection to move. Drag the handles to resize or rotate. Hold Shift to constrain while resizing or rotating. Hold Alt to resize uniformly.",
+        "historyMemento": {
+            "dropSelection": "Finish Selection",
+            "moveRotationAnchor": "Move Rotation Anchor",
+            "rotate": "Rotate Selection",
+            "scale": "Resize Selection",
+            "translate": "Move Selection"
+        },
+        "name": "Move Selection"
+    },
+    "moveTool": {
+        "helpText": "Drag the selection to move. Drag the handles to resize. Drag with right mouse button to rotate.",
+        "historyMemento": {
+            "dropPixels": "Finish Pixels",
+            "rotate": "Rotate Pixels",
+            "scale": "Resize Pixels",
+            "translate": "Move Pixels"
+        },
+        "name": "Move Selected Pixels"
+    },
+    "moveToolInterpolationMode": {
+        "anisotropic": "Anisotropic",
+        "highQualityCubic": "Bicubic",
+        "linear": "Bilinear",
+        "multisampleLinear": "Multisample Bilinear",
+        "nearestNeighbor": "Nearest Neighbor"
+    },
+    "multiplyShape": {
+        "name": "Multiply"
+    },
+    "newFileDialog": {
+        "text": "New"
+    },
+    "newImageAction": {
+        "error": {
+            "outOfMemory": "Not enough memory to create new image."
+        },
+        "name": "New Image"
+    },
+    "newLayerAction": {
+        "error": {
+            "outOfMemory": "Not enough memory to create a new layer."
+        }
+    },
+    "nonAdminErrorBox": {
+        "message": "You must be a system administrator to perform this action."
+    },
+    "notchedArrowShape": {
+        "name": "Notched arrow"
+    },
+    "octagonShape": {
+        "name": "Octagon"
+    },
+    "oilPaintingEffect": {
+        "configDialog": {
+            "amount1Label": "Brush size",
+            "amount2Label": "Coarseness",
+            "granularity": {
+                "displayName": "Granularity"
+            },
+            "kernelShape": {
+                "circle": {
+                    "displayName": "Circle"
+                },
+                "displayName": "Kernel Shape:",
+                "square": {
+                    "displayName": "Square"
+                }
+            }
+        },
+        "name": "Oil Painting"
+    },
+    "openImageAction": {
+        "name": "Open Image"
+    },
+    "outlineEffect": {
+        "configDialog": {
+            "intensityLabel": "Intensity",
+            "thicknessLabel": "Thickness"
+        },
+        "name": "Outline"
+    },
+    "paintBrushTool": {
+        "helpText": "Left click to draw with primary color, right click to draw with secondary color.",
+        "name": "Paintbrush"
+    },
+    "paintBucketTool": {
+        "changed": {
+            "generic": {
+                "historyMementoName": "Edit Paint Bucket"
+            }
+        },
+        "commitChanges": {
+            "historyMementoName": "Finish Paint Bucket"
+        },
+        "endDrawing": {
+            "historyMementoName": "Paint Bucket"
+        },
+        "helpText": "Left click to fill a region with the primary color, right click to fill with the secondary color. Hold Shift for Global mode.",
+        "name": "Paint Bucket"
+    },
+    "panTool": {
+        "helpText": "When zoomed in close, click and drag to navigate the image",
+        "name": "Pan"
+    },
+    "parallelogramShape": {
+        "name": "Parallelogram"
+    },
+    "pasteAction": {
+        "error": {
+            "noImage": "The clipboard doesn't contain an image.",
+            "transferFromClipboard": "There was an error getting the image from the clipboard."
+        },
+        "question": {
+            "expandCanvas": "The image being pasted is larger than the image canvas.\r\nExpand canvas to fit pasted image?"
+        }
+    },
+    "pasteInToNewImageAction": {
+        "error": {
+            "noClipboardImage": "There is no usable image in the clipboard."
+        }
+    },
+    "pasteSelectionAction": {
+        "error": {
+            "noSelection": "The clipboard contains neither a selection nor an image.",
+            "transferFromClipboard": "There was an error getting the selection from the clipboard."
+        }
+    },
+    "pasteSelectionFromClipboardAction": {
+        "historyMemento": {
+            "exclude": {
+                "text": "Paste Selection: Subtract"
+            },
+            "intersect": {
+                "text": "Paste Selection: Intersect"
+            },
+            "replace": {
+                "text": "Paste Selection"
+            },
+            "union": {
+                "text": "Paste Selection: Add (union)"
+            },
+            "xor": {
+                "text": "Paste Selection: Invert (\"xor\")"
+            }
+        }
+    },
+    "pdnDistortionSamplingMode": {
+        "linear": "Bilinear",
+        "point": "Nearest Neighbor"
+    },
+    "pdnInfo": {
+        "friendlyVersionString": {
+            "configWithSpace": {
+                "format": " {0}"
+            },
+            "format": "version {0}{1}"
+        },
+        "fullAppName": {
+            "format": "{0} ({1})"
+        },
+        "versionString": {
+            "debug": {
+                "format": "{0} Debug {1}"
+            },
+            "release": {
+                "format": "{0} {1}"
+            }
+        }
+    },
+    "pencilSketchEffect": {
+        "configDialog": {
+            "pencilTipSizeLabel": "Pencil tip size",
+            "rangeLabel": "Range"
+        },
+        "name": "Pencil Sketch"
+    },
+    "pencilTool": {
+        "helpText": "Left click to draw freeform, one-pixel wide lines with the primary color, right click to use the secondary color",
+        "name": "Pencil"
+    },
+    "pentagonArrowShape": {
+        "name": "Pentagon arrow"
+    },
+    "pentagonShape": {
+        "name": "Pentagon"
+    },
+    "pixelateEffect": {
+        "configDialog": {
+            "anchor": {
+                "displayName": "Anchor"
+            },
+            "scaleDownMode": {
+                "displayName": "Scale Down:"
+            },
+            "scaleUpMode": {
+                "displayName": "Scale Up:"
+            },
+            "sliderLabel": "Cell size",
+            "sliderUnitsName": "pixels"
+        },
+        "name": "Pixelate"
+    },
+    "pixelSampleMode": {
+        "average11x11": "11 × 11 pixels",
+        "average31x31": "31 × 31 pixels",
+        "average3x3": "3 × 3 pixels",
+        "average51x51": "51 × 51 pixels",
+        "average5x5": "5 × 5 pixels",
+        "pointSample": "Single Pixel"
+    },
+    "pluginBlockReason": {
+        "incompatible": "This plugin is incompatible with this version of Paint.NET.",
+        "notBlocked": "This plugin is not blocked.",
+        "nowBuiltIn": "This plugin is now built-in to Paint.NET.",
+        "unstable": "This plugin is known to cause stability problems.",
+        "unsupportedOS": "This plugin cannot be loaded on Windows 10 S.",
+        "updateRequired": "A required update is available."
+    },
+    "pngFileType": {
+        "configUI": {
+            "bitDepth": {
+                "autoDetect": {
+                    "displayName": "Auto-detect"
+                },
+                "bpp1": {
+                    "displayName": "1-bit"
+                },
+                "bpp2": {
+                    "displayName": "2-bit"
+                },
+                "bpp24": {
+                    "displayName": "24-bit"
+                },
+                "bpp32": {
+                    "displayName": "32-bit"
+                },
+                "bpp4": {
+                    "displayName": "4-bit"
+                },
+                "bpp8": {
+                    "displayName": "8-bit"
+                },
+                "displayName": "Bit Depth"
+            },
+            "ditherLevel": {
+                "displayName": "Dithering level"
+            },
+            "interlaced": {
+                "description": "Interlaced"
+            },
+            "otherOptions": {
+                "displayName": "Other options"
+            },
+            "quantizationAlgorithm": {
+                "displayName": "Quantization algorithm"
+            },
+            "threshold": {
+                "description": "Pixels with an alpha value less than the threshold will be fully transparent.",
+                "displayName": "Transparency threshold"
+            }
+        }
+    },
+    "polarInversion": {
+        "configUI": {
+            "edgeBehavior": {
+                "clamp": {
+                    "displayName": "Clamp"
+                },
+                "displayName": "Edge Behavior:",
+                "reflect": {
+                    "displayName": "Reflect"
+                },
+                "transparent": {
+                    "displayName": "Transparent"
+                },
+                "wrap": {
+                    "displayName": "Wrap"
+                }
+            },
+            "offset": {
+                "displayName": "Offset"
+            },
+            "quality": {
+                "displayName": "Quality"
+            },
+            "scale": {
+                "displayName": "Scale"
+            }
+        },
+        "name": "Polar Inversion"
+    },
+    "posterizeAdjustment": {
+        "configDialog": {
+            "alphaLevels": {
+                "displayName": "Alpha"
+            },
+            "blueLevels": {
+                "displayName": "Blue"
+            },
+            "greenLevels": {
+                "displayName": "Green"
+            },
+            "linkLevels": {
+                "description": "Linked"
+            },
+            "redLevels": {
+                "displayName": "Red"
+            }
+        },
+        "name": "Posterize"
+    },
+    "printAction": {
+        "error": {
+            "outOfMemory": "There was not enough memory to complete the clipboard operation."
+        }
+    },
+    "processorArchitecture": {
+        "x64": "x64",
+        "x86": "x86"
+    },
+    "program": {
+        "showDiagnostics": {
+            "message": "The diagnostics information is shown below."
+        }
+    },
+    "quantizationAlgorithm": {
+        "medianCut": "Median Cut",
+        "octree": "Octree"
+    },
+    "quantizeEffect": {
+        "configDialog": {
+            "algorithm": {
+                "displayName": "Algorithm:"
+            },
+            "colorCount": {
+                "displayName": "Colors"
+            }
+        },
+        "name": "Quantize"
+    },
+    "radialBlurEffect": {
+        "configDialog": {
+            "offsetLabel": "Center",
+            "qualityLabel": "Quality",
+            "radialLabel": "Angle"
+        },
+        "name": "Radial Blur"
+    },
+    "recolorTool": {
+        "helpText": "Left click to draw with primary color, right click to draw with secondary color.",
+        "name": "Recolor"
+    },
+    "recolorToolSamplingMode": {
+        "once": "Sampling: Once\r\nUses the color that you click on at the start of a brush stroke.",
+        "secondaryColor": "Sampling: Secondary Color\r\nUses the Secondary Color in the Colors window."
+    },
+    "rectangleSelectTool": {
+        "helpText": "Click and drag to draw a rectangular selection. Hold shift to constrain to a square.",
+        "name": "Rectangle Select"
+    },
+    "rectangleShape": {
+        "name": "Rectangle"
+    },
+    "rectangleTool": {
+        "helpText": "Click and drag to draw a rectangle (right click for secondary color). Hold shift to constrain to a square.",
+        "name": "Rectangle",
+        "statusText": {
+            "format": "Size: {0}{1} × {2}{3}, area: {4} {5}"
+        }
+    },
+    "rectangularCalloutShape": {
+        "name": "Rectangular callout"
+    },
+    "redEyeRemoveEffect": {
+        "configDialog": {
+            "strengthLabel": "Strength",
+            "usageHintLabel": "For best results, first use the selection tools to select each eye."
+        },
+        "name": "Red Eye Removal"
+    },
+    "reduceNoise": {
+        "radius": {
+            "displayName": "Radius"
+        },
+        "strength": {
+            "displayName": "Strength"
+        }
+    },
+    "reduceNoiseEffect": {
+        "name": "Reduce Noise"
+    },
+    "reliefEffect": {
+        "name": "Relief"
+    },
+    "resizeAction": {
+        "name": "Resize",
+        "performAction": {
+            "outOfMemory": "Not enough memory to resize the image.",
+            "unspecifiedError": "There was an error while trying to resize the image."
+        },
+        "progressDialog": {
+            "description": "Resizing..."
+        }
+    },
+    "resizeDialog": {
+        "absoluteRB": {
+            "text": "By absolute size:"
+        },
+        "constrainCheckBox": {
+            "text": "Maintain aspect ratio"
+        },
+        "currentImageSizeLabel": {
+            "text": "Current image size:"
+        },
+        "gammaModeCheckBox": {
+            "text": "Use gamma correction"
+        },
+        "newHeightLabel1": {
+            "text": "Height:"
+        },
+        "newHeightLabel2": {
+            "text": "Height:"
+        },
+        "newWidthLabel1": {
+            "text": "Width:"
+        },
+        "newWidthLabel2": {
+            "text": "Width:"
+        },
+        "optionsHeader": {
+            "text": "Options"
+        },
+        "percentRB": {
+            "text": "By percentage:"
+        },
+        "percentSignLabel": {
+            "text": "%"
+        },
+        "pixelSizeHeader": {
+            "text": "Pixel size"
+        },
+        "pixelsLabel1": {
+            "text": "pixels"
+        },
+        "pixelsLabel2": {
+            "text": "pixels"
+        },
+        "printSizeHeader": {
+            "text": "Print size"
+        },
+        "resamplingChoice": {
+            "adaptiveHighQuality": "Adaptive (Sharp)",
+            "cubic": "Bicubic",
+            "cubicSmooth": "Bicubic (Smooth)",
+            "fant": "Fant",
+            "lanczos3": "Lanczos",
+            "linear": "Bilinear",
+            "linearLowQuality": "Bilinear (Low Quality)",
+            "nearestNeighbor": "Nearest Neighbor"
+        },
+        "resamplingLabel": {
+            "text": "Resampling:"
+        },
+        "resizedImageHeader": {
+            "text": {
+                "format": "New size: {0}"
+            }
+        },
+        "resolutionLabel": {
+            "text": "Resolution:"
+        },
+        "text": "Resize"
+    },
+    "resizeProgressDialog": {
+        "resizing": {
+            "text": "Resizing..."
+        },
+        "resizingWithPercent": {
+            "text": {
+                "format": "Resizing... {0}%"
+            }
+        }
+    },
+    "rightTriangleShape": {
+        "name": "Right triangle"
+    },
+    "rotateAction": {
+        "180": "180° (all)",
+        "90CCW": "90° CCW",
+        "90CW": "90° CW",
+        "historyMementoName": {
+            "format": "{0} {1}"
+        },
+        "name": "Rotate"
+    },
+    "rotateLayer180Action": {
+        "name": "Rotate 180°"
+    },
+    "rotateZoomEffect": {
+        "name": "Rotate / Zoom"
+    },
+    "rotateZoomEffectConfigDialog": {
+        "angleLabel": {
+            "text": "Angle:"
+        },
+        "headerPan": {
+            "text": "Pan"
+        },
+        "headerRoll": {
+            "text": "Roll / Rotate"
+        },
+        "headerZoom": {
+            "text": "Zoom"
+        },
+        "keepBackgroundCheckBox": {
+            "text": "Preserve background"
+        },
+        "quality": {
+            "text": "Quality"
+        },
+        "samplingMode": {
+            "text": "Sampling:"
+        },
+        "tilingMode": {
+            "mirror": {
+                "text": "Mirror"
+            },
+            "text": "Tiling Mode:",
+            "transparent": {
+                "text": "None"
+            },
+            "wrap": {
+                "text": "Repeat"
+            }
+        }
+    },
+    "roundedRectangleShape": {
+        "name": "Rounded rectangle"
+    },
+    "roundedRectangleTool": {
+        "helpText": "Click and drag to draw a rounded rectangle (right click for secondary color). Hold shift to constrain.",
+        "name": "Rounded Rectangle",
+        "statusText": {
+            "format": "Bounding rectangle size: {0}{1} × {2}{3}, area: {4} {5}"
+        }
+    },
+    "roundedRectangularCalloutShape": {
+        "name": "Rounded rectangular callout"
+    },
+    "sampleAllLayers": {
+        "false": "Layer",
+        "true": "Image"
+    },
+    "sampledCircleBrush": {
+        "displayName": "Circle"
+    },
+    "sampledSquareBrush": {
+        "displayName": "Square"
+    },
+    "saveAs": {
+        "overwriteConfirmation": {
+            "text": {
+                "format": "{0} already exists.\r\nDo you want to replace it?"
+            },
+            "title": "Confirm Save As"
+        }
+    },
+    "saveAsDialog": {
+        "title": "Save As"
+    },
+    "saveConfigDialog": {
+        "defaultsButton": {
+            "text": "Defaults"
+        },
+        "fileSizeText": {
+            "text": {
+                "computing": {
+                    "text": "(computing)",
+                    "format": "(computing: {0}%)"
+                },
+                "error": "(error)"
+            }
+        },
+        "finishing": {
+            "text": "Finishing..."
+        },
+        "previewHeader": {
+            "text": {
+                "format": "Preview, file size: {0}"
+            }
+        },
+        "settingsHeader": {
+            "text": "Settings"
+        },
+        "text": "Save Configuration"
+    },
+    "savedWithOlderVersion": {
+        "format": "This image was saved with an older version of Paint.NET. If you save it, it will not be readable by that older version.\r\n\r\nSaved with: Paint.NET {0}\r\nCurrent version: Paint.NET {1}"
+    },
+    "saveImage": {
+        "error": {
+            "directoryNotFoundException": "The directory could not be found. Use File->Save As... to save to another location.",
+            "exception": "There was an error while saving the file.",
+            "fileNotFoundException": {
+                "controlledFolderAccess": "The file could not be saved. This is probably because the Windows Defender setting called \"Controlled Folder Access\" is enabled."
+            },
+            "iOException": "An I/O error occurred when writing to the file.",
+            "outOfMemoryException": "Not enough memory to save the image.",
+            "securityException": "Access is denied. Use File->Save As... to save under a different location or name.",
+            "unauthorizedAccessException": "Access is denied. Use File->Save As... to save under a different location or name."
+        }
+    },
+    "savePaletteDialog": {
+        "palettesLabel": {
+            "text": "Palettes that have already been saved:"
+        },
+        "text": "Save Current Palette",
+        "typeANameLabel": {
+            "text": "Type a name for the palette:"
+        }
+    },
+    "saveProgressDialog": {
+        "description": "Saving...",
+        "descriptionWithPercent": {
+            "format": "Saving... {0}%"
+        },
+        "title": "Saving"
+    },
+    "scaleFactor": {
+        "percentage": {
+            "format": "{0}%"
+        }
+    },
+    "selectAllAction": {
+        "name": "Select All"
+    },
+    "selectionCombineMode": {
+        "exclude": "Subtract",
+        "intersect": "Intersect",
+        "replace": "Replace",
+        "union": "Add (union)",
+        "xor": "Invert (\"xor\")"
+    },
+    "selectionDrawMode": {
+        "fixedRatio": "Fixed Ratio",
+        "fixedSize": "Fixed Size",
+        "normal": "Any Size"
+    },
+    "selectionRenderingQuality": {
+        "aliased": "Pixelated selection quality",
+        "highQualityAntialiased": "Antialiased selection quality"
+    },
+    "selectionTool": {
+        "moveSelection": "Move Selection",
+        "rotateSelection": "Rotate Selection",
+        "scaleSelection": "Resize Selection"
+    },
+    "sendFeedback": {
+        "email": {
+            "body": "<< Enter your feedback or bug report here (English preferred). >>",
+            "subject": {
+                "format": "Feedback for: {0} ({1})"
+            }
+        }
+    },
+    "sendFeedbackAction": {
+        "error": "There was an error launching the link. You may not have an e-mail program installed."
+    },
+    "sepiaEffect": {
+        "intensity": {
+            "displayName": "Intensity"
+        },
+        "name": "Sepia"
+    },
+    "settingsDialog": {
+        "canvas": {
+            "displayName": "Canvas",
+            "enableCustomBorderColor": {
+                "description": "Use a custom color for the canvas border"
+            },
+            "enableDropShadow": {
+                "description": "Draw a shadow around the canvas"
+            }
+        },
+        "colorManagement": {
+            "displayName": "Color Management",
+            "enableWindowsAdvancedColor": {
+                "description": "Windows Advanced Color",
+                "footnote": "This enables high bit-depth output and use of the display's full color gamut. Windows will manage color for the display to ensure color accuracy. A display configured for High Dynamic Range (HDR) or Wide Color Gamut (WCG) is required, which can be done in Windows Display Settings."
+            },
+            "openWindowsDisplaySettings": {
+                "buttonText": "⚙️ Open Windows Display Settings",
+                "footnote": "To enable High Dynamic Range (HDR) mode, look for a setting called \"Use HDR\".\r\nTo enable Wide Color Gamut (WCG) mode, look for a setting called \"Automatically manage color for apps\" in either the \"Color profile\" or \"Advanced display\" section."
+            },
+            "status": {
+                "displayConfiguration": {
+                    "highDynamicRange": "ℹ️ The display is configured for High Dynamic Range (HDR) mode.",
+                    "standardDynamicRange": "ℹ️ The display is configured for Standard Dynamic Range (SDR) mode. Windows Advanced Color cannot be enabled.",
+                    "wideColorGamut": "ℹ️ The display is configured for Wide Color Gamut (WCG) mode."
+                },
+                "outcome": {
+                    "fullGamut": "✔️ Paint.NET can use the full gamut of the display.",
+                    "srgb": "ℹ️ Paint.NET is operating in sRGB mode.",
+                    "srgbMaybeInaccurate": "ℹ️ Paint.NET is operating in sRGB mode. Colors may not be accurate unless the display is also configured for sRGB mode."
+                },
+                "swapchainFormat": {
+                    "format": "ℹ️ The swapchain format is {0}."
+                },
+                "windowsAdvancedColor": {
+                    "enabled": "✔️ Windows Advanced Color is enabled.",
+                    "notEnabled": "⚠️ Windows Advanced Color is not enabled.",
+                    "notEnabledBecauseNoHardwareAcceleration": "⚠️ Windows Advanced Color cannot be enabled because hardware acceleration is not enabled."
+                },
+                "windowsIsManagingDisplay": "✔️ Windows is managing color for the display."
+            },
+            "statusHeading": {
+                "displayName": "Status"
+            }
+        },
+        "diagnostics": {
+            "displayName": "Diagnostics"
+        },
+        "effects": {
+            "defaultQualityLevel": {
+                "description": "Some effects have a Quality setting. Lower values draw faster, but higher values look much better. Setting this to the maximum is only recommended if you have a six-core CPU or better. Some plugin effects may not honor this setting.",
+                "header": "Default Quality Level"
+            },
+            "displayName": "Effects"
+        },
+        "graphics": {
+            "displayName": "Graphics",
+            "enableHardwareAccelerationForUI": {
+                "description": "Use hardware acceleration for UI and the canvas",
+                "footnote": "Disabling this will reduce performance but can resolve rendering or stability issues that are caused by old drivers. Before disabling this make sure you have the latest GPU drivers installed.",
+                "status": {
+                    "enabled": "✔️ Hardware acceleration was successfully enabled.",
+                    "notAvailable": "⚠️ Hardware acceleration is not available.",
+                    "notEnabled": "⚠️ Hardware acceleration is not enabled.",
+                    "notSupported": "⚠️ Hardware acceleration is not supported. A GPU with full DirectX 11 support is required."
+                }
+            },
+            "renderingGpuChoice": {
+                "description": "This selects the GPU used for tools, adjustments, and effects. Choosing the CPU for rendering will significantly reduce performance and is not recommended except for troubleshooting purposes.",
+                "displayName": "Rendering Device"
+            }
+        },
+        "penAndTablet": {
+            "displayName": "Pen & Tablet",
+            "enablePointerInput": {
+                "description": "Windows Ink",
+                "footnote": "This enables pressure sensitivity and high-frequency sampling for pens and drawing tablets. Disabling this may fix compatibility issues."
+            },
+            "noDevicesDetected": {
+                "text": "⚠️ No pens or drawing tablets were detected."
+            },
+            "openWindowsPenAndInkSettings": {
+                "buttonText": "⚙️ Open Pen & Windows Ink Settings"
+            }
+        },
+        "plugins": {
+            "assemblyDetailText": {
+                "name": {
+                    "format": "{0}, version {1}"
+                }
+            },
+            "displayName": "Plugin Errors",
+            "introText": {
+                "haveErrors": "There were errors while loading plugins:",
+                "noErrors": "There were no errors encountered while loading plugins.",
+                "stillLoading": "Still loading plugins..."
+            },
+            "supportInfo": {
+                "author": {
+                    "format": "Author: {0}"
+                },
+                "copyright": {
+                    "format": "Copyright: {0}"
+                },
+                "displayName": {
+                    "format": "Name: {0}"
+                },
+                "type": {
+                    "format": "Type: {0}"
+                },
+                "version": {
+                    "format": "Version: {0}"
+                },
+                "website": {
+                    "format": "Website: {0}"
+                }
+            }
+        },
+        "text": "Settings",
+        "tools": {
+            "defaultToolLabel": {
+                "text": "Default tool:"
+            },
+            "displayName": "Tools",
+            "introText": {
+                "text": "You may choose the tool that is active when starting Paint.NET, and what the defaults should be for the toolbar items."
+            },
+            "loadFromToolBarButton": {
+                "text": "Load From Toolbar"
+            },
+            "resetButton": {
+                "text": "Reset"
+            },
+            "toolConfigRow": {
+                "antialiasingBlendModeGammaModeInputPathSmoothingSelectionRenderingQuality": {
+                    "headerLabel": {
+                        "text": "Options"
+                    }
+                },
+                "brushFillBrushHardnessBrushPressureBrushSizeBrushSpacingBrushType": {
+                    "headerLabel": {
+                        "text": "Brush and Fill"
+                    }
+                },
+                "colorPickerBehavior": {
+                    "headerLabel": {
+                        "text": "Color Picker"
+                    }
+                },
+                "floodModeRecolorToolSamplingModeTolerance": {
+                    "headerLabel": {
+                        "text": "Magic Wand, Paint Bucket, and Recolor"
+                    }
+                },
+                "gradient": {
+                    "headerLabel": {
+                        "text": "Gradient"
+                    }
+                },
+                "lineCurveShapeTypePenDashStylePenEndCapPenStartCapRadiusShapeDrawTypeShapeType": {
+                    "headerLabel": {
+                        "text": "Shape and Style"
+                    }
+                },
+                "pixelSampleModeSampleImageOrLayer": {
+                    "headerLabel": {
+                        "text": "Sampling"
+                    }
+                },
+                "resampling": {
+                    "headerLabel": {
+                        "text": "Move Selected Pixels"
+                    }
+                },
+                "selectionCombineModeSelectionDrawMode": {
+                    "headerLabel": {
+                        "text": "Selection"
+                    }
+                },
+                "text": {
+                    "headerLabel": {
+                        "text": "Text"
+                    }
+                }
+            }
+        },
+        "uI": {
+            "aeroColorScheme": {
+                "description": {
+                    "classicDisabled": "A color scheme may not be set when Windows is configured for a Classic or High Contrast theme. You can change that from the Personalization control panel."
+                },
+                "displayName": "Color Scheme:",
+                "value": {
+                    "blue": "Blue",
+                    "dark": "Dark",
+                    "default": "Default",
+                    "light": "Light"
+                }
+            },
+            "autoScrollWhileDrawing": {
+                "description": "Auto-scroll when drawing at the edge of the window"
+            },
+            "checkerboardBrightness": {
+                "displayName": "Transparency Checkerboard Brightness"
+            },
+            "defaultTextAntialiasMode": {
+                "header": "Text",
+                "value": {
+                    "aliased": "Aliased",
+                    "clearType": "ClearType",
+                    "default": "Default antialiasing",
+                    "grayscale": "Grayscale"
+                }
+            },
+            "defaultTextRenderingMode": {
+                "value": {
+                    "aliased": "Aliased",
+                    "clearTypeGdiClassic": "GDI Classic",
+                    "clearTypeGdiNatural": "GDI Natural",
+                    "clearTypeNatural": "Natural",
+                    "clearTypeNaturalSymmetric": "Natural Symmetric",
+                    "default": "Default rendering",
+                    "outline": "Outline"
+                }
+            },
+            "displayName": "User Interface",
+            "enableAnimations": {
+                "description": "Animations"
+            },
+            "enableAntialiasedSelectionOutline": {
+                "description": "Antialiased selection outline",
+                "footnote": "Disabling this can significantly improve performance on lower end systems."
+            },
+            "enableAutoSelectNearestVisibleLayerAfterHidingLayer": {
+                "description": "Auto-select nearest visible layer after hiding a layer"
+            },
+            "language": {
+                "description": "Changing the UI language will require a restart of Paint.NET.",
+                "displayName": "Language:"
+            },
+            "overscroll": {
+                "description": "Scrolling past the edge of the image (overscroll)"
+            },
+            "showTaskbarPreviews": {
+                "description": "Show image previews in the Windows taskbar"
+            },
+            "translucentWindows": {
+                "description": "Translucent windows",
+                "footnote": "When a floating window is over the canvas, this will make it partially transparent."
+            }
+        },
+        "updates": {
+            "autoCheck": {
+                "description": "Automatically check for updates when Paint.NET starts"
+            },
+            "autoCheckForPrelease": {
+                "description": "Also check for pre-release (beta) versions of Paint.NET"
+            },
+            "checkNow": {
+                "buttonText": "Check Now"
+            },
+            "displayName": "Updates"
+        }
+    },
+    "setup": {
+        "appRegistration": {
+            "friendlyTypeName": "Paint.NET Image"
+        },
+        "defaultPrograms": {
+            "applicationDescription": "Paint.NET allows you to create and edit images and photographs using a wide array of tools, adjustments, and effects.",
+            "applicationName": "Paint.NET"
+        },
+        "desktopShortcut": {
+            "description": "Create, edit, scan, and print images and photographs.",
+            "linkName": "Paint.NET"
+        }
+    },
+    "setupWizard": {
+        "backButton": {
+            "text": "< Back"
+        },
+        "cancelButton": {
+            "text": "Cancel"
+        },
+        "cancelDialog": {
+            "message": "The installation is not yet complete. Are you sure you want to exit?"
+        },
+        "createMsiDeprecated": {
+            "helpText": {
+                "format": "The /createMsi command has been removed. You can download MSI files at {0}"
+            }
+        },
+        "error": {
+            "adminRequired": "Administrator privilege is required to install Paint.NET."
+        },
+        "helpText": "Paint.NET Installer Help\r\n\r\nCommand-line options:\r\n\r\n/skipConfig  -  Skips configuration of options and install directory. Uses MSI properties in the following order of precedence: 1. supplied on command-line, 2. read from HKLM\\Software\\Paint.NET, 3. default values. NOTE: Use of this option infers acceptance of the License Agreement.\r\n/auto  -  Automatic install. Infers /skipConfig. Does not show the final wizard page that details the result of installation.\r\nPROPERTY=VALUE  -  Sets an MSI property. See help file after installing for more information.\r\n\r\nReturn code is 0 on success, or non-zero on failure.",
+        "installDirPage": {
+            "badDirError": {
+                "message": "The specified folder could not be created. You will need to choose another folder to install to."
+            },
+            "browseButton": {
+                "text": "Browse..."
+            },
+            "browseForFolder": {
+                "description": "Choose an installation folder:"
+            },
+            "defaultTargetSubDir": "Paint.NET",
+            "folderLabel": {
+                "text": "Folder:"
+            },
+            "introText": {
+                "text": {
+                    "format": "{0} will be installed to the following folder.\r\n\r\nTo install in this folder, click \"Next\". To install to a different folder, enter it below or click \"Browse\"."
+                }
+            }
+        },
+        "installingPage": {
+            "infoText": {
+                "text": {
+                    "closeSRPoint": "Finalizing installation...",
+                    "failure": {
+                        "format": "There was an error while installing {0}."
+                    },
+                    "initializing": "Initializing...",
+                    "installing": {
+                        "format": "{0} is being installed..."
+                    },
+                    "openSRPoint": "Preparing to install...",
+                    "optimizing": "Optimizing Paint.NET's performance for your system. This may take a minute.",
+                    "success": {
+                        "format": "{0} was installed successfully. Click \"Finish\" to close this installation wizard.",
+                        "rebootRequired": {
+                            "format": "{0} was installed successfully. Click \"Finish\" to close this installation wizard."
+                        }
+                    },
+                    "uninstalling": "Removing previous version..."
+                }
+            },
+            "pdnDonateBannerImage": {
+                "text": "Thanks for using Paint.NET. You can show your appreciation and support future development by donating!"
+            },
+            "pdnWindows10StoreBannerImage": {
+                "text": "You can also support Paint.NET by purchasing it on the Microsoft Store. Updates are completely automatic -- no more upgrade prompts, ever!"
+            },
+            "startPdnOnExitCB": {
+                "text": "Start Paint.NET"
+            }
+        },
+        "introPage": {
+            "customDescription": {
+                "text": "Allows you to change the installation directory, and options related to file type associations and update checking."
+            },
+            "customRB": {
+                "text": "Custom"
+            },
+            "introText": {
+                "text": {
+                    "format": "This installer will help you install {0}.\r\n\r\nChoose the installation method you prefer, and then click Next."
+                }
+            },
+            "quickDescription": {
+                "text": "This is the recommended choice for most users. This installs using the default options, or the same options that were specified during a previous installation."
+            },
+            "quickRB": {
+                "text": "Express"
+            }
+        },
+        "licensePage": {
+            "agreeButton": {
+                "text": "I Agree"
+            },
+            "dontAgreeButton": {
+                "text": "I Do Not Agree"
+            },
+            "introText": {
+                "text": "Please take a moment to read the license agreement now."
+            }
+        },
+        "mustCloseAppFirst": {
+            "text": "Please ensure that Paint.NET is closed, and then click Retry."
+        },
+        "nextButton": {
+            "text": {
+                "text": "Next >",
+                "finished": "Finish"
+            }
+        },
+        "optionsPage": {
+            "checkForBetasCheckBox": {
+                "text": "Also check for pre-release (beta) versions"
+            },
+            "checkForUpdatesCheckBox": {
+                "text": "Automatically check for updates"
+            },
+            "desktopShortcutCheckBox": {
+                "text": "Create a shortcut on the Desktop"
+            },
+            "updatesText": {
+                "text": "Paint.NET can periodically check to see if there is a new version available and then notify you. No information is transmitted from your computer during this process. Note: You will only be notified of new versions while Paint.NET is running."
+            }
+        },
+        "readyToInstallPage": {
+            "introText": {
+                "text": {
+                    "format": "The installer is ready to install {0} on your computer.\r\n\r\nClick \"Next\" to start the installation."
+                }
+            }
+        },
+        "restartError": "There was an error while trying to restart the computer.",
+        "restartTaskDialog": {
+            "doNotRestartTB": {
+                "actionText": "Do not restart",
+                "explanationText": "Paint.NET will not work correctly until you restart your computer."
+            },
+            "introText": "The computer must be restarted to finish the installation.",
+            "launchAtRestartCB": {
+                "text": "Start Paint.NET after restart"
+            },
+            "restartTB": {
+                "actionText": "Restart now (recommended)",
+                "explanationText": "Installation will be finished after the system has restarted."
+            }
+        },
+        "x86Msi": {
+            "launchCondition": {
+                "notAllowedOn64bitOS": "32-bit MSI may not be installed on 64-bit OS."
+            }
+        }
+    },
+    "shapeCategory": {
+        "arrows": "Arrows",
+        "basic": "Basic",
+        "callouts": "Callouts",
+        "custom": "Custom",
+        "lines": "Lines",
+        "polygonsAndStars": "Polygons and Stars",
+        "symbols": "Symbols"
+    },
+    "shapeDrawType": {
+        "both": "Draw Filled Shape With Outline",
+        "interior": "Draw Filled Shape",
+        "outline": "Draw Shape Outline"
+    },
+    "shapesTool": {
+        "beginDrawing": {
+            "historyMementoName": {
+                "format": "Draw {0}"
+            }
+        },
+        "changed": {
+            "curveType": {
+                "historyMementoName": "Change Curve Type"
+            },
+            "generic": {
+                "historyMementoName": {
+                    "format": "Edit {0}"
+                }
+            },
+            "rotationAnchorOffset": {
+                "historyMementoName": "Move Rotation Anchor"
+            },
+            "shapeDrawType": {
+                "historyMementoName": "Change Draw Mode"
+            },
+            "shapeType": {
+                "historyMementoName": {
+                    "format": "Change to {0}"
+                }
+            },
+            "transform": {
+                "historyMementoName": {
+                    "format": "Adjust {0}"
+                }
+            }
+        },
+        "commitChanges": {
+            "historyMementoName": {
+                "format": "Finish {0}"
+            }
+        },
+        "endDrawing": {
+            "historyMementoName": {
+                "format": "{0} Shape"
+            }
+        },
+        "helpText": {
+            "text": "Click and drag to draw a shape. Hold Shift to constrain. Hold Alt to draw centered.",
+            "adjustable": {
+                "format": "Size: {0}{1} × {2}{3}, Diagonal: {4} {5}, Angle: {6}°. Press Enter to finish.",
+                "noAngle": {
+                    "format": "Size: {0}{1} × {2}{3}, Diagonal: {4} {5}. Press Enter to finish."
+                }
+            },
+            "whileAdjusting": {
+                "format": "Size: {0}{1} × {2}{3}, Diagonal: {4} {5}, Angle: {6}°",
+                "noAngle": {
+                    "format": "Size: {0}{1} × {2}{3}, Diagonal: {4} {5}"
+                }
+            }
+        },
+        "name": "Shapes"
+    },
+    "sharpenEffect": {
+        "configDialog": {
+            "sliderLabel": "Amount",
+            "threshold": {
+                "displayName": "Threshold"
+            }
+        },
+        "name": "Sharpen"
+    },
+    "sketchBlurEffect": {
+        "name": "Sketch Blur",
+        "percentile": {
+            "displayName": "Percentile"
+        },
+        "radius": {
+            "displayName": "Radius"
+        },
+        "smoothness": {
+            "displayName": "Smoothness"
+        }
+    },
+    "softenPortraitEffect": {
+        "configDialog": {
+            "lightingLabel": "Lighting",
+            "softnessLabel": "Softness",
+            "warmthLabel": "Warmth"
+        },
+        "name": "Soften Portrait"
+    },
+    "squareBlurEffect": {
+        "name": "Square Blur"
+    },
+    "star3PointShape": {
+        "name": "Three-point star"
+    },
+    "star4PointShape": {
+        "name": "Four-point star"
+    },
+    "star5PointShape": {
+        "name": "Five-point star"
+    },
+    "star6PointShape": {
+        "name": "Six-point star"
+    },
+    "statusBar": {
+        "context": {
+            "help": {
+                "text": {
+                    "format": "{0}: {1}"
+                }
+            },
+            "selectedArea": {
+                "text": {
+                    "format": "Selection top left: {0}{1}, {2}{3}. Bounding rectangle size: {4}{5} × {6}{7}. Area: {8} {9} square",
+                    "withAngle": {
+                        "format": "Selection top left: {0}{1}, {2}{3}. Bounding rectangle size: {4}{5} × {6}{7}. Area: {8} {9} square. Angle: {10}°"
+                    }
+                }
+            }
+        },
+        "cursorInfo": {
+            "format": {
+                "2": "{0}, {1}"
+            }
+        },
+        "progress": {
+            "percentage": {
+                "format": "{0}%"
+            }
+        },
+        "size": {
+            "format": {
+                "2": "{0} × {1}"
+            }
+        }
+    },
+    "straightenEffect": {
+        "angle": {
+            "displayName": "Angle"
+        },
+        "name": "Straighten",
+        "sampling": {
+            "displayName": "Sampling:"
+        }
+    },
+    "straightenScaleMode": {
+        "anisotropic": "Anisotropic",
+        "cubic": "Bicubic",
+        "linear": "Bilinear",
+        "multisampleLinear": "Multisample Bilinear",
+        "nearestNeighbor": "Nearest Neighbor"
+    },
+    "surfaceBlurEffect": {
+        "configDialog": {
+            "radiusLabel": "Radius",
+            "thresholdLabel": "Threshold"
+        },
+        "name": "Surface Blur"
+    },
+    "swapLayerFunction": {
+        "name": "Swap Layer"
+    },
+    "systemLayer": {
+        "userDataDirName": "Paint.NET User Files"
+    },
+    "taskButton": {
+        "cancel": {
+            "actionText": "Cancel",
+            "explanationText": ""
+        }
+    },
+    "taskProgressDialog": {
+        "canceling": {
+            "text": "Canceling..."
+        },
+        "initializing": {
+            "text": "Initializing..."
+        },
+        "percentText": {
+            "text": {
+                "format": "{0}%"
+            }
+        }
+    },
+    "temperatureAndTintEffect": {
+        "name": "Temperature / Tint",
+        "temperature": {
+            "displayName": "Temperature"
+        },
+        "tint": {
+            "displayName": "Tint"
+        }
+    },
+    "textAlignment": {
+        "center": "Center Align",
+        "left": "Align Left",
+        "right": "Align Right"
+    },
+    "textConfigWidget": {
+        "error": {
+            "invalidNumber": "Invalid number",
+            "tooLarge": {
+                "format": "Size is larger than {0}"
+            },
+            "tooSmall": {
+                "format": "Size is smaller than {0}"
+            }
+        },
+        "fontLabel": {
+            "text": "Font:"
+        },
+        "loadingFontsList": {
+            "text": "Loading font list..."
+        }
+    },
+    "textTool": {
+        "helpText": "Left click to place the text cursor, and then type to enter text. Text is drawn with the primary color.",
+        "name": "Text",
+        "statusText": {
+            "startTyping": "Drag the handle to move the text. Hold Ctrl to hide handle and cursor.",
+            "textInfo": {
+                "format": "Anchor point: {0}{1}, {2}{3}"
+            }
+        }
+    },
+    "textToolRenderingMode": {
+        "classic": "Sharp (Classic)",
+        "sharp": "Sharp (Modern)",
+        "smooth": "Smooth"
+    },
+    "tgaFileType": {
+        "configUI": {
+            "bitDepth": {
+                "autoDetect": {
+                    "displayName": "Auto-detect"
+                },
+                "bpp24": {
+                    "displayName": "24-bit"
+                },
+                "bpp32": {
+                    "displayName": "32-bit"
+                },
+                "displayName": "Bit Depth"
+            },
+            "convertToSrgb": {
+                "description": "Convert to sRGB"
+            },
+            "rleCompress": {
+                "description": "Compress (RLE)"
+            }
+        }
+    },
+    "tiffFileType": {
+        "configUI": {
+            "bitDepth": {
+                "autoDetect": {
+                    "displayName": "Auto-detect"
+                },
+                "bpp1": {
+                    "displayName": "1-bit"
+                },
+                "bpp24": {
+                    "displayName": "24-bit"
+                },
+                "bpp32": {
+                    "displayName": "32-bit"
+                },
+                "bpp4": {
+                    "displayName": "4-bit"
+                },
+                "bpp8": {
+                    "displayName": "8-bit"
+                },
+                "displayName": "Bit Depth"
+            },
+            "ditherLevel": {
+                "displayName": "Dithering level"
+            },
+            "quantizationAlgorithm": {
+                "displayName": "Quantization algorithm"
+            }
+        }
+    },
+    "tileEffect": {
+        "intensity": {
+            "text": "Curvature"
+        },
+        "name": "Tile Reflection",
+        "quality": {
+            "text": "Quality"
+        },
+        "rotation": {
+            "text": "Angle"
+        },
+        "squareSize": {
+            "text": "Tile Size"
+        }
+    },
+    "toleranceAlphaMode": {
+        "premultiplied": "Premultiplied",
+        "straight": "Straight"
+    },
+    "toleranceConfig": {
+        "toleranceLabel": {
+            "text": "Tolerance:"
+        }
+    },
+    "toleranceSliderControl": {
+        "percentage": {
+            "format": "{0}%"
+        },
+        "tolerance": "Tolerance"
+    },
+    "toolConfigStrip": {
+        "blendModeSplitButton": {
+            "toolTipText": "Blending mode"
+        },
+        "brush": {
+            "enablePressureSensitivity": {
+                "false": "Disable pressure sensitivity",
+                "toolTipText": "Pressure sensitivity",
+                "true": "Enable pressure sensitivity"
+            }
+        },
+        "brushSizeDecButton": {
+            "toolTipText": "Decrease brush size\r\nShortcut key: [ (hold Ctrl to decrease by 5)"
+        },
+        "brushSizeIncButton": {
+            "toolTipText": "Increase brush size\r\nShortcut key: ] (hold Ctrl to increase by 5)"
+        },
+        "colorPickerBehaviorLabel": {
+            "text": "After click:"
+        },
+        "colorPickerSizeLabel": {
+            "text": "Sampling:"
+        },
+        "commitButton": {
+            "text": "Finish",
+            "toolTipText": "Finish\r\nCommits the tool's changes.\r\nShortcut key: Enter"
+        },
+        "floodModeLabel": {
+            "text": "Flood Mode:"
+        },
+        "fontFamilyComboBox": {
+            "fontSampleText": "The quick brown fox"
+        },
+        "fontRenderingModeSplitButton": {
+            "toolTipText": "Text rendering mode"
+        },
+        "fontSizeDecButton": {
+            "toolTipText": "Decrease font size\r\nHold Ctrl to decrease by 5"
+        },
+        "fontSizeIncButton": {
+            "toolTipText": "Increase font size\r\nHold Ctrl to increase by 5"
+        },
+        "fontSizeMetricSplitButton": {
+            "toolTipText": "Font size metric"
+        },
+        "fontStyleButtonGroup": {
+            "bold": {
+                "text": "B"
+            },
+            "italic": {
+                "text": "I"
+            },
+            "strikeout": {
+                "text": "abc"
+            },
+            "underline": {
+                "text": "U"
+            }
+        },
+        "gammaModeSplitButton": {
+            "toolTipText": "Gamma mode"
+        },
+        "hardnessSlider": {
+            "decrementButton": {
+                "toolTipText": "Decrease hardness by 1%\r\nHold Ctrl to decrease by 5%"
+            },
+            "incrementButton": {
+                "toolTipText": "Increase hardness by 1%\r\nHold Ctrl to increase by 5%"
+            }
+        },
+        "inputPathSmoothingSplitButton": {
+            "toolTipText": "Path smoothing"
+        },
+        "penDashStyleSplitButton": {
+            "toolTipText": "Toggle dash type for line style\r\nShortcut key: ."
+        },
+        "penEndCapSplitButton": {
+            "toolTipText": "Toggle end cap for line style\r\nShortcut key: /"
+        },
+        "penHardnessLabel": {
+            "text": "Hardness:"
+        },
+        "penSpacingLabel": {
+            "text": "Spacing:"
+        },
+        "penStartCapSplitButton": {
+            "toolTipText": "Toggle start cap for line style\r\nShortcut key: ,"
+        },
+        "penStyleLabel": {
+            "text": "Style:"
+        },
+        "radiusDecButton": {
+            "toolTipText": "Decrease corner size\r\nHold Ctrl to decrease by 5"
+        },
+        "radiusIncButton": {
+            "toolTipText": "Increase corner size\r\nHold Ctrl to increase by 5"
+        },
+        "radiusLabel": {
+            "text": "Corner size:"
+        },
+        "resamplingLabel": {
+            "text": "Sampling:"
+        },
+        "selectionCombineMode": {
+            "exclude": "Subtract\r\nHold Alt while drawing with left mouse button",
+            "intersect": "Intersect\r\nHold Alt while drawing with right mouse button",
+            "replace": "Replace",
+            "union": "Add (union)\r\nHold Ctrl while drawing with left mouse button",
+            "xor": "Invert (\"xor\")\r\nHold Ctrl while drawing with right mouse button"
+        },
+        "selectionCombineModeLabel": {
+            "text": "Selection Mode:"
+        },
+        "selectionDrawModeHeightLabel": {
+            "text": "Height:"
+        },
+        "selectionDrawModeLabel": {
+            "text": "Draw mode:"
+        },
+        "selectionDrawModeWidthLabel": {
+            "text": "Width:"
+        },
+        "selectionRenderingQualitySplitButton": {
+            "toolTipText": "Selection quality"
+        },
+        "shapeDrawTypeButton": {
+            "toolTipText": "Shape draw/fill mode"
+        },
+        "spacingSlider": {
+            "decrementButton": {
+                "toolTipText": "Decrease spacing by 1%\r\nHold Ctrl to decrease by 5%"
+            },
+            "incrementButton": {
+                "toolTipText": "Increase spacing by 1%\r\nHold Ctrl to increase by 5%"
+            }
+        },
+        "toleranceAlphaModeSplitButton": {
+            "toolTipText": "Tolerance alpha mode\r\nConfigures how the alpha channel contributes to the comparison of neighboring pixels.\r\nPremultiplied (default) results in transparent pixels being treated as equal even if their color channel values are different.\r\nStraight (classic) results in transparent pixels being treated as equal only if their color channel values are also equal."
+        },
+        "toleranceSlider": {
+            "decrementButton": {
+                "toolTipText": "Decrease tolerance by 1%\r\nHold Ctrl to decrease by 5%"
+            },
+            "incrementButton": {
+                "toolTipText": "Increase tolerance by 1%\r\nHold Ctrl to increase by 5%"
+            }
+        }
+    },
+    "toolConfigUI": {
+        "brushTypeDropDownButton": {
+            "toolTipText": "Brush Type\r\nClick to open list"
+        },
+        "shapeTypeDropDownButton": {
+            "toolTipText": "Shape type\r\nClick to open list\r\nShortcut keys: A (next shape), Shift+A (previous shape)"
+        }
+    },
+    "toolGammaMode": {
+        "companded": "Ignore Gamma\r\nRendering will ignore gamma. Luminance will not be correctly preserved.",
+        "linear": "Gamma Corrected\r\nRendering will take gamma into account. Luminance will be preserved."
+    },
+    "toolsControl": {
+        "toolToolTip": {
+            "format": "{0}\r\nShortcut key: {1}"
+        }
+    },
+    "toolStripChooser": {
+        "chooseToolButton": {
+            "text": "Tool:"
+        }
+    },
+    "transactedTool": {
+        "changed": {
+            "antialiasing": {
+                "historyMementoName": "Toggle Antialiasing"
+            },
+            "blendMode": {
+                "historyMementoName": "Change Blend Mode"
+            },
+            "brush": {
+                "width": {
+                    "historyMementoName": "Change Brush Size"
+                }
+            },
+            "brushFillTypeHatchStyle": {
+                "historyMementoName": "Change Fill"
+            },
+            "floodMode": {
+                "historyMementoName": "Change Flood Mode"
+            },
+            "gammaMode": {
+                "historyMementoName": "Change Gamma Mode"
+            },
+            "moveToolInterpolationMode": {
+                "historyMementoName": "Change Sampling"
+            },
+            "pen": {
+                "dashStyle": {
+                    "historyMementoName": "Change Dash Style"
+                },
+                "endCap": {
+                    "historyMementoName": "Change End Cap"
+                },
+                "startCap": {
+                    "historyMementoName": "Change Start Cap"
+                }
+            },
+            "primaryColorOrSecondaryColor": {
+                "historyMementoName": "Change Color"
+            },
+            "radius": {
+                "historyMementoName": "Change Corner Size"
+            },
+            "sampleAllLayers": {
+                "historyMementoName": "Change Sampling"
+            },
+            "selectionCombineMode": {
+                "historyMementoName": "Change Selection Mode"
+            },
+            "selectionRenderingQuality": {
+                "historyMementoName": "Change Selection Quality"
+            },
+            "tolerance": {
+                "historyMementoName": "Change Tolerance"
+            },
+            "toleranceAlphaMode": {
+                "historyMementoName": "Change Tolerance alpha mode"
+            }
+        }
+    },
+    "trapezoidShape": {
+        "name": "Trapezoid"
+    },
+    "turbulenceEffect": {
+        "blendMode": {
+            "text": "Blend Mode:"
+        },
+        "name": "Turbulence",
+        "noise": {
+            "fractalSum": {
+                "text": "Fractal sum"
+            },
+            "text": "Noise:",
+            "turbulence": {
+                "text": "Turbulence"
+            }
+        },
+        "octaves": {
+            "text": "Octaves"
+        },
+        "period": {
+            "text": "Period"
+        },
+        "seed": {
+            "button": {
+                "text": "Randomize"
+            }
+        },
+        "size": {
+            "text": "Size"
+        }
+    },
+    "twistEffect": {
+        "antialias": {
+            "text": "Quality"
+        },
+        "name": "Twist",
+        "offset": {
+            "text": "Center"
+        },
+        "twistAmount": {
+            "text": "Amount / Direction"
+        },
+        "twistSize": {
+            "text": "Size"
+        }
+    },
+    "twoAmountsConfigDialog": {
+        "reset": {
+            "text": "Reset"
+        }
+    },
+    "unfocusEffect": {
+        "configDialog": {
+            "amountLabel": "Radius"
+        },
+        "name": "Unfocus"
+    },
+    "unsavedChangesDialog": {
+        "cancelButton": {
+            "actionText": "Cancel",
+            "explanationText": "Go back to Paint.NET"
+        },
+        "documentListHeader": {
+            "text": "Images"
+        },
+        "dontSaveButton": {
+            "actionText": "Don't Save",
+            "explanationText": "Discard all unsaved changes, and then exit."
+        },
+        "infoLabel": {
+            "text": "The following images that are open have changes that have not been saved. You may click on a thumbnail to show the image in the main window."
+        },
+        "saveButton": {
+            "actionText": "Save",
+            "explanationText": "Save the images that are in the list above, and then exit."
+        },
+        "text": "Unsaved Changes"
+    },
+    "untitled": {
+        "friendlyName": "Untitled"
+    },
+    "updatePromptTaskDialog": {
+        "auxButtonText": "More info",
+        "cancelTB": {
+            "actionText": "Do Not Install (not recommended)",
+            "descriptionText": "Does not install the update right now. Paint.NET will ask again in a few days."
+        },
+        "installNowTB": {
+            "actionText": "Install Now",
+            "descriptionText": "The update will be downloaded and installed right now. You will not be able to use Paint.NET until this has completed."
+        },
+        "installOnExitTB": {
+            "actionText": "Install When I Exit",
+            "descriptionText": "The update will be downloaded in the background, and installed once you exit Paint.NET."
+        },
+        "introText": "An update for Paint.NET is available. It is strongly recommended that you install it as soon as possible.",
+        "title": "Paint.NET Updates"
+    },
+    "updates": {
+        "checkingState": {
+            "genericError": "There was an error while checking for updates."
+        },
+        "downloadingState": {
+            "genericError": "There was an error while downloading the update."
+        },
+        "extractingState": {
+            "genericError": "There was an error decompressing the download."
+        }
+    },
+    "updatesDialog": {
+        "betaWarningLabel": {
+            "text": "NOTE: This is a pre-release version (beta). It may not be stable."
+        },
+        "closeButton": {
+            "text": "Close"
+        },
+        "continueButton": {
+            "text": {
+                "abortedState": "",
+                "checkingState": "Checking",
+                "doneState": "Done",
+                "downloadingState": "Downloading",
+                "errorState": "",
+                "extractingState": "Extracting",
+                "installingState": "Installing",
+                "readyToCheckState": "Check Now",
+                "readyToInstallState": "OK",
+                "startupState": "Initializing",
+                "updateAvailableState": "Install"
+            }
+        },
+        "currentVersionHeader": {
+            "text": "Currently Installed Version"
+        },
+        "infoLabel": {
+            "text": "A newer version of Paint.NET is available. You may click the Install button to download and install it, or you may click Close to be reminded again in several days."
+        },
+        "infoText": {
+            "text": {
+                "abortedState": "The updater was aborted.",
+                "checkingState": "Paint.NET is currently checking to see if there is a newer version available.",
+                "doneState": "No updates are currently available.",
+                "downloadingState": "The update for Paint.NET is being downloaded.",
+                "errorState": {
+                    "format": "There was an error while checking for updates.\r\n\r\n{0}"
+                },
+                "extractingState": "The update has been downloaded, and is currently being extracted and verified.",
+                "installingState": "Installing the update!",
+                "readyToCheckState": "Paint.NET is ready to check for updates.",
+                "readyToInstallState": {
+                    "text": "Paint.NET must close to install the update. After you click OK, you will be asked to save any changes if necessary.",
+                    "installOnExit": "Paint.NET will now install the update."
+                },
+                "startupState": "The Paint.NET Updates System is initializing.",
+                "updateAvailableState": "A newer version of Paint.NET is available. You may click the Install button below to download and install the update."
+            }
+        },
+        "installButton": {
+            "text": "Install"
+        },
+        "moreInfoLink": {
+            "text": "More Info"
+        },
+        "newVersionHeader": {
+            "text": "New Version"
+        },
+        "newVersionZipLabel": {
+            "text": "Download:"
+        },
+        "progressLabel": {
+            "text": {
+                "format": "{0}%"
+            }
+        },
+        "text": "Paint.NET Updates"
+    },
+    "utility": {
+        "sizeStringFromBytes": {
+            "bytesFormat": "{0} bytes",
+            "gBFormat": "{0} GB",
+            "kBFormat": "{0} KB",
+            "mBFormat": "{0} MB"
+        }
+    },
+    "vignetteEffect": {
+        "configDialog": {
+            "centerLabel": "Center",
+            "densityLabel": "Strength",
+            "radiusLabel": "Radius"
+        },
+        "name": "Vignette"
+    },
+    "warnAboutFlattening": {
+        "cancelTB": {
+            "actionText": "Cancel",
+            "explanationText": "Cancels the save action."
+        },
+        "flattenTB": {
+            "actionText": "Flatten",
+            "explanationText": "The image will be flattened, and then saved. You will be able to undo the flatten operation after saving is finished."
+        },
+        "introText": "Saving in this file format requires that the image is first \"flattened\", which reduces it to a single layer.",
+        "title": "Save"
+    },
+    "webPFileType": {
+        "forumLink_Description": "Forum Discussion",
+        "forumLink_DisplayName": "More Info",
+        "lossless_Description": "Lossless",
+        "preset_Default_DisplayName": "Default",
+        "preset_DisplayName": "Preset",
+        "preset_Drawing_DisplayName": "Drawing",
+        "preset_Icon_DisplayName": "Icon",
+        "preset_Photo_DisplayName": "Photo",
+        "preset_Picture_DisplayName": "Picture",
+        "preset_Text_DisplayName": "Text",
+        "quality_DisplayName": "Quality"
+    },
+    "whichUserColor": {
+        "primary": "Primary",
+        "secondary": "Secondary"
+    },
+    "wIA": {
+        "error": {
+            "enableMe": "To use this feature you must enable the Windows Image Acquisition system service.",
+            "unableToLoad": "The Windows Image Acquisition (WIA) library, \"wiaaut.dll\" is unavailable. Please read the Help file (Help menu -> Help Topics), in the Frequently Asked Questions topic, for troubleshooting information."
+        }
+    },
+    "workspaceOptionsConfigWidget": {
+        "drawGridToggleButton": {
+            "toolTipText": "Display pixel grid when zoomed in"
+        },
+        "rulersToggleButton": {
+            "toolTipText": "Rulers"
+        },
+        "unitsLabel": {
+            "text": "Units:"
+        }
+    },
+    "zoomBasis": {
+        "fitToWindow": "Window",
+        "scaleFactor": "Factor",
+        "selection": "Selection"
+    },
+    "zoomBlurEffect": {
+        "configDialog": {
+            "alphaExponent": "Focus",
+            "amountLabel": "Distance",
+            "offset": "Center"
+        },
+        "name": "Zoom Blur"
+    },
+    "zoomConfigWidget": {
+        "error": {
+            "invalidNumber": "Invalid number",
+            "tooLarge": "Zoom cannot exceed 6400%",
+            "tooSmall": "Zoom has to be at least 1%"
+        },
+        "percentage": {
+            "format": "{0}%"
+        },
+        "zoomInButton": {
+            "toolTipText": "Zoom in"
+        },
+        "zoomOutButton": {
+            "toolTipText": "Zoom out"
+        }
+    },
+    "zoomTool": {
+        "helpText": "Left click to zoom in, right click to zoom out, middle click to slide",
+        "name": "Zoom"
+    }
+}

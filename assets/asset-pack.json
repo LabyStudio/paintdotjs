@@ -1,0 +1,8 @@
+{
+    "formatVersion": 1,
+    "id": "paintjs-default",
+    "name": "paint.js Default",
+    "author": "LabyStudio",
+    "version": "1.0.0",
+    "description": "Original paint.js interface artwork and built-in English text."
+}

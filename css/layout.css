@@ -14,6 +14,11 @@ body {
     overflow: hidden;
 }
 
+body.asset-pack-loading #content,
+body.asset-pack-loading #windowOverlay {
+    visibility: hidden;
+}
+
 #content {
     margin: 0;
     width: 100%;

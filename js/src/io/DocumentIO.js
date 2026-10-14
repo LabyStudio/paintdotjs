@@ -376,6 +376,17 @@ class DocumentIO {
     }
 
     static async handleDroppedFiles(files) {
+        let assetPackFiles = files.filter(file => AssetPackManager.isZipFile(file));
+        if (assetPackFiles.length > 0) {
+            SettingsDialog.open("assets");
+            for (let file of assetPackFiles) {
+                await SettingsDialog.instance.importAssetPack(file);
+            }
+            files = files.filter(file => !AssetPackManager.isZipFile(file));
+            if (files.length === 0) {
+                return;
+            }
+        }
         const fontFiles = files.filter(file => FontManager.isFontFile(file));
         if (fontFiles.length > 0) {
             if (fontFiles.length === files.length) {

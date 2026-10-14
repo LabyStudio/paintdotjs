@@ -33,4 +33,4 @@ Follow the existing builders in `ColorSliderItem`, `ColorCircleItem`, and `Color
 - Put feature-specific classes in a nested feature package instead of a broad, flat directory. For example, use `engine/document/tool/tool/move/MoveToolContext.js`, not `engine/document/tool/tool/MoveToolContext.js`.
 - Put all dialog classes together in the shared `interface/window/dialog` package. For example, use `interface/window/dialog/AboutDialog.js`, not a separate package for each dialog.
 - Put non-dialog support classes in the narrowest relevant package outside `dialog`, such as `interface/window/effect/CurveEditor.js` or `interface/window/settings/AppSettingsStore.js`.
-- Keep executable scripts at the root of `scripts`, but put reusable script classes in a nested package such as `scripts/resource/ResourceReader.js`.
+- Keep executable scripts at the root of `scripts`, but put reusable script classes in a nested package under `scripts`.

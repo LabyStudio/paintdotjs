@@ -34,9 +34,6 @@ AUR helper, for example:
 yay -S paintdotjs-bin
 ```
 
-During installation, the AUR package fetches the required artwork and translations from the official
-Paint.NET download.
-
 ### Flatpak
 
 Download the latest `.flatpak` bundle from
@@ -53,9 +50,6 @@ the downloaded file.
 
 Download the latest universal `.dmg` from [GitHub Releases](https://github.com/LabyStudio/paintdotjs/releases/latest),
 open it, and drag paint.js into the Applications folder.
-
-The macOS app fetches the required artwork and translations from the official Paint.NET download on
-first launch.
 
 ## Differences from Paint.NET
 
@@ -138,10 +132,9 @@ required functionality.
 npm run app
 ```
 
-The repository does not redistribute Paint.NET's modern artwork and translations because they are
-not part of the MIT-compatible Paint.NET 3.36.7 source release on which this project is based. On the
-first build, paint.js fetches the required assets from the official Paint.NET download. This lets the
-interface follow Paint.NET v5.1.12+ without redistributing those files in this repository.
+paint.js includes a default icon pack with original project artwork. You can install and activate
+custom icon packs from **Settings → Icon Packs** to replace the built-in icons or add translations.
+See [`docs/asset-packs.md`](docs/asset-packs.md) for the pack format.
 
 ### Build the Flatpak
 

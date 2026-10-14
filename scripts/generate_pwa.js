@@ -23,10 +23,10 @@ if (!fs.existsSync(path.join(output, 'index.html'))) {
 	throw new Error('Missing Pages build. Run scripts/build_pages.js before generating the PWA.');
 }
 
-// Keep the public social-card URL stable while using the project screenshot as
-// its source. Social crawlers do not execute the application JavaScript.
+// Keep the public social-card URL stable while using the official project icon.
+// Social crawlers do not execute the application JavaScript.
 fs.copyFileSync(
-	path.join(root, '.github/assets/app.png'),
+	path.join(root, 'assets/icon.png'),
 	path.join(output, 'assets/social-preview.png')
 );
 

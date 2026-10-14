@@ -1,6 +1,6 @@
 {
   "name": "paintdotjs",
-  "version": "2.1.17",
+  "version": "2.2.0",
   "description": "An open source general-purpose raster graphics editor program.",
   "main": "js/platform/desktop/main.js",
   "desktopName": "paintdotjs.desktop",
@@ -10,30 +10,24 @@
     "type": "git",
     "url": "https://github.com/LabyStudio/paintdotjs.git"
   },
-  "paintdotjs": {
-    "paintDotNetVersion": "5.1.12",
-    "paintDotNetSha256": "d5ae7043f2fb9d365b48dfe243a2aca1c74924de99b04b6445916c95354aefa3"
-  },
   "scripts": {
     "lint": "eslint js src scripts webpack.config.js",
-    "check-assets": "node ./scripts/check_assets.js",
     "check-version-info": "node ./scripts/check_version_info.js",
     "headers": "node ./scripts/sync_source_headers.js",
     "check-headers": "node ./scripts/sync_source_headers.js --check",
-    "preweb": "npm run lint && npm run check-assets && npm run check-version-info && npm run check-headers",
+    "preweb": "npm run lint && npm run check-version-info && npm run check-headers",
     "web": "webpack --config webpack.config.js",
     "pages": "npm run web && node ./scripts/build_pages.js && node ./scripts/generate_pwa.js",
-    "preweb-watch": "npm run lint && npm run check-assets && npm run check-version-info && npm run check-headers",
+    "preweb-watch": "npm run lint && npm run check-version-info && npm run check-headers",
     "web-watch": "webpack --config webpack.config.js --watch",
     "preapp": "npm run desktop:build",
     "app": "electron .",
-    "predesktop:build": "npm run lint && npm run check-assets && npm run check-version-info && npm run check-headers",
+    "predesktop:build": "npm run lint && npm run check-version-info && npm run check-headers",
     "desktop:build": "webpack --config webpack.config.js",
     "dist": "npm run desktop:build && electron-builder",
     "dist:linux": "npm run desktop:build && electron-builder --linux AppImage",
     "dist:mac": "npm run desktop:build && electron-builder --mac dmg zip --universal",
     "install:local": "node ./scripts/install_local.js",
-    "assets:manifest": "node ./scripts/check_assets.js --refresh-manifest",
     "gen-imports": "node ./scripts/generate_imports.js",
     "pwa": "npm run pages",
     "prepublish": "npm run web"
@@ -68,9 +62,9 @@
     "buffer": "^6.0.3",
     "custom-electron-titlebar": "^4.2.8",
     "electron-updater": "^6.8.9",
+    "fflate": "^0.8.3",
     "jpegxr": "^0.3.0",
-    "ms-nrbf-js": "^0.1.0",
-    "yauzl": "^3.2.0"
+    "ms-nrbf-js": "^0.1.0"
   },
   "build": {
     "appId": "net.paintjs.desktop",
@@ -86,30 +80,15 @@
       "!dist/**/*",
       "!run/**/*",
       "!flatpak/**/*",
+      "!flatpak-build/**/*",
+      "!.flatpak-builder/**/*",
       "!.tmp/**/*",
-      "!scripts/__pycache__/**/*",
       "!**/*.map"
     ],
     "extraResources": [
       {
-        "from": "desktop-resources/asset-manifest.json",
-        "to": "desktop/asset-manifest.json"
-      },
-      {
-        "from": "desktop-resources/icon.png",
-        "to": "desktop/icon.png"
-      },
-      {
-        "from": "assets/font",
-        "to": "assets/font"
-      },
-      {
-        "from": "assets/pdn",
-        "to": "assets/pdn"
-      },
-      {
-        "from": "assets/codecs",
-        "to": "assets/codecs"
+        "from": "assets",
+        "to": "assets"
       }
     ],
     "publish": [
@@ -250,12 +229,12 @@
       }
     ],
     "mac": {
-      "icon": "desktop-resources/icon.png",
+      "icon": "assets/icon.png",
       "category": "public.app-category.graphics-design",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "entitlements": "desktop-resources/entitlements.mac.plist",
-      "entitlementsInherit": "desktop-resources/entitlements.mac.plist",
+      "entitlements": "packaging/entitlements.mac.plist",
+      "entitlementsInherit": "packaging/entitlements.mac.plist",
       "notarize": true,
       "target": [
         "dmg",
@@ -265,8 +244,11 @@
     "dmg": {
       "sign": false
     },
+    "win": {
+      "icon": "assets/icon.ico"
+    },
     "linux": {
-      "icon": "desktop-resources/icon.png",
+      "icon": "assets/icon.png",
       "category": "Graphics",
       "target": [
         "AppImage"
