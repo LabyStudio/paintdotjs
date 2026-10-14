@@ -142,7 +142,7 @@ class MaskedSurface {
     }
 
     render(targetSurface, transform, sampling, gammaCorrected = false, fullQuality = true,
-           renderingQuality = "high") {
+           renderingQuality = "high", replaceDestination = false) {
         if (this.disposed) {
             throw new Error("MaskedSurface has been disposed");
         }
@@ -152,6 +152,9 @@ class MaskedSurface {
 
         if (typeof targetSurface.getSurface === "function") {
             targetSurface = targetSurface.getSurface();
+        }
+        if (replaceDestination) {
+            this.eraseTransformedFrom(targetSurface, transform);
         }
         const m = transform.getElements();
         const integerTranslation = m[0][0] === 1 && m[0][1] === 0
@@ -184,6 +187,19 @@ class MaskedSurface {
             context.clip("evenodd");
         }
         context.drawImage(this.surface.canvas, this.bounds.x, this.bounds.y);
+        context.restore();
+    }
+
+    eraseTransformedFrom(targetSurface, transform) {
+        const context = targetSurface.context;
+        const m = transform.getElements();
+        context.save();
+        context.globalCompositeOperation = "destination-out";
+        context.globalAlpha = 1;
+        context.fillStyle = "#000";
+        context.setTransform(m[0][0], m[1][0], m[0][1], m[1][1], m[0][2], m[1][2]);
+        this.tracePath(context, this.path);
+        context.fill("evenodd");
         context.restore();
     }
 

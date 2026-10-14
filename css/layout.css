@@ -61,6 +61,11 @@ header {
     white-space: pre;
 }
 
+.text-tool-editor::selection {
+    color: transparent;
+    background: rgba(0, 120, 215, 0.55);
+}
+
 .text-tool-caret {
     position: absolute;
     z-index: 21;

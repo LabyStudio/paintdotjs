@@ -1264,7 +1264,8 @@ body.window-resizing * {
     width: 150px;
     max-height: 120px;
     object-fit: contain;
-    background: white;
+    background-color: rgb(191, 191, 191);
+    background-image: var(--image-transparency);
     border: 1px solid var(--color-dialog-border);
 }
 
@@ -2594,6 +2595,8 @@ html.effect-rendering * {
 }
 
 .rotate-pan-visual {
+    background-color: rgb(191, 191, 191);
+    background-image: var(--image-transparency);
     border: 1px solid var(--pdn-control-border);
 }
 

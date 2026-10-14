@@ -796,8 +796,7 @@ class EffectConfigDialog {
         const dragWidth = sourceCanvas ? sourceCanvas.width * fit : 90;
         const dragHeight = sourceCanvas ? sourceCanvas.height * fit : 66;
         const redraw = () => {
-            context.fillStyle = "white";
-            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.clearRect(0, 0, canvas.width, canvas.height);
             if (sourceCanvas) {
                 context.globalAlpha = .45;
                 context.drawImage(sourceCanvas, (canvas.width - dragWidth) / 2, (canvas.height - dragHeight) / 2, dragWidth, dragHeight);

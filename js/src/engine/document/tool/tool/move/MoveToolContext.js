@@ -20,6 +20,7 @@ class MoveToolContext extends MoveToolBaseContext {
         this.liftedPixels = null;
         this.poLiftedPixels = null;
         this.copying = false;
+        this.replacing = false;
         this.previewBounds = null;
     }
 
@@ -30,6 +31,7 @@ class MoveToolContext extends MoveToolBaseContext {
         clone.liftedPixels = this.liftedPixels === null ? null : this.liftedPixels.clone();
         clone.poLiftedPixels = this.poLiftedPixels;
         clone.copying = this.copying;
+        clone.replacing = this.replacing;
         clone.previewBounds = this.previewBounds === null ? null : this.previewBounds.clone();
         return clone;
     }

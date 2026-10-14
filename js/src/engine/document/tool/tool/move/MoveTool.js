@@ -239,6 +239,7 @@ class MoveTool extends MoveToolBase {
         // copied content so moving the floating paste never erases its source
         // rectangle from the preserved underlay.
         this.context.copying = isPaste || this.app.isControlKeyDown();
+        this.context.replacing = isPaste;
         this.context.previewBounds = null;
         this.exactPreviewRestoreRequired = false;
 
@@ -336,7 +337,8 @@ class MoveTool extends MoveToolBase {
             resampling,
             !!this.getSetting("gammaCorrected", true),
             this.fullQuality,
-            this.getSetting("renderingQuality", "high")
+            this.getSetting("renderingQuality", "high"),
+            this.context.replacing
         );
 
         let dirtyRectangles = [sourceBounds, destinationBounds];

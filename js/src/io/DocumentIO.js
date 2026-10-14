@@ -1190,7 +1190,8 @@ class DocumentIO {
         const activeLayer = workspace.getActiveLayer();
         // Keep the pixels from before the paste separate from the floating
         // bitmap. MoveTool uses this underlay while the paste is still being
-        // positioned, so transparent areas can never erase existing artwork.
+        // positioned, then replaces the destination with every source pixel,
+        // including transparent ones.
         const pasteUnderlay = activeLayer.getSurface().clone();
         if (!expand) {
             history = new BitmapHistoryMemento(
@@ -1200,7 +1201,14 @@ class DocumentIO {
                 workspace.getActiveLayerIndex()
             );
         }
-        activeLayer.getSurface().context.drawImage(image, pastePosition.x, pastePosition.y);
+        const activeLayerContext = activeLayer.getSurface().context;
+        activeLayerContext.save();
+        activeLayerContext.beginPath();
+        activeLayerContext.rect(pastePosition.x, pastePosition.y, image.width, image.height);
+        activeLayerContext.clip();
+        activeLayerContext.globalCompositeOperation = "copy";
+        activeLayerContext.drawImage(image, pastePosition.x, pastePosition.y);
+        activeLayerContext.restore();
         workspace.getHistory().pushNewMemento(history);
         activeLayer.invalidate();
         const selection = workspace.getSelection();
