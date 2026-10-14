@@ -39,11 +39,11 @@ fs.writeFileSync(
 
 workbox.generateSW({
 	cacheId: 'paintdotjs',
-	// This release replaces the separately downloaded assets with a built-in
-	// pack. Activate it immediately so an older worker cannot keep serving the
-	// obsolete asset guard and app shell.
-	skipWaiting: true,
-	clientsClaim: true,
+	// Normal updates remain waiting until the user accepts the update prompt.
+	// The targeted migration below only activates immediately when it detects
+	// the broken built-in-assets release in the existing precache.
+	skipWaiting: false,
+	clientsClaim: false,
 	cleanupOutdatedCaches: true,
 	// v is used by index.html to force an old worker to fetch the current
 	// bootstrap. The current worker may ignore it so deployed PWAs stay offline.
@@ -66,29 +66,63 @@ workbox.generateSW({
 	sourcemap: false
 }).then(({count, size}) => {
 	let serviceWorkerPath = path.join(output, 'service_worker.js');
-	let assetPackMigration = `
-
-// One-time recovery for clients controlled by the pre-2.2 asset worker.
-let paintDotJsHadPreviousWorker = self.registration.active !== null;
-self.addEventListener('activate', event => {
+	let generatedServiceWorker = fs.readFileSync(serviceWorkerPath, 'utf8');
+	let assetPackDetection = `
+// Detect the broken web asset guard before Workbox updates the existing cache.
+let paintDotJsAssetRecoveryCache = 'pdj-asset-recovery';
+let paintDotJsAssetRecoveryMarker = new Request(new URL('/.paintdotjs-migrations/built-in-assets-v2', self.location.origin));
+self.addEventListener('install', event => {
 	event.waitUntil((async () => {
-		if (!paintDotJsHadPreviousWorker) {
-			return;
-		}
+		let cacheNames = await caches.keys();
+		for (let cacheName of cacheNames) {
+			if (cacheName === paintDotJsAssetRecoveryCache) {
+				continue;
+			}
 
-		let migrationCache = await caches.open('paintdotjs-migration-state');
-		let marker = new Request(new URL('/.paintdotjs-migrations/built-in-assets-v1', self.location.origin));
-		if (await migrationCache.match(marker)) {
-			return;
-		}
+			let cache = await caches.open(cacheName);
+			let requests = await cache.keys();
+			for (let request of requests) {
+				if (!new URL(request.url).pathname.endsWith('/build/web/app.bundle.js')) {
+					continue;
+				}
 
-		await migrationCache.put(marker, new Response('complete'));
-		await self.clients.claim();
-		let windowClients = await self.clients.matchAll({type: 'window', includeUncontrolled: true});
-		await Promise.all(windowClients.map(client => client.navigate(client.url)));
+				let response = await cache.match(request);
+				if (response === undefined) {
+					continue;
+				}
+				let source = await response.text();
+				let isBrokenAssetRelease = source.includes('This paint.js checkout is missing its built-in asset pack.')
+					&& !source.includes('paintDotJsBundledWebAssets');
+				if (!isBrokenAssetRelease) {
+					continue;
+				}
+
+				let recoveryCache = await caches.open(paintDotJsAssetRecoveryCache);
+				await recoveryCache.put(paintDotJsAssetRecoveryMarker, new Response('pending'));
+				await self.skipWaiting();
+				return;
+			}
+		}
 	})());
 });
 `;
-	fs.appendFileSync(serviceWorkerPath, assetPackMigration);
+	let assetPackMigration = `
+
+// Reload only clients whose existing precache contained the broken release.
+self.addEventListener('activate', event => {
+	event.waitUntil((async () => {
+		let recoveryCache = await caches.open(paintDotJsAssetRecoveryCache);
+		if (!await recoveryCache.match(paintDotJsAssetRecoveryMarker)) {
+			return;
+		}
+
+		await self.clients.claim();
+		let windowClients = await self.clients.matchAll({type: 'window', includeUncontrolled: true});
+		await Promise.all(windowClients.map(client => client.navigate(client.url)));
+		await recoveryCache.delete(paintDotJsAssetRecoveryMarker);
+	})());
+});
+`;
+	fs.writeFileSync(serviceWorkerPath, assetPackDetection + generatedServiceWorker + assetPackMigration);
 	console.log(`Generated service-worker, which will precache ${count} files, totaling ${(size/1e6).toFixed(2)} MB.`);
 });
