@@ -305,7 +305,7 @@ class DocumentStrip extends Panel {
         const activeWorkspace = this.app.getActiveDocumentWorkspace();
         let longestNameWidth = 0;
         const textContext = document.createElement("canvas").getContext("2d");
-        textContext.font = "14px Segoe UI, sans-serif";
+        textContext.font = `14px ${AppSettingsStore.getUiFontStack()}`;
         for (const item of this.documentsListItem.items) {
             const workspace = item.getDocumentWorkspace();
 

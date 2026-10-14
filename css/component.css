@@ -362,6 +362,12 @@ button {
     cursor: pointer;
 }
 
+button,
+select,
+textarea {
+    font-family: var(--font-family);
+}
+
 /* ------------ Hr ------------ */
 hr {
     border: 1px solid var(--color-slider-outline);

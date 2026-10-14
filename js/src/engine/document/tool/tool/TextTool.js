@@ -47,7 +47,7 @@ class TextTool extends DrawingTool {
 
     onActivate() {
         super.onActivate();
-        FontManager.ensureLoaded(this.getSetting("fontFamily", "Segoe UI")).then(face => {
+        FontManager.ensureLoaded(this.getSetting("fontFamily", "Noto Sans")).then(face => {
             if (face !== null && this.isActive() && this.pending) {
                 this.updateEditorStyle();
                 this.renderPreview();
@@ -373,7 +373,7 @@ class TextTool extends DrawingTool {
     }
 
     getFontString() {
-        const family = this.getSetting("fontFamily", "Segoe UI");
+        const family = this.getSetting("fontFamily", "Noto Sans");
         const generic = ["serif", "sans-serif", "monospace", "cursive", "fantasy"];
         const cssFamily = generic.includes(family) ? family : `'${family}'`;
         return `${this.getSetting("italic", false) ? "italic " : ""}`

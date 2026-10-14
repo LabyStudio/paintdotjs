@@ -14,3 +14,8 @@ terms. See [LICENSE.md](LICENSE.md) for the complete licensing terms and inherit
 
 Copies or substantial portions of paint.js must retain the applicable copyright, license, and
 attribution notices.
+
+paint.js includes third-party fonts whose bundled selection may change between releases. Each font
+family is stored in its own directory under [`assets/font/`](assets/font/) together with its
+applicable `LICENSE.txt`. Those colocated license files are the authoritative copyright and license
+notices for the fonts distributed with a particular release.

@@ -87,8 +87,7 @@
 
     --image-transparency: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPjxwYXRoIGZpbGw9IiM4ZjhmOGYiIGQ9Ik0wIDBoNHY0SDB6bTQgNGg0djRINHoiLz48cGF0aCBmaWxsPSIjYmZiZmJmIiBkPSJNNCAwaDR2NEg0ek0wIDRoNHY0SDB6Ii8+PC9zdmc+');
 
-    /* Actually we need Microsoft Sans Serif but Segoe UI is the closest we can get */
-    --font-family: 'Segoe UI', sans-serif;
+    --font-family: "Noto Sans", "Segoe UI", system-ui, sans-serif;
     --font-size: 8.25pt;
     --font-weight: 500;
 
@@ -180,8 +179,198 @@
     opacity: .88;
 }
 
-/* Windows Font */
+/* Redistributable default fonts. See assets/font/README.md for licenses. */
 @font-face {
-    font-family: "Segoe UI";
-    src: url("../assets/font/segoe_ui.ttf") format('truetype');
+    font-family: "Noto Sans";
+    src: url("../assets/font/noto-sans/NotoSans-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Noto Serif";
+    src: url("../assets/font/noto-serif/NotoSerif-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Noto Sans Mono";
+    src: url("../assets/font/noto-sans-mono/NotoSansMono-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Atkinson Hyperlegible";
+    src: url("../assets/font/atkinson-hyperlegible/AtkinsonHyperlegible-Regular.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("../assets/font/inter/Inter-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Playfair Display";
+    src: url("../assets/font/playfair-display/PlayfairDisplay-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Roboto Slab";
+    src: url("../assets/font/roboto-slab/RobotoSlab-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Oswald";
+    src: url("../assets/font/oswald/Oswald-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 200 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Caveat";
+    src: url("../assets/font/caveat/Caveat-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Pacifico";
+    src: url("../assets/font/pacifico/Pacifico-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Bebas Neue";
+    src: url("../assets/font/bebas-neue/BebasNeue-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("../assets/font/jetbrains-mono/JetBrainsMono-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 100 800;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Lato";
+    src: url("../assets/font/lato/Lato-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Montserrat";
+    src: url("../assets/font/montserrat/Montserrat-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Open Sans";
+    src: url("../assets/font/open-sans/OpenSans-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 300 800;
+    font-stretch: 75% 100%;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Raleway";
+    src: url("../assets/font/raleway/Raleway-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Source Sans 3";
+    src: url("../assets/font/source-sans-3/SourceSans3-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 200 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Merriweather";
+    src: url("../assets/font/merriweather/Merriweather-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 300 900;
+    font-stretch: 87.5% 112.5%;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Libre Baskerville";
+    src: url("../assets/font/libre-baskerville/LibreBaskerville-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Source Serif 4";
+    src: url("../assets/font/source-serif-4/SourceSerif4-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 200 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Cinzel";
+    src: url("../assets/font/cinzel/Cinzel-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Dancing Script";
+    src: url("../assets/font/dancing-script/DancingScript-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Comic Neue";
+    src: url("../assets/font/comic-neue/ComicNeue-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inconsolata";
+    src: url("../assets/font/inconsolata/Inconsolata-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 200 900;
+    font-stretch: 50% 200%;
+    font-display: swap;
 }

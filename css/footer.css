@@ -13,7 +13,7 @@ footer {
     min-width: 0;
     align-items: center;
     overflow: hidden;
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-family);
     font-size: 14px;
     font-weight: 400;
 }
