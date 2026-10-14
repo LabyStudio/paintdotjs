@@ -39,10 +39,11 @@ fs.writeFileSync(
 
 workbox.generateSW({
 	cacheId: 'paintdotjs',
-	// Leave a downloaded update waiting until the user accepts the update
-	// prompt. Workbox adds a SKIP_WAITING message handler in this mode.
-	skipWaiting: false,
-	clientsClaim: false,
+	// This release replaces the separately downloaded assets with a built-in
+	// pack. Activate it immediately so an older worker cannot keep serving the
+	// obsolete asset guard and app shell.
+	skipWaiting: true,
+	clientsClaim: true,
 	cleanupOutdatedCaches: true,
 	// v is used by index.html to force an old worker to fetch the current
 	// bootstrap. The current worker may ignore it so deployed PWAs stay offline.
@@ -64,5 +65,30 @@ workbox.generateSW({
 	maximumFileSizeToCacheInBytes: 20_000_000,
 	sourcemap: false
 }).then(({count, size}) => {
+	let serviceWorkerPath = path.join(output, 'service_worker.js');
+	let assetPackMigration = `
+
+// One-time recovery for clients controlled by the pre-2.2 asset worker.
+let paintDotJsHadPreviousWorker = self.registration.active !== null;
+self.addEventListener('activate', event => {
+	event.waitUntil((async () => {
+		if (!paintDotJsHadPreviousWorker) {
+			return;
+		}
+
+		let migrationCache = await caches.open('paintdotjs-migration-state');
+		let marker = new Request(new URL('/.paintdotjs-migrations/built-in-assets-v1', self.location.origin));
+		if (await migrationCache.match(marker)) {
+			return;
+		}
+
+		await migrationCache.put(marker, new Response('complete'));
+		await self.clients.claim();
+		let windowClients = await self.clients.matchAll({type: 'window', includeUncontrolled: true});
+		await Promise.all(windowClients.map(client => client.navigate(client.url)));
+	})());
+});
+`;
+	fs.appendFileSync(serviceWorkerPath, assetPackMigration);
 	console.log(`Generated service-worker, which will precache ${count} files, totaling ${(size/1e6).toFixed(2)} MB.`);
 });
