@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24.0 24"><title>menu window layers icon</title><defs>
+<linearGradient id="gray"><stop stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
+<linearGradient id="reflected"><stop stop-color="#596772"/><stop offset=".5" stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
+<linearGradient id="color" x2="1" y2="1"><stop stop-color="#528bb9"/><stop offset="1" stop-color="#9868b2"/></linearGradient>
+<radialGradient id="radial"><stop stop-color="#f6f7f5"/><stop offset=".4" stop-color="#d5d9d9"/><stop offset="1" stop-color="#46525c"/></radialGradient>
+</defs><path d="M3 15l9-4 9 4-9 4Z" fill="#f6f7f5" stroke="#528bb9" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" /><path d="M3 11l9-4 9 4-9 4Z" fill="#f6f7f5" stroke="#528bb9" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" /><path d="M3 7l9-4 9 4-9 4Z" fill="#c6dfef" stroke="#528bb9" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" /></svg>

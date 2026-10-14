@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24.0 24"><title>levels effect</title><defs>
+<linearGradient id="gray"><stop stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
+<linearGradient id="reflected"><stop stop-color="#596772"/><stop offset=".5" stop-color="#f6f7f5"/><stop offset="1" stop-color="#596772"/></linearGradient>
+<linearGradient id="color" x2="1" y2="1"><stop stop-color="#528bb9"/><stop offset="1" stop-color="#9868b2"/></linearGradient>
+<radialGradient id="radial"><stop stop-color="#f6f7f5"/><stop offset=".4" stop-color="#d5d9d9"/><stop offset="1" stop-color="#46525c"/></radialGradient>
+</defs><path d="M3 2v19h19" fill="none" stroke="#90999f" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" /><rect x="5" y="13" width="2" height="7" rx="0" fill="#528bb9" stroke="none" stroke-width="1.1" /><rect x="8" y="8" width="2" height="12" rx="0" fill="#528bb9" stroke="none" stroke-width="1.1" /><rect x="11" y="3" width="2" height="17" rx="0" fill="#9868b2" stroke="none" stroke-width="1.1" /><rect x="14" y="11" width="2" height="9" rx="0" fill="#528bb9" stroke="none" stroke-width="1.1" /><rect x="17" y="6" width="2" height="14" rx="0" fill="#528bb9" stroke="none" stroke-width="1.1" /></svg>
