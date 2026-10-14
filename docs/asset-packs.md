@@ -2,11 +2,18 @@
 
 paint.js icon packs are ZIP files that replace some or all of the application's images and translations. Packs are stored locally in the browser or desktop application and are not uploaded.
 
-Only distribute artwork and translations that you created or have permission to redistribute. An icon pack is not a way to bypass another project's license.
+## Install a pack
 
-## ZIP structure
+Open **Settings → Icon Packs** to install a pack.
 
-The ZIP may contain a single top-level folder. Its contents use this layout:
+- Image changes apply immediately.
+- Reload paint.js to apply translations.
+
+## Create a pack
+
+### 1. Organize the ZIP
+
+The ZIP may contain a single top-level folder, as shown below:
 
 ```text
 my-pack/
@@ -22,7 +29,11 @@ my-pack/
     de.json
 ```
 
-`asset-pack.json` is required:
+Only `asset-pack.json` is required. Include whichever images and language files you want to replace; missing images and translation keys fall back to the built-in pack.
+
+### 2. Add the manifest
+
+Create `asset-pack.json` at the root of the pack:
 
 ```json
 {
@@ -35,8 +46,14 @@ my-pack/
 }
 ```
 
-Every other file is optional. Missing images and translation keys fall back to the built-in pack. Images must be PNG or WebP files. Language files use the same nested JSON keys as `assets/lang/en.json`.
+### 3. Add images and translations
 
-Browse the repository's [built-in assets folder](../assets/) to see which files can be replaced. Keep the same path relative to `assets/` inside your ZIP. For example, to replace `assets/icons/menu_file_open_icon.png`, add your version as `icons/menu_file_open_icon.png`.
+#### Images
 
-Install a pack from **Settings → Icon Packs**. Image changes apply immediately; reload paint.js to apply translations.
+Browse the repository's [built-in assets folder](../assets/) to see which files can be replaced. Images must be PNG or WebP files.
+
+Keep the same path relative to `assets/` inside your pack. For example, to replace `assets/icons/menu_file_open_icon.png`, add your version as `icons/menu_file_open_icon.png`.
+
+#### Translations
+
+Place language files in `lang/`, for example `lang/en.json` or `lang/de.json`. Use the same nested JSON keys as [the built-in English translations](../assets/lang/en.json).
