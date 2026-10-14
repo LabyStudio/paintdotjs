@@ -42,6 +42,7 @@ class EffectsMenu extends DropMenuItem {
         );
         super("menu.effects", effectEntries);
 
+        this.builtInEffectEntries = effectEntries;
         this.effectEntries = effectEntries;
         this.repeatEntry = ActionRegistry.get("menu.effects.repeat").createDropEntry();
         this.repeatEntry.getIconPath = () => {
@@ -58,11 +59,42 @@ class EffectsMenu extends DropMenuItem {
     }
 
     open() {
+        const pluginEntry = EffectsMenu.createPluginCategory();
+        this.effectEntries = pluginEntry === null
+            ? this.builtInEffectEntries
+            : [...this.builtInEffectEntries, pluginEntry];
         const hasLastEffect = BitmapEffectAction.getLastEffect() !== null;
         this.entries = hasLastEffect
             ? [this.repeatEntry, this.repeatSeparator, ...this.effectEntries]
             : this.effectEntries;
         super.open();
+    }
+
+    static createPluginCategory() {
+        const plugins = PluginManager.getRuntimePlugins();
+        if (plugins.length === 0) {
+            return null;
+        }
+        const pluginEntries = plugins.map(plugin => {
+            const effects = plugin.effects.map(definition => {
+                const action = ActionRegistry.get(definition.actionId);
+                if (action === null) {
+                    throw new Error("Missing plugin effect action: " + definition.actionId);
+                }
+                return action.createDropEntry()
+                    .withIconPathKey(definition.icon.replace(/\.png$/, ""));
+            });
+            const entry = new SubmenuDropEntry(
+                "effects.plugins." + plugin.id + ".submenu",
+                effects
+            ).withNoIcon();
+            entry.getText = () => plugin.name;
+            return entry;
+        });
+        const entry = new SubmenuDropEntry("effects.plugins.submenu", pluginEntries)
+            .withNoIcon();
+        entry.getText = () => "Plugins";
+        return entry;
     }
 
     static createCategory(category, effectIds) {

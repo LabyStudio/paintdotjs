@@ -494,7 +494,12 @@ class BitmapEffectEngine {
             }
             const result = definition.transform(
                 source.data[offset], source.data[offset + 1], source.data[offset + 2],
-                source.data[offset + 3], values, state
+                source.data[offset + 3], values, state, {
+                    x: pixel % width,
+                    y: Math.floor(pixel / width),
+                    width,
+                    height
+                }
             );
             const amount = coverage / 255;
             for (let channel = 0; channel < 4; ++channel) {

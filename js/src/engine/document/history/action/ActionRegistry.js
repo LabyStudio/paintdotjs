@@ -126,6 +126,9 @@ class ActionRegistry {
             definition.actionId = "menu.effects." + definition.id;
             this.register(new BitmapEffectAction(definition));
         }
+        for (const definition of PluginManager.getEffectDefinitions()) {
+            this.register(new BitmapEffectAction(definition));
+        }
         this.register(new RepeatEffectAction());
         this.register(new BitmapEffectAction(BitmapEffectEngine.ROTATE_ZOOM));
 
@@ -174,6 +177,18 @@ class ActionRegistry {
         this.actions.set(action.getActionId(), action);
         this.notifyChanged(action);
         return action;
+    }
+
+    static unregister(actionId) {
+        const action = this.actions.get(actionId);
+        if (action === undefined) {
+            return false;
+        }
+        this.actions.delete(actionId);
+        delete this.shortcutOverrides[actionId];
+        this.saveOverrides();
+        this.notifyChanged(action);
+        return true;
     }
 
     static registerCallback(actionId, callback, displayName, executable = null, shortcutKeyCombo = null) {

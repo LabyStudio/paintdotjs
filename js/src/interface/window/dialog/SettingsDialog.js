@@ -46,6 +46,8 @@ class SettingsDialog {
         this.assetPackList = null;
         this.assetPackImporting = false;
         this.assetPackPreviewUrls = [];
+        this.pluginList = null;
+        this.pluginImporting = false;
         this.changedListener = () => this.renderShortcutRows();
         this.fontsChangedListener = () => {
             if (this.backdrop !== null && this.activeSection === "fonts") {
@@ -64,6 +66,12 @@ class SettingsDialog {
         };
         window.addEventListener("paintdotjs:asset-packs-changed", this.assetPacksChangedListener);
         window.addEventListener("paintdotjs:asset-pack-changed", this.assetPacksChangedListener);
+        this.pluginsChangedListener = () => {
+            if (this.backdrop !== null && this.activeSection === "plugins") {
+                this.renderPluginRows();
+            }
+        };
+        window.addEventListener("paintdotjs:plugins-changed", this.pluginsChangedListener);
         this.sections = [
             ["ui", "User Interface", "settings_u_i_24.png"],
             ["canvas", "Canvas", "settings_canvas_24.png"],
@@ -75,7 +83,7 @@ class SettingsDialog {
             ["graphics", "Graphics", "settings_graphics_24.png"],
             ["colorManagement", "Color Management", "settings_color_management_24.png"],
             ["updates", "Updates", "settings_updates_24.png"],
-            ["plugins", "Plugin Errors", "settings_plugins_24.png"],
+            ["plugins", "Plugins", "settings_plugins_24.png"],
             ["diagnostics", "Diagnostics", "settings_diagnostics_24.png"]
         ];
     }
@@ -217,6 +225,7 @@ class SettingsDialog {
         this.shortcutList = null;
         this.fontList = null;
         this.assetPackList = null;
+        this.pluginList = null;
         this.uiFontSelect = null;
         this.uiAssetPackSelect = null;
         this.page.className = "settings-page settings-page-" + section;
@@ -790,12 +799,210 @@ class SettingsDialog {
     }
 
     renderPlugins() {
-        this.addHeading("Plugin Errors");
-        this.addNote("No plugin errors were found.");
-        const empty = document.createElement("div");
-        empty.className = "settings-empty-list";
-        empty.textContent = "paint.js does not currently load native Paint.NET plugins.";
-        this.page.appendChild(empty);
+        this.addHeading("Plugins", "Install JavaScript plugins that add effects to paint.js.");
+        this.addNote("Plugins run code with access to this app. Only install plugins you trust.");
+
+        // Plugin actions
+        const controls = document.createElement("div");
+        controls.className = "settings-asset-controls";
+        {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".js,.paintjs,text/javascript,application/javascript";
+            input.hidden = true;
+            input.onchange = async () => {
+                if (input.files !== null && input.files.length > 0) {
+                    await this.importPlugin(input.files[0]);
+                }
+                input.value = "";
+            };
+            controls.appendChild(input);
+
+            const add = document.createElement("button");
+            add.type = "button";
+            add.className = "settings-action-button";
+            add.textContent = "Install plugin…";
+            add.onclick = () => input.click();
+            controls.appendChild(add);
+        }
+        this.page.appendChild(controls);
+
+        // Drop zone
+        const dropZone = document.createElement("div");
+        dropZone.className = "settings-font-drop-zone settings-plugin-drop-zone";
+        dropZone.tabIndex = 0;
+        dropZone.textContent = "Drop a .js or .paintjs plugin here";
+        dropZone.ondragenter = dropZone.ondragover = event => {
+            event.preventDefault();
+            event.stopPropagation();
+            dropZone.classList.add("drag-over");
+            if (event.dataTransfer !== null) {
+                event.dataTransfer.dropEffect = "copy";
+            }
+        };
+        dropZone.ondragleave = event => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!dropZone.contains(event.relatedTarget)) {
+                dropZone.classList.remove("drag-over");
+            }
+        };
+        dropZone.ondrop = async event => {
+            event.preventDefault();
+            event.stopPropagation();
+            dropZone.classList.remove("drag-over");
+            const files = Array.from(event.dataTransfer?.files || []);
+            if (files.length > 0) {
+                await this.importPlugin(files[0]);
+            }
+        };
+        this.page.appendChild(dropZone);
+
+        const documentation = this.addNote("");
+        documentation.classList.add("settings-asset-documentation");
+        {
+            const link = document.createElement("a");
+            link.href = "https://github.com/LabyStudio/paintdotjs/blob/develop/docs/plugin-api.md";
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "Learn how to create a paint.js plugin";
+            documentation.appendChild(link);
+        }
+
+        this.addSectionHeading("Installed plugins");
+        this.pluginList = document.createElement("div");
+        this.pluginList.className = "settings-plugin-list";
+        this.page.appendChild(this.pluginList);
+        this.renderPluginRows();
+    }
+
+    async importPlugin(file) {
+        if (this.pluginImporting) {
+            this.setStatus("Wait for the current plugin import to finish.");
+            return;
+        }
+        this.pluginImporting = true;
+        this.setStatus(`Installing ${file.name}…`);
+        try {
+            const plugin = await PluginManager.importFile(file);
+            this.setStatus(`Installed ${plugin.name}. Its effects are available in the Effects menu.`);
+            this.renderPluginRows();
+        } catch (error) {
+            console.error("Could not install plugin", error);
+            this.setStatus("Could not install the plugin.");
+            ErrorForm.report(error, `Could not install ${file.name}`);
+        } finally {
+            this.pluginImporting = false;
+        }
+    }
+
+    renderPluginRows() {
+        if (this.pluginList === null || !this.pluginList.isConnected) {
+            return;
+        }
+        this.pluginList.innerHTML = "";
+        const plugins = PluginManager.getPlugins();
+        const errors = PluginManager.getLoadErrors();
+        if (plugins.length === 0 && errors.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "settings-empty-list settings-plugin-empty";
+            empty.textContent = "No plugins are installed.";
+            this.pluginList.appendChild(empty);
+            return;
+        }
+        for (const plugin of plugins) {
+            const row = document.createElement("article");
+            row.className = "settings-plugin-row";
+            {
+                // Details
+                const details = document.createElement("div");
+                details.className = "settings-plugin-details";
+                {
+                    const name = document.createElement("strong");
+                    name.textContent = plugin.name;
+                    details.appendChild(name);
+
+                    const metadata = document.createElement("span");
+                    const author = plugin.author ? ` by ${plugin.author}` : "";
+                    const effectLabel = plugin.effectCount === 1 ? "effect" : "effects";
+                    metadata.textContent = `${plugin.version}${author} · ${plugin.effectCount} ${effectLabel}`;
+                    details.appendChild(metadata);
+
+                    if (plugin.description) {
+                        const description = document.createElement("span");
+                        description.textContent = plugin.description;
+                        details.appendChild(description);
+                    }
+                }
+                row.appendChild(details);
+
+                // Enabled toggle
+                const enabledLabel = document.createElement("label");
+                enabledLabel.className = "settings-plugin-enabled";
+                {
+                    const enabled = document.createElement("input");
+                    enabled.type = "checkbox";
+                    enabled.checked = plugin.enabled;
+                    enabled.onchange = async () => {
+                        enabled.disabled = true;
+                        try {
+                            await PluginManager.setEnabled(plugin.id, enabled.checked);
+                            this.setStatus(`${plugin.name} ${enabled.checked ? "enabled" : "disabled"}.`);
+                        } catch (error) {
+                            enabled.checked = !enabled.checked;
+                            ErrorForm.report(error, `Could not update ${plugin.name}`);
+                        } finally {
+                            enabled.disabled = false;
+                        }
+                    };
+                    enabledLabel.appendChild(enabled);
+
+                    const enabledText = document.createElement("span");
+                    enabledText.textContent = "Enabled";
+                    enabledLabel.appendChild(enabledText);
+                }
+                row.appendChild(enabledLabel);
+
+                // Remove button
+                const remove = document.createElement("button");
+                remove.type = "button";
+                remove.className = "settings-font-remove settings-plugin-remove";
+                remove.title = `Remove ${plugin.name}`;
+                remove.setAttribute("aria-label", `Remove ${plugin.name}`);
+                remove.onclick = async () => {
+                    await PluginManager.remove(plugin.id);
+                    this.setStatus(`Removed ${plugin.name}.`);
+                    this.renderPluginRows();
+                };
+                {
+                    const icon = document.createElement("img");
+                    icon.src = "assets/icons/cancel_icon.png";
+                    icon.alt = "";
+                    remove.appendChild(icon);
+                }
+                row.appendChild(remove);
+            }
+            this.pluginList.appendChild(row);
+        }
+        for (const error of errors) {
+            const row = document.createElement("article");
+            row.className = "settings-plugin-row settings-plugin-error";
+            {
+                const details = document.createElement("div");
+                details.className = "settings-plugin-details";
+                {
+                    const name = document.createElement("strong");
+                    name.textContent = error.name;
+                    details.appendChild(name);
+
+                    const message = document.createElement("span");
+                    message.textContent = error.message;
+                    details.appendChild(message);
+                }
+                row.appendChild(details);
+            }
+            this.pluginList.appendChild(row);
+        }
     }
 
     renderFonts() {
@@ -1495,6 +1702,7 @@ class SettingsDialog {
         this.shortcutList = null;
         this.fontList = null;
         this.assetPackList = null;
+        this.pluginList = null;
         this.uiFontSelect = null;
         this.uiAssetPackSelect = null;
         this.fontAddButton = null;

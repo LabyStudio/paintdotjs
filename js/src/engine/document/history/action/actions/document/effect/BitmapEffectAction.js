@@ -20,11 +20,15 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
     constructor(definition, shortcut = null) {
         super(
             definition.actionId || "adjustment." + definition.id,
-            definition.translationKey || definition.id + ".name",
+            definition.displayName ? null : (definition.translationKey || definition.id + ".name"),
             null,
             shortcut
         );
         this.definition = definition;
+    }
+
+    getDisplayName() {
+        return this.definition.displayName || super.getDisplayName();
     }
 
     static cloneValues(values) {
@@ -61,6 +65,22 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
             .performAction(documentWorkspace, last.values);
     }
 
+    static forgetDefinition(definition) {
+        this.rememberedValues.delete(definition.id);
+        if (this.lastEffect?.definition === definition) {
+            this.lastEffect = null;
+        }
+    }
+
+    getEffectName() {
+        return this.definition.displayName
+            || i18n(this.definition.translationKey || this.definition.id + ".name");
+    }
+
+    getEffectIconPath() {
+        return "assets/icons/" + this.definition.icon;
+    }
+
     async performAction(documentWorkspace, repeatedValues = undefined) {
         const layer = documentWorkspace.getActiveLayer();
         if (!(layer instanceof BitmapLayer)) {
@@ -77,8 +97,8 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
         const selectionMask = BitmapEffectEngine.createSelectionMask(
             surface.getWidth(), surface.getHeight(), documentWorkspace.getSelection());
         const memento = new BitmapHistoryMemento(
-            i18n(this.definition.translationKey || this.definition.id + ".name"),
-            "assets/icons/" + this.definition.icon,
+            this.getEffectName(),
+            this.getEffectIconPath(),
             documentWorkspace,
             layerIndex
         );
@@ -214,8 +234,8 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
         const values = repeatedValues === undefined
             ? await EffectConfigDialog.open({
                 title: this.definition.dialogTitle
-                    || i18n(this.definition.translationKey || this.definition.id + ".name"),
-                icon: "assets/icons/" + this.definition.icon,
+                    || this.getEffectName(),
+                icon: this.getEffectIconPath(),
                 layout: this.definition.dialog,
                 controls: this.definition.controls,
                 values: remembered || BitmapEffectEngine.defaults(this.definition),
@@ -260,7 +280,8 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
     }
 
     rememberSuccessfulEffect(app, values) {
-        if (BitmapEffectEngine.EFFECTS[this.definition.id] === this.definition) {
+        if (BitmapEffectEngine.EFFECTS[this.definition.id] === this.definition
+            || this.definition.pluginId !== undefined) {
             BitmapEffectAction.lastEffect = {
                 definition: this.definition,
                 values: BitmapEffectAction.cloneValues(values)

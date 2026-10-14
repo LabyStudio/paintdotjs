@@ -1092,6 +1092,98 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
     font-style: italic;
 }
 
+.settings-page-plugins {
+    overflow: hidden;
+}
+
+.settings-page-plugins h2 {
+    margin-bottom: 4px;
+}
+
+.settings-page-plugins > p {
+    margin-bottom: 6px;
+}
+
+.settings-page-plugins .settings-note {
+    max-width: none;
+    margin-left: 0 !important;
+}
+
+.settings-page-plugins .settings-section-heading {
+    margin: 7px 0 5px;
+}
+
+.settings-plugin-list {
+    width: 100%;
+    min-height: 0;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 5px;
+    padding-right: 4px;
+    overflow-y: auto;
+}
+
+.settings-plugin-empty {
+    min-height: 70px;
+}
+
+.settings-plugin-row {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 29px;
+    gap: 10px;
+    align-items: center;
+    padding: 8px;
+    background: var(--color-number-input-background);
+    border: 1px solid var(--color-window-border);
+}
+
+.settings-plugin-details {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.settings-plugin-details strong,
+.settings-plugin-details span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settings-plugin-details span {
+    color: color-mix(in srgb, var(--color-menu-item-text) 64%, transparent);
+    font-size: 11px;
+}
+
+.settings-plugin-enabled {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.settings-plugin-remove {
+    box-sizing: border-box;
+    width: 29px;
+    min-width: 29px;
+    padding: 3px;
+}
+
+.settings-plugin-remove img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+}
+
+.settings-plugin-error {
+    grid-template-columns: minmax(0, 1fr);
+    border-color: var(--color-error, #a03030);
+}
+
 .settings-diagnostics-table {
     width: 100%;
     display: grid;

@@ -376,6 +376,17 @@ class DocumentIO {
     }
 
     static async handleDroppedFiles(files) {
+        let pluginFiles = files.filter(file => PluginManager.isPluginFile(file));
+        if (pluginFiles.length > 0) {
+            SettingsDialog.open("plugins");
+            for (let file of pluginFiles) {
+                await SettingsDialog.instance.importPlugin(file);
+            }
+            files = files.filter(file => !PluginManager.isPluginFile(file));
+            if (files.length === 0) {
+                return;
+            }
+        }
         let assetPackFiles = files.filter(file => AssetPackManager.isZipFile(file));
         if (assetPackFiles.length > 0) {
             SettingsDialog.open("assets");
