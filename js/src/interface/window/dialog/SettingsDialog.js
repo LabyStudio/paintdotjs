@@ -967,18 +967,19 @@ class SettingsDialog {
                 };
                 row.append(details, activate);
 
+                let remove = document.createElement("button");
+                remove.type = "button";
+                remove.className = "settings-font-remove";
+                remove.textContent = "Remove";
+                remove.disabled = pack.builtIn;
                 if (!pack.builtIn) {
-                    const remove = document.createElement("button");
-                    remove.type = "button";
-                    remove.className = "settings-font-remove";
-                    remove.textContent = "Remove";
                     remove.onclick = async () => {
                         await AssetPackManager.remove(pack.id);
                         this.setStatus(`Removed ${pack.name}.`);
                         this.renderAssetPackRows();
                     };
-                    row.appendChild(remove);
                 }
+                row.appendChild(remove);
             }
             this.assetPackList.appendChild(row);
         }

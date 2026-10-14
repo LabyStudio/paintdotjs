@@ -73,28 +73,15 @@ let paintDotJsAssetRecoveryCache = 'pdj-asset-recovery';
 let paintDotJsAssetRecoveryMarker = new Request(new URL('/.paintdotjs-migrations/built-in-assets-v2', self.location.origin));
 self.addEventListener('install', event => {
 	event.waitUntil((async () => {
-		let recoveryCache = await caches.open(paintDotJsAssetRecoveryCache);
-		let legacyMigrationCache = await caches.open('paintdotjs-migration-state');
-		let legacyMigrationMarker = new Request(new URL('/.paintdotjs-migrations/built-in-assets-v1', self.location.origin));
-		if (await legacyMigrationCache.match(legacyMigrationMarker)) {
-			await recoveryCache.put(paintDotJsAssetRecoveryMarker, new Response('pending'));
-			await self.skipWaiting();
-			return;
-		}
-
+		await caches.delete('paintdotjs-migration-state');
+		await caches.delete(paintDotJsAssetRecoveryCache);
 		let cacheNames = await caches.keys();
 		for (let cacheName of cacheNames) {
-			if (cacheName === paintDotJsAssetRecoveryCache || cacheName === 'paintdotjs-migration-state') {
-				continue;
-			}
-
 			let cache = await caches.open(cacheName);
 			let requests = await cache.keys();
 			for (let request of requests) {
 				let pathname = new URL(request.url).pathname;
-				let isApplicationBundle = pathname.endsWith('/build/web/app.bundle.js');
-				let isEnglishAsset = pathname.endsWith('/assets/lang/en.json');
-				if (!isApplicationBundle && !isEnglishAsset) {
+				if (!pathname.endsWith('/build/web/app.bundle.js')) {
 					continue;
 				}
 
@@ -103,20 +90,14 @@ self.addEventListener('install', event => {
 					continue;
 				}
 
-				let isBrokenAssetRelease = !response.ok;
-				if (isEnglishAsset && response.url !== '') {
-					isBrokenAssetRelease = isBrokenAssetRelease
-						|| new URL(response.url).origin !== self.location.origin;
-				}
-				if (isApplicationBundle) {
-					let source = await response.text();
-					isBrokenAssetRelease = source.includes('This paint.js checkout is missing its built-in asset pack.')
-						&& !source.includes('paintDotJsBundledWebAssets');
-				}
+				let source = await response.text();
+				let isBrokenAssetRelease = source.includes('This paint.js checkout is missing its built-in asset pack.')
+					&& !source.includes('paintDotJsBundledWebAssets');
 				if (!isBrokenAssetRelease) {
 					continue;
 				}
 
+				let recoveryCache = await caches.open(paintDotJsAssetRecoveryCache);
 				await recoveryCache.put(paintDotJsAssetRecoveryMarker, new Response('pending'));
 				await self.skipWaiting();
 				return;
@@ -132,13 +113,14 @@ self.addEventListener('activate', event => {
 	event.waitUntil((async () => {
 		let recoveryCache = await caches.open(paintDotJsAssetRecoveryCache);
 		if (!await recoveryCache.match(paintDotJsAssetRecoveryMarker)) {
+			await caches.delete(paintDotJsAssetRecoveryCache);
 			return;
 		}
 
+		await caches.delete(paintDotJsAssetRecoveryCache);
 		await self.clients.claim();
 		let windowClients = await self.clients.matchAll({type: 'window', includeUncontrolled: true});
 		await Promise.all(windowClients.map(client => client.navigate(client.url)));
-		await recoveryCache.delete(paintDotJsAssetRecoveryMarker);
 	})());
 });
 `;
