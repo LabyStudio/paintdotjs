@@ -23,14 +23,29 @@ class PaintBucketTool extends Tool {
         this.button = MouseButton.LEFT;
         this.originNub = null;
         this.sampleSnapshot = null;
+        this.colorsForm = null;
+        this.colorsChangedListener = () => {
+            if (this.pending) {
+                this.renderPending();
+            }
+        };
     }
 
     onActivate() {
         super.onActivate();
+        this.colorsForm = FormRegistry.get("colorsForm");
+        if (this.colorsForm?.changed !== undefined) {
+            this.colorsForm.changed.add(this.colorsChangedListener);
+        }
         this.app.setCursorImg("paint_bucket_tool_cursor");
     }
 
     onDeactivate() {
+        const colorsForm = this.colorsForm;
+        this.colorsForm = null;
+        if (typeof colorsForm?.changed?.remove === "function") {
+            colorsForm.changed.remove(this.colorsChangedListener);
+        }
         if (this.pending) {
             this.commitPending();
         }
