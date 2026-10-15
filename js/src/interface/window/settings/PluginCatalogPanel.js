@@ -149,19 +149,12 @@ class PluginCatalogPanel {
         }
         this.busy = true;
         this.refresh.disabled = true;
+        this.message.textContent = `Installing ${entry.name}…`;
         this.render();
         try {
-            let choice = await TaskDialog.show({
-                title: "Install plugin", message: `Install ${entry.name} ${entry.version} from ${new URL(entry.url).host}? Plugins run code with access to this app. Only continue if you trust this source.`,
-                cancelValue: "cancel", choices: [
-                    {value: "install", title: "Install", description: "Download, verify, and store this plugin locally."},
-                    {value: "cancel", title: "Cancel", description: "Do not install this plugin."}
-                ]
-            });
-            if (choice === "install") {
-                await PluginCatalog.install(entry);
-                this.setStatus(`Installed ${entry.name} ${entry.version}. Available offline.`);
-            }
+            await PluginCatalog.install(entry);
+            this.message.textContent = `${this.entries.length} plugins available.`;
+            this.setStatus(`Installed ${entry.name} ${entry.version}.`);
         } catch (error) {
             this.message.textContent = `Installation failed: ${error.message}`;
         } finally {

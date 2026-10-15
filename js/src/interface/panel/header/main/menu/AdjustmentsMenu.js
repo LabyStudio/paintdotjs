@@ -51,11 +51,12 @@ class AdjustmentsMenu extends DropMenuItem {
                     continue;
                 }
                 const descriptor = {plugin, definition};
-                if (definition.category.toLocaleLowerCase() === "root") {
+                const categoryName = definition.category.trim();
+                if (categoryName === "" || categoryName.toLocaleLowerCase() === "root") {
                     rootEntries.push(AdjustmentsMenu.createPluginEntry(descriptor));
                     continue;
                 }
-                const label = definition.category;
+                const label = categoryName;
                 const key = label.toLocaleLowerCase();
                 const category = categories.get(key) || {label, effects: []};
                 category.effects.push(descriptor);

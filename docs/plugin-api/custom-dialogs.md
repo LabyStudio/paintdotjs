@@ -43,4 +43,25 @@ The plugin owns the custom dialog's DOM and must remove it before resolving. The
 
 Await `preview()` when later UI work depends on the rendered result. Coalesce frequent pointer events with `requestAnimationFrame()`.
 
+## Create the window
+
+Use the dialog API instead of assembling the outer window yourself:
+
+```javascript
+const dialogWindow = paintDotJs.dialogs.create({
+    title: context.title,
+    icon: context.icon,
+    className: "my-effect-dialog",
+    contentClassName: "my-effect-content"
+});
+```
+
+The returned `dialog` is a form, `content` is where your controls go, and
+`closeButton` is the title-bar close button. The window is modal and movable by
+default. Remove it through the returned controller:
+
+```javascript
+dialogWindow.destroy();
+```
+
 [Previous: Effect controls](controls.md) · [Next: Whole-image effects](whole-image-effects.md)
