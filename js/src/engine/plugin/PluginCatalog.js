@@ -15,6 +15,7 @@
 class PluginCatalog {
 
     static defaultUrl = "https://labystudio.github.io/paintdotjs-plugins/catalog.json";
+    static sourceBaseUrl = "https://github.com/LabyStudio/paintdotjs-plugins/tree/main/plugins/";
 
     static validateUrl(value) {
         let url = new URL(value);
@@ -25,8 +26,12 @@ class PluginCatalog {
         return url;
     }
 
-    static async download(url, maximumBytes) {
-        let response = await fetch(url, {cache: "no-cache", credentials: "omit",
+    static async download(url, maximumBytes, refresh = false) {
+        let requestUrl = new URL(url);
+        if (refresh) {
+            requestUrl.searchParams.set("refresh", Date.now().toString(36));
+        }
+        let response = await fetch(requestUrl, {credentials: "omit",
             redirect: "error", signal: AbortSignal.timeout(15000)});
         if (!response.ok) {
             throw new Error(`Download failed (HTTP ${response.status}). The catalog may not be published yet.`);
@@ -58,7 +63,7 @@ class PluginCatalog {
 
     static async load() {
         let url = this.validateUrl(this.defaultUrl);
-        let bytes = await this.download(url, 1024 * 1024);
+        let bytes = await this.download(url, 1024 * 1024, true);
         let catalog = JSON.parse(new TextDecoder().decode(bytes));
         if (catalog.schemaVersion !== 1 || !Array.isArray(catalog.plugins) || catalog.plugins.length > 1000) {
             throw new Error("Unsupported plugin catalog format.");
@@ -82,6 +87,12 @@ class PluginCatalog {
             if (website && new URL(website).protocol !== "https:") {
                 throw new Error(`Invalid creator website for ${id}.`);
             }
+            let packageName = entry.file.split("/").pop().replace(/\.paintjs$/, "");
+            let source = PluginManager.optionalText(entry.source,
+                this.sourceBaseUrl + encodeURIComponent(packageName), 500);
+            if (new URL(source).protocol !== "https:") {
+                throw new Error(`Invalid source URL for ${id}.`);
+            }
             return {
                 id, name: PluginManager.validateText(entry.name, "Catalog name", 80),
                 version: PluginManager.validateText(entry.version, "Catalog version", 32),
@@ -90,7 +101,7 @@ class PluginCatalog {
                 website,
                 license: PluginManager.validateText(entry.license, "Plugin license", 120),
                 category: PluginManager.optionalText(entry.category, "Plugins", 80),
-                sha256: entry.sha256, url: new URL(entry.file, base).href
+                source, sha256: entry.sha256, url: new URL(entry.file, base).href
             };
         });
     }

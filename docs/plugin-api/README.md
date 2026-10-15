@@ -12,10 +12,12 @@ Start with [Getting started](getting-started.md). The other pages cover one feat
 1. [Getting started](getting-started.md) — create, package, and install a small plugin.
 2. [Pixel effects](effects.md) — change pixels and choose a menu location.
 3. [Effect controls](controls.md) — add sliders, checkboxes, lists, colors, and text.
-4. [Whole-image effects](whole-image-effects.md) — blur, transform, and work with selections.
-5. [File types](file-types.md) — add import and export formats.
-6. [Assets, workers, and helpers](assets-workers-helpers.md) — icons, performance, and pixel utilities.
-7. [Publishing](publishing.md) — build packages and add them to the catalog.
+4. [Custom effect dialogs](custom-dialogs.md) — build interactive editors for specialized effects.
+5. [Whole-image effects](whole-image-effects.md) — blur, transform, and work with selections.
+6. [Using other effects](effect-chains.md) — enumerate effects and build effect chains.
+7. [File types](file-types.md) — add import and export formats.
+8. [Assets, workers, and helpers](assets-workers-helpers.md) — icons, performance, and pixel utilities.
+9. [Publishing](publishing.md) — build packages and add them to the catalog.
 
 ## Current scope
 

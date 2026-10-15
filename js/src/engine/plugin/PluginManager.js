@@ -59,12 +59,118 @@ class PluginManager {
             clamp: (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value)),
             clampByte: value => Math.max(0, Math.min(255, Math.round(value)))
         });
+        const effects = Object.freeze({
+            list: () => this.getPublicEffectDefinitions(),
+            apply: (id, source, width, height, values = null, selection = null) =>
+                this.applyPublicEffect(id, source, width, height, values, selection),
+            configure: (id, options) => this.configurePublicEffect(id, options)
+        });
         window.paintDotJs = Object.freeze({
             apiVersion: this.apiVersion,
             controls,
+            effects,
             utils,
             pixels: PluginPixels,
             registerPlugin: definition => this.captureRegistration(definition)
+        });
+    }
+
+    static getPublicEffectDefinitions() {
+        let definitions = [];
+        if (typeof BitmapEffectEngine !== "undefined") {
+            definitions.push(...Object.values(BitmapEffectEngine.EFFECTS));
+            definitions.push(...Object.values(BitmapEffectEngine.DEFINITIONS));
+        }
+        definitions.push(...this.effectDefinitions.values());
+        let seen = new Set();
+        return definitions.filter(definition => {
+            if (definition === null || definition === undefined || seen.has(definition.id)) {
+                return false;
+            }
+            seen.add(definition.id);
+            return typeof definition.apply === "function" || typeof definition.transform === "function";
+        }).map(definition => ({
+            id: definition.id,
+            name: definition.displayName
+                || (typeof i18n === "function"
+                    ? i18n(definition.translationKey || `${definition.id}.name`)
+                    : definition.id),
+            menu: definition.menu || "Effects",
+            category: definition.category || "",
+            controls: (definition.controls || []).map(control => ({...control})),
+            values: BitmapEffectEngine.defaults(definition)
+        })).sort((left, right) => left.name.localeCompare(right.name));
+    }
+
+    static getPublicEffectDefinition(id) {
+        let definition = this.effectDefinitions.get(id);
+        if (definition === undefined && typeof BitmapEffectEngine !== "undefined") {
+            definition = BitmapEffectEngine.EFFECTS[id] || BitmapEffectEngine.DEFINITIONS[id];
+        }
+        if (definition === undefined) {
+            throw new Error(`Unknown effect: ${id}`);
+        }
+        return definition;
+    }
+
+    static applyPublicEffect(id, source, width, height, values = null, selection = null) {
+        if (!(source instanceof Uint8ClampedArray) || source.length !== width * height * 4) {
+            throw new Error("Effect source must be an RGBA Uint8ClampedArray of the requested size.");
+        }
+        let definition = this.getPublicEffectDefinition(id);
+        let input = new ImageData(new Uint8ClampedArray(source), width, height);
+        let effectValues = values === null ? BitmapEffectEngine.defaults(definition) : values;
+        return BitmapEffectEngine.apply(input, width, height, definition, effectValues, selection).data;
+    }
+
+    static async configurePublicEffect(id, options) {
+        if (options === null || typeof options !== "object") {
+            throw new Error("Effect configuration options are required.");
+        }
+        let definition = this.getPublicEffectDefinition(id);
+        let source = options.source;
+        let width = Number(options.width);
+        let height = Number(options.height);
+        if (!(source instanceof Uint8ClampedArray) || source.length !== width * height * 4) {
+            throw new Error("Effect source must be an RGBA Uint8ClampedArray of the requested size.");
+        }
+        let clone = value => typeof structuredClone === "function"
+            ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+        let values = options.values === undefined || options.values === null
+            ? BitmapEffectEngine.defaults(definition) : clone(options.values);
+        let selection = options.selection instanceof Uint8Array
+            ? new Uint8Array(options.selection) : null;
+        let preview = previewValues => {
+            if (typeof options.preview !== "function") {
+                return null;
+            }
+            return options.preview(previewValues === null ? null : clone(previewValues));
+        };
+        if (definition.configure !== null && definition.configure !== undefined) {
+            return definition.configure({
+                title: definition.dialogTitle || definition.displayName || id,
+                icon: BitmapEffectAction.getIconSource(definition),
+                source: new Uint8ClampedArray(source),
+                width,
+                height,
+                selection,
+                selectionBounds: PluginPixels.selectionBounds(selection, width, height),
+                values,
+                preview,
+                showOriginal: () => preview(null)
+            });
+        }
+        if ((definition.controls || []).length === 0) {
+            return values;
+        }
+        return EffectConfigDialog.open({
+            title: definition.dialogTitle || definition.displayName || id,
+            icon: BitmapEffectAction.getIconSource(definition),
+            layout: definition.dialog,
+            controls: definition.controls,
+            values,
+            source: new ImageData(new Uint8ClampedArray(source), width, height),
+            onPreview: preview
         });
     }
 
@@ -455,6 +561,11 @@ class PluginManager {
             menu,
             category: this.optionalText(effect.category, "Plugins", 48)
         };
+        if (effect.configure !== undefined && typeof effect.configure !== "function") {
+            throw new Error(`Effect ${id} configure must be a function.`);
+        }
+        definition.configure = typeof effect.configure === "function"
+            ? effect.configure : null;
         if (typeof effect.renderPixel === "function") {
             definition.prepare = null;
             definition.transform = (r, g, b, a, values, _state, context) => {
