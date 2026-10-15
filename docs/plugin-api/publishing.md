@@ -52,9 +52,9 @@ Pushing the source repository's `main` branch runs the publication workflow. It:
 
 1. builds every plugin package;
 2. creates `catalog.json` with package hashes;
-3. uploads the generated files to the stable `catalog` GitHub Release.
+3. deploys the generated files to GitHub Pages.
 
-paint.js reads that release directly. There is no catalog server and generated files are not committed.
+paint.js reads the GitHub Pages catalog directly. Generated files are not committed.
 
 ## Updating a plugin
 

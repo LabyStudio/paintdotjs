@@ -2126,6 +2126,11 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
     width: min(390px, calc(100vw - 32px));
 }
 
+.plugin-custom-effect-dialog {
+    width: min(720px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+}
+
 .app-dialog-backdrop.effect-preview-rendering,
 .app-dialog-backdrop.effect-preview-rendering *,
 html.effect-rendering,
@@ -2142,6 +2147,70 @@ html.effect-rendering * {
     padding: 11px 12px;
     overflow-y: auto;
     font-size: 9pt;
+}
+
+.plugin-custom-effect-content {
+    min-width: 0;
+    min-height: 0;
+    overflow-x: hidden;
+}
+
+.plugin-custom-effect-content > * {
+    min-width: 0;
+}
+
+.plugin-custom-effect-content .effect-config-row > div {
+    grid-template-columns: minmax(80px, 1fr) 72px;
+    gap: 8px;
+}
+
+.plugin-custom-effect-content .effect-config-row input[type="range"] {
+    min-width: 80px;
+}
+
+.plugin-effect-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 8px;
+}
+
+.plugin-effect-toolbar-three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.plugin-effect-toolbar .effect-config-row {
+    min-width: 0;
+    flex: 1 1 180px;
+}
+
+.plugin-canvas-editor {
+    box-sizing: border-box;
+    width: 100%;
+    height: clamp(180px, calc(100vh - 270px), 460px);
+    min-width: 0;
+    min-height: 0;
+}
+
+.plugin-canvas-editor > canvas,
+.plugin-custom-effect-content > canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+}
+
+@media (max-width: 560px) {
+    .plugin-effect-toolbar-three {
+        grid-template-columns: 1fr;
+    }
+
+    .plugin-canvas-editor {
+        height: clamp(160px, calc(100vh - 380px), 360px);
+    }
 }
 
 .effect-config-row {
@@ -2169,8 +2238,8 @@ html.effect-rendering * {
 .effect-config-row input[type="range"]::-webkit-slider-runnable-track {
     height: 4px;
     background: linear-gradient(to right, var(--color-menu-item-selected-border) 0,
-        var(--color-menu-item-selected-border) var(--effect-value),
-        var(--pdn-slider-background) var(--effect-value), var(--pdn-slider-background) 100%);
+        var(--color-menu-item-selected-border) var(--effect-value, 0%),
+        var(--pdn-slider-background) var(--effect-value, 0%), var(--pdn-slider-background) 100%);
     box-shadow: none;
 }
 
@@ -3766,13 +3835,22 @@ html.effect-rendering * {
     }
 }
 .plugin-browser-dialog {
-    width: min(860px, calc(100vw - 32px));
-    max-height: calc(100vh - 32px);
+    width: min(960px, calc(100vw - 32px));
+    height: min(700px, calc(100vh - 32px));
 }
 
 .plugin-browser-content {
+    min-height: 0;
+    flex: 1 1 auto;
     padding: 16px;
-    overflow: auto;
+    overflow: hidden;
+}
+
+.settings-plugin-catalog {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .plugin-browser-content input[type="search"] {
@@ -3781,7 +3859,8 @@ html.effect-rendering * {
 }
 
 .settings-plugin-catalog .settings-plugin-list {
-    max-height: min(480px, calc(100vh - 220px));
+    min-height: 0;
+    flex: 1 1 auto;
     overflow: auto;
 }
 
@@ -3800,7 +3879,7 @@ html.effect-rendering * {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
 }
 
 .settings-plugin-catalog .settings-plugin-details > div {

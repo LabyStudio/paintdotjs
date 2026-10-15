@@ -65,13 +65,81 @@ class PluginManager {
                 this.applyPublicEffect(id, source, width, height, values, selection),
             configure: (id, options) => this.configurePublicEffect(id, options)
         });
+        const dialogs = Object.freeze({
+            create: options => this.createPublicDialog(options)
+        });
         window.paintDotJs = Object.freeze({
             apiVersion: this.apiVersion,
             controls,
+            dialogs,
             effects,
             utils,
             pixels: PluginPixels,
             registerPlugin: definition => this.captureRegistration(definition)
+        });
+    }
+
+    static createPublicDialog(options = {}) {
+        const titleText = this.validateText(options.title, "Dialog title", 120);
+        const backdrop = document.createElement("div");
+        backdrop.className = "app-dialog-backdrop";
+        if (isApp) {
+            backdrop.classList.add("dialog-backdrop-app");
+        }
+
+        const dialog = document.createElement("form");
+        dialog.className = `app-dialog ${String(options.className || "").trim()}`.trim();
+        dialog.setAttribute("role", "dialog");
+        dialog.setAttribute("aria-modal", "true");
+        backdrop.appendChild(dialog);
+
+        const titleBar = document.createElement("header");
+        titleBar.className = "app-dialog-title-bar";
+        dialog.appendChild(titleBar);
+        {
+            const title = document.createElement("div");
+            title.className = "app-dialog-title";
+            titleBar.appendChild(title);
+
+            if (options.icon) {
+                const icon = document.createElement("img");
+                icon.src = String(options.icon);
+                icon.alt = "";
+                title.appendChild(icon);
+            }
+
+            const text = document.createElement("strong");
+            text.textContent = titleText;
+            title.appendChild(text);
+        }
+
+        const closeButton = document.createElement("button");
+        closeButton.type = "button";
+        closeButton.className = "app-dialog-close";
+        closeButton.textContent = "×";
+        closeButton.setAttribute("aria-label", "Close");
+        titleBar.appendChild(closeButton);
+
+        const content = document.createElement("div");
+        content.className = String(options.contentClassName || "").trim();
+        dialog.appendChild(content);
+
+        document.body.appendChild(backdrop);
+        const mover = new DialogMover(dialog, titleBar, backdrop);
+        let destroyed = false;
+        return Object.freeze({
+            backdrop,
+            dialog,
+            content,
+            closeButton,
+            destroy: () => {
+                if (destroyed) {
+                    return;
+                }
+                destroyed = true;
+                mover.destroy();
+                backdrop.remove();
+            }
         });
     }
 
