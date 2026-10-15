@@ -14,7 +14,7 @@
 
 class PluginCatalog {
 
-    static defaultUrl = "https://github.com/LabyStudio/paintdotjs-plugins/releases/download/catalog/catalog.json";
+    static defaultUrl = "https://labystudio.github.io/paintdotjs-plugins/catalog.json";
 
     static validateUrl(value) {
         let url = new URL(value);

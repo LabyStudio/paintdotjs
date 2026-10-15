@@ -55,7 +55,7 @@ class SettingsPluginsEntry extends SettingsEntry {
         const dropZone = document.createElement("div");
         dropZone.className = "settings-font-drop-zone settings-plugin-drop-zone";
         dropZone.tabIndex = 0;
-        dropZone.textContent = "Drop .paintjs plugin packages here (works offline)";
+        dropZone.textContent = "Drop .paintjs plugin packages here";
         dropZone.ondragenter = dropZone.ondragover = event => {
             event.preventDefault();
             event.stopPropagation();
