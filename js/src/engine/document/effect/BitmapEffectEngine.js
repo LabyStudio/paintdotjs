@@ -480,7 +480,8 @@ class BitmapEffectEngine {
 
     static apply(source, width, height, definition, values, selection = null) {
         if (typeof definition.apply === "function") {
-            const rendered = definition.apply(source, width, height, values);
+            const rendered = definition.apply(source, width, height, values,
+                this.createSelectionMask(width, height, selection));
             return this.maskResult(source, rendered, width, height, selection);
         }
         const output = new ImageData(new Uint8ClampedArray(source.data), width, height);
@@ -494,7 +495,12 @@ class BitmapEffectEngine {
             }
             const result = definition.transform(
                 source.data[offset], source.data[offset + 1], source.data[offset + 2],
-                source.data[offset + 3], values, state
+                source.data[offset + 3], values, state, {
+                    x: pixel % width,
+                    y: Math.floor(pixel / width),
+                    width,
+                    height
+                }
             );
             const amount = coverage / 255;
             for (let channel = 0; channel < 4; ++channel) {

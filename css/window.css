@@ -415,27 +415,21 @@ body.window-resizing * {
     height: 72px;
 }
 
-.project-info-welcome .project-info-banner-artwork img {
-    width: 54px;
-    height: 54px;
-}
-
-.project-info-welcome .project-info-banner-artwork span {
-    font-size: 40px;
-}
-
-.project-info-about .project-info-banner-artwork {
+.project-info-about .project-info-banner-artwork,
+.project-info-welcome .project-info-banner-artwork {
     gap: 6px;
     padding: 5px 2px;
 }
 
-.project-info-about .project-info-banner-artwork img {
+.project-info-about .project-info-banner-artwork img,
+.project-info-welcome .project-info-banner-artwork img {
     width: 62px;
     height: 62px;
     filter: none;
 }
 
-.project-info-about .project-info-banner-artwork span {
+.project-info-about .project-info-banner-artwork span,
+.project-info-welcome .project-info-banner-artwork span {
     font-family: "Inter", "Segoe UI Light", "Segoe UI", Arial, sans-serif;
     font-size: 50px;
     font-weight: 300;
@@ -618,7 +612,7 @@ body.window-resizing * {
 /* ----------------- Forms ----------------- */
 
 .settings-dialog {
-    width: min(858px, calc(100vw - 32px));
+    width: min(874px, calc(100vw - 32px));
     height: min(670px, calc(100vh - 32px));
 }
 
@@ -635,7 +629,7 @@ body.window-resizing * {
     min-height: 0;
     display: grid;
     flex: 1 1 auto;
-    grid-template-columns: 188px 1fr;
+    grid-template-columns: 204px 1fr;
 }
 
 .settings-navigation {
@@ -644,6 +638,18 @@ body.window-resizing * {
     overflow-y: auto;
     background: color-mix(in srgb, var(--color-window-background) 78%, var(--color-menu-background));
     border-right: 1px solid var(--color-window-border);
+}
+
+.settings-navigation-group + .settings-navigation-group {
+    margin-top: 7px;
+}
+
+.settings-navigation-group-title {
+    padding: 5px 8px 4px;
+    color: color-mix(in srgb, var(--color-menu-item-text) 58%, transparent);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .02em;
 }
 
 .settings-navigation button {
@@ -804,7 +810,9 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
     border: 1px solid var(--pdn-menu-border);
 }
 
-.settings-font-controls {
+.settings-font-controls,
+.settings-shape-controls,
+.settings-plugin-controls {
     display: flex;
     gap: 8px;
 }
@@ -960,6 +968,122 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
     cursor: default;
 }
 
+.settings-page-shapes {
+    overflow: hidden;
+}
+
+.settings-page-shapes .settings-note {
+    max-width: none;
+}
+
+.settings-page-shapes .settings-section-heading {
+    margin-top: 7px;
+}
+
+.settings-shape-clear {
+    margin-left: auto;
+}
+
+.settings-shape-list {
+    width: 100%;
+    min-height: 0;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 5px;
+    padding-right: 4px;
+    overflow-y: auto;
+}
+
+.settings-shape-empty {
+    min-height: 70px;
+}
+
+.settings-shape-row {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 29px;
+    gap: 9px;
+    align-items: center;
+    padding: 6px;
+    background: var(--color-number-input-background);
+    border: 1px solid var(--color-window-border);
+}
+
+.settings-shape-preview {
+    box-sizing: border-box;
+    width: 42px;
+    height: 42px;
+    padding: 3px;
+    object-fit: contain;
+    background: color-mix(in srgb, var(--color-window-background) 62%, transparent);
+    border: 1px solid var(--color-window-border);
+}
+
+.settings-shape-details {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.settings-shape-details strong,
+.settings-shape-details span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settings-shape-details span {
+    color: color-mix(in srgb, var(--color-menu-item-text) 64%, transparent);
+    font-size: 11px;
+}
+
+.settings-shape-remove {
+    box-sizing: border-box;
+    width: 29px;
+    min-width: 29px;
+    padding: 3px;
+}
+
+.settings-shape-remove img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+}
+
+.settings-shape-error-list {
+    max-height: min(420px, calc(100vh - 210px));
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+}
+
+.settings-shape-error {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 8px;
+    background: var(--color-number-input-background);
+    border: 1px solid var(--color-error, #a03030);
+}
+
+.settings-shape-error span {
+    color: color-mix(in srgb, var(--color-menu-item-text) 68%, transparent);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+
+.shape-errors-dialog {
+    width: min(620px, calc(100vw - 32px));
+}
+
+.shape-errors-dialog .task-dialog-content {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .settings-page-assets {
     overflow: hidden;
 }
@@ -1090,6 +1214,144 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
 
 .settings-asset-preview .settings-asset-preview-empty {
     font-style: italic;
+}
+
+.settings-page-plugins {
+    overflow: hidden;
+}
+
+.settings-page-plugins .settings-note {
+    max-width: none;
+}
+
+.settings-page-plugins .settings-section-heading {
+    margin-top: 7px;
+}
+
+.settings-plugin-list {
+    width: 100%;
+    min-height: 0;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 5px;
+    padding-right: 4px;
+    overflow-y: auto;
+}
+
+.settings-plugin-empty {
+    min-height: 70px;
+}
+
+.settings-plugin-row {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 29px;
+    gap: 10px;
+    align-items: center;
+    padding: 8px;
+    background: var(--color-number-input-background);
+    border: 1px solid var(--color-window-border);
+}
+
+.settings-plugin-details {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.settings-plugin-details strong,
+.settings-plugin-details span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settings-plugin-details span {
+    color: color-mix(in srgb, var(--color-menu-item-text) 64%, transparent);
+    font-size: 11px;
+}
+
+.settings-plugin-enabled {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.settings-plugin-remove {
+    box-sizing: border-box;
+    width: 29px;
+    min-width: 29px;
+    padding: 3px;
+}
+
+.settings-plugin-remove img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+}
+
+.settings-plugin-import-list {
+    max-height: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+}
+
+.settings-plugin-import-result {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 3px 10px;
+    padding: 6px 8px;
+    background: var(--color-number-input-background);
+    border: 1px solid var(--color-window-border);
+}
+
+.settings-plugin-import-status {
+    font-weight: bold;
+}
+
+.settings-plugin-import-details,
+.settings-plugin-import-warning {
+    grid-column: 1 / -1;
+    color: color-mix(in srgb, var(--color-menu-item-text) 68%, transparent);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+
+.settings-plugin-import-warning {
+    color: color-mix(in srgb, #b87900 82%, var(--color-menu-item-text));
+}
+
+.settings-plugin-import-invalid {
+    border-color: var(--color-error, #a03030);
+}
+
+.plugin-issues-dialog {
+    width: min(620px, calc(100vw - 32px));
+}
+
+.plugin-issues-dialog .task-dialog-content {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.plugin-issues-dialog .task-dialog-message {
+    order: 1;
+}
+
+.plugin-issues-dialog .plugin-issues-list {
+    width: auto;
+    max-height: min(420px, calc(100vh - 210px));
+    order: 2;
+    padding-right: 4px;
+}
+
+.plugin-issues-dialog .task-dialog-choices {
+    order: 3;
 }
 
 .settings-diagnostics-table {
@@ -1874,7 +2136,7 @@ html.effect-rendering * {
 .effect-config-content {
     display: flex;
     min-height: 70px;
-    max-height: min(560px, calc(100vh - 155px));
+    max-height: min(640px, calc(100vh - 110px));
     flex-direction: column;
     gap: 10px;
     padding: 11px 12px;
@@ -1910,6 +2172,96 @@ html.effect-rendering * {
         var(--color-menu-item-selected-border) var(--effect-value),
         var(--pdn-slider-background) var(--effect-value), var(--pdn-slider-background) 100%);
     box-shadow: none;
+}
+
+.effect-config-row input.effect-range-hue::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+}
+
+.effect-config-row input.effect-range-hue-shift::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #0ff, #00f, #f0f, #f00, #ff0, #0f0, #0ff);
+}
+
+.effect-config-row input.effect-range-saturation::-webkit-slider-runnable-track,
+.effect-config-row input.effect-range-saturation-adjustment::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #aaa, #ddb98c, #b3d7d7, #f7a2cc, #f0ff51);
+}
+
+.effect-config-row input.effect-range-lightness::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #111, #fff);
+}
+
+.effect-config-row input.effect-range-alpha::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #fff, #888, #111);
+}
+
+.effect-config-row input.effect-range-contrast::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #888, #555, #aaa, #444, #ccc, #222, #fff, #000);
+}
+
+.effect-config-row input.effect-range-cyan-red::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #0ff, #fff, #f00);
+}
+
+.effect-config-row input.effect-range-magenta-green::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #f0f, #fff, #0f0);
+}
+
+.effect-config-row input.effect-range-yellow-blue::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #ff0, #fff, #00f);
+}
+
+.effect-config-row input.effect-range-temperature::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #6498ff, #fff, #ff891e);
+}
+
+.effect-config-row input.effect-range-tint::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #f0f, #fff, #0f0);
+}
+
+.effect-config-row input.effect-range-hue::-moz-range-track {
+    background: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+}
+
+.effect-config-row input.effect-range-hue-shift::-moz-range-track {
+    background: linear-gradient(90deg, #0ff, #00f, #f0f, #f00, #ff0, #0f0, #0ff);
+}
+
+.effect-config-row input.effect-range-saturation::-moz-range-track,
+.effect-config-row input.effect-range-saturation-adjustment::-moz-range-track {
+    background: linear-gradient(90deg, #aaa, #ddb98c, #b3d7d7, #f7a2cc, #f0ff51);
+}
+
+.effect-config-row input.effect-range-lightness::-moz-range-track {
+    background: linear-gradient(90deg, #111, #fff);
+}
+
+.effect-config-row input.effect-range-alpha::-moz-range-track {
+    background: linear-gradient(90deg, #fff, #888, #111);
+}
+
+.effect-config-row input.effect-range-contrast::-moz-range-track {
+    background: linear-gradient(90deg, #888, #555, #aaa, #444, #ccc, #222, #fff, #000);
+}
+
+.effect-config-row input.effect-range-cyan-red::-moz-range-track {
+    background: linear-gradient(90deg, #0ff, #fff, #f00);
+}
+
+.effect-config-row input.effect-range-magenta-green::-moz-range-track {
+    background: linear-gradient(90deg, #f0f, #fff, #0f0);
+}
+
+.effect-config-row input.effect-range-yellow-blue::-moz-range-track {
+    background: linear-gradient(90deg, #ff0, #fff, #00f);
+}
+
+.effect-config-row input.effect-range-temperature::-moz-range-track {
+    background: linear-gradient(90deg, #6498ff, #fff, #ff891e);
+}
+
+.effect-config-row input.effect-range-tint::-moz-range-track {
+    background: linear-gradient(90deg, #f0f, #fff, #0f0);
 }
 
 .effect-config-row input[type="range"]::-webkit-slider-thumb {
@@ -3412,4 +3764,23 @@ html.effect-rendering * {
     .save-config-content {
         grid-template-columns: 210px minmax(0, 1fr);
     }
+}
+.plugin-browser-dialog {
+    width: min(760px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+}
+
+.plugin-browser-content {
+    padding: 16px;
+    overflow: auto;
+}
+
+.plugin-browser-content input[type="search"] {
+    flex: 1;
+    min-width: 0;
+}
+
+.settings-plugin-catalog .settings-plugin-list {
+    max-height: min(480px, calc(100vh - 220px));
+    overflow: auto;
 }

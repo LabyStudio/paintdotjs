@@ -413,6 +413,12 @@ class ToolOptionDropdown {
 
     buildShapeGrid() {
         for (const group of this.options.shapeGroups) {
+            const entries = group.values
+                .map(value => this.options.values.find(candidate => candidate[0] === value))
+                .filter(Boolean);
+            if (entries.length === 0) {
+                continue;
+            }
             // Group heading
             const heading = document.createElement("div");
             heading.className = "tool-shape-grid-heading";
@@ -423,15 +429,12 @@ class ToolOptionDropdown {
             const grid = document.createElement("div");
             grid.className = "tool-shape-grid";
             {
-                for (const value of group.values) {
-                    const entry = this.options.values.find(candidate => candidate[0] === value);
-                    if (!entry) {
-                        continue;
-                    }
+                for (const entry of entries) {
 
                     const button = document.createElement("button");
                     button.type = "button";
-                    button.title = entry[1];
+                    button.title = ShapeCatalog.has(entry[0])
+                        ? ShapeCatalog.getTooltip(entry[0]) : entry[1];
                     button.setAttribute("aria-label", entry[1]);
                     button.toggleAttribute("active", entry[0] === this.value);
                     {

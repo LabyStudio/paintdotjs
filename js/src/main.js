@@ -15,6 +15,8 @@
 async function startPaintDotJs() {
     try {
         await AssetPackManager.initialize();
+        await ShapeManager.initialize();
+        await PluginManager.initialize();
         FontManager.initialize();
         window.app = new AppWorkspace();
         ErrorForm.install();

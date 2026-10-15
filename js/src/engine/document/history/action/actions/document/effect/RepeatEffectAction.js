@@ -32,7 +32,8 @@ class RepeatEffectAction extends DocumentWorkspaceAction {
         if (last === null) {
             return i18n("effects.repeatMenuItem.format", [""]);
         }
-        const name = i18n(last.definition.translationKey || last.definition.id + ".name");
+        const name = last.definition.displayName
+            || i18n(last.definition.translationKey || last.definition.id + ".name");
         return i18n("effects.repeatMenuItem.format", [name]);
     }
 }

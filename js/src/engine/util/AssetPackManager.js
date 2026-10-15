@@ -24,7 +24,7 @@ class AssetPackManager {
         name: "paint.js Default",
         author: "LabyStudio",
         version: "1.0.0",
-        description: "Original paint.js interface artwork and built-in English text.",
+        description: "AI-generated paint.js interface artwork and built-in English text.",
         builtIn: true,
         iconCount: 276,
         localeCount: 1
