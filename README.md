@@ -63,7 +63,12 @@ still some additions and limitations worth noting.
 - A **Fonts** settings page lets you add font files by picker or drag and drop, preview installed
   fonts, and remove individual fonts or clear them all. Added fonts are stored locally and are
   available in the Text tool.
-- A searchable **Keyboard** settings page lets you rebind, clear, and reset keyboard shortcuts.
+- A **Keyboard** settings page lets you rebind, clear, and reset keyboard shortcuts.
+- A versioned **JavaScript plugin API** lets extensions add effects, adjustments, and file formats.
+- Native **Paint.NET custom shapes** can be installed as `.xaml` files and appear in the Shapes
+  tool's Custom category; see [the custom-shapes guide](docs/shapes.md).
+- An **icon pack API** can replace icons, images, cursors, and translations without modifying the
+  application.
 - Interface, canvas, tool, pen, window, and dialog preferences are stored locally and restored across
   sessions.
 - The deployed web version can work offline and provides browser-oriented file, clipboard, and drag
@@ -74,7 +79,7 @@ still some additions and limitations worth noting.
 - Chromium is the supported browser family. Firefox and Safari are not regularly tested, and their
   file-system and clipboard capabilities differ.
 - Open Recent, scanner/camera acquisition, and color-profile commands are not implemented yet.
-- Native Paint.NET plugins and file-type plugins cannot be loaded.
+- Native Paint.NET DLL plugins cannot be loaded. JavaScript plugins can provide effects and file types; see [the plugin guide](docs/plugin-api/README.md).
 - Manual GPU/device selection and direct advanced-color management are not implemented.
 - Very large documents, large-radius effects, and complex selections may still be slower or more
   memory-intensive than in Paint.NET.
@@ -100,6 +105,28 @@ still some additions and limitations worth noting.
 | JPEG XR (`.jxr`, `.wdp`, `.wmp`) | Yes | Yes | Limited | No | paint.js can open RGB images with 8-bit, 16-bit, or 32-bit floating-point channels but cannot save JPEG XR. |
 
 Animated and multi-page files are imported and exported as a single static image in paint.js.
+
+## Icon Packs
+
+paint.js uses AI-generated icons for its default icon pack because
+[we cannot redistribute the original Paint.NET icons](https://github.com/LabyStudio/paintdotjs/issues/5).
+You can install and activate custom icon packs from **Settings → Icon Packs** to
+replace the default icons or add translations.
+See [`docs/asset-packs.md`](docs/asset-packs.md) for the pack format.
+
+## Plugin API
+
+paint.js has a versioned JavaScript API for extensions that add effects, adjustments, or import and
+export formats. Plugins can include their own icons and other assets, use built-in
+configuration controls, and process either individual pixels or complete images.
+
+Plugins are distributed as `.paintjs` packages. Install them from **Settings → Plugins** using the
+plugin browser, file picker, or drag and drop. Start with the step-by-step
+[plugin API guide](docs/plugin-api/README.md) to build and package a plugin.
+
+Maintained plugins live in the separate
+[`paintdotjs-plugins`](https://github.com/LabyStudio/paintdotjs-plugins) repository. Its build creates
+the plugin packages and catalog consumed by the in-app plugin browser.
 
 ## Development
 
@@ -131,10 +158,6 @@ required functionality.
 ```bash
 npm run app
 ```
-
-paint.js includes a default icon pack with original project artwork. You can install and activate
-custom icon packs from **Settings → Icon Packs** to replace the built-in icons or add translations.
-See [`docs/asset-packs.md`](docs/asset-packs.md) for the pack format.
 
 ### Build the Flatpak
 

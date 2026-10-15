@@ -343,6 +343,21 @@
     text-align: right;
 }
 
+.command-drop-menu .plugin-effect-entry .plugin-effect-badge,
+.effect-submenu .plugin-effect-entry .plugin-effect-badge {
+    min-width: 20px;
+    justify-self: end;
+    margin-left: 14px;
+    line-height: 0;
+}
+
+.plugin-effect-badge img {
+    width: 16px;
+    height: 16px;
+    display: block;
+    object-fit: contain;
+}
+
 .command-drop-menu .vertical-separator {
     margin-left: var(--drop-menu-icon-divider);
 }

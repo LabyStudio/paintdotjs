@@ -14,7 +14,7 @@
 
 class SaveImageDialog {
     static FORMATS = [
-        {id: "pdn", name: "Paint.NET image", extension: ".pdn", mime: "application/x-paintdotnet"},
+        {id: "pdn", name: "Paint.NET image", extension: ".pdn", mime: "application/x-paintdotnet", supportsLayers: true},
         {id: "png", name: "PNG", extension: ".png", mime: "image/png"},
         {id: "jpeg", name: "JPEG", extension: ".jpg", extensions: [".jpg", ".jpeg", ".jpe"], mime: "image/jpeg", quality: 95},
         {id: "jxl", name: "JPEG XL", extension: ".jxl", mime: "image/jxl", quality: 90},
@@ -30,12 +30,16 @@ class SaveImageDialog {
     ];
 
     static find(id) {
-        return this.FORMATS.find(format => format.id === id) || this.FORMATS[1];
+        return this.formats().find(format => format.id === id) || this.FORMATS[1];
+    }
+
+    static formats() {
+        return [...this.FORMATS, ...PluginFileTypes.saveFormats()];
     }
 
     static fromFileName(name, fallback = "png") {
         const lower = String(name || "").toLowerCase();
-        return this.FORMATS.find(format => (format.extensions || [format.extension])
+        return this.formats().find(format => (format.extensions || [format.extension])
             .some(extension => lower.endsWith(extension))) || this.find(fallback);
     }
 
@@ -85,6 +89,15 @@ class SaveImageDialog {
                 ? {} : AppSettingsStore.get("fileTypes.saveOptions", {});
             const persistedOptions = savedOptions !== null && typeof savedOptions === "object"
                 ? savedOptions : {};
+            let pluginOptions = new Map();
+            let pluginControls = document.createElement("div");
+            pluginControls.className = "save-config-plugin-controls";
+            settings.appendChild(pluginControls);
+            for (let format of PluginFileTypes.saveFormats()) {
+                pluginOptions.set(format.id, {...Object.fromEntries(format.controls.map(control =>
+                    [control.key, control.defaultValue])), ...persistedOptions[format.id],
+                    ...(format.id === initialFormat.id ? initialOptions : {})});
+            }
             const qualities = new Map(this.FORMATS.filter(format => format.quality !== undefined)
                 .map(format => [format.id, format.id === initialFormat.id
                     ? Number(initialOptions.quality ?? persistedOptions[format.id]?.quality
@@ -221,6 +234,9 @@ class SaveImageDialog {
             const selectedOptions = () => {
                 const format = this.find(formatSelect.value);
                 const result = {};
+                if (pluginOptions.has(format.id)) {
+                    return {...pluginOptions.get(format.id)};
+                }
                 if (format.quality !== undefined) {
                     result.quality = qualities.get(format.id) ?? format.quality;
                 }
@@ -233,7 +249,14 @@ class SaveImageDialog {
                 const format = this.find(formatSelect.value);
                 qualityGroup.hidden = format.quality === undefined;
                 chromaGroup.hidden = format.id !== "jpeg";
-                defaults.hidden = format.quality === undefined;
+                defaults.hidden = format.quality === undefined && !(format.controls?.length);
+                pluginControls.replaceChildren();
+                if (pluginOptions.has(format.id)) {
+                    for (let control of format.controls) {
+                        pluginControls.appendChild(EffectConfigDialog.createGenericControl(
+                            control, pluginOptions.get(format.id), scheduleRender).element);
+                    }
+                }
                 if (format.quality !== undefined) {
                     setQuality(qualities.get(format.id) ?? format.quality);
                 }
@@ -262,7 +285,7 @@ class SaveImageDialog {
                     }
                     previewUrl = URL.createObjectURL(displayBlob);
                     preview.src = previewUrl;
-                    previewHeading.label.textContent = "Preview, file size: " + formatSize(blob.size);
+                    previewHeading.label.textContent = (format.pluginId ? "Source preview, file size: " : "Preview, file size: ") + formatSize(blob.size);
                     status.textContent = "";
                     ok.disabled = false;
                 } catch (error) {
@@ -331,6 +354,11 @@ class SaveImageDialog {
             };
             defaults.onclick = () => {
                 const format = this.find(formatSelect.value);
+                if (pluginOptions.has(format.id)) {
+                    pluginOptions.set(format.id, Object.fromEntries(format.controls.map(control =>
+                        [control.key, control.defaultValue])));
+                    refreshControls();
+                }
                 if (format.quality !== undefined) {
                     setQuality(format.quality);
                 }
@@ -429,7 +457,7 @@ class SaveImageDialog {
             formatSelect = document.createElement("select");
             formatSelect.className = "save-config-format";
             formatSelect.autofocus = true;
-            for (const format of this.FORMATS) {
+            for (const format of this.formats()) {
                 const option = document.createElement("option");
                 option.value = format.id;
                 option.textContent = format.name + " (" + (format.extensions || [format.extension]).join(", ") + ")";

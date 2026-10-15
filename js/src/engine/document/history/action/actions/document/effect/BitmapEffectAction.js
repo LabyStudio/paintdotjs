@@ -78,7 +78,13 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
     }
 
     getEffectIconPath() {
-        return "assets/icons/" + this.definition.icon;
+        return BitmapEffectAction.getIconSource(this.definition);
+    }
+
+    static getIconSource(definition) {
+        return definition.icon.startsWith("data:image/png;base64,")
+            ? definition.icon
+            : "assets/icons/" + definition.icon;
     }
 
     async performAction(documentWorkspace, repeatedValues = undefined) {
@@ -111,18 +117,12 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
                 selectionMask
             );
 
-        if (this.definition.controls.length === 0) {
-            const values = repeatedValues === undefined ? {} : repeatedValues;
-            present(render(values));
-            this.rememberSuccessfulEffect(app, values);
-            return memento;
-        }
-
         // Some neighborhood effects remain expensive on large images even after
         // their CPU algorithms are optimized. Run them outside the main thread
         // so window movement, cancellation, and slider input remain responsive.
         // Each new preview terminates stale work.
-        const useWorker = ["oilPaintingEffect", "bokehEffect"].includes(this.definition.id)
+        const useWorker = (["oilPaintingEffect", "bokehEffect"].includes(this.definition.id)
+                || this.definition.workerPlugin !== undefined)
             && typeof Worker !== "undefined" && typeof Blob !== "undefined";
         let workerUrl = null;
         let workerJob = null;
@@ -138,14 +138,33 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
                     clamp: (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value))
                 };
                 const BitmapEffectEngine = ${BitmapEffectEngine.toString()};
+                ${this.definition.workerPlugin ? `
+                self.window = self;
+                const PluginPixels = ${PluginPixels.toString()};
+                const PluginFileTypes = ${PluginFileTypes.toString()};
+                const PluginManager = ${PluginManager.toString()};
+                PluginManager.installPublicApi();
+                PluginManager.registrationTarget = [];
+                PluginManager.registrationMetadata = ${JSON.stringify(this.definition.workerPlugin?.manifest || null)};
+                (function() { ${this.definition.workerPlugin.source}\n })();
+                if (PluginManager.registrationTarget.length !== 1) {
+                    throw new Error('Worker plugins must register exactly once.');
+                }
+                const plugin = PluginManager.normalizePlugin(PluginManager.registrationTarget[0]);
+                const pluginDefinition = plugin.effects.find(effect => effect.id ===
+                    ${JSON.stringify(this.definition.workerPlugin.effectId)}).definition;
+                ` : ""}
                 self.onmessage = event => {
                     const message = event.data;
                     const input = new ImageData(
                         new Uint8ClampedArray(message.sourceBuffer), message.width, message.height);
-                    const definition = BitmapEffectEngine.EFFECTS[message.effectId]
+                    let definition = BitmapEffectEngine.EFFECTS[message.effectId]
                         || BitmapEffectEngine.DEFINITIONS[message.effectId];
                     const selection = message.selectionBuffer === null
                         ? null : new Uint8Array(message.selectionBuffer);
+                    if (typeof pluginDefinition !== 'undefined') {
+                        definition = pluginDefinition;
+                    }
                     const result = BitmapEffectEngine.apply(
                         input, message.width, message.height, definition, message.values, selection);
                     self.postMessage(result.data.buffer, [result.data.buffer]);
@@ -231,7 +250,9 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
         };
 
         const remembered = BitmapEffectAction.getRememberedValues(this.definition);
-        const values = repeatedValues === undefined
+        const values = this.definition.controls.length === 0
+            ? (repeatedValues === undefined ? {} : repeatedValues)
+            : repeatedValues === undefined
             ? await EffectConfigDialog.open({
                 title: this.definition.dialogTitle
                     || this.getEffectName(),
@@ -281,7 +302,7 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
 
     rememberSuccessfulEffect(app, values) {
         if (BitmapEffectEngine.EFFECTS[this.definition.id] === this.definition
-            || this.definition.pluginId !== undefined) {
+            || (this.definition.pluginId !== undefined && this.definition.menu !== "Adjustments")) {
             BitmapEffectAction.lastEffect = {
                 definition: this.definition,
                 values: BitmapEffectAction.cloneValues(values)

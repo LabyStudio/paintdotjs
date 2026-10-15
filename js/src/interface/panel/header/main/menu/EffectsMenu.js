@@ -37,17 +37,16 @@ class EffectsMenu extends DropMenuItem {
     });
 
     constructor() {
-        const effectEntries = Object.entries(EffectsMenu.CATEGORIES).map(([category, effects]) =>
-            EffectsMenu.createCategory(category, effects)
-        );
+        const effectEntries = EffectsMenu.createEffectEntries();
         super("menu.effects", effectEntries);
 
-        this.builtInEffectEntries = effectEntries;
         this.effectEntries = effectEntries;
         this.repeatEntry = ActionRegistry.get("menu.effects.repeat").createDropEntry();
-        this.repeatEntry.getIconPath = () => {
+        this.repeatEntry.getIconSrc = () => {
             const last = BitmapEffectAction.getLastEffect();
-            return last === null ? "effect_icon.png" : last.definition.icon;
+            return last === null
+                ? "assets/icons/effect_icon.png"
+                : BitmapEffectAction.getIconSource(last.definition);
         };
         this.repeatSeparator = new VerticalSeparator();
 
@@ -59,10 +58,7 @@ class EffectsMenu extends DropMenuItem {
     }
 
     open() {
-        const pluginEntry = EffectsMenu.createPluginCategory();
-        this.effectEntries = pluginEntry === null
-            ? this.builtInEffectEntries
-            : [...this.builtInEffectEntries, pluginEntry];
+        this.effectEntries = EffectsMenu.createEffectEntries();
         const hasLastEffect = BitmapEffectAction.getLastEffect() !== null;
         this.entries = hasLastEffect
             ? [this.repeatEntry, this.repeatSeparator, ...this.effectEntries]
@@ -70,34 +66,48 @@ class EffectsMenu extends DropMenuItem {
         super.open();
     }
 
-    static createPluginCategory() {
-        const plugins = PluginManager.getRuntimePlugins();
-        if (plugins.length === 0) {
-            return null;
-        }
-        const pluginEntries = plugins.map(plugin => {
-            const effects = plugin.effects.map(definition => {
-                const action = ActionRegistry.get(definition.actionId);
-                if (action === null) {
-                    throw new Error("Missing plugin effect action: " + definition.actionId);
+    static createEffectEntries() {
+        const pluginEffects = new Map();
+        for (const plugin of PluginManager.getRuntimePlugins()) {
+            for (const definition of plugin.effects) {
+                if (definition.menu !== "Effects") {
+                    continue;
                 }
-                return action.createDropEntry()
-                    .withIconPathKey(definition.icon.replace(/\.png$/, ""));
+                const category = EffectsMenu.normalizeCategory(definition.category);
+                const effects = pluginEffects.get(category.key) || [];
+                effects.push({plugin, definition});
+                pluginEffects.set(category.key, effects);
+            }
+        }
+
+        const categories = Object.entries(EffectsMenu.CATEGORIES).map(([category, effects]) => ({
+            label: i18n(`effects.${category}.submenu.name`),
+            entry: EffectsMenu.createCategory(
+                category, effects, pluginEffects.get(category) || []
+            )
+        }));
+        for (const [key, effects] of pluginEffects) {
+            if (key === "root" || Object.hasOwn(EffectsMenu.CATEGORIES, key)) {
+                continue;
+            }
+            const label = EffectsMenu.normalizeCategory(effects[0].definition.category).label;
+            categories.push({
+                label,
+                entry: EffectsMenu.createPluginOnlyCategory(key, label, effects)
             });
-            const entry = new SubmenuDropEntry(
-                "effects.plugins." + plugin.id + ".submenu",
-                effects
-            ).withNoIcon();
-            entry.getText = () => plugin.name;
-            return entry;
-        });
-        const entry = new SubmenuDropEntry("effects.plugins.submenu", pluginEntries)
-            .withNoIcon();
-        entry.getText = () => "Plugins";
-        return entry;
+        }
+        categories.sort((left, right) => EffectsMenu.compareNames(left.label, right.label));
+
+        const entries = categories.map(category => category.entry);
+        const rootEffects = pluginEffects.get("root") || [];
+        if (rootEffects.length !== 0) {
+            entries.push(new VerticalSeparator());
+            entries.push(...EffectsMenu.createPluginEntries(rootEffects));
+        }
+        return entries;
     }
 
-    static createCategory(category, effectIds) {
+    static createCategory(category, effectIds, pluginEffects = []) {
         const entries = effectIds.map(id => {
             const actionId = "menu.effects." + id;
             const action = ActionRegistry.get(actionId);
@@ -108,8 +118,59 @@ class EffectsMenu extends DropMenuItem {
                 .withTranslationKey(id + ".name")
                 .withIconPathKey(BitmapEffectEngine.EFFECTS[id].icon.replace(/\.png$/, ""));
         });
+        entries.push(...EffectsMenu.createPluginEntries(pluginEffects));
+        entries.sort((left, right) => EffectsMenu.compareNames(left.getText(), right.getText()));
         return new SubmenuDropEntry("effects." + category + ".submenu", entries)
             .withTranslationKey("name", false)
             .withNoIcon();
+    }
+
+    static createPluginOnlyCategory(key, label, effects) {
+        const entry = new SubmenuDropEntry(
+            `effects.plugins.${key}.submenu`, EffectsMenu.createPluginEntries(effects)
+        ).withNoIcon();
+        entry.getText = () => label;
+        return entry;
+    }
+
+    static createPluginEntries(effects) {
+        return effects.map(({plugin, definition}) => {
+            const action = ActionRegistry.get(definition.actionId);
+            if (action === null) {
+                throw new Error("Missing plugin effect action: " + definition.actionId);
+            }
+            return new PluginEffectDropEntry(action, definition, plugin);
+        }).sort((left, right) => EffectsMenu.compareNames(left.getText(), right.getText()));
+    }
+
+    static normalizeCategory(value) {
+        const label = typeof value === "string" && value.trim() !== ""
+            ? value.trim()
+            : "Plugins";
+        const aliases = {
+            artistic: "artistic",
+            blurring: "blurring",
+            blurs: "blurring",
+            color: "color",
+            distort: "distort",
+            noise: "noise",
+            object: "object",
+            photo: "photo",
+            render: "render",
+            stylize: "stylize",
+            root: "root"
+        };
+        const normalized = label.toLocaleLowerCase().replace(/\s+/g, " ");
+        return {
+            key: aliases[normalized] || normalized.replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, "") || "plugins",
+            label
+        };
+    }
+
+    static compareNames(left, right) {
+        return left.replace(/\.\.\.$/, "").localeCompare(
+            right.replace(/\.\.\.$/, ""), undefined, {sensitivity: "base"}
+        );
     }
 }

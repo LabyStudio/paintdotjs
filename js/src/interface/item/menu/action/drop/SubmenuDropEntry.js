@@ -100,6 +100,11 @@ class SubmenuDropEntry extends DropEntry {
     }
 
     close() {
+        for (const entry of this.entries) {
+            if (entry instanceof SubmenuDropEntry) {
+                entry.close();
+            }
+        }
         this.submenuPopup?.close();
         this.submenuPopup = null;
         this.submenuElement = null;

@@ -167,6 +167,28 @@ class EffectConfigDialog {
     }
 
     static createGenericControl(control, values, notify) {
+        if (control.type === "color" || control.type === "text") {
+            let label = document.createElement("label");
+            label.className = "effect-config-row";
+            let input;
+            {
+                let caption = document.createElement("span");
+                caption.textContent = control.label;
+                if (control.label) {
+                    label.appendChild(caption);
+                }
+                input = document.createElement("input");
+                input.type = control.type;
+                input.maxLength = 4096;
+                input.value = values[control.key];
+                input.oninput = () => {
+                    values[control.key] = input.value;
+                    notify();
+                };
+                label.appendChild(input);
+            }
+            return {element: label, setValue: value => { input.value = value; }};
+        }
         if (control.type === "curve") {
             return this.createCurveEditor(control, values, notify);
         }
@@ -194,7 +216,10 @@ class EffectConfigDialog {
                     values[control.key] = select.value;
                     notify(true);
                 };
-                row.append(label, select);
+                if (control.label) {
+                    row.appendChild(label);
+                }
+                row.appendChild(select);
             }
             return {element: row, setValue};
         }
@@ -233,6 +258,9 @@ class EffectConfigDialog {
                 range.min = control.min;
                 range.max = control.max;
                 range.step = control.step;
+                if (control.track && control.track !== "default") {
+                    range.classList.add("effect-range-" + control.track);
+                }
 
                 const number = document.createElement("input");
                 number.type = "number";
@@ -266,7 +294,10 @@ class EffectConfigDialog {
                 this.enableSliderThumbReset(range, resetValue);
                 controls.append(range, NumberInput.wrap(number), this.createResetButton(resetValue));
             }
-            row.append(label, controls);
+            if (control.label) {
+                row.appendChild(label);
+            }
+            row.appendChild(controls);
         }
         return {element: row, setValue};
     }

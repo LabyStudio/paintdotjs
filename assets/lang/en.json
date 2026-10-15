@@ -1710,6 +1710,9 @@
                 "shortcutKeysDisplayString": "Backspace",
                 "text": "Fill Selection"
             },
+            "fillSelectionSecondary": {
+                "text": "Fill Selection (Secondary Color)"
+            },
             "invertSelection": {
                 "text": "Invert Selection"
             },

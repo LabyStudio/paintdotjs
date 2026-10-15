@@ -42,6 +42,17 @@ class ToolMenu extends StripPanel {
                 }
             }
         });
+        window.addEventListener("paintdotjs:shapes-changed", () => {
+            const activeTool = this.app.getActiveTool();
+            if (activeTool?.getType() === ToolType.SHAPES) {
+                const selectedShape = ToolType.SHAPES.getSetting("shape");
+                if (selectedShape.startsWith("custom.") && !ShapeCatalog.has(selectedShape)) {
+                    ToolType.SHAPES.setSetting("shape", "rectangle");
+                }
+                ToolOptionDropdown.active?.close();
+                this.renderOptions(activeTool);
+            }
+        });
         this.app.on("app:active_tool_updated", tool => this.renderOptions(tool));
     }
 
@@ -373,7 +384,7 @@ class ToolMenu extends StripPanel {
                         {label: "Symbols", values: [
                             "lightningBolt", "checkMark", "multiply", "gear", "heart"
                         ]},
-                        ShapeCatalog.CUSTOM_GROUP
+                        ShapeCatalog.getCustomGroup()
                     ]),
                     iconChoice("", "drawType", [
                         ["outline", "Draw Shape Outline", "enum_shape_draw_type_outline_dark.png"],
