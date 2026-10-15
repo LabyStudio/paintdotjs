@@ -42,7 +42,7 @@ class PluginCatalogPanel {
             }
             this.message = document.createElement("p");
             this.message.setAttribute("role", "status");
-            this.message.textContent = "Load the online catalog to browse. Installed plugins and local file installation work offline.";
+            this.message.textContent = "Loading the plugin catalog…";
             this.root.appendChild(this.message);
             this.list = document.createElement("div");
             this.list.className = "settings-plugin-list";
@@ -61,7 +61,7 @@ class PluginCatalogPanel {
         this.render();
         try {
             this.entries = await PluginCatalog.load();
-            this.message.textContent = `${this.entries.length} plugins available. Review the source before installing; plugins can access this app.`;
+            this.message.textContent = `${this.entries.length} plugins available.`;
         } catch (error) {
             this.message.textContent = `Could not load catalog: ${error.message} You can still install local files.`;
         } finally {
@@ -89,36 +89,53 @@ class PluginCatalogPanel {
                     let name = document.createElement("strong");
                     name.textContent = entry.name;
                     details.appendChild(name);
-                    let metadata = document.createElement("div");
-                    metadata.textContent = `${entry.version} · ${entry.author} · ${entry.category} · ${entry.license}`;
-                    details.appendChild(metadata);
-                    let description = document.createElement("p");
-                    description.textContent = entry.description;
-                    details.appendChild(description);
+                    let author = document.createElement("div");
+                    author.className = "settings-plugin-author";
+                    author.append("by ");
                     if (entry.website) {
                         let creator = document.createElement("a");
-                        creator.textContent = `Original creator: ${entry.author}`;
+                        creator.textContent = entry.author;
                         creator.href = entry.website;
                         creator.target = "_blank";
                         creator.rel = "noopener noreferrer";
-                        details.appendChild(creator);
-                        details.appendChild(document.createElement("br"));
+                        author.appendChild(creator);
+                    } else {
+                        author.append(entry.author);
                     }
-                    let link = document.createElement("a");
-                    link.textContent = "View source / download for offline installation";
-                    link.href = entry.url;
-                    link.target = "_blank";
-                    link.rel = "noopener noreferrer";
-                    details.appendChild(link);
+                    details.appendChild(author);
+                    let description = document.createElement("p");
+                    description.textContent = entry.description;
+                    details.appendChild(description);
                 }
-                let button = document.createElement("button");
-                button.type = "button";
-                button.className = "settings-action-button";
-                button.textContent = current?.version === entry.version ? "Installed"
-                    : current ? "Install this version" : "Install";
-                button.disabled = this.busy || current?.version === entry.version;
-                button.onclick = () => this.install(entry);
-                row.appendChild(button);
+                let actions = document.createElement("div");
+                actions.className = "settings-plugin-catalog-actions";
+                row.appendChild(actions);
+                {
+                    let source = document.createElement("a");
+                    source.className = "settings-plugin-catalog-link";
+                    source.textContent = "View source";
+                    source.href = entry.source;
+                    source.target = "_blank";
+                    source.rel = "noopener noreferrer";
+                    actions.appendChild(source);
+
+                    let download = document.createElement("a");
+                    download.className = "settings-plugin-catalog-link";
+                    download.textContent = "Download";
+                    download.href = entry.url;
+                    download.target = "_blank";
+                    download.rel = "noopener noreferrer";
+                    actions.appendChild(download);
+
+                    let button = document.createElement("button");
+                    button.type = "button";
+                    button.className = "settings-action-button";
+                    button.textContent = current?.version === entry.version ? "Installed"
+                        : current ? "Update" : "Install";
+                    button.disabled = this.busy || current?.version === entry.version;
+                    button.onclick = () => this.install(entry);
+                    actions.appendChild(button);
+                }
             }
         }
         if (this.entries.length && !this.list.childElementCount) {

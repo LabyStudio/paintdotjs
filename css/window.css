@@ -3766,7 +3766,7 @@ html.effect-rendering * {
     }
 }
 .plugin-browser-dialog {
-    width: min(760px, calc(100vw - 32px));
+    width: min(860px, calc(100vw - 32px));
     max-height: calc(100vh - 32px);
 }
 
@@ -3783,4 +3783,65 @@ html.effect-rendering * {
 .settings-plugin-catalog .settings-plugin-list {
     max-height: min(480px, calc(100vh - 220px));
     overflow: auto;
+}
+
+.settings-plugin-catalog .settings-plugin-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 6px 8px;
+}
+
+.settings-plugin-catalog .settings-plugin-details {
+    gap: 1px;
+}
+
+.settings-plugin-catalog .settings-plugin-details p {
+    margin: 0;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.settings-plugin-catalog .settings-plugin-details > div {
+    overflow: hidden;
+    color: color-mix(in srgb, var(--color-menu-item-text) 64%, transparent);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settings-plugin-catalog .settings-plugin-details a {
+    width: fit-content;
+    font-size: 11px;
+}
+
+.settings-plugin-catalog-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.settings-plugin-catalog-link {
+    color: var(--color-link);
+    white-space: nowrap;
+}
+
+.settings-plugin-catalog-link:hover,
+.settings-plugin-catalog-link:focus-visible {
+    color: var(--color-link-hover);
+}
+
+.settings-plugin-catalog-actions .settings-action-button {
+    box-sizing: border-box;
+    width: 112px;
+    min-width: 112px;
+    height: 29px;
+    min-height: 29px;
+    margin: 0;
+    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
 }

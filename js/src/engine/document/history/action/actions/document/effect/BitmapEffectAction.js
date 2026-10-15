@@ -250,20 +250,43 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
         };
 
         const remembered = BitmapEffectAction.getRememberedValues(this.definition);
-        const values = this.definition.controls.length === 0
-            ? (repeatedValues === undefined ? {} : repeatedValues)
-            : repeatedValues === undefined
-            ? await EffectConfigDialog.open({
-                title: this.definition.dialogTitle
-                    || this.getEffectName(),
+        const defaultValues = remembered || BitmapEffectEngine.defaults(this.definition);
+        let values;
+        if (repeatedValues !== undefined) {
+            values = BitmapEffectAction.cloneValues(repeatedValues);
+        } else if (this.definition.configure !== null) {
+            try {
+                values = await this.definition.configure({
+                    title: this.definition.dialogTitle || this.getEffectName(),
+                    icon: this.getEffectIconPath(),
+                    source: new Uint8ClampedArray(source.data),
+                    width: surface.getWidth(),
+                    height: surface.getHeight(),
+                    selection: selectionMask === null ? null : new Uint8Array(selectionMask),
+                    selectionBounds: PluginPixels.selectionBounds(
+                        selectionMask, surface.getWidth(), surface.getHeight()),
+                    values: BitmapEffectAction.cloneValues(defaultValues),
+                    preview: previewValues => preview(BitmapEffectAction.cloneValues(previewValues)),
+                    showOriginal: () => preview(null)
+                });
+            } catch (error) {
+                cancelWorker();
+                present(source);
+                throw error;
+            }
+        } else if (this.definition.controls.length === 0) {
+            values = {};
+        } else {
+            values = await EffectConfigDialog.open({
+                title: this.definition.dialogTitle || this.getEffectName(),
                 icon: this.getEffectIconPath(),
                 layout: this.definition.dialog,
                 controls: this.definition.controls,
-                values: remembered || BitmapEffectEngine.defaults(this.definition),
+                values: defaultValues,
                 source,
                 onPreview: preview
-            })
-            : BitmapEffectAction.cloneValues(repeatedValues);
+            });
+        }
         if (values === null) {
             cancelWorker();
             present(source);
