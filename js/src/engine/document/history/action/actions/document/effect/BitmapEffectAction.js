@@ -254,7 +254,7 @@ class BitmapEffectAction extends DocumentWorkspaceAction {
         let values;
         if (repeatedValues !== undefined) {
             values = BitmapEffectAction.cloneValues(repeatedValues);
-        } else if (this.definition.configure !== null) {
+        } else if (typeof this.definition.configure === "function") {
             try {
                 values = await this.definition.configure({
                     title: this.definition.dialogTitle || this.getEffectName(),
