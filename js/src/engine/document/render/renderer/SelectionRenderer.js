@@ -91,10 +91,13 @@ class SelectionRenderer extends SurfaceBoxRenderer {
             context.setLineDash([]);
         }
 
+        context.beginPath();
         for (let vertexList of selectedPath.getVertexLists()) {
-            context.beginPath();
-
             let vertices = vertexList.getVertices();
+            if (vertices.length === 0) {
+                continue;
+            }
+
             for (let i = 0; i < vertices.length; i++) {
                 let point = vertices[i];
                 let x = point.x * scaleX + renderBounds.getX();
@@ -115,15 +118,15 @@ class SelectionRenderer extends SurfaceBoxRenderer {
                 }
             }
             context.closePath();
+        }
 
-            if (options.fill) {
-                // Paint.NET's GeometryList uses alternate filling. With the
-                // even-odd rule, a lasso crossing over itself toggles the
-                // overlapped region instead of filling it twice.
-                context.fill("evenodd");
-            } else {
-                context.stroke();
-            }
+        if (options.fill) {
+            // Paint.NET's GeometryList uses alternate filling. The even-odd
+            // rule must be applied to every figure at once so nested figures
+            // remain holes in the selection.
+            context.fill("evenodd");
+        } else {
+            context.stroke();
         }
     };
 
