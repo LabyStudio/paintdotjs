@@ -325,7 +325,7 @@ class AssetPackManager {
             }
         }
         if (document.documentElement !== null) {
-            this.applyToTree(document.documentElement);
+            this.applyToTree(document.documentElement, true);
         }
     }
 
@@ -354,20 +354,31 @@ class AssetPackManager {
         this.applyToTree(document.documentElement);
     }
 
-    static applyToTree(root) {
+    static applyToTree(root, force = false) {
         if (root instanceof HTMLImageElement) {
-            this.applyToImage(root);
+            this.applyToImage(root, force);
         }
         for (const image of root.querySelectorAll?.("img") || []) {
-            this.applyToImage(image);
+            this.applyToImage(image, force);
         }
     }
 
-    static applyToImage(image) {
+    static applyToImage(image, force = false) {
         if (image.dataset.assetPackUpdating === "true") {
             return;
         }
-        let original = image.dataset.assetPath || image.getAttribute("src") || "";
+
+        let current = image.getAttribute("src") || "";
+        let original = image.dataset.assetPath || current;
+        if (!force && image.dataset.assetPath
+            && current !== this.resolve(image.dataset.assetPath)) {
+            // The application deliberately changed this image. Track the new
+            // path instead of restoring the first asset assigned to the node.
+            delete image.dataset.assetPath;
+            delete image.dataset.assetPackSource;
+            original = current;
+        }
+
         if (original.startsWith("blob:")) {
             return;
         }
