@@ -31,6 +31,8 @@ let activeAssets = null;
 const pendingFiles = [];
 let closeDialogReady = false;
 let closeDialogPending = false;
+let quitRequested = false;
+let closeApproved = false;
 let quittingForUpdate = false;
 let saveWindowStateTimer = null;
 
@@ -125,6 +127,10 @@ function scheduleWindowStateSave(window) {
 nativeAutoUpdater.on('before-quit-for-update', () => {
     quittingForUpdate = true;
     closeDialogPending = false;
+});
+
+app.on('before-quit', () => {
+    quitRequested = true;
 });
 
 // Electron/AppImage command lines may contain both the original .AppImage and
@@ -228,6 +234,8 @@ async function registerAppProtocol() {
 function createWindow() {
     closeDialogReady = false;
     closeDialogPending = false;
+    quitRequested = false;
+    closeApproved = false;
     const savedWindowState = readWindowState();
     const restoredBounds = restoreWindowBounds(savedWindowState?.bounds);
     mainWindow = new BrowserWindow({
@@ -278,7 +286,7 @@ function createWindow() {
     });
     mainWindow.on('close', event => {
         writeWindowState(mainWindow);
-        if (quittingForUpdate) {
+        if (quittingForUpdate || closeApproved) {
             return;
         }
         if (!closeDialogReady) {
@@ -315,6 +323,11 @@ ipcMain.on('desktop:close-dialog-ready', event => {
         closeDialogReady = true;
     }
 });
+ipcMain.on('desktop:quit', event => {
+    if (mainWindow !== null && event.sender === mainWindow.webContents) {
+        app.quit();
+    }
+});
 ipcMain.on('desktop:close-response', (event, shouldClose) => {
     if (mainWindow === null || event.sender !== mainWindow.webContents) {
         return;
@@ -322,7 +335,14 @@ ipcMain.on('desktop:close-response', (event, shouldClose) => {
     closeDialogPending = false;
     if (shouldClose) {
         writeWindowState(mainWindow);
-        mainWindow.destroy();
+        if (quitRequested) {
+            closeApproved = true;
+            app.quit();
+        } else {
+            mainWindow.destroy();
+        }
+    } else {
+        quitRequested = false;
     }
 });
 ipcMain.handle('desktop:check-for-updates', () => updater.checkForUpdates());

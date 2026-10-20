@@ -32,6 +32,10 @@ window.desktopFileActions = {
     showItemInFolder: filePath => shell.showItemInFolder(filePath)
 };
 
+window.desktopAppActions = {
+    quit: () => ipcRenderer.send('desktop:quit')
+};
+
 const waitForApplication = () => new Promise(resolve => {
     const poll = () => {
         if (window.app && typeof DocumentIO !== 'undefined') {

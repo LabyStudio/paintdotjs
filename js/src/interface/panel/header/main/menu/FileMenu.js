@@ -31,7 +31,11 @@ class FileMenu extends DropMenuItem {
             FileMenu.create("close"),
             new VerticalSeparator(),
             new DropEntry("menu.file.exit", () => {
-                window.close();
+                if (typeof window.desktopAppActions?.quit === "function") {
+                    window.desktopAppActions.quit();
+                } else {
+                    window.close();
+                }
             }),
         ]);
 
