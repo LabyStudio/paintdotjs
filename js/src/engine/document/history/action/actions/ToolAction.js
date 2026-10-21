@@ -51,7 +51,7 @@ class ToolAction extends Action {
         if (shortcut.isShift()) {
             return shortcut.isEvent(event);
         }
-        return shortcut.getKey() === ShortcutKey.normalizeKey(event.key)
+        return shortcut.getKey() === ShortcutKey.keyFromEvent(event)
             && shortcut.isCtrl() === event.ctrlKey
             && shortcut.isAlt() === event.altKey
             && shortcut.isMeta() === event.metaKey;
