@@ -130,7 +130,7 @@ class ToolMenu extends StripPanel {
         const sampleScope = iconChoice("Sampling:", "sampleMode", [
             ["layer", "Layer", "sample_all_layers_false.png"],
             ["image", "Image", "sample_all_layers_true.png"]
-        ], 70, true);
+        ], 79, true);
         const blend = {
             kind: "select", label: "", key: "blendMode", icon: "alpha_blending_true.png", width: 82,
             toolbar: true,
@@ -275,12 +275,12 @@ class ToolMenu extends StripPanel {
                         [11, "11 x 11 Average", "enum_pixel_sample_mode_average11x11.png"],
                         [31, "31 x 31 Average", "enum_pixel_sample_mode_average31x31.png"],
                         [51, "51 x 51 Average", "enum_pixel_sample_mode_average51x51.png"]
-                    ], 101, true),
+                    ], 132, true),
                     section(iconChoice("After click:", "afterClick", [
                         ["none", "Do not switch tool", "enum_color_picker_click_behavior_no_tool_switch.png"],
                         ["previous", "Switch to previous tool", "enum_color_picker_click_behavior_switch_to_last_tool.png"],
                         ["pencil", "Switch to Pencil tool", "enum_color_picker_click_behavior_switch_to_pencil_tool.png"]
-                    ], 139, true))
+                    ], 170, true))
                 ];
             case "gradientTool":
                 return [
