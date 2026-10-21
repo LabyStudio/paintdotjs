@@ -168,11 +168,6 @@ if (typeof isApp !== 'undefined' && !isApp && 'serviceWorker' in navigator) {
                         message: 'An update for paint.js is available. It is strongly recommended that you install it as soon as possible.',
                         cancelValue: 'later',
                         choices: [{
-                            value: 'later',
-                            title: 'Install When I Exit',
-                            description: 'The update is ready and will be installed after all paint.js tabs are closed.',
-                            icon: 'assets/icons/update_prompt_task_dialog_install_at_exit.png'
-                        }, {
                             value: 'now',
                             title: 'Install Now',
                             description: 'Install the update and reload paint.js now.',
