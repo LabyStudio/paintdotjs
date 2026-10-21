@@ -80,7 +80,7 @@ class ColorSliderItem extends Item {
     }
 
     renderSpectrum(canvas) {
-        let ctx = canvas.getContext("2d");
+        let ctx = canvas.getContext("2d", {willReadFrequently: true});
         let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         let data = imageData.data;
 
