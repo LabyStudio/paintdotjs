@@ -51,6 +51,11 @@ class ToolSelector extends SelectorMenuItem {
             : AppSettingsStore.get("tools.defaultTool", "paintBrushTool");
         this.setSelectedId(ToolType.getById(defaultToolId) === null ? "paintBrushTool" : defaultToolId);
 
+        this.app.on("app:active_tool_updated", tool => {
+            if (tool !== null) {
+                this.syncSelectedId(tool.getType().getId());
+            }
+        });
         this.app.on("app:shortcut_changed", () => this.reinitialize());
     }
 
@@ -71,5 +76,11 @@ class ToolSelector extends SelectorMenuItem {
             throw new Error("Tool not found: " + id);
         }
         this.app.setActiveToolFromType(tool);
+    }
+
+    syncSelectedId(id) {
+        if (this.getSelectedId() !== id) {
+            super.setSelectedId(id);
+        }
     }
 }
