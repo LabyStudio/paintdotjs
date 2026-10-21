@@ -44,6 +44,15 @@ class SettingsEntry {
         throw new Error(`Settings entry ${this.definition.id} does not implement render().`);
     }
 
+    isWebGlAvailable() {
+        try {
+            const canvas = document.createElement("canvas");
+            return canvas.getContext("webgl2") !== null || canvas.getContext("webgl") !== null;
+        } catch (_) {
+            return false;
+        }
+    }
+
     scrollToAddedRow(row) {
         if (row === null) {
             return;

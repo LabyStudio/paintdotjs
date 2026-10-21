@@ -26,13 +26,4 @@ class SettingsGraphicsEntry extends SettingsEntry {
             note: "Rendering-device selection is not available to web applications."
         });
     }
-
-    isWebGlAvailable() {
-        try {
-            const canvas = document.createElement("canvas");
-            return canvas.getContext("webgl2") !== null || canvas.getContext("webgl") !== null;
-        } catch (_) {
-            return false;
-        }
-    }
 }

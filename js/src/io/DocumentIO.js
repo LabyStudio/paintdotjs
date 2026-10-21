@@ -260,14 +260,27 @@ class DocumentIO {
     }
 
     static async getClipboardImageSize() {
-        const nativeReader = window.desktopFileActions?.getClipboardImageSize;
+        // A file copied from the OS file manager puts its icon, not its pixels,
+        // on the pasteboard. Read the real file first so the dialog is prefilled
+        // with the actual image dimensions.
+        const fileBlob = await this.readClipboardImageFile();
+        if (fileBlob !== null) {
+            const size = await this.getImageSize(fileBlob);
+            if (size !== null) {
+                return size;
+            }
+        }
+
+        const nativeReader = window.desktopFileActions?.readClipboardImage;
         if (typeof nativeReader === "function") {
             try {
-                const size = nativeReader();
-                return size !== null && Number.isFinite(size.width) && Number.isFinite(size.height)
-                    && size.width > 0 && size.height > 0
-                    ? {width: Math.round(size.width), height: Math.round(size.height)}
-                    : null;
+                const blob = await nativeReader();
+                if (blob !== null) {
+                    const size = await this.getImageSize(blob);
+                    if (size !== null) {
+                        return size;
+                    }
+                }
             } catch (_) {
                 // Fall through to the browser clipboard implementation.
             }
@@ -277,7 +290,10 @@ class DocumentIO {
         if (blob === null) {
             return null;
         }
+        return await this.getImageSize(blob);
+    }
 
+    static async getImageSize(blob) {
         let image = null;
         try {
             image = await this.loadImage(blob);
@@ -1020,20 +1036,37 @@ class DocumentIO {
         return this.pasteBlob(blob);
     }
 
+    static async readClipboardImageFile() {
+        const nativeReader = window.desktopFileActions?.readClipboardImageFile;
+        if (typeof nativeReader !== "function") {
+            return null;
+        }
+        try {
+            return await nativeReader();
+        } catch (_) {
+            return null;
+        }
+    }
+
     static async readClipboardImage() {
-        let blob = null;
-        if (navigator.clipboard && typeof navigator.clipboard.read === "function") {
-            try {
-                const items = await navigator.clipboard.read();
-                for (const item of items) {
-                    const type = item.types.find(candidate => candidate.startsWith("image/"));
-                    if (type) {
-                        blob = await item.getType(type);
-                        break;
+        // A file copied from the OS file manager is stored as a file URL, not
+        // as image bytes. Read the real file first so it wins over the file
+        // icon the pasteboard also carries.
+        let blob = await this.readClipboardImageFile();
+        if (blob === null) {
+            if (navigator.clipboard && typeof navigator.clipboard.read === "function") {
+                try {
+                    const items = await navigator.clipboard.read();
+                    for (const item of items) {
+                        const type = item.types.find(candidate => candidate.startsWith("image/"));
+                        if (type) {
+                            blob = await item.getType(type);
+                            break;
+                        }
                     }
+                } catch (_) {
+                    // Fall back to the in-app clipboard below.
                 }
-            } catch (_) {
-                // Fall back to the in-app clipboard below.
             }
         }
         if (blob === null) {

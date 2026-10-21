@@ -13,23 +13,86 @@
  */
 
 const {CustomTitlebar, TitlebarColor} = require('custom-electron-titlebar')
-const {ipcRenderer, clipboard, shell, webUtils} = require('electron');
+const {ipcRenderer, shell, webUtils} = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const localFilePaths = new WeakMap();
 
+// File extensions the image loader can decode when a file is copied from the
+// OS file manager and pasted into a document.
+const clipboardImageFileMimeTypes = {
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'webp': 'image/webp',
+    'gif': 'image/gif',
+    'bmp': 'image/bmp',
+    'avif': 'image/avif',
+    'heic': 'image/heic',
+    'heif': 'image/heif',
+    'tif': 'image/tiff',
+    'tiff': 'image/tiff',
+    'jxl': 'image/jxl',
+    'tga': 'image/x-tga',
+    'dds': 'image/vnd-ms.dds',
+    'jxr': 'image/vnd.ms-photo'
+};
+
+// Electron 44 moved the clipboard module to the main process, so the
+// pasteboard is read through IPC. The main process resolves the text/uri-list
+// payload (CF_HDROP on Windows, public.file-url on macOS) to local paths.
+const readClipboardFilePaths = () => ipcRenderer.invoke('desktop:clipboard-read-file-paths');
+
 window.desktopFileActions = {
-    copyText: text => clipboard.writeText(text),
-    getClipboardImageSize: () => {
-        const image = clipboard.readImage();
-        return image.isEmpty() ? null : image.getSize();
+    copyText: text => ipcRenderer.invoke('desktop:clipboard-write-text', text),
+    readClipboardImage: async () => {
+        try {
+            const image = await ipcRenderer.invoke('desktop:clipboard-read-image');
+            if (image === null) {
+                return null;
+            }
+            return new Blob([image.data], {type: image.type});
+        } catch (error) {
+            console.error('Could not read the clipboard image', error);
+            return null;
+        }
+    },
+    readClipboardImageFile: async () => {
+        try {
+            const filePaths = await readClipboardFilePaths();
+            if (filePaths === null) {
+                return null;
+            }
+            for (const filePath of filePaths) {
+                const extension = path.extname(filePath).slice(1).toLowerCase();
+                const mimeType = clipboardImageFileMimeTypes[extension];
+                if (mimeType === undefined) {
+                    continue;
+                }
+                const data = await fs.promises.readFile(filePath);
+                const file = new Blob([data], {type: mimeType});
+                Object.defineProperties(file, {
+                    name: {value: path.basename(filePath)},
+                    lastModified: {value: (await fs.promises.stat(filePath)).mtimeMs}
+                });
+                return file;
+            }
+            return null;
+        } catch (error) {
+            console.error('Could not read the clipboard image file', error);
+            return null;
+        }
     },
     getPathForFile: file => localFilePaths.get(file) || webUtils.getPathForFile(file),
     writeFile: async (filePath, data) => {
         await fs.promises.writeFile(filePath, Buffer.from(data));
     },
     showItemInFolder: filePath => shell.showItemInFolder(filePath)
+};
+
+window.desktopAppActions = {
+    quit: () => ipcRenderer.send('desktop:quit')
 };
 
 const waitForApplication = () => new Promise(resolve => {
