@@ -74,7 +74,7 @@ class ShortcutKey {
             combo += "Shift+";
         }
         if (this.meta) {
-            combo += "Meta+";
+            combo += Platform.isMac() ? "Cmd+" : "Meta+";
         }
         combo += ShortcutKey.displayKey(this.key);
         return combo;
@@ -131,6 +131,15 @@ class ShortcutKey {
             targetKey = "+";
         }
         return new ShortcutKey(targetKey, shift, ctrl, alt, meta);
+    }
+
+    // On macOS the command (Meta) modifier replaces Ctrl in default
+    // shortcuts. Returns the shortcut unchanged when it has no Ctrl.
+    static withMetaModifier(shortcut) {
+        if (!shortcut.isCtrl()) {
+            return shortcut;
+        }
+        return new ShortcutKey(shortcut.getKey(), shortcut.isShift(), false, shortcut.isAlt(), true);
     }
 
     static fromEvent(event) {

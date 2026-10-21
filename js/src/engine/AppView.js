@@ -98,7 +98,9 @@ class AppView {
             let x = event.clientX - this.editor.offsetLeft;
             let y = event.clientY - this.editor.offsetTop - windowTop();
 
-            if (event.ctrlKey) {
+            // On macOS the command (Meta) key acts as the Ctrl modifier.
+            // Plain Ctrl+wheel must keep working for trackpad pinch zoom.
+            if (event.ctrlKey || (Platform.isMac() && event.metaKey)) {
                 event.preventDefault();
 
                 // Modal forms own their input. In particular, Ctrl+wheel may be
@@ -274,7 +276,8 @@ class AppView {
 
         // Disable smooth scrolling
         this.view.addEventListener('wheel', event => {
-            if (event.ctrlKey) {
+            // On macOS the command (Meta) key acts as the Ctrl modifier.
+            if (event.ctrlKey || (Platform.isMac() && event.metaKey)) {
                 return;
             }
 
@@ -304,7 +307,8 @@ class AppView {
 
         window.addEventListener('keydown', event => {
             let modifierChanged = false;
-            if (event.key === "Control") {
+            // On macOS the command (Meta) key acts as the Ctrl modifier.
+            if (event.key === "Control" || (Platform.isMac() && event.key === "Meta")) {
                 modifierChanged = !this.controlKeyDown;
                 this.controlKeyDown = true;
             }
@@ -361,7 +365,8 @@ class AppView {
 
         window.addEventListener('keyup', event => {
             let modifierChanged = false;
-            if (event.key === "Control") {
+            // On macOS the command (Meta) key acts as the Ctrl modifier.
+            if (event.key === "Control" || (Platform.isMac() && event.key === "Meta")) {
                 modifierChanged = this.controlKeyDown;
                 this.controlKeyDown = false;
             }
