@@ -23,20 +23,28 @@ class ShortcutKey {
     }
 
     isEvent(event) {
-        const normalizedKey = ShortcutKey.normalizeKey(event.key);
+        const normalizedKey = ShortcutKey.keyFromEvent(event);
         // On most keyboard layouts "+" requires Shift. Paint.NET displays the
         // binding as Ctrl++ rather than Ctrl+Shift++, so accept that implicit
         // Shift modifier without weakening modifier matching for other keys.
-        const shiftMatches = this.key === "+" && normalizedKey === "+" && !this.shift
-            ? true
-            : this.shift === event.shiftKey;
+        // While a command modifier is held, browsers report the unshifted "="
+        // character, so accept it for plus bindings as well.
+        const plusMatches = this.key === "+" && !this.shift
+            && (normalizedKey === "+" || normalizedKey === "=");
+        const shiftMatches = plusMatches ? true : this.shift === event.shiftKey;
+        // On macOS the main delete key reports "Backspace". In command-modified
+        // combinations it stands in for the Delete key (for example
+        // Shift+Cmd+Delete), while unmodified Backspace keeps its own bindings.
+        const macDeleteMatches = Platform.isMac()
+            && (event.ctrlKey || event.metaKey)
+            && this.key === "Delete" && normalizedKey === "Backspace";
 
         return this.key !== null
+            && (plusMatches || macDeleteMatches || normalizedKey === this.key)
             && shiftMatches
             && this.ctrl === event.ctrlKey
             && this.alt === event.altKey
-            && this.meta === event.metaKey
-            && normalizedKey === this.key;
+            && this.meta === event.metaKey;
     }
 
     isShift() {
@@ -142,10 +150,27 @@ class ShortcutKey {
         return new ShortcutKey(shortcut.getKey(), shortcut.isShift(), false, shortcut.isAlt(), true);
     }
 
+    // On macOS, holding Option composes the pressed key into another
+    // character (for example Alt+V reports "ν"). Fall back to the physical
+    // key for letter keys so Alt+letter bindings keep matching.
+    static keyFromEvent(event) {
+        if (Platform.isMac() && event.altKey && typeof event.code === "string"
+            && event.code.startsWith("Key")) {
+            return event.code.slice(3);
+        }
+        return ShortcutKey.normalizeKey(event.key);
+    }
+
     static fromEvent(event) {
-        const key = ShortcutKey.normalizeKey(event.key);
+        let key = ShortcutKey.keyFromEvent(event);
         if (["Control", "Shift", "Alt", "Meta"].includes(key)) {
             return new ShortcutKey(null, false, false, false, false);
+        }
+        // On macOS the main delete key reports "Backspace"; in command-modified
+        // combinations it stands in for the Delete key, matching isEvent().
+        if (Platform.isMac() && key === "Backspace"
+            && (event.ctrlKey || event.metaKey)) {
+            key = "Delete";
         }
         return new ShortcutKey(key, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey);
     }
