@@ -51,13 +51,13 @@ class BrushPreviewRenderer extends SurfaceBoxRenderer {
         const height = Math.max(1, this.diameter * scaleY);
         const context = destination.getContext();
 
-        if (this.shape === "square" && this.diameter === 1) {
-            // Keep the one document pixel clear and draw Paint.NET's three
-            // screen-space outlines around it: black, white, black.
-            const left = renderBounds.getX() + this.location.x * scaleX;
-            const top = renderBounds.getY() + this.location.y * scaleY;
-            const right = left + scaleX;
-            const bottom = top + scaleY;
+        if (this.shape === "square") {
+            // Keep the sampled document pixels clear and draw Paint.NET's
+            // three screen-space outlines around them: black, white, black.
+            const left = centerX - width / 2;
+            const top = centerY - height / 2;
+            const right = centerX + width / 2;
+            const bottom = centerY + height / 2;
             const outline = 1;
 
             context.save();
