@@ -12,11 +12,11 @@
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
-const {app, autoUpdater: nativeAutoUpdater, BrowserWindow, Menu, ipcMain, net, protocol, screen} = require('electron');
+const {app, autoUpdater: nativeAutoUpdater, BrowserWindow, Menu, clipboard, ipcMain, net, protocol, screen} = require('electron');
 const {setupTitlebar} = require('custom-electron-titlebar/main');
 const fs = require('node:fs');
 const path = require('node:path');
-const {pathToFileURL} = require('node:url');
+const {fileURLToPath, pathToFileURL} = require('node:url');
 const {ensureDesktopAssets} = require('./asset-manager');
 const updater = require('./updater');
 
@@ -347,6 +347,46 @@ ipcMain.on('desktop:close-response', (event, shouldClose) => {
 });
 ipcMain.handle('desktop:check-for-updates', () => updater.checkForUpdates());
 ipcMain.on('desktop:install-update', () => updater.installUpdate());
+
+// Electron 44 moved the clipboard module to the main process, so the renderer
+// reaches the system pasteboard through these handlers.
+ipcMain.handle('desktop:clipboard-read-file-paths', async () => {
+    const items = await clipboard.read();
+    for (const item of items) {
+        // Files copied from the OS file manager arrive as a text/uri-list
+        // payload (CF_HDROP on Windows, public.file-url on macOS).
+        const type = item.types.find(candidate => candidate === 'text/uri-list'
+            || candidate === 'electron application/osclipboard;format="public.file-url"');
+        if (type === undefined) {
+            continue;
+        }
+        const blob = await item.getType(type);
+        const text = await blob.text();
+        const filePaths = text.split(/\r?\n|\0/)
+            .map(entry => entry.trim())
+            .filter(entry => entry.startsWith('file://'))
+            .map(entry => fileURLToPath(entry));
+        if (filePaths.length > 0) {
+            return filePaths;
+        }
+    }
+    return null;
+});
+ipcMain.handle('desktop:clipboard-read-image', async () => {
+    const items = await clipboard.read();
+    for (const item of items) {
+        const type = item.types.find(candidate => candidate.startsWith('image/'));
+        if (type === undefined) {
+            continue;
+        }
+        const blob = await item.getType(type);
+        return {type, data: await blob.arrayBuffer()};
+    }
+    return null;
+});
+ipcMain.handle('desktop:clipboard-write-text', async (_event, text) => {
+    await clipboard.writeText(text);
+});
 
 async function prepareApplication() {
     while (!activeAssets) {
