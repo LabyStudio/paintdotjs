@@ -131,6 +131,9 @@ class ActionRegistry {
         }
         this.register(new RepeatEffectAction());
         this.register(new BitmapEffectAction(BitmapEffectEngine.ROTATE_ZOOM));
+        for (const alignment of AlignObjectAction.ALIGNMENTS) {
+            this.register(new AlignObjectAction(alignment));
+        }
 
         // Tools are actions too. Their order is significant because Paint.NET
         // cycles tools which share S, M, or O in this order.

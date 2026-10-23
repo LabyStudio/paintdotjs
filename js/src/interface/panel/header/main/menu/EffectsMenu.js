@@ -96,6 +96,10 @@ class EffectsMenu extends DropMenuItem {
                 entry: EffectsMenu.createPluginOnlyCategory(key, label, effects)
             });
         }
+        categories.push({
+            label: i18n("objectAlign.submenu.name"),
+            entry: EffectsMenu.createObjectAlignSubmenu()
+        });
         categories.sort((left, right) => EffectsMenu.compareNames(left.label, right.label));
 
         const entries = categories.map(category => category.entry);
@@ -123,6 +127,20 @@ class EffectsMenu extends DropMenuItem {
         return new SubmenuDropEntry("effects." + category + ".submenu", entries)
             .withTranslationKey("name", false)
             .withNoIcon();
+    }
+
+    static createObjectAlignSubmenu() {
+        const entries = AlignObjectAction.ALIGNMENTS.map(alignment => {
+            const action = ActionRegistry.get("menu.effects.objectAlign." + alignment);
+            if (action === null) {
+                throw new Error("Missing object align action: menu.effects.objectAlign." + alignment);
+            }
+            return action.createDropEntry()
+                .withIconPathKey(AlignObjectAction.ICONS[alignment]);
+        });
+        return new SubmenuDropEntry("objectAlign.submenu", entries)
+            .withTranslationKey("name", false)
+            .withIconPathKey("zoom_blur_effect");
     }
 
     static createPluginOnlyCategory(key, label, effects) {

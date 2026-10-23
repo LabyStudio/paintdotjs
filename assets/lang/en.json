@@ -2173,6 +2173,36 @@
     "notchedArrowShape": {
         "name": "Notched arrow"
     },
+    "objectAlign": {
+        "submenu": {
+            "name": "Object Align"
+        },
+        "center": {
+            "name": "Center"
+        },
+        "horizontalCenter": {
+            "name": "Horizontal Center"
+        },
+        "verticalCenter": {
+            "name": "Vertical Center"
+        },
+        "left": {
+            "name": "Left"
+        },
+        "right": {
+            "name": "Right"
+        },
+        "top": {
+            "name": "Top"
+        },
+        "bottom": {
+            "name": "Bottom"
+        },
+        "empty": {
+            "title": "No Object to Align",
+            "message": "The active layer has no visible pixels, so there is nothing to align."
+        }
+    },
     "octagonShape": {
         "name": "Octagon"
     },
