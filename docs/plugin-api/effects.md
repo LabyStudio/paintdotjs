@@ -58,6 +58,32 @@ Effects go into **Effects** by default.
 - `category` is the submenu name.
 - Use `category: "Root"` to put the command directly in the menu.
 
+To give a plugin-created submenu an icon, use a category object. Packaged icons
+can be referenced with `paintDotJs.asset()`:
+
+```javascript
+const objectAlignCategory = {
+    name: "Object Align",
+    icon: paintDotJs.asset("object-align.png")
+};
+
+paintDotJs.registerPlugin({
+    effects: [{
+        id: "align-center",
+        name: "Center",
+        category: objectAlignCategory,
+        renderPixel({r, g, b, a}) {
+            return [r, g, b, a];
+        }
+    }]
+});
+```
+
+The `icon` property is optional. A category string and a category object without
+an icon both produce the standard iconless submenu. Category icons must be PNG
+files. If several effects use the same category, reuse the category object or
+give the icon to at least one of them.
+
 ## Add several effects
 
 One plugin may register multiple effects:

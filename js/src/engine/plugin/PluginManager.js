@@ -616,6 +616,7 @@ class PluginManager {
         if (!["Effects", "Adjustments"].includes(menu)) {
             throw new Error(`Effect ${id} menu must be Effects or Adjustments.`);
         }
+        const category = this.normalizeEffectCategory(effect.category, id);
         const runtimeId = `plugin.${plugin.id}.${id}`;
         const definition = {
             id: runtimeId,
@@ -627,7 +628,8 @@ class PluginManager {
             pluginId: plugin.id,
             pluginName: plugin.name,
             menu,
-            category: this.optionalText(effect.category, "Plugins", 48)
+            category: category.name,
+            categoryIcon: category.icon
         };
         if (effect.configure !== undefined && typeof effect.configure !== "function") {
             throw new Error(`Effect ${id} configure must be a function.`);
@@ -756,6 +758,22 @@ class PluginManager {
             throw new Error("Effect icons must name a built-in PNG file or contain a PNG data URL.");
         }
         return value;
+    }
+
+    static normalizeEffectCategory(category, effectId) {
+        if (category === undefined || typeof category === "string") {
+            return {
+                name: this.optionalText(category, "Plugins", 48),
+                icon: null
+            };
+        }
+        if (category === null || typeof category !== "object" || Array.isArray(category)) {
+            throw new Error(`Effect ${effectId} category must be a string or an object.`);
+        }
+        return {
+            name: this.optionalText(category.name, "Plugins", 48),
+            icon: category.icon === undefined ? null : this.normalizeIcon(category.icon)
+        };
     }
 
     static activatePlugin(plugin) {
