@@ -153,7 +153,7 @@ class CloneStampTool extends DrawingTool {
         this.missingAnchorDialogOpen = true;
         void TaskDialog.show({
             title: "paint.js",
-            className: "clone-stamp-warning-dialog",
+            className: "message-box-dialog",
             message: "Could not use the Clone Stamp because the area to clone has not been set.\n\nUse Ctrl+Click to set the anchor point.",
             cancelValue: true,
             choices: [{value: true, title: "OK"}]

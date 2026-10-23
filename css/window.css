@@ -1786,20 +1786,21 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
     line-height: 1.35;
 }
 
-/* Paint.NET presents Clone Stamp's missing-anchor error as a compact message
-   box rather than as a task dialog with large command-link buttons. */
-.clone-stamp-warning-dialog {
+/* Paint.NET presents simple message-only dialogs (for example Clone Stamp's
+   missing-anchor error) as a compact message box rather than as a task
+   dialog with large command-link buttons. */
+.message-box-dialog {
     width: min(440px, calc(100vw - 32px));
 }
 
-.clone-stamp-warning-dialog .task-dialog-content {
+.message-box-dialog .task-dialog-content {
     grid-template-columns: 42px minmax(0, 1fr);
     column-gap: 14px;
     row-gap: 0;
     padding: 14px 12px 0;
 }
 
-.clone-stamp-warning-dialog .task-dialog-content::before {
+.message-box-dialog .task-dialog-content::before {
     content: "×";
     display: grid;
     place-items: center;
@@ -1812,17 +1813,17 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
     font: 700 27px/1 Arial, sans-serif;
 }
 
-.clone-stamp-warning-dialog .task-dialog-content > .task-dialog-message {
+.message-box-dialog .task-dialog-content > .task-dialog-message {
     grid-column: 2;
     margin: 0;
-    color: var(--color-link, #185abd);
+    color: var(--color-menu-item-text);
     font-size: 12pt;
     font-weight: 400;
     line-height: 1.35;
     white-space: pre-line;
 }
 
-.clone-stamp-warning-dialog .task-dialog-choices {
+.message-box-dialog .task-dialog-choices {
     grid-column: 1 / -1;
     display: flex;
     justify-content: flex-end;
@@ -1832,7 +1833,7 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
     background: var(--color-window-background);
 }
 
-.clone-stamp-warning-dialog .task-dialog-choice {
+.message-box-dialog .task-dialog-choice {
     display: block;
     width: 82px;
     min-height: 28px;
@@ -1844,17 +1845,17 @@ html[data-color-scheme="dark"] img[data-asset-pack-source="built-in"][data-asset
     background: var(--color-button);
 }
 
-.clone-stamp-warning-dialog .task-dialog-choice:hover,
-.clone-stamp-warning-dialog .task-dialog-choice:focus-visible {
+.message-box-dialog .task-dialog-choice:hover,
+.message-box-dialog .task-dialog-choice:focus-visible {
     border-color: var(--color-menu-item-selected-border);
     background: var(--color-button);
 }
 
-.clone-stamp-warning-dialog .task-dialog-choice > span {
+.message-box-dialog .task-dialog-choice > span {
     display: block;
 }
 
-.clone-stamp-warning-dialog .task-dialog-choice strong {
+.message-box-dialog .task-dialog-choice strong {
     font-size: 9pt;
     font-weight: 400;
 }
