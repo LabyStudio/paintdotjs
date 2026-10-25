@@ -34,6 +34,7 @@ class WebWindow extends AbstractWindow {
         this.contentElement = null;
 
         this.dragging = false;
+        this.activePointerId = null;
         this.dragStartX = 0;
         this.dragStartY = 0;
         this.resizable = false;
@@ -107,15 +108,24 @@ class WebWindow extends AbstractWindow {
         this.updateImageOverlap();
 
         // Window movement handling
-        this.titleBarElement.addEventListener("mousedown", (event) => {
+        this.titleBarElement.addEventListener("pointerdown", (event) => {
+            if (event.button !== 0
+                || event.target.closest("button, a, input, select, textarea")) {
+                return;
+            }
             this.dragging = true;
+            this.activePointerId = event.pointerId;
             this.dragStartX = event.clientX - this.x;
             this.dragStartY = event.clientY - this.y;
+            this.titleBarElement.setPointerCapture?.(event.pointerId);
 
             event.preventDefault();
             event.stopPropagation();
         });
-        document.addEventListener("mousemove", (event) => {
+        document.addEventListener("pointermove", (event) => {
+            if (event.pointerId !== this.activePointerId) {
+                return;
+            }
             if (this.resizing) {
                 this.resizeToPointer(event.clientX, event.clientY);
 
@@ -131,14 +141,20 @@ class WebWindow extends AbstractWindow {
                 event.stopPropagation();
             }
         });
-        document.addEventListener("mouseup", () => {
+        const finishPointerInteraction = event => {
+            if (event.pointerId !== this.activePointerId) {
+                return;
+            }
             this.dragging = false;
             this.resizing = false;
             this.resizeDirection = null;
             this.resizeStart = null;
+            this.activePointerId = null;
             document.body.classList.remove("window-resizing");
             this.saveState(true);
-        });
+        };
+        document.addEventListener("pointerup", finishPointerInteraction);
+        document.addEventListener("pointercancel", finishPointerInteraction);
 
         super.create();
         this.saveState(true);
@@ -214,7 +230,7 @@ class WebWindow extends AbstractWindow {
         };
 
         // Capture the event before title-bar dragging stops propagation.
-        document.addEventListener("mousedown", event => updateFocusedWindow(event.target), true);
+        document.addEventListener("pointerdown", event => updateFocusedWindow(event.target), true);
         document.addEventListener("focusin", event => updateFocusedWindow(event.target), true);
     }
 
@@ -264,12 +280,13 @@ class WebWindow extends AbstractWindow {
         for (const direction of ["n", "e", "s", "w", "ne", "se", "sw", "nw"]) {
             const handle = document.createElement("div");
             handle.className = "window-resize-handle window-resize-" + direction;
-            handle.addEventListener("mousedown", event => {
+            handle.addEventListener("pointerdown", event => {
                 if (event.button !== 0) {
                     return;
                 }
                 this.dragging = false;
                 this.resizing = true;
+                this.activePointerId = event.pointerId;
                 this.resizeDirection = direction;
                 this.resizeStart = {
                     clientX: event.clientX,
@@ -279,6 +296,7 @@ class WebWindow extends AbstractWindow {
                     width: this.width,
                     height: this.height
                 };
+                handle.setPointerCapture?.(event.pointerId);
                 document.body.classList.add("window-resizing");
                 WebWindow.focus(this.windowElement);
                 event.preventDefault();

@@ -105,6 +105,9 @@ class ScrollList extends Item {
 
         for (let item of this.items) {
             const element = item.getElement();
+            // The browser otherwise claims a finger drag for native scrolling
+            // and cancels the pointer before the reorder threshold is reached.
+            element.style.touchAction = "none";
             element.addEventListener("pointerdown", event => {
                 if (event.button !== 0 || event.target.closest("input, button") !== null) {
                     return;
@@ -126,6 +129,9 @@ class ScrollList extends Item {
         if (this.itemSwapper === null) {
             return;
         }
+        if (event.pointerType === "touch") {
+            event.preventDefault();
+        }
         const bounds = item.getElement().getBoundingClientRect();
         const coordinate = this.getPointerCoordinate(event);
         const itemStart = this.orientation === ScrollOrientation.HORIZONTAL ? bounds.left : bounds.top;
@@ -141,7 +147,9 @@ class ScrollList extends Item {
         if (item === null) {
             return this.stopPointerDrag();
         }
-        if ((event.buttons & 1) === 0) {
+        // Some touch implementations report buttons=0 while a contact is
+        // moving. Its pointerup/pointercancel event is the reliable endpoint.
+        if (event.pointerType !== "touch" && (event.buttons & 1) === 0) {
             return this.stopPointerDrag();
         }
 

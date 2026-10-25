@@ -22,14 +22,19 @@ class DialogMover {
         this.offsetX = 0;
         this.offsetY = 0;
         this.dragging = false;
+        this.pointerId = null;
 
-        this.onMouseDown = event => this.start(event);
-        this.onMouseMove = event => this.move(event);
-        this.onMouseUp = () => this.stop();
+        this.onPointerDown = event => this.start(event);
+        this.onPointerMove = event => this.move(event);
+        this.onPointerUp = event => {
+            if (event.pointerId === this.pointerId) {
+                this.stop();
+            }
+        };
         this.onResize = () => this.clampToBounds();
 
         this.handle.classList.add("movable-dialog-handle");
-        this.handle.addEventListener("mousedown", this.onMouseDown);
+        this.handle.addEventListener("pointerdown", this.onPointerDown);
         window.addEventListener("resize", this.onResize);
 
         if (this.persistenceId !== null && typeof AppSettingsStore !== "undefined") {
@@ -53,9 +58,12 @@ class DialogMover {
         this.offsetX = event.clientX - bounds.left;
         this.offsetY = event.clientY - bounds.top;
         this.dragging = true;
+        this.pointerId = event.pointerId;
+        this.handle.setPointerCapture?.(event.pointerId);
 
-        document.addEventListener("mousemove", this.onMouseMove, true);
-        document.addEventListener("mouseup", this.onMouseUp, true);
+        document.addEventListener("pointermove", this.onPointerMove, true);
+        document.addEventListener("pointerup", this.onPointerUp, true);
+        document.addEventListener("pointercancel", this.onPointerUp, true);
         event.preventDefault();
     }
 
@@ -96,13 +104,15 @@ class DialogMover {
             });
         }
         this.dragging = false;
-        document.removeEventListener("mousemove", this.onMouseMove, true);
-        document.removeEventListener("mouseup", this.onMouseUp, true);
+        this.pointerId = null;
+        document.removeEventListener("pointermove", this.onPointerMove, true);
+        document.removeEventListener("pointerup", this.onPointerUp, true);
+        document.removeEventListener("pointercancel", this.onPointerUp, true);
     }
 
     destroy() {
         this.stop();
-        this.handle.removeEventListener("mousedown", this.onMouseDown);
+        this.handle.removeEventListener("pointerdown", this.onPointerDown);
         this.handle.classList.remove("movable-dialog-handle");
         window.removeEventListener("resize", this.onResize);
     }

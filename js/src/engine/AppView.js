@@ -28,6 +28,9 @@ class AppView {
         this.pointerDown = false;
         this.activePointerId = null;
         this.pointerButton = MouseButton.LEFT;
+        this.touchPointers = new Map();
+        this.touchGesture = null;
+        this.touchGestureBlocked = false;
         this.autoScrollPointer = null;
         this.autoScrollFrame = null;
         this.lastAutoScrollTime = 0;
@@ -95,8 +98,9 @@ class AppView {
 
         // Cancel website zoom
         window.addEventListener('wheel', event => {
-            let x = event.clientX - this.editor.offsetLeft;
-            let y = event.clientY - this.editor.offsetTop - windowTop();
+            const editorBounds = this.editor.getBoundingClientRect();
+            let x = event.clientX - editorBounds.left;
+            let y = event.clientY - editorBounds.top;
 
             // On macOS the command (Meta) key acts as the Ctrl modifier.
             // Plain Ctrl+wheel must keep working for trackpad pinch zoom.
@@ -137,13 +141,16 @@ class AppView {
                 ? 1
                 : Utility.clamp(event.pressure || 0.5, 0, 1);
         };
-        const getPointerPosition = event => ({
-            x: event.clientX - this.editor.offsetLeft,
-            y: event.clientY - this.editor.offsetTop - windowTop(),
-            pressure: getPointerPressure(event),
-            pointerType: event.pointerType || "mouse",
-            timeStamp: event.timeStamp
-        });
+        const getPointerPosition = event => {
+            const editorBounds = this.editor.getBoundingClientRect();
+            return {
+                x: event.clientX - editorBounds.left,
+                y: event.clientY - editorBounds.top,
+                pressure: getPointerPressure(event),
+                pointerType: event.pointerType || "mouse",
+                timeStamp: event.timeStamp
+            };
+        };
         const getPointerInput = event => {
             const events = typeof event.getCoalescedEvents === "function"
                 ? event.getCoalescedEvents()
@@ -153,6 +160,56 @@ class AppView {
                 pointerType: event.pointerType || "mouse",
                 samples: events.map(getPointerPosition)
             };
+        };
+        const rememberTouchPointer = event => {
+            if (event.pointerType !== "touch") {
+                return;
+            }
+            const point = getPointerPosition(event);
+            this.touchPointers.set(event.pointerId, {x: point.x, y: point.y});
+        };
+        const getTouchGestureGeometry = () => {
+            const points = Array.from(this.touchPointers.values());
+            if (points.length < 2) {
+                return null;
+            }
+            const first = points[0];
+            const second = points[1];
+            return {
+                centerX: (first.x + second.x) / 2,
+                centerY: (first.y + second.y) / 2,
+                distance: Math.max(1, Math.hypot(second.x - first.x, second.y - first.y))
+            };
+        };
+        const beginTouchGesture = () => {
+            this.touchGesture = getTouchGestureGeometry();
+        };
+        const updateTouchGesture = () => {
+            const geometry = getTouchGestureGeometry();
+            if (geometry === null || this.touchGesture === null) {
+                return;
+            }
+            const workspace = this.getActiveDocumentWorkspace();
+            if (workspace !== null) {
+                const scale = geometry.distance / this.touchGesture.distance;
+                workspace.setZoom(workspace.getZoom() * scale,
+                    this.touchGesture.centerX, this.touchGesture.centerY);
+                this.view.scrollLeft += this.touchGesture.centerX - geometry.centerX;
+                this.view.scrollTop += this.touchGesture.centerY - geometry.centerY;
+            }
+            this.touchGesture = geometry;
+        };
+        const forgetTouchPointer = event => {
+            if (event.pointerType !== "touch") {
+                return;
+            }
+            this.touchPointers.delete(event.pointerId);
+            if (this.touchPointers.size < 2) {
+                this.touchGesture = null;
+            }
+            if (this.touchPointers.size === 0) {
+                this.touchGestureBlocked = false;
+            }
         };
 
         const rememberAutoScrollPointer = event => {
@@ -195,6 +252,23 @@ class AppView {
         // samples. Paint.NET 5's brush pipeline consumes the same information
         // instead of reducing every device to a stream of mouse coordinates.
         this.editor.addEventListener('pointerdown', event => {
+            rememberTouchPointer(event);
+            if (event.pointerType === "touch" && this.touchPointers.size >= 2) {
+                if (this.pointerDown) {
+                    finishInterruptedPointer(null);
+                }
+                this.touchGestureBlocked = true;
+                beginTouchGesture();
+                if (typeof this.editor.setPointerCapture === "function") {
+                    this.editor.setPointerCapture(event.pointerId);
+                }
+                event.preventDefault();
+                return;
+            }
+            if (event.pointerType === "touch" && this.touchGestureBlocked) {
+                event.preventDefault();
+                return;
+            }
             if (this.pointerDown) {
                 // Ignore additional touch/pen contacts while the active pointer
                 // owns the stroke. A repeated down from the same pointer means
@@ -225,6 +299,12 @@ class AppView {
         });
 
         this.editor.addEventListener('pointermove', event => {
+            rememberTouchPointer(event);
+            if (event.pointerType === "touch" && this.touchGestureBlocked) {
+                updateTouchGesture();
+                event.preventDefault();
+                return;
+            }
             if (this.pointerDown && event.pointerId !== this.activePointerId) {
                 return;
             }
@@ -244,7 +324,13 @@ class AppView {
         });
 
         this.editor.addEventListener('pointerup', event => {
+            if (event.pointerType === "touch" && this.touchGestureBlocked) {
+                forgetTouchPointer(event);
+                event.preventDefault();
+                return;
+            }
             if (!this.pointerDown || event.pointerId !== this.activePointerId) {
+                forgetTouchPointer(event);
                 return;
             }
             try {
@@ -258,15 +344,21 @@ class AppView {
                 this.handleError(e);
             } finally {
                 this.stopAutoScroll();
+                forgetTouchPointer(event);
             }
 
             event.preventDefault();
         });
 
         this.editor.addEventListener('pointercancel', event => {
+            if (event.pointerType === "touch" && this.touchGestureBlocked) {
+                forgetTouchPointer(event);
+                return;
+            }
             if (event.pointerId === this.activePointerId) {
                 finishInterruptedPointer(event);
             }
+            forgetTouchPointer(event);
         });
         this.editor.addEventListener('lostpointercapture', event => {
             if (this.pointerDown && event.pointerId === this.activePointerId) {
@@ -630,6 +722,9 @@ class AppView {
         }
 
         const pointer = this.autoScrollPointer;
+        if (pointer.pointerType === "touch") {
+            return false;
+        }
         const viewportBounds = this.view.getBoundingClientRect();
         const centerX = (viewportBounds.left + viewportBounds.right) / 2;
         const centerY = (viewportBounds.top + viewportBounds.bottom) / 2;

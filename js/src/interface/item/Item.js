@@ -190,15 +190,38 @@ class Item extends UIElement {
     }
 
     registerMouseEvents(element, onMouseDown, onMouseMove, onMouseUp) {
-        element.onmousedown = event => {
+        let activePointerId = null;
+        element.style.touchAction = "none";
+
+        element.onpointerdown = event => {
+            if (activePointerId !== null) {
+                return;
+            }
+            activePointerId = event.pointerId;
+            event.preventDefault();
             onMouseDown(event.clientX, event.clientY, event.button);
-            document.addEventListener("mouseup", event => {
-                onMouseUp(event.clientX, event.clientY, event.button);
-                document.removeEventListener("mousemove", this.moveEvent);
-            }, {once: true});
-            document.addEventListener("mousemove", this.moveEvent = event => {
+
+            element.setPointerCapture?.(event.pointerId);
+        };
+        element.onpointermove = event => {
+            if (event.pointerId === activePointerId) {
+                event.preventDefault();
                 onMouseMove(event.clientX, event.clientY, event.button);
-            });
-        }
+            }
+        };
+        element.onpointerup = event => {
+            if (event.pointerId !== activePointerId) {
+                return;
+            }
+            event.preventDefault();
+            onMouseUp(event.clientX, event.clientY, event.button);
+            element.releasePointerCapture?.(event.pointerId);
+            activePointerId = null;
+        };
+        element.onpointercancel = event => {
+            if (event.pointerId === activePointerId) {
+                activePointerId = null;
+            }
+        };
     }
 }

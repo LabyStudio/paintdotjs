@@ -60,6 +60,7 @@ still some additions and limitations worth noting.
 
 - Runs on macOS, Linux, Windows, and the web through a shared JavaScript codebase, with an Electron
   desktop application for a more native experience.
+- Supports touch input, including drawing and two-finger canvas pan and zoom.
 - A **Fonts** settings page lets you add font files by picker or drag and drop, preview installed
   fonts, and remove individual fonts or clear them all. Added fonts are stored locally and are
   available in the Text tool.

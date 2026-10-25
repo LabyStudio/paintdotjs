@@ -190,7 +190,7 @@ class ColorsForm extends Form {
             for (let i = 0; i < 32; i++) {
                 let colorElement = document.createElement("div");
                 colorElement.classList.add("color");
-                colorElement.onmousedown = event => {
+                colorElement.onpointerdown = event => {
                     event.preventDefault();
                     this.onPaletteColorClick(i, event.button);
                 };
@@ -210,7 +210,7 @@ class ColorsForm extends Form {
             for (let i = 32; i < 32 * 3; i++) {
                 let colorElement = document.createElement("div");
                 colorElement.classList.add("color");
-                colorElement.onmousedown = event => {
+                colorElement.onpointerdown = event => {
                     event.preventDefault();
                     this.onPaletteColorClick(i, event.button);
                 };
