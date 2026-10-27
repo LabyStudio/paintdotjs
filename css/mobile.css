@@ -1,0 +1,13 @@
+/* Touch input behavior only. Keep the same sizes and layout on every device. */
+
+@media (pointer: coarse) {
+    #view {
+        touch-action: none;
+        overscroll-behavior: none;
+    }
+
+    .window .title-bar,
+    .app-dialog-title-bar {
+        touch-action: none;
+    }
+}

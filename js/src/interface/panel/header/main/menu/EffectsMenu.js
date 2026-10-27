@@ -128,9 +128,21 @@ class EffectsMenu extends DropMenuItem {
     static createPluginOnlyCategory(key, label, effects) {
         const entry = new SubmenuDropEntry(
             `effects.plugins.${key}.submenu`, EffectsMenu.createPluginEntries(effects)
-        ).withNoIcon();
+        );
         entry.getText = () => label;
+        EffectsMenu.applyPluginCategoryIcon(entry, effects);
         return entry;
+    }
+
+    static applyPluginCategoryIcon(entry, effects) {
+        const categoryEffect = effects.find(({definition}) => definition.categoryIcon !== null);
+        if (categoryEffect === undefined) {
+            entry.withNoIcon();
+            return;
+        }
+        entry.getIconSrc = () => BitmapEffectAction.getIconSource({
+            icon: categoryEffect.definition.categoryIcon
+        });
     }
 
     static createPluginEntries(effects) {

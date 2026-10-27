@@ -23,8 +23,12 @@ class Action {
         this.actionId = actionId;
         this.nameTranslationId = nameTranslationId;
         this.descriptionTranslationId = descriptionTranslationId;
-        this.defaultShortcutKey = ShortcutKey.fromCombo(shortcutKeyCombo);
-        this.shortcutKey = ShortcutKey.fromCombo(shortcutKeyCombo);
+        // On macOS the command modifier replaces Ctrl in default shortcuts.
+        const parsed = ShortcutKey.fromCombo(shortcutKeyCombo);
+        this.defaultShortcutKey = Platform.isMac()
+            ? ShortcutKey.withMetaModifier(parsed)
+            : parsed;
+        this.shortcutKey = this.defaultShortcutKey;
     }
 
     runPerformAction() {

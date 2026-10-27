@@ -31,7 +31,12 @@ class ToolOptionDropdown {
         this.pendingFontJumpValue = null;
         this.fontPreviewObserver = null;
         this.fontTypeaheadListener = event => this.onFontTypeahead(event);
-        this.documentClickListener = () => this.close();
+        this.documentPointerListener = event => {
+            if (this.element.contains(event.target) || this.menu?.contains(event.target)) {
+                return;
+            }
+            this.close();
+        };
 
         this.element = document.createElement("button");
         this.element.type = "button";
@@ -189,7 +194,10 @@ class ToolOptionDropdown {
             // Move and Line tools.
             document.addEventListener("keydown", this.fontTypeaheadListener, true);
         }
-        setTimeout(() => document.addEventListener("click", this.documentClickListener, {once: true}));
+        // Canvas touch handling can suppress the synthetic click event. Use
+        // pointerdown in the capture phase so an outside tap always closes
+        // the dropdown before the canvas consumes it.
+        setTimeout(() => document.addEventListener("pointerdown", this.documentPointerListener, true));
     }
 
     createEntryButton(entry) {
@@ -509,7 +517,7 @@ class ToolOptionDropdown {
         this.fontTypeaheadValue = "";
         this.pendingFontJumpValue = null;
         this.fontEntryButtons.clear();
-        document.removeEventListener("click", this.documentClickListener);
+        document.removeEventListener("pointerdown", this.documentPointerListener, true);
         this.element.setAttribute("aria-expanded", "false");
         if (this.menu !== null) {
             this.menu.remove();

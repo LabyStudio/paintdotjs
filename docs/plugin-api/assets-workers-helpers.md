@@ -29,7 +29,7 @@ paintDotJs.registerPlugin({
 });
 ```
 
-Effect icons must be PNG files. Other assets may be PNG, JPEG, GIF, WebP, SVG, JSON, or text. Asset names cannot contain subdirectories. Each asset may be at most 384 KB.
+Effect and effect-category icons must be PNG files. Other assets may be PNG, JPEG, GIF, WebP, SVG, JSON, or text. Asset names cannot contain subdirectories. Each asset may be at most 384 KB.
 
 `paintDotJs.asset()` is replaced while the package is installed, so the plugin keeps working offline.
 

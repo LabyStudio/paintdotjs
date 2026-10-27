@@ -27,6 +27,13 @@ class DropMenuItem extends MenuItem {
         this.entries = entries;
 
         this.closeListener = event => {
+            // Keep the menu open while interacting with its contents. Menu
+            // entries close it themselves after their action has run.
+            if (this.dropMenuElement?.contains(event.target)
+                || this.element?.contains(event.target)) {
+                return;
+            }
+
             // Clicking another top-level menu is handled by MainMenu. Do not
             // let the previous menu's outside-click listener close the menu
             // which has just replaced it during the same click event.
@@ -94,12 +101,14 @@ class DropMenuItem extends MenuItem {
 
         // Register close listener
         setTimeout(_ => {
-            document.addEventListener("click", this.closeListener, {once: true});
+            // Listen in the capture phase so a touch gesture consumed by the
+            // canvas still dismisses an open menu.
+            document.addEventListener("pointerdown", this.closeListener, true);
         });
     }
 
     close() {
-        document.removeEventListener("click", this.closeListener);
+        document.removeEventListener("pointerdown", this.closeListener, true);
 
         for (const entry of this.entries) {
             if (entry instanceof SubmenuDropEntry) {

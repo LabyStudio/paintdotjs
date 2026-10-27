@@ -333,10 +333,10 @@ class SaveImageDialog {
                 if (event.key === "Escape") {
                     event.preventDefault();
                     finish(null);
-                } else if (event.ctrlKey && event.key === "0") {
+                } else if ((event.ctrlKey || event.metaKey) && event.key === "0") {
                     event.preventDefault();
                     fitPreview();
-                } else if (event.ctrlKey && event.key === "1") {
+                } else if ((event.ctrlKey || event.metaKey) && event.key === "1") {
                     event.preventDefault();
                     setZoom(1);
                 }

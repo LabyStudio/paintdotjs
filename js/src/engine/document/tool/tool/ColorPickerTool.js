@@ -48,7 +48,8 @@ class ColorPickerTool extends Tool {
             this.pixelPreview.setVisible(false);
             return;
         }
-        this.pixelPreview.setPreview(point, 1, "square", 1);
+        const sampleSize = Number(this.getSetting("sampleSize", 1));
+        this.pixelPreview.setPreview(point, sampleSize, "square", 1);
     }
 
     onMouseDown(x, y, button) {

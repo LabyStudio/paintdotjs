@@ -75,13 +75,25 @@ class AdjustmentsMenu extends DropMenuItem {
                 left.getText(), right.getText()));
             const submenu = new SubmenuDropEntry(
                 `adjustments.plugins.${key.replace(/[^a-z0-9]+/g, "-")}.submenu`, entries
-            ).withNoIcon();
+            );
             submenu.getText = () => category.label;
+            AdjustmentsMenu.applyPluginCategoryIcon(submenu, category.effects);
             return submenu;
         });
         categoryEntries.sort((left, right) => AdjustmentsMenu.compareNames(
             left.getText(), right.getText()));
         return [...categoryEntries, new VerticalSeparator(), ...rootEntries];
+    }
+
+    static applyPluginCategoryIcon(entry, effects) {
+        const categoryEffect = effects.find(({definition}) => definition.categoryIcon !== null);
+        if (categoryEffect === undefined) {
+            entry.withNoIcon();
+            return;
+        }
+        entry.getIconSrc = () => BitmapEffectAction.getIconSource({
+            icon: categoryEffect.definition.categoryIcon
+        });
     }
 
     static createPluginEntry({plugin, definition}) {
