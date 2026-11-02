@@ -16,6 +16,7 @@ class PaintBucketTool extends Tool {
     constructor(type) {
         super(type);
         this.pending = false;
+        this.drawing = false;
         this.tracking = false;
         this.origin = null;
         this.dragStart = null;
@@ -24,9 +25,36 @@ class PaintBucketTool extends Tool {
         this.originNub = null;
         this.sampleSnapshot = null;
         this.colorsForm = null;
+        this.restoredSettings = null;
+        this.restoredColors = null;
+        this.drawHistoryPushed = false;
+        this.editingStartState = null;
+        this.lastPendingState = null;
+        this.pendingEditStartState = null;
+        this.pendingEditTimer = null;
+        this.pendingEditExpireTime = 0;
+        this.activePointerIds = new Set();
+        this.pointerDownListener = event => this.activePointerIds.add(event.pointerId);
+        this.pointerUpListener = event => {
+            this.activePointerIds.delete(event.pointerId);
+            this.checkPendingEdit();
+        };
+        this.pointerBlurListener = () => {
+            this.activePointerIds.clear();
+            this.checkPendingEdit();
+        };
         this.colorsChangedListener = () => {
+            const previousState = this.lastPendingState;
+            if (this.restoredColors !== null && this.colorsForm !== null) {
+                this.restoredColors = {
+                    primary: this.colorsForm.mainColor.copy(),
+                    secondary: this.colorsForm.secondaryColor.copy()
+                };
+            }
             if (this.pending) {
                 this.renderPending();
+                this.schedulePendingEdit(previousState);
+                this.lastPendingState = this.capturePendingState();
             }
         };
     }
@@ -37,18 +65,27 @@ class PaintBucketTool extends Tool {
         if (this.colorsForm?.changed !== undefined) {
             this.colorsForm.changed.add(this.colorsChangedListener);
         }
+        document.addEventListener("pointerdown", this.pointerDownListener, true);
+        document.addEventListener("pointerup", this.pointerUpListener, true);
+        document.addEventListener("pointercancel", this.pointerUpListener, true);
+        window.addEventListener("blur", this.pointerBlurListener);
         this.app.setCursorImg("paint_bucket_tool_cursor");
     }
 
     onDeactivate() {
         const colorsForm = this.colorsForm;
+        if (this.pending) {
+            this.commitPending();
+        }
         this.colorsForm = null;
         if (typeof colorsForm?.changed?.remove === "function") {
             colorsForm.changed.remove(this.colorsChangedListener);
         }
-        if (this.pending) {
-            this.commitPending();
-        }
+        document.removeEventListener("pointerdown", this.pointerDownListener, true);
+        document.removeEventListener("pointerup", this.pointerUpListener, true);
+        document.removeEventListener("pointercancel", this.pointerUpListener, true);
+        window.removeEventListener("blur", this.pointerBlurListener);
+        this.activePointerIds.clear();
         this.destroyNub();
         super.onDeactivate();
     }
@@ -59,7 +96,9 @@ class PaintBucketTool extends Tool {
         }
         const point = new Point(x, y);
         if (this.pending && this.originNub !== null && this.originNub.isPointTouching(point, true)) {
+            this.flushPendingEdit();
             this.tracking = true;
+            this.editingStartState = this.capturePendingState();
             this.dragStart = point;
             this.originStart = this.origin.clone();
             this.app.setCursorImg("hand_closed_cursor");
@@ -79,7 +118,13 @@ class PaintBucketTool extends Tool {
         this.sampleSnapshot = sampleSurface.clone();
         this.origin = point;
         this.button = button;
+        this.drawing = true;
         this.pending = true;
+        this.drawHistoryPushed = false;
+        this.editingStartState = null;
+        this.restoredSettings = null;
+        this.restoredColors = null;
+        this.lastPendingState = this.capturePendingState();
         this.renderPending();
         this.positionNub();
         return true;
@@ -98,12 +143,25 @@ class PaintBucketTool extends Tool {
         return true;
     }
 
-    onMouseUp(x, y) {
+    onMouseUp(x, y, button) {
+        if (this.drawing && button === this.button) {
+            this.drawing = false;
+            this.pushDrawHistoryMemento();
+            return true;
+        }
         if (!this.tracking) {
             return false;
         }
         this.onMouseMove(x, y);
         this.tracking = false;
+        if (this.editingStartState !== null) {
+            this.historyStack.pushNewMemento(new PaintBucketEditHistoryMemento(
+                this.getDocumentWorkspace(), this.editingStartState,
+                i18n("paintBucketTool.changed.generic.historyMementoName"), this.getImage()
+            ));
+            this.editingStartState = null;
+        }
+        this.lastPendingState = this.capturePendingState();
         this.app.setCursorImg("paint_bucket_tool_cursor");
         return true;
     }
@@ -121,9 +179,13 @@ class PaintBucketTool extends Tool {
         return false;
     }
 
-    onSettingChanged(key) {
+    onSettingChanged(key, value) {
         if (!this.pending) {
             return;
+        }
+        const previousState = this.lastPendingState;
+        if (this.restoredSettings !== null && key !== undefined) {
+            this.restoredSettings[key] = value;
         }
         if (key === "sampleMode") {
             const bounds = this.bitmapTransaction.dirtyBounds;
@@ -139,6 +201,31 @@ class PaintBucketTool extends Tool {
             this.bitmapTransaction.dirtyBounds = null;
         }
         this.renderPending();
+        this.schedulePendingEdit(previousState);
+        this.lastPendingState = this.capturePendingState();
+    }
+
+    getSetting(name, fallback = null) {
+        if (this.restoredSettings !== null
+            && Object.prototype.hasOwnProperty.call(this.restoredSettings, name)) {
+            return this.restoredSettings[name];
+        }
+        return super.getSetting(name, fallback);
+    }
+
+    getColor(button = MouseButton.LEFT) {
+        if (this.restoredColors !== null) {
+            return (button === MouseButton.RIGHT
+                ? this.restoredColors.secondary : this.restoredColors.primary).copy();
+        }
+        return super.getColor(button);
+    }
+
+    onExecutingHistoryMemento() {
+        // HistoryStack asks the tool to settle live transactions before it
+        // chooses the memento to execute. This makes an immediate Ctrl+Z undo
+        // the grouped color edit instead of removing the whole fill.
+        this.flushPendingEdit();
     }
 
     renderPending() {
@@ -267,11 +354,29 @@ class PaintBucketTool extends Tool {
         if (!this.pending) {
             return false;
         }
+        // A tool switch or Finish may arrive before the pointer-up callback.
+        // Preserve the original Draw -> Commit history sequence in that case.
+        this.pushDrawHistoryMemento();
+        this.flushPendingEdit();
+        const state = this.capturePendingState();
         this.pending = false;
+        this.drawing = false;
         this.tracking = false;
+        this.editingStartState = null;
         this.destroyNub();
         this.disposeSampleSnapshot();
-        this.commitBitmapTransaction();
+        const bitmapMemento = this.takeBitmapTransactionMemento();
+        if (bitmapMemento !== null) {
+            this.historyStack.pushNewMemento(new PaintBucketCommitHistoryMemento(
+                this.getDocumentWorkspace(), state, bitmapMemento,
+                i18n("paintBucketTool.commitChanges.historyMementoName"), this.getImage(), true
+            ));
+        }
+        this.drawHistoryPushed = false;
+        this.restoredSettings = null;
+        this.restoredColors = null;
+        this.lastPendingState = null;
+        this.clearPendingEdit();
         this.app.setCursorImg("paint_bucket_tool_cursor");
         return true;
     }
@@ -281,12 +386,125 @@ class PaintBucketTool extends Tool {
             return false;
         }
         this.pending = false;
+        this.drawing = false;
         this.tracking = false;
+        this.editingStartState = null;
         this.destroyNub();
         this.disposeSampleSnapshot();
         this.cancelBitmapTransaction();
+        this.drawHistoryPushed = false;
+        this.restoredSettings = null;
+        this.restoredColors = null;
+        this.lastPendingState = null;
+        this.clearPendingEdit();
         this.app.setCursorImg("paint_bucket_tool_cursor");
         return true;
+    }
+
+    pushDrawHistoryMemento() {
+        if (this.drawHistoryPushed) {
+            return;
+        }
+        this.historyStack.pushNewMemento(new PaintBucketDrawHistoryMemento(
+            this.getDocumentWorkspace(),
+            i18n("paintBucketTool.endDrawing.historyMementoName"), this.getImage()
+        ));
+        this.drawHistoryPushed = true;
+    }
+
+    schedulePendingEdit(previousState) {
+        if (!this.drawHistoryPushed || previousState === null) {
+            return;
+        }
+        if (this.pendingEditStartState === null) {
+            this.pendingEditStartState = previousState;
+        }
+        this.pendingEditExpireTime = Date.now() + 500;
+        this.armPendingEditTimer();
+    }
+
+    armPendingEditTimer(delay = 100) {
+        clearTimeout(this.pendingEditTimer);
+        this.pendingEditTimer = setTimeout(() => this.checkPendingEdit(), delay);
+    }
+
+    checkPendingEdit() {
+        if (this.pendingEditStartState === null) {
+            return;
+        }
+        const remaining = this.pendingEditExpireTime - Date.now();
+        if (remaining > 0 || this.activePointerIds.size > 0) {
+            this.armPendingEditTimer(Math.max(1, Math.min(100, remaining > 0 ? remaining : 100)));
+            return;
+        }
+        this.flushPendingEdit();
+    }
+
+    flushPendingEdit() {
+        if (this.pendingEditStartState === null) {
+            return false;
+        }
+        const previousState = this.pendingEditStartState;
+        this.pendingEditStartState = null;
+        clearTimeout(this.pendingEditTimer);
+        this.pendingEditTimer = null;
+        this.historyStack.pushNewMemento(new PaintBucketEditHistoryMemento(
+            this.getDocumentWorkspace(), previousState,
+            i18n("paintBucketTool.changed.generic.historyMementoName"), this.getImage()
+        ));
+        return true;
+    }
+
+    clearPendingEdit() {
+        clearTimeout(this.pendingEditTimer);
+        this.pendingEditTimer = null;
+        this.pendingEditStartState = null;
+        this.pendingEditExpireTime = 0;
+    }
+
+    capturePendingState() {
+        const colors = this.colorsForm === null ? null : {
+            primary: this.colorsForm.mainColor.copy(),
+            secondary: this.colorsForm.secondaryColor.copy()
+        };
+        return {
+            origin: this.origin.clone(),
+            button: this.button,
+            settings: Object.assign({}, this.restoredSettings === null
+                ? this.type.settings : this.restoredSettings),
+            colors: this.restoredColors === null ? colors : {
+                primary: this.restoredColors.primary.copy(),
+                secondary: this.restoredColors.secondary.copy()
+            }
+        };
+    }
+
+    restorePendingState(state) {
+        this.clearPendingEdit();
+        if (this.bitmapTransaction !== null) {
+            this.cancelBitmapTransaction();
+        }
+        this.beginBitmapTransaction();
+        this.origin = state.origin.clone();
+        this.button = state.button;
+        this.restoredSettings = Object.assign({}, state.settings);
+        this.restoredColors = state.colors === null ? null : {
+            primary: state.colors.primary.copy(),
+            secondary: state.colors.secondary.copy()
+        };
+        const sampleSurface = this.getSetting("sampleMode", "layer") === "image"
+            ? this.getDocumentWorkspace().getCompositionSurface()
+            : this.getActiveLayer().getSurface();
+        this.sampleSnapshot = sampleSurface.clone();
+        this.pending = true;
+        this.drawing = false;
+        this.tracking = false;
+        this.editingStartState = null;
+        this.drawHistoryPushed = true;
+        this.renderPending();
+        this.lastPendingState = this.capturePendingState();
+        this.positionNub();
+        this.app.setCursorImg("paint_bucket_tool_cursor");
     }
 
     disposeSampleSnapshot() {
