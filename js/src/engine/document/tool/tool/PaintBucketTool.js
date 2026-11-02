@@ -222,6 +222,21 @@ class PaintBucketTool extends Tool {
     }
 
     onExecutingHistoryMemento() {
+        // Match TransactedTool: an undo that arrives before pointer-up cancels
+        // the in-progress draw instead of applying older history on top of its
+        // live bitmap transaction.
+        if (this.drawing) {
+            this.cancelPending();
+            return;
+        }
+        if (this.tracking) {
+            const state = this.editingStartState;
+            this.tracking = false;
+            this.editingStartState = null;
+            if (state !== null) {
+                this.restorePendingState(state);
+            }
+        }
         // HistoryStack asks the tool to settle live transactions before it
         // chooses the memento to execute. This makes an immediate Ctrl+Z undo
         // the grouped color edit instead of removing the whole fill.
