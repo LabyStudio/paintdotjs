@@ -73,6 +73,7 @@ class MoveTool extends MoveToolBase {
     }
 
     onDeactivate() {
+        this.finishKeyboardMove();
         this.cancelPendingMove();
 
         if (this.context.lifted) {
@@ -116,6 +117,7 @@ class MoveTool extends MoveToolBase {
     }
 
     drop() {
+        this.finishKeyboardMove();
         // The final restore must be synchronous and pixel-exact. The normal
         // preview restore uses drawImage so dragging stays GPU accelerated,
         // but Chromium may defer that cross-canvas copy. If the final render
@@ -403,7 +405,7 @@ class MoveTool extends MoveToolBase {
     }
 
     onMouseMove(mouseX, mouseY) {
-        if (!this.tracking || this.processingMoveFrame) {
+        if (!this.tracking || this.processingMoveFrame || this.processingKeyboardMove) {
             return super.onMouseMove(mouseX, mouseY);
         }
 
@@ -548,6 +550,7 @@ class MoveTool extends MoveToolBase {
     }
 
     onExecutingHistoryMemento() {
+        super.onExecutingHistoryMemento();
         this.dontDrop = true;
         this.exactPreviewRestoreRequired = false;
 

@@ -29,6 +29,9 @@ class MoveToolBase extends Tool {
         this.currentHistoryMementos = [];
         this.deactivateOnLayerChange = true;
         this.enableOutline = true;
+        this.keyboardMovePoint = null;
+        this.keyboardMoveTimer = null;
+        this.processingKeyboardMove = false;
     }
 
     usesContinuousPointerCoordinates() {
@@ -104,6 +107,9 @@ class MoveToolBase extends Tool {
     }
 
     determineMoveMode(mouseX, mouseY, button) {
+        if (this.processingKeyboardMove) {
+            return {mode: MoveToolBaseMode.TRANSLATE, edge: MoveToolBaseEdge.NONE};
+        }
         let mode = MoveToolBaseMode.TRANSLATE;
         let edge = MoveToolBaseEdge.NONE;
 
@@ -454,22 +460,55 @@ class MoveToolBase extends Tool {
             }
 
             if (dx !== 0 || dy !== 0) {
-                const bounds = this.getSelection().isEmpty()
+                let bounds = this.getSelection().isEmpty()
                     ? this.getDocumentWorkspace().getDocument().getBounds()
                     : this.getSelection().getBounds(false);
-                const start = new Point(
+                let start = new Point(
                     bounds.getLeft() + bounds.getWidth() / 2,
                     bounds.getTop() + bounds.getHeight() / 2
                 );
-                this.onMouseDown(start.x, start.y, MouseButton.LEFT);
-                this.onMouseMove(start.x + dx, start.y + dy);
-                this.onMouseUp(start.x + dx, start.y + dy, MouseButton.LEFT);
+                this.processingKeyboardMove = true;
+                try {
+                    if (this.keyboardMovePoint === null) {
+                        this.onMouseDown(start.x, start.y, MouseButton.LEFT);
+                        this.keyboardMovePoint = start;
+                    }
+                    this.keyboardMovePoint.x += dx;
+                    this.keyboardMovePoint.y += dy;
+                    this.tracking = true;
+                    // Keyboard repeats share one translation and one starting
+                    // snapshot. Render synchronously without pointer throttling.
+                    this.onMouseMove(this.keyboardMovePoint.x, this.keyboardMovePoint.y);
+                } finally {
+                    this.tracking = false;
+                    this.processingKeyboardMove = false;
+                }
+                clearTimeout(this.keyboardMoveTimer);
+                // Paint.NET uses max(500 ms, 1.5 * OS keyboard delay).
+                // The browser has no OS keyboard-delay API; use its minimum.
+                this.keyboardMoveTimer = setTimeout(() => this.finishKeyboardMove(), 500);
                 return true;
             }
         } else {
             return super.onKeyPress(key);
         }
         return false;
+    }
+
+    finishKeyboardMove() {
+        clearTimeout(this.keyboardMoveTimer);
+        this.keyboardMoveTimer = null;
+        let point = this.keyboardMovePoint;
+        this.keyboardMovePoint = null;
+        if (point !== null) {
+            this.tracking = true;
+            this.onMouseUp(point.x, point.y, MouseButton.LEFT);
+        }
+    }
+
+    onExecutingHistoryMemento() {
+        this.finishKeyboardMove();
+        super.onExecutingHistoryMemento();
     }
 
     onActivate() {
@@ -524,6 +563,9 @@ class MoveToolBase extends Tool {
     }
 
     onMouseDown(mouseX, mouseY, button) {
+        if (!this.processingKeyboardMove) {
+            this.finishKeyboardMove();
+        }
         let consumed = super.onMouseDown(mouseX, mouseY, button);
 
         if (this.tracking || button === MouseButton.MIDDLE) {
