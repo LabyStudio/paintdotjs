@@ -51,6 +51,7 @@
   "devDependencies": {
     "electron": "44.5.1",
     "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
     "terser": "^5.39.0",
     "webpack": "^5.74.0",

@@ -113,4 +113,12 @@ class SubmenuDropEntry extends DropEntry {
             this.getElement().setAttribute("aria-expanded", "false");
         }
     }
+
+    containsPopupTarget(target) {
+        if (this.submenuElement?.contains(target)) {
+            return true;
+        }
+        return this.entries.some(entry =>
+            entry instanceof SubmenuDropEntry && entry.containsPopupTarget(target));
+    }
 }

@@ -30,7 +30,9 @@ class DropMenuItem extends MenuItem {
             // Keep the menu open while interacting with its contents. Menu
             // entries close it themselves after their action has run.
             if (this.dropMenuElement?.contains(event.target)
-                || this.element?.contains(event.target)) {
+                || this.element?.contains(event.target)
+                || this.entries.some(entry => entry instanceof SubmenuDropEntry
+                    && entry.containsPopupTarget(event.target))) {
                 return;
             }
 

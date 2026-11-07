@@ -66,7 +66,9 @@ class PluginManager {
             configure: (id, options) => this.configurePublicEffect(id, options)
         });
         const dialogs = Object.freeze({
-            create: options => this.createPublicDialog(options)
+            create: options => this.createPublicDialog(options),
+            alert: options => this.showPublicAlert(options),
+            wrapNumberInput: input => NumberInput.wrap(input)
         });
         window.paintDotJs = Object.freeze({
             apiVersion: this.apiVersion,
@@ -140,6 +142,24 @@ class PluginManager {
                 mover.destroy();
                 backdrop.remove();
             }
+        });
+    }
+
+    static showPublicAlert(options = {}) {
+        if (options === null || typeof options !== "object" || Array.isArray(options)) {
+            throw new Error("Dialog options are required.");
+        }
+        const title = this.validateText(options.title, "Dialog title", 120);
+        const message = this.validateText(options.message, "Dialog message", 4000);
+        const buttonText = this.optionalText(options.buttonText, "OK", 40);
+        const icon = options.icon === undefined ? null : this.normalizeIcon(options.icon);
+        return TaskDialog.show({
+            title,
+            message,
+            icon,
+            choices: [{title: buttonText, value: true}],
+            cancelValue: true,
+            className: "plugin-alert-dialog"
         });
     }
 
@@ -448,6 +468,62 @@ class PluginManager {
         this.sortRecords();
         this.dispatchChanged(plugin.id);
         return this.publicMetadata(record);
+    }
+
+    static async importDevelopmentPlugin(packageData, previousId = null) {
+        await this.initialize();
+        if (packageData === null || typeof packageData !== "object" || Array.isArray(packageData)) {
+            throw new Error("Development plugin data is invalid.");
+        }
+        const fileName = this.validateText(packageData.fileName, "Plugin file name", 160);
+        const manifest = this.normalizeManifest(packageData.manifest, fileName);
+        if (typeof packageData.source !== "string" || packageData.source.length > 1024 * 1024) {
+            throw new Error("Development plugin.js may not exceed 1 MB.");
+        }
+        const assetEntries = Object.entries(packageData.assets || {});
+        if (assetEntries.length > 126) {
+            throw new Error("Development plugins may contain at most 126 assets.");
+        }
+        const archive = {};
+        let extractedSize = packageData.source.length;
+        for (const [assetName, encoded] of assetEntries) {
+            if (!/^[A-Za-z0-9_.-]+$/.test(assetName) || typeof encoded !== "string"
+                || !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) {
+                throw new Error(`Development plugin contains an invalid asset: ${assetName}`);
+            }
+            const binary = atob(encoded);
+            const data = Uint8Array.from(binary, character => character.charCodeAt(0));
+            extractedSize += data.byteLength;
+            if (extractedSize > 8 * 1024 * 1024) {
+                throw new Error("The development plugin may not exceed 8 MB.");
+            }
+            archive[`assets/${assetName}`] = data;
+        }
+
+        const source = this.resolvePackageAssets(packageData.source, archive);
+        const plugin = await this.evaluateSource(source, fileName, manifest);
+        PluginFileTypes.assertAvailable(plugin);
+        if (previousId !== null && previousId !== plugin.id) {
+            this.deactivatePlugin(previousId);
+        }
+        if (this.runtimePlugins.has(plugin.id)) {
+            this.deactivatePlugin(plugin.id);
+        }
+        this.activatePlugin(plugin);
+        this.clearLoadError(plugin.id);
+        this.dispatchChanged(plugin.id);
+        return {
+            id: plugin.id,
+            name: plugin.name,
+            author: plugin.author,
+            version: plugin.version,
+            description: plugin.description,
+            fileName,
+            enabled: true,
+            development: true,
+            effectCount: plugin.effects.length,
+            fileTypeCount: plugin.fileTypes.length
+        };
     }
 
     static async setEnabled(id, enabled) {

@@ -107,6 +107,28 @@ const waitForApplication = () => new Promise(resolve => {
     poll();
 });
 
+let developmentPluginId = null;
+ipcRenderer.on('desktop:development-plugin', async (_event, message) => {
+    if (message.error) {
+        console.error('[plugin-dev] ' + message.error);
+        return;
+    }
+    try {
+        await waitForApplication();
+        const metadata = await PluginManager.importDevelopmentPlugin(
+            message.plugin,
+            developmentPluginId
+        );
+        developmentPluginId = metadata.id;
+        ipcRenderer.send('desktop:development-plugin-status', metadata);
+    } catch (error) {
+        const detail = error.stack || error.message;
+        console.error('[plugin-dev] Could not load development plugin', error);
+        ipcRenderer.send('desktop:development-plugin-status', {error: detail});
+    }
+});
+ipcRenderer.send('desktop:development-plugin-ready');
+
 let closeDialogOpen = false;
 ipcRenderer.on('desktop:request-close', async () => {
     if (closeDialogOpen) {

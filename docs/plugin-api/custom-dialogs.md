@@ -1,5 +1,27 @@
 # Custom effect dialogs
 
+For a simple message, use the built-in alert dialog:
+
+```js
+await paintDotJs.dialogs.alert({
+    title: "My plugin",
+    message: "Select part of the image before running this effect.",
+    icon: paintDotJs.asset("icon.png")
+});
+```
+
+Use `paintDotJs.dialogs.create()` when the dialog needs custom controls or a live preview.
+
+Wrap custom number fields to use paint.js's standard up/down buttons:
+
+```js
+const input = document.createElement("input");
+input.type = "number";
+input.min = "0";
+input.max = "100";
+dialogWindow.content.appendChild(paintDotJs.dialogs.wrapNumberInput(input));
+```
+
 Use the standard controls whenever they can describe an effect. Use `configure()` only for an interactive canvas, a curve editor, a variable-length list, or another specialized editor.
 
 ## Add a configurator

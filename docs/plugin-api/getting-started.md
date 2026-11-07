@@ -49,7 +49,17 @@ paintDotJs.registerPlugin({
 
 Call `paintDotJs.registerPlugin()` exactly once. Identity and creator details stay in `plugin.json`; do not repeat them in `plugin.js`.
 
-## 3. Create the package
+## 3. Develop it in paint.js
+
+From a paint.js source checkout, pass the absolute plugin directory to the desktop app:
+
+```sh
+npm run app -- --dev-plugin=/absolute/path/to/invert-red
+```
+
+paint.js opens with the plugin loaded and watches its `plugin.js`, `plugin.json`, and `assets/` files. Saving a change rebuilds and reloads the plugin automatically. The temporary development plugin is not added to the normal installed-plugin database. Press `F12` to open DevTools; build and plugin errors are also printed in the terminal.
+
+## 4. Create the package
 
 The two files must be at the root of the ZIP, not inside another folder.
 
@@ -60,7 +70,7 @@ zip ../invert-red.paintjs plugin.json plugin.js
 
 The file extension must be `.paintjs`.
 
-## 4. Install it
+## 5. Install it
 
 In paint.js, open **Settings → Plugins** and choose **Install plugin**, or drag `invert-red.paintjs` onto the app.
 
