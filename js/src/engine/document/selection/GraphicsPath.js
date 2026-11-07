@@ -321,6 +321,11 @@ class GraphicsPath {
         }
 
         const ret = new GraphicsPath();
+        // Tracing consumes the stencil. Preserve its pixels before scanlines
+        // are inverted, then attach the snapshot after adding the contours.
+        let pixelStencil = bounds.x === 0 && bounds.y === 0
+            && bounds.width === stencil.width && bounds.height === stencil.height
+            ? new Uint8Array(stencil.bitArray) : null;
         const boundsLeft = bounds.getLeft();
         const boundsTop = bounds.getTop();
         const boundsRight = bounds.getRight();
@@ -413,9 +418,12 @@ class GraphicsPath {
             ret.closeFigure();
         }
 
-        if (bounds.x === 0 && bounds.y === 0
-            && bounds.width === stencil.width && bounds.height === stencil.height) {
-            ret.setPixelStencil(stencil);
+        if (pixelStencil !== null) {
+            ret.pixelStencil = {
+                width: stencil.width,
+                height: stencil.height,
+                data: pixelStencil
+            };
         }
         return ret;
     }

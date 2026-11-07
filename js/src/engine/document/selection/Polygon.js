@@ -72,12 +72,15 @@ class Polygon {
     }
 
     static fromGraphicsPath(graphicsPath) {
-        let bounds = [];
-        let holes = [];
+        let polygon = null;
         for (let vertexList of graphicsPath.getVertexLists()) {
-            let target = vertexList.isHole() ? holes : bounds;
-            target.push(vertexList.vertices);
+            // GraphicsPath uses even-odd filling, including stencil contours
+            // without explicit hole flags. XOR preserves holes and islands
+            // nested inside them when passing the path to the polygon clipper.
+            let contour = new Polygon([vertexList.vertices]);
+            polygon = polygon === null ? contour
+                : Polygon.clip(CombineMode.XOR, polygon, contour);
         }
-        return new Polygon(bounds, holes);
+        return polygon;
     }
 }
