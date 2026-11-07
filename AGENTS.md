@@ -6,6 +6,43 @@
 - Merge `develop` into `master`; do not cherry-pick release or hotfix commits directly onto `master`.
 - After the merge is pushed, switch back to `develop` and bump it to the next development version.
 
+## Debugging and verification
+
+Prefer the local Electron app for canvas, tools, and history debugging. The user has experienced stale caches and repeated startup errors when agents open the site in Codex browser tabs. Do not default to opening another Codex tab for these tests.
+
+### Launch an isolated instance
+
+Run from the repository root. Build the current checkout first with `npm run desktop:build`. On Linux, launch Electron under Xvfb in a persistent terminal session:
+
+```sh
+paint_debug_profile=$(mktemp -d /tmp/paintdotjs-debug.XXXXXX)
+echo "$paint_debug_profile"
+xvfb-run -a ./node_modules/.bin/electron . \
+  --user-data-dir="$paint_debug_profile" \
+  --remote-debugging-address=127.0.0.1 \
+  --remote-debugging-port=9333
+```
+
+- Record the terminal session and exact temporary profile path for cleanup. Use a free debugging port if 9333 is occupied; never attach to or stop another agent's or the user's instance.
+- The temporary profile isolates settings, caches, and Electron's single-instance lock from the user's normal app. Xvfb keeps the test window off their desktop.
+- Wait for the DevTools listening message, then query `http://127.0.0.1:9333/json`. Select the page with the expected app URL (normally `paintjs://app/index.html`) and connect to its `webSocketDebuggerUrl` using Chrome DevTools Protocol (CDP).
+- Node's `fetch` and `WebSocket` can be used for a small CDP harness. Match responses by request ID, handle protocol errors and `Runtime.evaluate` exception details, and use bounded timeouts. Do not assume the first target is the app.
+- Check `window.app`, the active workspace, tool, and document before testing. After source edits, rebuild and restart the isolated instance to ensure the running code matches the checkout.
+
+### Reproduce and inspect
+
+- Use `Runtime.evaluate` to inspect the real app state: `window.app.getActiveDocumentWorkspace()`, its `getHistory()` undo/redo stacks, `window.app.getActiveTool()`, and layer canvas pixels via `getImageData()`.
+- For deterministic ordering tests, invoke the actual tool methods (`onMouseDown`, `onMouseMove`, `onMouseUp`) and history operations in a controlled sequence. For example, bucket mouse-down followed by `history.stepBackward()` before mouse-up tests Undo during an unfinished draw.
+- Assert results, not just absence of exceptions: verify history entries, pending tool state, and pixel values or full-image comparisons. Test Undo, Redo, and return to the initial document state. When practical, confirm the same test fails before the fix.
+- Direct method calls bypass event routing, shortcuts, pointer capture, and coordinate conversion. For touch, keyboard, dragging, dropdown, or layout bugs, also exercise real UI input (for example CDP `Input` events) and inspect screenshots as appropriate. State clearly which level was tested.
+- Compare behavior with the original source when port accuracy matters: `/home/daniel/IdeaProjects/Private/CSharp/PaintDotNet-5.1.12-Decompiled/`.
+- Electron does not prove browser-only behavior such as service workers or web updates. Test those in a fresh, isolated browser context against the local build, checking its version and cache state.
+
+### Finish
+
+- Stop only the test process launched for this task, then remove only its recorded temporary profile and harness files. Do not use broad process-kill or cleanup commands.
+- Run relevant regression checks and the repository build/checks before reporting a fix. Report any remaining test limitations; a successful build alone does not verify interaction behavior.
+
 ## Control flow
 
 - Always use braces for `if`, `else`, loops, and every other control-flow body, including one-line bodies.

@@ -23,8 +23,10 @@ async function startPaintDotJs() {
         app.initialize();
         DocumentIO.initialize(app);
 
-        const skipWelcome = new URLSearchParams(window.location.search).has("skipWelcome");
-        if (!(isApp && skipWelcome)) {
+        const startupParameters = new URLSearchParams(window.location.search);
+        const skipWelcome = startupParameters.has("skipWelcome");
+        const createBlankDocument = startupParameters.has("createBlankDocument");
+        if (!(isApp && skipWelcome) || createBlankDocument) {
             app.createBlankDocumentInNewWorkspace(800, 600, 96, true);
         }
         if (!skipWelcome) {

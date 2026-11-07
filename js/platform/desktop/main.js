@@ -18,6 +18,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {fileURLToPath, pathToFileURL} = require('node:url');
 const {ensureDesktopAssets} = require('./asset-manager');
+const DevelopmentPluginHost = require('./DevelopmentPluginHost');
 const updater = require('./updater');
 
 protocol.registerSchemesAsPrivileged([{
@@ -28,6 +29,7 @@ setupTitlebar();
 
 let mainWindow = null;
 let activeAssets = null;
+let developmentPluginHost = null;
 const pendingFiles = [];
 let closeDialogReady = false;
 let closeDialogPending = false;
@@ -258,9 +260,17 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js')
         }
     });
+    developmentPluginHost?.attach(mainWindow);
 
     Menu.setApplicationMenu(null);
-    const startupQuery = pendingFiles.length ? '?skipWelcome=1' : '';
+    const startupParameters = new URLSearchParams();
+    if (pendingFiles.length || developmentPluginHost) {
+        startupParameters.set('skipWelcome', '1');
+    }
+    if (developmentPluginHost && pendingFiles.length === 0) {
+        startupParameters.set('createBlankDocument', '1');
+    }
+    const startupQuery = startupParameters.size === 0 ? '' : `?${startupParameters}`;
     void mainWindow.loadURL(`paintjs://app/index.html${startupQuery}`);
     mainWindow.once('ready-to-show', () => {
         if (savedWindowState?.maximized) {
@@ -387,8 +397,23 @@ ipcMain.handle('desktop:clipboard-read-image', async () => {
 ipcMain.handle('desktop:clipboard-write-text', async (_event, text) => {
     await clipboard.writeText(text);
 });
+ipcMain.on('desktop:development-plugin-ready', event => {
+    developmentPluginHost?.rendererDidBecomeReady(event.sender);
+});
+ipcMain.on('desktop:development-plugin-status', (_event, status) => {
+    developmentPluginHost?.reportStatus(status);
+});
 
 async function prepareApplication() {
+    try {
+        const arguments_ = process.argv.slice(app.isPackaged ? 1 : 2);
+        developmentPluginHost = DevelopmentPluginHost.fromCommandLine(arguments_, app.isPackaged);
+        await developmentPluginHost?.initialize();
+    } catch (error) {
+        console.error('[plugin-dev] ' + (error.stack || error.message));
+        app.quit();
+        return;
+    }
     while (!activeAssets) {
         try {
             activeAssets = await ensureDesktopAssets();
@@ -426,3 +451,5 @@ app.on('window-all-closed', () => {
         app.quit();
     }
 });
+
+app.on('will-quit', () => developmentPluginHost?.close());
