@@ -35,6 +35,7 @@ class MoveSelectionTool extends MoveToolBase {
     }
 
     onDeactivate() {
+        this.finishKeyboardMove();
         this.getDocumentWorkspace().getSelectionRenderer().setSelectionTinting(false);
 
         if (this.context.lifted) {
@@ -55,6 +56,7 @@ class MoveSelectionTool extends MoveToolBase {
     }
 
     onExecutingHistoryMemento() {
+        super.onExecutingHistoryMemento();
         this.dontDrop = true;
     }
 
@@ -70,6 +72,7 @@ class MoveSelectionTool extends MoveToolBase {
     }
 
     drop() {
+        this.finishKeyboardMove();
         let cha = new MoveSelectionContextHistoryMemento(this.getDocumentWorkspace(), this.context, this.getName(), this.getImage());
         this.currentHistoryMementos.push(cha);
 

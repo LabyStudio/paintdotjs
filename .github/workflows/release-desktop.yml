@@ -51,12 +51,13 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run desktop:build
-      - run: npx electron-builder --linux AppImage --x64 --publish never
+      - run: npx electron-builder --linux AppImage deb --x64 --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-linux
           path: |
             dist/*.AppImage
+            dist/*.deb
             dist/*.blockmap
             dist/latest-linux.yml
           if-no-files-found: error

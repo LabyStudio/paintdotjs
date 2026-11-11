@@ -25,7 +25,7 @@
     "predesktop:build": "npm run lint && npm run check-version-info && npm run check-headers",
     "desktop:build": "webpack --config webpack.config.js",
     "dist": "npm run desktop:build && electron-builder",
-    "dist:linux": "npm run desktop:build && electron-builder --linux AppImage",
+    "dist:linux": "npm run desktop:build && electron-builder --linux AppImage deb",
     "dist:mac": "npm run desktop:build && electron-builder --mac dmg zip --universal",
     "install:local": "node ./scripts/install_local.js",
     "gen-imports": "node ./scripts/generate_imports.js",
@@ -252,8 +252,10 @@
       "icon": "assets/icon.png",
       "category": "Graphics",
       "target": [
-        "AppImage"
+        "AppImage",
+        "deb"
       ],
+      "maintainer": "LabyStudio <labystudio@gmail.com>",
       "syncDesktopName": true,
       "synopsis": "An open source raster graphics editor",
       "description": "An open source general-purpose raster graphics editor with support for multiple documents, layers, and common image formats."
