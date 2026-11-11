@@ -252,6 +252,11 @@ class AppView {
         // samples. Paint.NET 5's brush pipeline consumes the same information
         // instead of reducing every device to a stream of mouse coordinates.
         this.editor.addEventListener('pointerdown', event => {
+            // Native scrollbar events also bubble through the editor. Only
+            // presses in the viewport's client area belong to a canvas tool.
+            if (!this.isInViewportClientArea(event.clientX, event.clientY)) {
+                return;
+            }
             rememberTouchPointer(event);
             if (event.pointerType === "touch" && this.touchPointers.size >= 2) {
                 if (this.pointerDown) {
@@ -299,6 +304,12 @@ class AppView {
         });
 
         this.editor.addEventListener('pointermove', event => {
+            // Keep captured strokes working outside the viewport, but leave
+            // scrollbar hover/drag events to the browser when no stroke owns it.
+            if (!this.pointerDown && !this.touchGestureBlocked
+                && !this.isInViewportClientArea(event.clientX, event.clientY)) {
+                return;
+            }
             rememberTouchPointer(event);
             if (event.pointerType === "touch" && this.touchGestureBlocked) {
                 updateTouchGesture();
@@ -474,6 +485,14 @@ class AppView {
                 this.onModifierKeysChanged();
             }
         });
+    }
+
+    isInViewportClientArea(clientX, clientY) {
+        let bounds = this.view.getBoundingClientRect();
+        let left = bounds.left + this.view.clientLeft;
+        let top = bounds.top + this.view.clientTop;
+        return clientX >= left && clientX < left + this.view.clientWidth
+            && clientY >= top && clientY < top + this.view.clientHeight;
     }
 
     updateCanvasBounds(shiftView = true) {
