@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -20,7 +20,7 @@ const attributionBanner = [
     'Original Paint.NET source Copyright (C) dotPDN LLC, Rick Brewster, and contributors.',
     'JavaScript port and port-specific changes Copyright (C) 2024-present LabyStudio.',
     'https://github.com/LabyStudio',
-    'Interface design and behavior target Paint.NET 5.1.12+.',
+    'Interface design and behavior target Paint.NET 5.2+.',
     'See LICENSE.md and NOTICE.md.'
 ].join('\n')
 
