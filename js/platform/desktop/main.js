@@ -21,6 +21,16 @@ const {ensureDesktopAssets} = require('./asset-manager');
 const DevelopmentPluginHost = require('./DevelopmentPluginHost');
 const updater = require('./updater');
 
+// Wayland does not allow Electron to read or set a window's global position.
+// The status-bar grip needs both capabilities to keep the top-left corner fixed,
+// so use Electron's documented XWayland fallback unless the user chose a backend.
+const hasOzonePlatformArgument = process.argv.some(argument => {
+    return argument === '--ozone-platform' || argument.startsWith('--ozone-platform=');
+});
+const shouldRelaunchForX11 = process.platform === 'linux'
+    && process.env.XDG_SESSION_TYPE === 'wayland'
+    && !hasOzonePlatformArgument;
+
 protocol.registerSchemesAsPrivileged([{
     scheme: 'paintjs',
     privileges: {standard: true, secure: true, supportFetchAPI: true, corsEnabled: true}
@@ -37,6 +47,7 @@ let quitRequested = false;
 let closeApproved = false;
 let quittingForUpdate = false;
 let saveWindowStateTimer = null;
+let resizeStartBounds = null;
 
 const defaultWindowBounds = {width: 1080, height: 720};
 const minimumWindowBounds = {width: 640, height: 480};
@@ -321,12 +332,37 @@ function createWindow() {
     updater.initializeUpdater(mainWindow);
 }
 
-ipcMain.on('resize-window', (_event, {width, height}) => {
-    if (!mainWindow) {
+ipcMain.on('resize-window-start', event => {
+    if (mainWindow === null || event.sender !== mainWindow.webContents) {
         return;
     }
-    const bounds = mainWindow.getBounds();
-    mainWindow.setBounds({...bounds, width: Math.max(width, 100), height: Math.max(height, 100)});
+    resizeStartBounds = mainWindow.getBounds();
+});
+ipcMain.on('resize-window', (event, {deltaX, deltaY}) => {
+    if (mainWindow === null
+        || event.sender !== mainWindow.webContents
+        || resizeStartBounds === null
+        || !Number.isFinite(deltaX)
+        || !Number.isFinite(deltaY)) {
+        return;
+    }
+    mainWindow.setBounds({
+        x: resizeStartBounds.x,
+        y: resizeStartBounds.y,
+        width: Math.max(
+            Math.round(resizeStartBounds.width + deltaX),
+            minimumWindowBounds.width
+        ),
+        height: Math.max(
+            Math.round(resizeStartBounds.height + deltaY),
+            minimumWindowBounds.height
+        )
+    });
+});
+ipcMain.on('resize-window-end', event => {
+    if (mainWindow !== null && event.sender === mainWindow.webContents) {
+        resizeStartBounds = null;
+    }
 });
 ipcMain.on('desktop:close-dialog-ready', event => {
     if (mainWindow !== null && event.sender === mainWindow.webContents) {
@@ -438,7 +474,14 @@ async function prepareApplication() {
 }
 
 if (gotSingleInstanceLock) {
-    app.whenReady().then(prepareApplication);
+    app.whenReady().then(() => {
+        if (shouldRelaunchForX11) {
+            app.relaunch({args: [...process.argv.slice(1), '--ozone-platform=x11']});
+            app.exit(0);
+            return;
+        }
+        return prepareApplication();
+    });
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0 && activeAssets) {
             createWindow();
