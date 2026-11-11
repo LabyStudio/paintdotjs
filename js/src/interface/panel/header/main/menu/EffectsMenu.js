@@ -15,25 +15,74 @@
 class EffectsMenu extends DropMenuItem {
 
     static CATEGORIES = Object.freeze({
-        artistic: ["inkSketchEffect", "oilPaintingEffect", "pencilSketchEffect"],
+        artistic: [
+            "inkSketchEffect",
+            "linocutEffect",
+            "mosaicEffect",
+            "oilPaintingEffect",
+            "pencilSketchEffect",
+            "pointillismEffect",
+            "stainedGlassEffect"
+        ],
         blurring: [
-            "blurEffect", "bokehEffect", "fragmentEffect", "medianBlurEffect", "motionBlurEffect",
-            "radialBlurEffect", "reduceNoiseEffect", "sketchBlurEffect", "squareBlurEffect",
-            "surfaceBlurEffect", "unfocusEffect", "zoomBlurEffect"
+            "blurEffect",
+            "bokehEffect",
+            "fragmentEffect",
+            "medianBlurEffect",
+            "motionBlurEffect",
+            "radialBlurEffect",
+            "reduceNoiseEffect",
+            "sketchBlurEffect",
+            "squareBlurEffect",
+            "surfaceBlurEffect",
+            "unfocusEffect",
+            "zoomBlurEffect"
         ],
-        color: ["quantizeEffect"],
+        color: [
+            "orderedDitherEffect",
+            "quantizeEffect"
+        ],
         distort: [
-            "bulgeEffect", "crystalizeEffect", "dentsEffect", "pixelateEffect", "polarInversion",
-            "tileEffect", "turbulenceEffect", "twistEffect"
+            "bulgeEffect",
+            "crystalizeEffect",
+            "dentsEffect",
+            "pixelateEffect",
+            "polarInversion",
+            "spherizeEffect",
+            "tileEffect",
+            "turbulenceEffect",
+            "twistEffect",
+            "wavesEffect"
         ],
-        noise: ["addNoiseEffect", "frostedGlassEffect", "medianEffect"],
-        object: ["dropShadowEffect", "morphologyEffect", "outlineEffect"],
+        noise: [
+            "addNoiseEffect",
+            "frostedGlassEffect",
+            "medianEffect"
+        ],
+        object: [
+            "dropShadowEffect",
+            "morphologyEffect",
+            "outlineEffect"
+        ],
         photo: [
-            "glowEffect", "redEyeRemoveEffect", "sharpenEffect", "softenPortraitEffect",
-            "straightenEffect", "vignetteEffect"
+            "glowEffect",
+            "redEyeRemoveEffect",
+            "sharpenEffect",
+            "softenPortraitEffect",
+            "straightenEffect",
+            "vignetteEffect"
         ],
-        render: ["cloudsEffect", "juliaFractalEffect", "mandelbrotFractalEffect"],
-        stylize: ["edgeDetectEffect", "embossEffect", "reliefEffect"]
+        render: [
+            "cloudsEffect",
+            "juliaFractalEffect",
+            "mandelbrotFractalEffect"
+        ],
+        stylize: [
+            "edgeDetectEffect",
+            "embossEffect",
+            "halftoneEffect",
+            "reliefEffect"
+        ]
     });
 
     constructor() {

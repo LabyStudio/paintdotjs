@@ -264,6 +264,8 @@ class MaskedSurface {
         const anisotropicY = footprintXLength >= footprintYLength ? inverseB : inverseD;
         const anisotropicSamples = Utility.clamp(
             Math.ceil(Math.max(footprintXLength, footprintYLength)), 1, 16);
+        const nearestLinearScaleX = Math.max(1, Math.ceil(Math.hypot(m[0][0], m[1][0])));
+        const nearestLinearScaleY = Math.max(1, Math.ceil(Math.hypot(m[0][1], m[1][1])));
 
         gl.uniform1i(renderer.uniforms.source, 0);
         gl.uniform2f(renderer.uniforms.sourceSize, this.surface.width, this.surface.height);
@@ -277,6 +279,8 @@ class MaskedSurface {
         renderer.inverseValues[3] = inverseD;
         gl.uniformMatrix2fv(renderer.uniforms.inverse, false, renderer.inverseValues);
         gl.uniform1i(renderer.uniforms.mode, sampling);
+        gl.uniform2f(renderer.uniforms.nearestLinearScale,
+            nearestLinearScaleX, nearestLinearScaleY);
         gl.uniform1i(renderer.uniforms.gammaCorrected, gammaCorrected ? 1 : 0);
         gl.uniform1i(renderer.uniforms.anisotropicSamples, anisotropicSamples);
         gl.uniform2f(renderer.uniforms.anisotropicVector, anisotropicX, anisotropicY);
@@ -407,6 +411,7 @@ class MaskedSurface {
                 uniform vec2 uTranslation;
                 uniform mat2 uInverse;
                 uniform int uMode;
+                uniform vec2 uNearestLinearScale;
                 uniform bool uGammaCorrected;
                 uniform int uAnisotropicSamples;
                 uniform vec2 uAnisotropicVector;
@@ -455,6 +460,21 @@ class MaskedSurface {
                         mix(texel(base), texel(base + ivec2(1, 0)), fraction.x),
                         mix(texel(base + ivec2(0, 1)), texel(base + ivec2(1, 1)), fraction.x),
                         fraction.y);
+                }
+
+                vec4 nearestLinear(vec2 position) {
+                    vec2 virtualPosition = (position + 0.5) * uNearestLinearScale - 0.5;
+                    ivec2 base = ivec2(floor(virtualPosition));
+                    vec2 fraction = fract(virtualPosition);
+                    ivec2 p00 = ivec2(floor((vec2(base) + 0.5) / uNearestLinearScale));
+                    ivec2 p10 = ivec2(floor((vec2(base + ivec2(1, 0)) + 0.5)
+                        / uNearestLinearScale));
+                    ivec2 p01 = ivec2(floor((vec2(base + ivec2(0, 1)) + 0.5)
+                        / uNearestLinearScale));
+                    ivec2 p11 = ivec2(floor((vec2(base + ivec2(1, 1)) + 0.5)
+                        / uNearestLinearScale));
+                    return mix(mix(texel(p00), texel(p10), fraction.x),
+                        mix(texel(p01), texel(p11), fraction.x), fraction.y);
                 }
 
                 float cubicWeight(float value) {
@@ -519,6 +539,8 @@ class MaskedSurface {
                     vec4 value = vec4(0.0);
                     if (uMode == 5) {
                         value = bicubic(source);
+                    } else if (uMode == 2) {
+                        value = nearestLinear(source);
                     } else if (uMode == 3) {
                         for (int y = 0; y < 2; ++y) {
                             for (int x = 0; x < 2; ++x) {
@@ -581,6 +603,7 @@ class MaskedSurface {
                     translation: uniform("uTranslation"),
                     inverse: uniform("uInverse"),
                     mode: uniform("uMode"),
+                    nearestLinearScale: uniform("uNearestLinearScale"),
                     gammaCorrected: uniform("uGammaCorrected"),
                     anisotropicSamples: uniform("uAnisotropicSamples"),
                     anisotropicVector: uniform("uAnisotropicVector"),
@@ -640,6 +663,8 @@ class MaskedSurface {
         const anisotropicY = footprintXLength >= footprintYLength ? inverseB : inverseD;
         const anisotropicSamples = Utility.clamp(
             Math.ceil(Math.max(footprintXLength, footprintYLength)), 1, 16);
+        const nearestLinearScaleX = Math.max(1, Math.ceil(Math.hypot(m[0][0], m[1][0])));
+        const nearestLinearScaleY = Math.max(1, Math.ceil(Math.hypot(m[0][1], m[1][1])));
         const toLinear = gammaCorrected ? MaskedSurface.getToLinearLut() : null;
         const accumulator = new Float64Array(4);
         let outputOffset = 0;
@@ -667,6 +692,9 @@ class MaskedSurface {
 
                 if (sampling === ResamplingAlgorithm.HIGH_QUALITY_CUBIC) {
                     this.sampleBicubic(source, sourceX, sourceY, toLinear, accumulator, 1);
+                } else if (sampling === ResamplingAlgorithm.NEAREST_NEIGHBOR_ANTIALIASED) {
+                    this.sampleNearestLinear(source, sourceX, sourceY,
+                        nearestLinearScaleX, nearestLinearScaleY, toLinear, accumulator);
                 } else if (sampling === ResamplingAlgorithm.MULTISAMPLE_LINEAR) {
                     // Direct2D's multisample-linear mode evaluates four evenly
                     // distributed points in each destination pixel.
@@ -747,6 +775,25 @@ class MaskedSurface {
             (1 - fractionX) * fractionY * weight);
         this.addTexel(source, left + 1, top + 1, toLinear, accumulator,
             fractionX * fractionY * weight);
+    }
+
+    sampleNearestLinear(source, x, y, scaleX, scaleY, toLinear, accumulator) {
+        const virtualX = (x + 0.5) * scaleX - 0.5;
+        const virtualY = (y + 0.5) * scaleY - 0.5;
+        const left = Math.floor(virtualX);
+        const top = Math.floor(virtualY);
+        const fractionX = virtualX - left;
+        const fractionY = virtualY - top;
+        const sourceX = virtualPixel => Math.floor((virtualPixel + 0.5) / scaleX);
+        const sourceY = virtualPixel => Math.floor((virtualPixel + 0.5) / scaleY);
+        this.addTexel(source, sourceX(left), sourceY(top), toLinear, accumulator,
+            (1 - fractionX) * (1 - fractionY));
+        this.addTexel(source, sourceX(left + 1), sourceY(top), toLinear, accumulator,
+            fractionX * (1 - fractionY));
+        this.addTexel(source, sourceX(left), sourceY(top + 1), toLinear, accumulator,
+            (1 - fractionX) * fractionY);
+        this.addTexel(source, sourceX(left + 1), sourceY(top + 1), toLinear, accumulator,
+            fractionX * fractionY);
     }
 
     sampleBicubic(source, x, y, toLinear, accumulator, weight) {

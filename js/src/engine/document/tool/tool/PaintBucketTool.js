@@ -112,7 +112,8 @@ class PaintBucketTool extends Tool {
             return false;
         }
         this.beginBitmapTransaction();
-        const sampleSurface = this.getSetting("sampleMode", "layer") === "image"
+        const sampleSurface = (this.getSetting("sampleMode", "layer") === "image"
+            || this.app.isControlKeyDown())
             ? this.getDocumentWorkspace().getCompositionSurface()
             : surface;
         this.sampleSnapshot = sampleSurface.clone();

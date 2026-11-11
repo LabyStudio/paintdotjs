@@ -16,7 +16,10 @@ class ImageEncoder {
     static async encode(canvas, format, options = {}) {
         const quality = Utility.clamp(Number(options.quality ?? 95), 0, 100) / 100;
         switch (format) {
-            case "png": return this.canvasToBlob(canvas, "image/png");
+            case "png": {
+                const blob = await this.canvasToBlob(canvas, "image/png");
+                return this.injectPngTextChunks(blob, options.pngTextChunks || []);
+            }
             case "jpeg": return this.encodeJpeg(canvas, quality, options);
             case "webp": return this.canvasToBlob(canvas, "image/webp", quality);
             case "bmp": return this.encodeBmp(canvas);
@@ -42,6 +45,61 @@ class ImageEncoder {
             }
             resolve(blob);
         }, type, quality));
+    }
+
+    static extractPngTextChunks(bytes) {
+        const signature = [137, 80, 78, 71, 13, 10, 26, 10];
+        if (bytes.length < signature.length
+            || signature.some((value, index) => bytes[index] !== value)) {
+            return [];
+        }
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const chunks = [];
+        for (let offset = 8; offset + 12 <= bytes.length;) {
+            const length = view.getUint32(offset, false);
+            const end = offset + 12 + length;
+            if (end > bytes.length) {
+                break;
+            }
+            const type = String.fromCharCode(...bytes.subarray(offset + 4, offset + 8));
+            if (type === "tEXt" || type === "iTXt") {
+                chunks.push(bytes.slice(offset, end));
+            }
+            offset = end;
+            if (type === "IEND") {
+                break;
+            }
+        }
+        return chunks;
+    }
+
+    static async injectPngTextChunks(blob, chunks) {
+        if (!Array.isArray(chunks) || chunks.length === 0) {
+            return blob;
+        }
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        let iendOffset = -1;
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        for (let offset = 8; offset + 12 <= bytes.length;) {
+            const length = view.getUint32(offset, false);
+            const type = String.fromCharCode(...bytes.subarray(offset + 4, offset + 8));
+            if (type === "IEND") {
+                iendOffset = offset;
+                break;
+            }
+            offset += 12 + length;
+        }
+        if (iendOffset < 0) {
+            return blob;
+        }
+        const validChunks = chunks.filter(chunk => chunk instanceof Uint8Array
+            && chunk.length >= 12 && ["tEXt", "iTXt"].includes(
+                String.fromCharCode(...chunk.subarray(4, 8))));
+        return new Blob([
+            bytes.subarray(0, iendOffset),
+            ...validChunks,
+            bytes.subarray(iendOffset)
+        ], {type: "image/png"});
     }
 
     static async encodeModern(canvas, nativeType, format, quality) {

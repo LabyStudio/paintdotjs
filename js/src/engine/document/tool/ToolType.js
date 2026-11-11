@@ -200,7 +200,7 @@ class ToolType {
             blendMode: "normal", renderingQuality: "high"
         });
         ToolType.PAINT_BRUSH.setSettings(Object.assign({fillStyle: "solid", blendMode: "normal"}, brushSettings));
-        ToolType.ERASER.setSettings(brushSettings);
+        ToolType.ERASER.setSettings(Object.assign({fillStyle: "solid"}, brushSettings));
         ToolType.PENCIL.setSettings({blendMode: "normal", renderingQuality: "high"});
         ToolType.COLOR_PICKER.setSettings({
             sampleMode: "layer", sampleSize: 1, afterClick: "none", renderingQuality: "high"

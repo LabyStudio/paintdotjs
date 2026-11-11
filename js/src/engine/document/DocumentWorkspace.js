@@ -22,6 +22,7 @@ class DocumentWorkspace extends DocumentView {
         this.fileHandle = null;
         this.fileFormat = null;
         this.saveOptions = null;
+        this.pngTextChunks = [];
         this.dirty = false;
         this.activeLayer = null;
         this.history = new HistoryStack(app, this);

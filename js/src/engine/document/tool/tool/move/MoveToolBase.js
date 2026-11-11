@@ -384,7 +384,7 @@ class MoveToolBase extends Tool {
     }
 
     constrainScaling(
-        liftedBounds,
+        aspectRatio,
         startWidth,
         startHeight,
         newWidth,
@@ -392,23 +392,26 @@ class MoveToolBase extends Tool {
         scalesHorizontally = true,
         scalesVertically = true
     ) {
-        // A side handle only supplies one scale component. Treat the inactive
-        // component as unconstrained so Shift can derive both dimensions from
-        // the side that is actually being dragged, matching Paint.NET's
-        // TransformControl scale calculation.
-        let hRatio = scalesHorizontally
-            ? newWidth / liftedBounds.getWidth()
-            : Number.POSITIVE_INFINITY;
-        let vRatio = scalesVertically
-            ? newHeight / liftedBounds.getHeight()
-            : Number.POSITIVE_INFINITY;
+        const widthSign = Math.sign(newWidth) || 1;
+        const heightSign = Math.sign(newHeight) || 1;
+        let bestWidth;
+        let bestHeight;
+        if (!scalesVertically) {
+            bestWidth = Math.abs(newWidth);
+            bestHeight = bestWidth / aspectRatio;
+        } else if (!scalesHorizontally) {
+            bestHeight = Math.abs(newHeight);
+            bestWidth = bestHeight * aspectRatio;
+        } else if (Math.abs(newWidth) / aspectRatio <= Math.abs(newHeight)) {
+            bestWidth = Math.abs(newWidth);
+            bestHeight = bestWidth / aspectRatio;
+        } else {
+            bestHeight = Math.abs(newHeight);
+            bestWidth = bestHeight * aspectRatio;
+        }
 
-        let bestScale = Math.min(hRatio, vRatio);
-        let bestWidth = liftedBounds.getWidth() * bestScale;
-        let bestHeight = liftedBounds.getHeight() * bestScale;
-
-        let newXScale = bestWidth / startWidth;
-        let newYScale = bestHeight / startHeight;
+        let newXScale = bestWidth * widthSign / startWidth;
+        let newYScale = bestHeight * heightSign / startHeight;
 
         return new Size(newXScale, newYScale);
     }
@@ -867,8 +870,12 @@ class MoveToolBase extends Tool {
                     let yScale = newHeight / spBounds2.getHeight();
 
                     if (this.app.isShiftKeyDown()) {
+                        if (this.context.constrainedAspectRatio === null) {
+                            this.context.constrainedAspectRatio = Math.abs(
+                                spBounds2.getWidth() / spBounds2.getHeight());
+                        }
                         let out3 = this.constrainScaling(
-                            this.context.liftedBounds,
+                            this.context.constrainedAspectRatio,
                             spBounds2.getWidth(),
                             spBounds2.getHeight(),
                             newWidth,
@@ -879,6 +886,11 @@ class MoveToolBase extends Tool {
 
                         xScale = out3.width;
                         yScale = out3.height;
+                    } else {
+                        // Paint.NET 5.2 remembers the ratio established by the
+                        // first constrained resize until a resize without the
+                        // constraint is performed.
+                        this.context.constrainedAspectRatio = null;
                     }
 
                     translateMatrix.translate(xTranslate, yTranslate, MatrixOrder.APPEND);

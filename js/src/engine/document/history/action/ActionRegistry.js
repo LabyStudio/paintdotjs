@@ -53,7 +53,7 @@ class ActionRegistry {
                 && !workspace.getSelection().isEmpty()
                 && workspace.getActiveLayer() instanceof BitmapLayer;
         }, "Ctrl+X");
-        this.registerCallback("menu.edit.copyMerged", () => DocumentIO.copySelection(true), "Copy Merged", () => {
+        this.registerCallback("menu.edit.copyMerged", () => DocumentIO.copySelection(true), "Copy Flattened", () => {
             const workspace = window.app.getActiveDocumentWorkspace();
             return workspace !== null && !workspace.getSelection().isEmpty();
         }, "Ctrl+Shift+C");

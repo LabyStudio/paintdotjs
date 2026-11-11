@@ -133,8 +133,10 @@ class ImageSizeDialog {
                 }
                 syncing = true;
                 const percentage = Math.max(0.01, Math.min(2000, Number(percentInput.value) || 100));
-                width.input.value = this.clampDimension(originalWidth * percentage / 100);
-                height.input.value = this.clampDimension(originalHeight * percentage / 100);
+                const dimensions = this.constrainedPercentageSize(
+                    originalWidth, originalHeight, percentage / 100);
+                width.input.value = dimensions.width;
+                height.input.value = dimensions.height;
                 finishUpdate();
                 syncing = false;
             };
@@ -755,6 +757,54 @@ class ImageSizeDialog {
 
     static clampDimension(value) {
         return Math.max(1, Math.min(32768, Math.round(Number(value) || 1)));
+    }
+
+    static constrainedPercentageSize(originalWidth, originalHeight, scale) {
+        const targetWidth = originalWidth * scale;
+        const targetHeight = originalHeight * scale;
+        const originalAspect = originalWidth / originalHeight;
+        const aspectError = (width, height) => width < 1 || height < 1
+            ? Number.POSITIVE_INFINITY
+            : Math.abs(Math.log(width / height / originalAspect));
+        let bestWidth = Math.round(targetWidth);
+        let bestHeight = Math.round(targetHeight);
+        let bestError = aspectError(bestWidth, bestHeight);
+        const consider = (width, height) => {
+            if (Math.abs(width - targetWidth) > 2 || Math.abs(height - targetHeight) > 2) {
+                return;
+            }
+            const error = aspectError(width, height);
+            if (error < bestError) {
+                bestError = error;
+                bestWidth = width;
+                bestHeight = height;
+            }
+        };
+        const deriveFromHeight = height => {
+            const width = height * originalWidth / originalHeight;
+            consider(Math.floor(width), height);
+            consider(Math.ceil(width), height);
+        };
+        const deriveFromWidth = width => {
+            const height = width * originalHeight / originalWidth;
+            consider(width, Math.floor(height));
+            consider(width, Math.ceil(height));
+        };
+        consider(Math.floor(targetWidth), Math.floor(targetHeight));
+        consider(Math.floor(targetWidth), Math.ceil(targetHeight));
+        consider(Math.ceil(targetWidth), Math.floor(targetHeight));
+        consider(Math.ceil(targetWidth), Math.ceil(targetHeight));
+        if (originalWidth >= originalHeight) {
+            deriveFromHeight(Math.floor(targetHeight));
+            deriveFromHeight(Math.ceil(targetHeight));
+        } else {
+            deriveFromWidth(Math.floor(targetWidth));
+            deriveFromWidth(Math.ceil(targetWidth));
+        }
+        return {
+            width: this.clampDimension(bestWidth),
+            height: this.clampDimension(bestHeight)
+        };
     }
 
     static loadPreferences() {

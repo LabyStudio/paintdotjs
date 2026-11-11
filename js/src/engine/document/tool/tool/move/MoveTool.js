@@ -320,6 +320,7 @@ class MoveTool extends MoveToolBase {
         const configuredResampling = this.getSetting("resampling", "highQualityCubic");
         const resamplingModes = {
             nearest: ResamplingAlgorithm.NEAREST_NEIGHBOR,
+            nearestAntialiased: ResamplingAlgorithm.NEAREST_NEIGHBOR_ANTIALIASED,
             linear: ResamplingAlgorithm.LINEAR,
             bilinear: ResamplingAlgorithm.LINEAR,
             multisampleLinear: ResamplingAlgorithm.MULTISAMPLE_LINEAR,

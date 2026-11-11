@@ -421,7 +421,7 @@ class SaveImageDialog {
                 icon.alt = "";
 
                 const title = document.createElement("strong");
-                title.textContent = "Save Configuration";
+                title.textContent = "Save Options";
                 titleGroup.append(icon, title);
             }
 
