@@ -97,8 +97,36 @@ function linkSubject(subject, references) {
     });
 }
 
+function findAuthors(pullRequests) {
+    let authors = new Map();
+
+    for (let pullRequest of pullRequests) {
+        let user = pullRequest.user;
+        if (!user?.login || user.type === 'Bot' || user.login.endsWith('[bot]')) {
+            continue;
+        }
+
+        authors.set(user.login.toLowerCase(), user.login);
+    }
+
+    return [...authors.values()];
+}
+
+function formatAuthors(authors) {
+    if (authors.length === 0) {
+        return '';
+    }
+
+    if (authors.length === 1) {
+        return ` by @${authors[0]}`;
+    }
+
+    return ` by ${authors.map(author => `@${author}`).join(', ')}`;
+}
+
 async function formatCommit(commit) {
     let pullRequests = await findPullRequests(commit.sha);
+    let authors = findAuthors(pullRequests);
     let subjectReferences = findReferences(commit.subject);
     let references = new Map();
 
@@ -132,7 +160,7 @@ async function formatCommit(commit) {
     }
 
     let suffix = links.length > 0 ? ` (${links.join(', ')})` : '';
-    return `- ${linkSubject(commit.subject, references)}${suffix} (\`${commit.shortSha}\`)`;
+    return `- ${linkSubject(commit.subject, references)}${suffix}${formatAuthors(authors)} (\`${commit.shortSha}\`)`;
 }
 
 async function main() {
