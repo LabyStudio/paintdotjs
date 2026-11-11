@@ -2981,17 +2981,39 @@ html.effect-rendering * {
 }
 
 #layerForm #layerList .layer-item {
+    box-sizing: border-box;
+    min-width: 0;
+    width: calc(100% - 2px);
     height: 41px;
 }
 
+#layerForm #layerList {
+    overflow-x: hidden;
+}
+
+#layerForm #layerList .scroll-content {
+    min-width: 0;
+    width: 100%;
+}
+
 #layerForm #layerList .layer-item .thumbnail {
+    flex: 0 0 auto;
     margin-right: 5px;
     margin-left: 2px;
     box-shadow: 0 0 2px var(--color-title-bar-border);
     background-image: var(--image-transparency);
 }
 
+#layerForm #layerList .layer-item .name {
+    min-width: 0;
+    overflow: hidden;
+    flex: 1 1 auto;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 #layerForm #layerList .layer-item input[type="checkbox"] {
+    flex: 0 0 auto;
     margin-left: auto;
 }
 
