@@ -20,7 +20,8 @@ class EditMenu extends DropMenuItem {
             new VerticalSeparator(),
             EditMenu.create("cut"),
             EditMenu.create("copy"),
-            EditMenu.create("copyMerged"),
+            EditMenu.create("copyMerged")
+                .withIconPathKey("menu_edit_copy_flattened_icon"),
             EditMenu.create("paste"),
             EditMenu.create("pasteInToNewLayer"),
             EditMenu.create("pasteInToNewImage"),
