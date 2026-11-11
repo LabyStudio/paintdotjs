@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -582,6 +582,10 @@ class DocumentIO {
             this.openedFileHandles.get(file) || null,
             this.getLocalFilePath(file)
         );
+        if (this.getImageFormat(file) === "png") {
+            workspace.pngTextChunks = ImageEncoder.extractPngTextChunks(
+                new Uint8Array(await file.arrayBuffer()));
+        }
         workspace.setDirty(false);
         workspace.getDocument().invalidate();
         workspace.fitViewport();
@@ -785,7 +789,10 @@ class DocumentIO {
             return PluginFileTypes.encode(formatId, PluginFileTypes.snapshot(workspace, type.supportsLayers), options);
         }
         workspace.updateComposition();
-        return ImageEncoder.encode(workspace.getCompositionSurface().getCanvas(), formatId, options);
+        return ImageEncoder.encode(workspace.getCompositionSurface().getCanvas(), formatId, {
+            ...options,
+            pngTextChunks: formatId === "png" ? workspace.pngTextChunks : []
+        });
     }
 
     static async saveAll(includeClean = false) {

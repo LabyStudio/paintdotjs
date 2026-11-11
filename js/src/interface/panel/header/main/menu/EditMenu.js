@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -20,7 +20,8 @@ class EditMenu extends DropMenuItem {
             new VerticalSeparator(),
             EditMenu.create("cut"),
             EditMenu.create("copy"),
-            EditMenu.create("copyMerged"),
+            EditMenu.create("copyMerged")
+                .withIconPathKey("menu_edit_copy_flattened_icon"),
             EditMenu.create("paste"),
             EditMenu.create("pasteInToNewLayer"),
             EditMenu.create("pasteInToNewImage"),

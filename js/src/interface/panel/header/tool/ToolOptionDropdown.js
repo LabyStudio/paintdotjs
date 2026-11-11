@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -183,8 +183,7 @@ class ToolOptionDropdown {
 
         document.body.appendChild(this.menu);
         const bounds = this.element.getBoundingClientRect();
-        this.menu.style.left = Math.round(bounds.left) + "px";
-        this.menu.style.top = Math.round(bounds.bottom + 1) + "px";
+        this.positionMenu(bounds);
         this.element.setAttribute("aria-expanded", "true");
         ToolOptionDropdown.active = this;
         if (this.options.fontPreview) {
@@ -198,6 +197,35 @@ class ToolOptionDropdown {
         // pointerdown in the capture phase so an outside tap always closes
         // the dropdown before the canvas consumes it.
         setTimeout(() => document.addEventListener("pointerdown", this.documentPointerListener, true));
+    }
+
+    positionMenu(bounds) {
+        const margin = 4;
+        const left = Math.max(margin, Math.min(
+            bounds.left,
+            window.innerWidth - this.menu.offsetWidth - margin
+        ));
+        this.menu.style.left = Math.round(left) + "px";
+
+        if (!this.menu.classList.contains("tool-dropdown-menu-text")) {
+            this.menu.style.top = Math.round(bounds.bottom + 1) + "px";
+            return;
+        }
+
+        // BrushStyleComboBox doubles the native combo-box list height. At the
+        // toolbar's 125% density that is about 265px, with a scrollbar for the
+        // remaining hatch styles.
+        const heightLimit = 265;
+        const below = Math.max(0, window.innerHeight - bounds.bottom - margin);
+        const above = Math.max(0, bounds.top - margin);
+        const desired = Math.min(heightLimit, this.menu.scrollHeight);
+        const dropUp = below < desired && above > below;
+        const available = dropUp ? above : below;
+        this.menu.style.maxHeight = Math.max(1, Math.min(heightLimit, available)) + "px";
+        this.menu.style.top = Math.round(dropUp
+            ? bounds.top - this.menu.offsetHeight - 1
+            : bounds.bottom + 1) + "px";
+        this.menu.querySelector("button[active]")?.scrollIntoView({block: "nearest"});
     }
 
     createEntryButton(entry) {

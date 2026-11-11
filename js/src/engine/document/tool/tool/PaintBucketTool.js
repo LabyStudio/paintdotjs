@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -112,7 +112,8 @@ class PaintBucketTool extends Tool {
             return false;
         }
         this.beginBitmapTransaction();
-        const sampleSurface = this.getSetting("sampleMode", "layer") === "image"
+        const sampleSurface = (this.getSetting("sampleMode", "layer") === "image"
+            || this.app.isControlKeyDown())
             ? this.getDocumentWorkspace().getCompositionSurface()
             : surface;
         this.sampleSnapshot = sampleSurface.clone();

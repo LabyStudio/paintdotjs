@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -230,6 +230,40 @@ class BitmapEffectEngine {
         pencilSketchEffect: this.configurableSpatial("pencilSketchEffect", "pencil_sketch_effect_icon.png", [
             this.range("tip", "Pencil tip size", 1, 20, 2), this.range("range", "Color range", -20, 20, 0)
         ], (source, width, height, values) => this.pencilSketch(source, width, height, values)),
+        linocutEffect: this.configurableSpatial("linocutEffect", "linocut_effect_icon.png", [
+            this.select("lineMode", "Line mode", "parallel", [["parallel", "Parallel"], ["contour", "Contour"], ["crossHatch", "Crosshatch"]]),
+            this.range("lineAngle", "Line angle", 0, 360, 45),
+            this.range("lineSpacing", "Line spacing", 2, 64, 8, .5),
+            this.range("contrast", "Contrast", .25, 4, 1, .05),
+            this.range("gamma", "Gamma", .25, 4, 1, .05),
+            this.range("roughness", "Roughness", 0, 100, 20),
+            this.range("seed", "Seed", 0, 255, 0),
+            this.color("inkColor", "Ink color", "#000000"),
+            this.color("paperColor", "Paper color", "#f5f2e9")
+        ], (source, width, height, values) => this.linocut(source, width, height, values)),
+        mosaicEffect: this.configurableSpatial("mosaicEffect", "mosaic_effect_icon.png", [
+            this.select("tileShape", "Tile shape", "square", this.mosaicShapeChoices()),
+            this.select("tileColorMode", "Tile color mode", "average", [["average", "Average"], ["centerPixel", "Center Pixel"]]),
+            this.range("tileSize", "Tile size", 4, 200, 24),
+            this.range("anchorX", "Anchor X", -1, 1, 0, .01), this.range("anchorY", "Anchor Y", -1, 1, 0, .01),
+            this.range("groutWidth", "Grout width", 0, 50, 4), this.color("groutColor", "Grout color", "#808080"),
+            this.range("bevelDepth", "Bevel depth", 0, 100, 20), this.range("lightAngle", "Light angle", 0, 360, 135),
+            this.range("lightnessJitter", "Lightness jitter", 0, 100, 15),
+            this.range("positionJitter", "Position jitter", 0, 50, 10), this.range("seed", "Seed", 0, 255, 0)
+        ], (source, width, height, values) => this.mosaic(source, width, height, values)),
+        pointillismEffect: this.configurableSpatial("pointillismEffect", "pointillism_effect_icon.png", [
+            this.range("cellSize", "Cell size", 3, 64, 12), this.range("cellFill", "Cell fill", 10, 200, 141),
+            this.range("toneResponse", "Tone response", 0, 100, 100), this.range("placementJitter", "Placement jitter", 0, 100, 100),
+            this.range("colorJitter", "Color jitter", 0, 100, 25), this.color("backgroundColor", "Background color", "#ffffff"),
+            this.range("seed", "Seed", 0, 255, 0)
+        ], (source, width, height, values) => this.pointillism(source, width, height, values)),
+        stainedGlassEffect: this.configurableSpatial("stainedGlassEffect", "stained_glass_effect_icon.png", [
+            this.range("cellSize", "Cell size", 2, 250, 20),
+            this.select("cellColorMode", "Cell color mode", "average", [["average", "Average"], ["centerPixel", "Center Pixel"]]),
+            this.range("borderWidth", "Border width", 0, 100, 15), this.range("bevelDepth", "Bevel depth", 0, 100, 50),
+            this.range("lightAngle", "Light angle", 0, 360, 135), this.color("leadColor", "Lead color", "#000000"),
+            this.range("seed", "Seed", 0, 255, 0)
+        ], (source, width, height, values) => this.stainedGlass(source, width, height, values)),
 
         blurEffect: this.configurableSpatial("blurEffect", "blur_effect.png", [
             this.range("radius", "Radius", 0, 200, 2),
@@ -284,6 +318,11 @@ class BitmapEffectEngine {
             this.range("dithering", "Dithering level", 0, 8, 7),
             this.range("alphaThreshold", "Alpha threshold", 0, 255, 128)
         ], (source, width, height, values) => this.quantize(source, width, height, values)),
+        orderedDitherEffect: this.configurableSpatial("orderedDitherEffect", "ordered_dither_effect_icon.png", [
+            this.select("matrix", "Matrix", "bayer8x8", this.orderedDitherChoices()),
+            this.range("levels", "Levels", 2, 32, 4), this.range("strength", "Strength", 0, 100, 100),
+            this.range("seed", "Seed", 0, 255, 0)
+        ], (source, width, height, values) => this.orderedDither(source, width, height, values)),
         bulgeEffect: this.distortDefinition("bulgeEffect", "bulge_effect.png", "Amount", -300, 100, 45,
             (dx, dy, radius, value) => {
                 const distance = Math.hypot(dx, dy);
@@ -330,6 +369,22 @@ class BitmapEffectEngine {
             this.select("noise", "Noise", "turbulence", [["fractal", "Fractal sum"], ["turbulence", "Turbulence"]]),
             this.range("seed", "Seed", 0, 255, 1)
         ], (_source, width, height, values) => this.turbulence(width, height, values)),
+        spherizeEffect: this.configurableSpatial("spherizeEffect", "spherize_effect_icon.png", [
+            this.range("amount", "Amount", -100, 100, 50), this.range("radius", "Radius", 1, 100, 100),
+            this.range("centerX", "Center X", -2, 2, 0, .01), this.range("centerY", "Center Y", -2, 2, 0, .01),
+            this.select("edgeMode", "Edge behavior", "clamp", [["clamp", "Clamp"], ["wrap", "Wrap"], ["mirror", "Reflect"], ["transparent", "Transparent"]]),
+            this.range("quality", "Quality", 1, 5, 3)
+        ], (source, width, height, values) => this.spherize(source, width, height, values)),
+        wavesEffect: this.configurableSpatial("wavesEffect", "waves_effect_icon.png", [
+            this.select("pattern", "Pattern", "linear", this.wavesPatternChoices()),
+            this.select("waveform", "Waveform", "sine", this.wavesWaveformChoices()),
+            this.range("amplitude", "Amplitude", -50, 50, 10, .1), this.range("waveLength", "Wavelength", .5, 200, 10, .1),
+            this.range("lobes", "Lobes", 1, 64, 6), this.range("damping", "Damping", 0, 100, 0),
+            this.range("angle", "Angle", -180, 180, 0), this.range("phase", "Phase", -180, 180, 0),
+            this.range("centerX", "Center X", -2, 2, 0, .01), this.range("centerY", "Center Y", -2, 2, 0, .01),
+            this.select("edgeMode", "Edge behavior", "mirror", [["clamp", "Clamp"], ["wrap", "Wrap"], ["mirror", "Reflect"], ["transparent", "Transparent"]]),
+            this.range("quality", "Quality", 1, 5, 3)
+        ], (source, width, height, values) => this.waves(source, width, height, values)),
 
         addNoiseEffect: this.configurableSpatial("addNoiseEffect", "add_noise_effect.png", [
             this.range("intensity", "Intensity", 0, 100, 64), this.range("saturation", "Color saturation", 0, 400, 100),
@@ -394,7 +449,13 @@ class BitmapEffectEngine {
 
         edgeDetectEffect: this.convolutionDefinition("edgeDetectEffect", "edge_detect_effect.png", [-1,-1,-1,-1,8,-1,-1,-1,-1], 0),
         embossEffect: this.convolutionDefinition("embossEffect", "emboss_effect.png", [-2,-1,0,-1,1,1,0,1,2], 128),
-        reliefEffect: this.convolutionDefinition("reliefEffect", "relief_effect.png", [-1,-1,0,-1,0,1,0,1,1], 128)
+        reliefEffect: this.convolutionDefinition("reliefEffect", "relief_effect.png", [-1,-1,0,-1,0,1,0,1,1], 128),
+        halftoneEffect: this.configurableSpatial("halftoneEffect", "halftone_effect_icon.png", [
+            this.select("pattern", "Pattern", "dots", [["dots", "Dots"], ["diamond", "Diamond"], ["ellipse", "Ellipse"], ["square", "Square"], ["crosshatch", "Crosshatch"], ["lines", "Lines"]]),
+            this.checkbox("monochrome", "Monochrome", false), this.range("cellSize", "Cell size", 2, 200, 8),
+            this.range("angle", "Angle", -180, 180, 0), this.range("blackGeneration", "Black generation", 0, 100, 75),
+            this.range("softness", "Softness", 0, 100, 0), this.range("quality", "Quality", 1, 5, 5)
+        ], (source, width, height, values) => this.halftone(source, width, height, values))
     });
 
     static instant(id, icon, transform, prepare = null) {
@@ -456,6 +517,40 @@ class BitmapEffectEngine {
 
     static checkbox(key, label, defaultValue) {
         return {type: "checkbox", key, label, defaultValue};
+    }
+
+    static color(key, label, defaultValue) {
+        return {type: "color", key, label, defaultValue};
+    }
+
+    static mosaicShapeChoices() {
+        return ["Square", "Rhombus", "Triangle", "Hexagon", "Octagon Square", "Cairo",
+            "Snub Square", "Brick", "Herringbone", "Basketweave", "Fish Scale", "Polar",
+            "Ashlar", "Pythagorean", "Versailles", "Mondrian", "Tetromino", "Pentomino",
+            "Rhombille", "Cobblestone", "Penrose"].map(label => [
+            label.replace(/ /g, "").replace(/^./, value => value.toLowerCase()), label
+        ]);
+    }
+
+    static orderedDitherChoices() {
+        return ["Bayer 2x2", "Bayer 4x4", "Bayer 8x8", "Bayer 16x16", "Spiral 4x4",
+            "Spiral 8x8", "Dual Spiral 4x4", "Dual Spiral 8x8", "Blue Noise 16x16",
+            "Blue Noise 32x32", "Blue Noise 64x64", "White Noise 8x8", "White Noise 16x16",
+            "White Noise 32x32", "White Noise 64x64"].map(label => [
+            label.toLowerCase().replace(/\s+/g, "").replace("x", "x"), label
+        ]);
+    }
+
+    static wavesPatternChoices() {
+        return [["linear", "Linear"], ["radial", "Radial"], ["longitudinalLinear", "Longitudinal Linear"],
+            ["tangential", "Tangential"], ["squareRings", "Square Rings"], ["diamondRings", "Diamond Rings"],
+            ["crossed", "Crossed"], ["angular", "Angular"], ["spiral", "Spiral"], ["fromEdges", "From Edges"]];
+    }
+
+    static wavesWaveformChoices() {
+        return [["sine", "Sine"], ["triangle", "Triangle"], ["sawtooth", "Sawtooth"],
+            ["square", "Square"], ["semicircle", "Semicircle"], ["harmonics", "Harmonics"],
+            ["steppedSine", "Stepped Sine"]];
     }
 
     static select(key, label, defaultValue, choices) {
@@ -1901,6 +1996,518 @@ class BitmapEffectEngine {
             output.data[offset + 2] = 255 - value;
             output.data[offset + 3] = 255;
         }
+        }
+        return output;
+    }
+
+    static parseColor(value) {
+        const match = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(value || "");
+        if (match === null) {
+            return [0, 0, 0, 255];
+        }
+        const rgb = Number.parseInt(match[1], 16);
+        return [rgb >>> 16, rgb >>> 8 & 255, rgb & 255,
+            match[2] === undefined ? 255 : Number.parseInt(match[2], 16)];
+    }
+
+    static orderedDither(source, width, height, values) {
+        const matrixName = values.matrix || "bayer8x8";
+        const sizeMatch = /(2|4|8|16|32|64)x\1/.exec(matrixName);
+        const size = Number(sizeMatch?.[1] || 8);
+        const thresholds = this.orderedDitherThresholds(matrixName, size, values.seed >>> 0);
+        const output = new ImageData(width, height);
+        const levels = Math.max(2, values.levels | 0);
+        const strength = values.strength / 100;
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                const offset = (y * width + x) * 4;
+                const threshold = thresholds[(y % size) * size + x % size];
+                for (let channel = 0; channel < 3; ++channel) {
+                    const normalized = source.data[offset + channel] / 255;
+                    const quantized = Math.floor(normalized * (levels - 1)
+                        + threshold * strength + .5) / (levels - 1);
+                    output.data[offset + channel] = quantized * 255;
+                }
+                output.data[offset + 3] = source.data[offset + 3];
+            }
+        }
+        return output;
+    }
+
+    static orderedDitherThresholds(matrixName, size, seed) {
+        this.orderedDitherThresholdCache ??= new Map();
+        const cacheKey = `${matrixName}:${seed}`;
+        const cached = this.orderedDitherThresholdCache.get(cacheKey);
+        if (cached !== undefined) {return cached;}
+        let ranks;
+        if (matrixName.startsWith("bayer")) {
+            ranks = new Int32Array(size * size);
+            const bits = Math.log2(size);
+            for (let y = 0; y < size; ++y) {
+                for (let x = 0; x < size; ++x) {
+                    let rank = 0;
+                    for (let bit = 0; bit < bits; ++bit) {
+                        const xBit = x >> bit & 1, yBit = y >> bit & 1;
+                        rank = rank << 2 | (xBit ^ yBit) << 1 | yBit;
+                    }
+                    ranks[y * size + x] = rank;
+                }
+            }
+        } else if (matrixName.startsWith("spiral") || matrixName.startsWith("dualspiral")) {
+            const tables = {
+                spiral4x4: [15, 4, 8, 12, 11, 0, 1, 5, 7, 3, 2, 9, 14, 10, 6, 13],
+                spiral8x8: [61, 57, 45, 33, 28, 40, 52, 60, 53, 49, 27, 20, 16, 24, 48, 56,
+                    41, 37, 15, 4, 8, 12, 36, 44, 31, 19, 11, 0, 1, 5, 21, 32,
+                    34, 23, 7, 3, 2, 9, 17, 29, 46, 38, 14, 10, 6, 13, 39, 43,
+                    58, 50, 26, 18, 22, 25, 51, 55, 62, 54, 42, 30, 35, 47, 59, 63],
+                dualspiral4x4: [0, 1, 5, 6, 3, 2, 4, 7, 5, 6, 0, 1, 4, 7, 3, 2],
+                dualspiral8x8: [15, 4, 8, 12, 19, 23, 26, 16, 11, 0, 1, 5, 25, 30, 31, 20,
+                    7, 3, 2, 9, 22, 29, 28, 24, 14, 10, 6, 13, 18, 27, 21, 17,
+                    19, 23, 26, 16, 15, 4, 8, 12, 25, 30, 31, 20, 11, 0, 1, 5,
+                    22, 29, 28, 24, 7, 3, 2, 9, 18, 27, 21, 17, 14, 10, 6, 13]
+            };
+            ranks = tables[matrixName];
+        } else if (matrixName.startsWith("white")) {
+            ranks = this.createWhiteNoiseDitherRanks(size, seed);
+        } else {
+            ranks = this.createBlueNoiseDitherRanks(size, seed);
+        }
+        const rankCount = Math.max(...ranks) + 1;
+        const thresholds = Float32Array.from(ranks, rank => (rank + .5) / rankCount - .5);
+        this.orderedDitherThresholdCache.set(cacheKey, thresholds);
+        return thresholds;
+    }
+
+    static mixDitherSeed(seed) {
+        let mixed = Math.imul((seed | 0) - 1640531527, -1640531535) >>> 0;
+        mixed = Math.imul((mixed ^ mixed >>> 15) >>> 0, 2246822519) >>> 0;
+        mixed = (mixed ^ mixed >>> 13) >>> 0;
+        return mixed === 0 ? 2654435769 : mixed;
+    }
+
+    static nextDitherRandom(state) {
+        state ^= state << 13;
+        state ^= state >>> 17;
+        state ^= state << 5;
+        return state >>> 0;
+    }
+
+    static createWhiteNoiseDitherRanks(size, seed) {
+        const ranks = Int32Array.from({length: size * size}, (_, index) => index);
+        let state = this.mixDitherSeed(seed);
+        for (let index = ranks.length - 1; index > 0; --index) {
+            state = this.nextDitherRandom(state);
+            const swapIndex = state % (index + 1);
+            [ranks[index], ranks[swapIndex]] = [ranks[swapIndex], ranks[index]];
+        }
+        return ranks;
+    }
+
+    static createBlueNoiseDitherRanks(size, seed) {
+        const count = size * size, initialCount = Math.floor(count / 10);
+        const kernel = new Float64Array(count);
+        for (let y = 0; y < size; ++y) {
+            const dy = Math.min(y, size - y);
+            for (let x = 0; x < size; ++x) {
+                const dx = Math.min(x, size - x);
+                kernel[y * size + x] = Math.exp(-(dx * dx + dy * dy) / 7.22);
+            }
+        }
+        let filled = new Uint8Array(count), density = new Float64Array(count);
+        const addPoint = (index, sign) => {
+            const pointY = Math.floor(index / size), pointX = index % size;
+            for (let y = 0; y < size; ++y) {
+                const ky = (y - pointY + size) % size;
+                for (let x = 0; x < size; ++x) {
+                    const kx = (x - pointX + size) % size;
+                    density[y * size + x] += sign * kernel[ky * size + kx];
+                }
+            }
+        };
+        const findExtreme = (wantFilled, wantMax) => {
+            let result = -1, extreme = wantMax ? -Infinity : Infinity;
+            for (let index = 0; index < count; ++index) {
+                if (Boolean(filled[index]) === wantFilled
+                    && (wantMax ? density[index] > extreme : density[index] < extreme)) {
+                    extreme = density[index]; result = index;
+                }
+            }
+            return result;
+        };
+        let state = this.mixDitherSeed(seed), placed = 0;
+        while (placed < initialCount) {
+            state = this.nextDitherRandom(state);
+            const index = state % count;
+            if (filled[index] === 0) {filled[index] = 1; addPoint(index, 1); ++placed;}
+        }
+        for (let index = 0; index < count; ++index) {
+            const cluster = findExtreme(true, true);
+            filled[cluster] = 0; addPoint(cluster, -1);
+            const voidIndex = findExtreme(false, false);
+            filled[voidIndex] = 1; addPoint(voidIndex, 1);
+            if (voidIndex === cluster) {break;}
+        }
+        const initialFilled = filled.slice(), initialDensity = density.slice();
+        const ranks = new Int32Array(count);
+        for (let rank = initialCount - 1; rank >= 0; --rank) {
+            const index = findExtreme(true, true);
+            filled[index] = 0; addPoint(index, -1); ranks[index] = rank;
+        }
+        filled = initialFilled; density = initialDensity;
+        for (let rank = initialCount; rank < count; ++rank) {
+            const index = findExtreme(false, false);
+            filled[index] = 1; addPoint(index, 1); ranks[index] = rank;
+        }
+        return ranks;
+    }
+
+    static linocut(source, width, height, values) {
+        const output = new ImageData(width, height);
+        const ink = this.parseColor(values.inkColor);
+        const paper = this.parseColor(values.paperColor);
+        const angle = values.lineAngle * Math.PI / 180;
+        const cosine = Math.cos(angle), sine = Math.sin(angle);
+        const spacing = Math.max(2, values.lineSpacing);
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                const offset = (y * width + x) * 4;
+                const luma = (source.data[offset] * .299 + source.data[offset + 1] * .587
+                    + source.data[offset + 2] * .114) / 255;
+                const tone = this.clamp01((Math.pow(luma, values.gamma) - .5)
+                    * values.contrast + .5);
+                const noise = (this.coordinateRandom(values.seed | 0, x, y, 0x1a10) - .5)
+                    * values.roughness / 100;
+                const phase = ((x * cosine + y * sine) / spacing + noise + 10000) % 1;
+                let carved = Math.abs(phase - .5) < tone * .5;
+                if (values.lineMode === "crossHatch" && tone < .5) {
+                    const phase2 = ((-x * sine + y * cosine) / spacing + noise + 10000) % 1;
+                    carved ||= Math.abs(phase2 - .5) < (.5 - tone) * .5;
+                } else if (values.lineMode === "contour") {
+                    const gx = this.sample(source.data, width, height, x + 1, y, 0)
+                        - this.sample(source.data, width, height, x - 1, y, 0);
+                    const gy = this.sample(source.data, width, height, x, y + 1, 0)
+                        - this.sample(source.data, width, height, x, y - 1, 0);
+                    const contourPhase = ((x * Math.cos(Math.atan2(gy, gx))
+                        + y * Math.sin(Math.atan2(gy, gx))) / spacing + 10000) % 1;
+                    carved = Math.abs(contourPhase - .5) < tone * .5;
+                }
+                const color = carved ? paper : ink;
+                output.data.set(color, offset);
+                output.data[offset + 3] = source.data[offset + 3];
+            }
+        }
+        return output;
+    }
+
+    static pointillism(source, width, height, values) {
+        const background = this.parseColor(values.backgroundColor);
+        const output = new ImageData(width, height);
+        for (let offset = 0; offset < output.data.length; offset += 4) {
+            output.data.set(background, offset);
+        }
+        const cell = values.cellSize;
+        const jitter = values.placementJitter / 100 * cell * .45;
+        for (let gy = -1; gy <= Math.ceil(height / cell); ++gy) {
+            for (let gx = -1; gx <= Math.ceil(width / cell); ++gx) {
+                const cx = (gx + .5) * cell + (this.coordinateRandom(values.seed, gx, gy, 1) - .5) * 2 * jitter;
+                const cy = (gy + .5) * cell + (this.coordinateRandom(values.seed, gx, gy, 2) - .5) * 2 * jitter;
+                const sx = Math.max(0, Math.min(width - 1, Math.round(cx)));
+                const sy = Math.max(0, Math.min(height - 1, Math.round(cy)));
+                const sampleOffset = (sy * width + sx) * 4;
+                const luma = (source.data[sampleOffset] * .299 + source.data[sampleOffset + 1] * .587
+                    + source.data[sampleOffset + 2] * .114) / 255;
+                const tone = (1 - values.toneResponse / 100) + luma * values.toneResponse / 100;
+                const radius = cell * values.cellFill / 200 * (.35 + .65 * tone);
+                const colorNoise = (this.coordinateRandom(values.seed, gx, gy, 3) - .5)
+                    * values.colorJitter * 2.55;
+                const minimumX = Math.max(0, Math.floor(cx - radius));
+                const maximumX = Math.min(width - 1, Math.ceil(cx + radius));
+                const minimumY = Math.max(0, Math.floor(cy - radius));
+                const maximumY = Math.min(height - 1, Math.ceil(cy + radius));
+                for (let y = minimumY; y <= maximumY; ++y) {
+                    for (let x = minimumX; x <= maximumX; ++x) {
+                        if (Math.hypot(x + .5 - cx, y + .5 - cy) > radius) {continue;}
+                        const offset = (y * width + x) * 4;
+                        for (let channel = 0; channel < 3; ++channel) {
+                            output.data[offset + channel] = source.data[sampleOffset + channel] + colorNoise;
+                        }
+                        output.data[offset + 3] = source.data[sampleOffset + 3];
+                    }
+                }
+            }
+        }
+        return output;
+    }
+
+    static mosaic(source, width, height, values) {
+        const output = new ImageData(width, height);
+        const tile = values.tileSize;
+        const grout = this.parseColor(values.groutColor);
+        const anchorX = values.anchorX * width / 2, anchorY = values.anchorY * height / 2;
+        const angle = values.tileShape === "rhombus" ? Math.PI / 4 : 0;
+        const cosine = Math.cos(angle), sine = Math.sin(angle);
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                const rx = (x - anchorX) * cosine - (y - anchorY) * sine;
+                const ry = (x - anchorX) * sine + (y - anchorY) * cosine;
+                let cellX = Math.floor(rx / tile), cellY = Math.floor(ry / tile);
+                if (["brick", "herringbone", "basketweave", "ashlar"].includes(values.tileShape)) {
+                    cellX = Math.floor((rx - (cellY & 1) * tile / 2) / tile);
+                }
+                const localX = ((rx % tile) + tile) % tile;
+                const localY = ((ry % tile) + tile) % tile;
+                const edgeDistance = Math.min(localX, tile - localX, localY, tile - localY);
+                const offset = (y * width + x) * 4;
+                if (edgeDistance < values.groutWidth / 2) {
+                    output.data.set(grout, offset);
+                    continue;
+                }
+                const jitterX = (this.coordinateRandom(values.seed, cellX, cellY, 1) - .5)
+                    * values.positionJitter / 50 * tile;
+                const jitterY = (this.coordinateRandom(values.seed, cellX, cellY, 2) - .5)
+                    * values.positionJitter / 50 * tile;
+                const centerRX = (cellX + .5) * tile + jitterX;
+                const centerRY = (cellY + .5) * tile + jitterY;
+                const sampleX = (centerRX * cosine + centerRY * sine) + anchorX;
+                const sampleY = (-centerRX * sine + centerRY * cosine) + anchorY;
+                const jitter = (this.coordinateRandom(values.seed, cellX, cellY, 3) - .5)
+                    * values.lightnessJitter * 2.55;
+                const light = Math.cos(values.lightAngle * Math.PI / 180) * (localX / tile - .5)
+                    + Math.sin(values.lightAngle * Math.PI / 180) * (localY / tile - .5);
+                for (let channel = 0; channel < 3; ++channel) {
+                    output.data[offset + channel] = this.sample(source.data, width, height,
+                        sampleX, sampleY, channel) + jitter + light * values.bevelDepth;
+                }
+                output.data[offset + 3] = this.sample(source.data, width, height, sampleX, sampleY, 3);
+            }
+        }
+        return output;
+    }
+
+    static stainedGlass(source, width, height, values) {
+        const output = new ImageData(width, height);
+        const lead = this.parseColor(values.leadColor);
+        const cell = values.cellSize;
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                const gridX = Math.floor(x / cell), gridY = Math.floor(y / cell);
+                let nearest = null, secondDistance = Infinity, nearestDistance = Infinity;
+                for (let oy = -1; oy <= 1; ++oy) {
+                    for (let ox = -1; ox <= 1; ++ox) {
+                        const gx = gridX + ox, gy = gridY + oy;
+                        const fx = (gx + this.coordinateRandom(values.seed, gx, gy, 1)) * cell;
+                        const fy = (gy + this.coordinateRandom(values.seed, gx, gy, 2)) * cell;
+                        const distance = Math.hypot(x - fx, y - fy);
+                        if (distance < nearestDistance) {
+                            secondDistance = nearestDistance; nearestDistance = distance;
+                            nearest = [fx, fy, gx, gy];
+                        } else if (distance < secondDistance) {secondDistance = distance;}
+                    }
+                }
+                const offset = (y * width + x) * 4;
+                const borderDistance = secondDistance - nearestDistance;
+                if (borderDistance < values.borderWidth / 100 * cell) {
+                    output.data.set(lead, offset);
+                    continue;
+                }
+                const lighting = Math.min(1, borderDistance / Math.max(1, cell * .25))
+                    * values.bevelDepth / 100;
+                const lightDirection = Math.cos(values.lightAngle * Math.PI / 180)
+                    * (x - nearest[0]) + Math.sin(values.lightAngle * Math.PI / 180) * (y - nearest[1]);
+                for (let channel = 0; channel < 3; ++channel) {
+                    output.data[offset + channel] = this.sample(source.data, width, height,
+                        nearest[0], nearest[1], channel) + Math.sign(lightDirection) * lighting * 30;
+                }
+                output.data[offset + 3] = this.sample(source.data, width, height, nearest[0], nearest[1], 3);
+            }
+        }
+        return output;
+    }
+
+    static remapEdge(value, size, mode) {
+        if (mode === "wrap") {return ((value % size) + size) % size;}
+        if (mode === "mirror") {
+            const period = size * 2;
+            const wrapped = ((value % period) + period) % period;
+            return wrapped < size ? wrapped : period - wrapped - 1;
+        }
+        return Math.max(0, Math.min(size - 1, value));
+    }
+
+    static distortWithEdge(source, width, height, values, mapper) {
+        const output = new ImageData(width, height);
+        const point = [0, 0];
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                mapper(x, y, point);
+                const destination = (y * width + x) * 4;
+                if (values.edgeMode === "transparent"
+                    && (point[0] < 0 || point[1] < 0 || point[0] >= width || point[1] >= height)) {continue;}
+                const sx = this.remapEdge(point[0], width, values.edgeMode);
+                const sy = this.remapEdge(point[1], height, values.edgeMode);
+                for (let channel = 0; channel < 4; ++channel) {
+                    output.data[destination + channel] = this.sampleLinear(source.data, width, height, sx, sy, channel);
+                }
+            }
+        }
+        return output;
+    }
+
+    static spherize(source, width, height, values) {
+        const centerX = width / 2 + values.centerX * width / 2;
+        const centerY = height / 2 + values.centerY * height / 2;
+        const radius = Math.max(1, Math.min(width, height) / 2 * values.radius / 100);
+        const amount = values.amount / 100;
+        return this.distortWithEdge(source, width, height, values, (x, y, point) => {
+            const dx = x - centerX, dy = y - centerY;
+            const distance = Math.hypot(dx, dy);
+            if (distance >= radius || distance === 0) {
+                point[0] = x; point[1] = y; return;
+            }
+            const normalized = distance / radius;
+            const full = amount >= 0
+                ? 2 / Math.PI * Math.asin(normalized)
+                : Math.sin(normalized * Math.PI / 2);
+            const mappedDistance = (normalized + (full - normalized) * Math.abs(amount)) * radius;
+            point[0] = centerX + dx * mappedDistance / distance;
+            point[1] = centerY + dy * mappedDistance / distance;
+        });
+    }
+
+    static waveValue(cycles, waveform) {
+        const fraction = cycles - Math.floor(cycles);
+        if (waveform === "triangle") {
+            const shifted = cycles + .25 - Math.floor(cycles + .25);
+            return 1 - 4 * Math.abs(shifted - .5);
+        }
+        if (waveform === "sawtooth") {
+            const shifted = cycles + .5 - Math.floor(cycles + .5);
+            return 2 * shifted - 1;
+        }
+        if (waveform === "square") {return fraction < .5 ? 1 : -1;}
+        if (waveform === "semicircle") {
+            const halfFraction = fraction < .5 ? fraction : fraction - .5;
+            const x = halfFraction * 4 - 1;
+            const lobe = Math.sqrt(Math.max(0, 1 - x * x));
+            return fraction < .5 ? lobe : -lobe;
+        }
+        const radians = cycles * Math.PI * 2;
+        if (waveform === "harmonics") {
+            return (Math.sin(radians) + .5 * Math.sin(radians * 2)
+                + .25 * Math.sin(radians * 4)) / 3;
+        }
+        if (waveform === "steppedSine") {return Math.floor(Math.sin(radians) * 4 + .5) / 4;}
+        return Math.sin(radians);
+    }
+
+    static waves(source, width, height, values) {
+        const usesCenter = !["linear", "longitudinalLinear", "crossed"].includes(values.pattern);
+        const cx = width / 2 + (usesCenter ? values.centerX * width / 2 : 0);
+        const cy = height / 2 + (usesCenter ? values.centerY * height / 2 : 0);
+        const scale = Math.min(width, height);
+        const amplitude = scale * values.amplitude / 100;
+        const invWaveLength = 1 / Math.max(scale * values.waveLength / 100, Number.MIN_VALUE);
+        const angle = values.angle * Math.PI / 180;
+        const phase = values.phase / 360;
+        const directionX = Math.cos(angle), directionY = -Math.sin(angle);
+        const perpendicularX = -directionY, perpendicularY = directionX;
+        const dampingLog2 = Math.log2(Math.max(.0001, Math.min(1, 1 - values.damping / 100)));
+        return this.distortWithEdge(source, width, height, values, (x, y, point) => {
+            const dx = x - cx, dy = y - cy;
+            const radius = Math.hypot(dx, dy);
+            const radialX = dx / Math.max(radius, .000001);
+            const radialY = dy / Math.max(radius, .000001);
+            let offsetX, offsetY, falloff = 1;
+            if (values.pattern === "linear" || values.pattern === "longitudinalLinear") {
+                const cycles = (dx * directionX + dy * directionY) * invWaveLength;
+                const wave = this.waveValue(cycles + phase, values.waveform);
+                const longitudinal = values.pattern === "longitudinalLinear";
+                offsetX = (longitudinal ? directionX : perpendicularX) * wave;
+                offsetY = (longitudinal ? directionY : perpendicularY) * wave;
+            } else if (values.pattern === "crossed") {
+                const cyclesAcross = (dx * perpendicularX + dy * perpendicularY) * invWaveLength;
+                const cyclesAlong = (dx * directionX + dy * directionY) * invWaveLength;
+                const across = this.waveValue(cyclesAcross + phase, values.waveform);
+                const along = this.waveValue(cyclesAlong + phase, values.waveform);
+                offsetX = directionX * across + perpendicularX * along;
+                offsetY = directionY * across + perpendicularY * along;
+            } else if (values.pattern === "fromEdges") {
+                const spanLeft = Math.max(cx, .000001), spanRight = Math.max(width - cx, .000001);
+                const spanTop = Math.max(cy, .000001), spanBottom = Math.max(height - cy, .000001);
+                const nearLeft = x / spanLeft, nearRight = (width - x) / spanRight;
+                const nearTop = y / spanTop, nearBottom = (height - y) / spanBottom;
+                const nearX = Math.min(nearLeft, nearRight), nearY = Math.min(nearTop, nearBottom);
+                const reference = Math.min(spanLeft, spanRight, spanTop, spanBottom);
+                const cycles = Math.min(nearX, nearY) * reference * invWaveLength;
+                const axisX = nearLeft < nearRight ? 1 : -1;
+                const axisY = nearTop < nearBottom ? 1 : -1;
+                const weightX = nearY / Math.max(nearX + nearY, .000001);
+                const inwardX = axisX * weightX, inwardY = axisY * (1 - weightX);
+                const inwardLength = Math.hypot(inwardX, inwardY);
+                const wave = this.waveValue(cycles + phase, values.waveform);
+                offsetX = inwardX / inwardLength * wave;
+                offsetY = inwardY / inwardLength * wave;
+                falloff = 2 ** (cycles * dampingLog2);
+            } else {
+                let cycles, dampingCycles;
+                if (values.pattern === "squareRings") {
+                    cycles = Math.max(Math.abs(dx), Math.abs(dy)) * invWaveLength;
+                } else if (values.pattern === "diamondRings") {
+                    cycles = (Math.abs(dx) + Math.abs(dy)) * invWaveLength / Math.sqrt(2);
+                } else if (values.pattern === "angular") {
+                    cycles = Math.atan2(dy, dx) / (Math.PI * 2) * values.lobes;
+                } else if (values.pattern === "spiral") {
+                    dampingCycles = radius * invWaveLength;
+                    cycles = dampingCycles + Math.atan2(dy, dx) / (Math.PI * 2) * values.lobes;
+                } else {
+                    cycles = radius * invWaveLength;
+                }
+                if (dampingCycles === undefined) {dampingCycles = cycles;}
+                const wave = this.waveValue(cycles + phase, values.waveform);
+                if (values.pattern === "tangential") {
+                    offsetX = -radialY * wave; offsetY = radialX * wave;
+                } else {
+                    offsetX = radialX * wave; offsetY = radialY * wave;
+                }
+                if (values.pattern !== "angular") {falloff = 2 ** (dampingCycles * dampingLog2);}
+            }
+            point[0] = x + offsetX * amplitude * falloff;
+            point[1] = y + offsetY * amplitude * falloff;
+        });
+    }
+
+    static halftone(source, width, height, values) {
+        const output = new ImageData(width, height);
+        const cell = values.cellSize;
+        const angle = values.angle * Math.PI / 180;
+        const cosine = Math.cos(angle), sine = Math.sin(angle);
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                const offset = (y * width + x) * 4;
+                const rx = x * cosine - y * sine, ry = x * sine + y * cosine;
+                const ux = ((rx / cell + .5) % 1 + 1) % 1 - .5;
+                const uy = ((ry / cell + .5) % 1 + 1) % 1 - .5;
+                const luma = (source.data[offset] * .299 + source.data[offset + 1] * .587
+                    + source.data[offset + 2] * .114) / 255;
+                let metric = Math.hypot(ux, uy) * 1.128;
+                if (values.pattern === "square") {metric = Math.max(Math.abs(ux), Math.abs(uy)) * 2;}
+                else if (values.pattern === "diamond") {metric = Math.abs(ux) + Math.abs(uy);}
+                else if (values.pattern === "ellipse") {metric = Math.hypot(ux * .7, uy * 1.4) * 1.128;}
+                else if (values.pattern === "lines") {metric = Math.abs(uy) * 2;}
+                else if (values.pattern === "crosshatch") {metric = Math.min(Math.abs(ux), Math.abs(uy)) * 2;}
+                const softness = values.softness / 100 * .5;
+                const coverage = this.clamp01((1 - luma - metric + softness) / Math.max(.001, softness * 2 || .001));
+                if (values.monochrome) {
+                    const gray = 255 * (1 - coverage);
+                    output.data[offset] = output.data[offset + 1] = output.data[offset + 2] = gray;
+                } else {
+                    const amount = coverage * values.blackGeneration / 100;
+                    for (let channel = 0; channel < 3; ++channel) {
+                        output.data[offset + channel] = source.data[offset + channel] * (1 - amount);
+                    }
+                }
+                output.data[offset + 3] = source.data[offset + 3];
+            }
         }
         return output;
     }

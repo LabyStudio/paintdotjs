@@ -6,7 +6,7 @@ port-specific changes have been developed and maintained by
 
 The original Paint.NET source is Copyright (C) dotPDN LLC, Rick Brewster, and contributors.
 Paint.NET was created by Rick Brewster. The paint.js interface design and behavior target Paint.NET
-5.1.12+.
+5.2+.
 
 paint.js is not affiliated with or endorsed by dotPDN LLC or Paint.NET. Paint.NET names, artwork,
 resources, and other applicable materials remain subject to their respective copyright and license

@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -320,6 +320,7 @@ class MoveTool extends MoveToolBase {
         const configuredResampling = this.getSetting("resampling", "highQualityCubic");
         const resamplingModes = {
             nearest: ResamplingAlgorithm.NEAREST_NEIGHBOR,
+            nearestAntialiased: ResamplingAlgorithm.NEAREST_NEIGHBOR_ANTIALIASED,
             linear: ResamplingAlgorithm.LINEAR,
             bilinear: ResamplingAlgorithm.LINEAR,
             multisampleLinear: ResamplingAlgorithm.MULTISAMPLE_LINEAR,

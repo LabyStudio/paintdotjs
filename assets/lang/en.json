@@ -1692,7 +1692,7 @@
                 "text": "Copy"
             },
             "copyMerged": {
-                "text": "Copy Merged"
+                "text": "Copy Flattened"
             },
             "copySelection": {
                 "text": "Copy Selection"
@@ -2141,7 +2141,7 @@
             "scale": "Resize Pixels",
             "translate": "Move Pixels"
         },
-        "name": "Move Selected Pixels"
+        "name": "Move Pixels"
     },
     "moveToolInterpolationMode": {
         "anisotropic": "Anisotropic",
@@ -2221,7 +2221,7 @@
         "endDrawing": {
             "historyMementoName": "Paint Bucket"
         },
-        "helpText": "Left click to fill a region with the primary color, right click to fill with the secondary color. Hold Shift for Global mode.",
+        "helpText": "Left click to fill a region with the primary color, right click to fill with the secondary color. Hold Shift for Global mode. Hold Ctrl to sample from all layers (merged).",
         "name": "Paint Bucket"
     },
     "panTool": {
@@ -2718,7 +2718,7 @@
         "settingsHeader": {
             "text": "Settings"
         },
-        "text": "Save Configuration"
+        "text": "Save Options"
     },
     "savedWithOlderVersion": {
         "format": "This image was saved with an older version of Paint.NET. If you save it, it will not be readable by that older version.\r\n\r\nSaved with: Paint.NET {0}\r\nCurrent version: Paint.NET {1}"
@@ -2969,7 +2969,7 @@
                 },
                 "resampling": {
                     "headerLabel": {
-                        "text": "Move Selected Pixels"
+                        "text": "Move Pixels"
                     }
                 },
                 "selectionCombineModeSelectionDrawMode": {
@@ -4053,5 +4053,29 @@
     "zoomTool": {
         "helpText": "Left click to zoom in, right click to zoom out, middle click to slide",
         "name": "Zoom"
+    },
+    "halftoneEffect": {
+        "name": "Halftone"
+    },
+    "linocutEffect": {
+        "name": "Linocut"
+    },
+    "mosaicEffect": {
+        "name": "Mosaic"
+    },
+    "orderedDitherEffect": {
+        "name": "Ordered Dither"
+    },
+    "pointillismEffect": {
+        "name": "Pointillism"
+    },
+    "stainedGlassEffect": {
+        "name": "Stained Glass"
+    },
+    "spherizeEffect": {
+        "name": "Spherize"
+    },
+    "wavesEffect": {
+        "name": "Waves"
     }
 }

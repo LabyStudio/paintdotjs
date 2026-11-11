@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -20,7 +20,6 @@ const {execFileSync} = require('child_process');
 const current = require('../../package.json');
 const manual = process.env.GITHUB_EVENT_NAME === 'workflow_dispatch';
 let previousVersion = null;
-let previousSha = '';
 
 if (!manual) {
     const before = process.env.BEFORE_SHA;
@@ -34,14 +33,12 @@ if (!manual) {
         {encoding: 'utf8'}
     );
     previousVersion = JSON.parse(previousPackage).version;
-    previousSha = before;
 }
 
 const changed = manual || current.version !== previousVersion;
 fs.appendFileSync(
     process.env.GITHUB_OUTPUT,
     `changed=${changed}\n` +
-    `previous_sha=${previousSha}\n` +
     `version=${current.version}\n`
 );
 

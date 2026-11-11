@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -222,6 +222,7 @@ class ToolMenu extends StripPanel {
                 return [
                     choices("Sampling:", "resampling", [
                         ["nearest", "Nearest Neighbor"],
+                        ["nearestAntialiased", "Nearest Neighbor (Antialiased)"],
                         ["linear", "Bilinear"],
                         ["multisampleLinear", "Multisample Bilinear"],
                         ["anisotropic", "Anisotropic"],
@@ -240,7 +241,7 @@ class ToolMenu extends StripPanel {
             case "paintBrushTool":
                 return brushControls(true, true);
             case "eraserTool":
-                return brushControls(false, false);
+                return brushControls(true, false);
             case "cloneStampTool":
                 return brushControls(false, true);
             case "pencilTool":

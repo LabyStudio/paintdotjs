@@ -5,7 +5,7 @@ raster graphics editor **Paint.NET** by [Rick Brewster](https://www.getpaint.net
 available for the web and as an Electron desktop application.
 
 Its core editing model is based on **Paint.NET 3.36.7**, the last version released under the original
-MIT-compatible license, while the current interface and behavior follow Paint.NET v5.1.12+.
+MIT-compatible license, while the current interface and behavior follow Paint.NET v5.2+.
 
 ## Why?
 

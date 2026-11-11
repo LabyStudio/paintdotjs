@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -28,6 +28,7 @@ class MoveToolBaseContext {
         this.startEdge = null;
         this.startMouseXY = null;
         this.offset = null;
+        this.constrainedAspectRatio = null;
     }
 
     getMatrixElements(matrix) {
@@ -65,6 +66,7 @@ class MoveToolBaseContext {
 
         clone.startMouseXY = this.startMouseXY;
         clone.offset = this.offset;
+        clone.constrainedAspectRatio = this.constrainedAspectRatio;
 
         return clone;
     }

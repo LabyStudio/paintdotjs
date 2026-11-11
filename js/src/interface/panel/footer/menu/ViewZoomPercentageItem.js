@@ -8,7 +8,7 @@
  * Copyright (C) 2024-present LabyStudio.
  * https://github.com/LabyStudio
  *
- * The interface design and behavior target Paint.NET 5.1.12+.
+ * The interface design and behavior target Paint.NET 5.2+.
  * Licensed under LICENSE.md. See NOTICE.md for full attribution.
  */
 
@@ -43,7 +43,7 @@ class ViewZoomPercentageItem extends DropMenuItem {
             return;
         }
 
-        let zoom = parseInt(this.textField.getText().replace("%", ""));
+        let zoom = parseFloat(this.textField.getText().replace("%", ""));
         if (isNaN(zoom)) {
             return;
         }
@@ -56,6 +56,8 @@ class ViewZoomPercentageItem extends DropMenuItem {
         if (activeDocumentWorkspace === null) {
             return "100%";
         }
-        return Math.round(activeDocumentWorkspace.getZoom() * 100) + "%";
+        const zoom = activeDocumentWorkspace.getZoom();
+        const digits = zoom < 0.1 ? 2 : zoom < 1 ? 1 : 0;
+        return (zoom * 100).toFixed(digits) + "%";
     }
 }
