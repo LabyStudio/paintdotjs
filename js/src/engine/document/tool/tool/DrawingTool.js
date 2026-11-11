@@ -32,6 +32,7 @@ class DrawingTool extends Tool {
         this.pendingStrokeBounds = null;
         this.brushProfileCache = new Map();
         this.brushSpriteCache = new Map();
+        this.strokePresentationCanvas = null;
     }
 
     getWidth() {
@@ -220,10 +221,56 @@ class DrawingTool extends Tool {
         destination.globalCompositeOperation = this.erase
             ? "destination-out"
             : this.getCompositeOperation();
-        destination.globalAlpha = this.getColor(this.button).alpha / 255;
-        destination.drawImage(this.strokeSurface.canvas, 0, 0);
+        if (this.usesSampledFillStyle()) {
+            // The sampled surface is an accumulated coverage mask. Color it
+            // only for presentation so repeated previews never multiply the
+            // foreground/background alpha or shift the hatch between dabs.
+            const presentation = this.createStrokePresentation(dirtyBounds);
+            destination.globalAlpha = 1;
+            destination.drawImage(presentation, dirtyBounds.x, dirtyBounds.y);
+        } else {
+            destination.globalAlpha = this.getColor(this.button).alpha / 255;
+            destination.drawImage(this.strokeSurface.canvas, 0, 0);
+        }
         destination.restore();
         return dirtyBounds;
+    }
+
+    usesSampledFillStyle() {
+        return this.type === ToolType.PAINT_BRUSH || this.type === ToolType.ERASER;
+    }
+
+    createStrokePresentation(bounds) {
+        if (this.strokePresentationCanvas === null) {
+            this.strokePresentationCanvas = document.createElement("canvas");
+        }
+        const canvas = this.strokePresentationCanvas;
+        canvas.width = bounds.width;
+        canvas.height = bounds.height;
+        const context = canvas.getContext("2d", {alpha: true});
+        context.drawImage(
+            this.strokeSurface.canvas,
+            bounds.x, bounds.y, bounds.width, bounds.height,
+            0, 0, bounds.width, bounds.height
+        );
+
+        // Paint.NET's eraser uses an opaque foreground and transparent
+        // background for hatch fills. Paint Brush uses the two user colors.
+        const foreground = this.erase
+            ? new Color(0, 0, 0, 255)
+            : this.getColor(this.button);
+        const background = this.erase
+            ? new Color(0, 0, 0, 0)
+            : this.getColor(this.button === MouseButton.LEFT ? MouseButton.RIGHT : MouseButton.LEFT);
+        context.save();
+        context.globalCompositeOperation = "source-in";
+        // Work in document coordinates so the 8x8 hatch remains stationary
+        // while individual brush stamps and dirty rectangles move.
+        context.translate(-bounds.x, -bounds.y);
+        context.fillStyle = this.createFillStyle(context, foreground, background);
+        context.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+        context.restore();
+        return canvas;
     }
 
     drawSegment(from, to, fromPressure = 1, toPressure = fromPressure) {

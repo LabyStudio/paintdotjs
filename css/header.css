@@ -1061,6 +1061,25 @@ header {
 
 .tool-dropdown-menu-text {
     border-color: var(--color-menu-item-selected-border);
+    max-height: 265px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-color: var(--pdn-scrollbar-thumb) var(--pdn-scrollbar-track);
+    scrollbar-width: auto;
+}
+
+.tool-dropdown-menu-text::-webkit-scrollbar {
+    width: 16px;
+}
+
+.tool-dropdown-menu-text::-webkit-scrollbar-track {
+    background: var(--pdn-scrollbar-track);
+}
+
+.tool-dropdown-menu-text::-webkit-scrollbar-thumb {
+    min-height: 24px;
+    background: var(--pdn-scrollbar-thumb);
+    border: 2px solid var(--pdn-scrollbar-track);
 }
 
 .tool-font-dropdown-menu {
