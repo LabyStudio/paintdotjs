@@ -37,7 +37,19 @@ class Surface {
     }
 
     clear(color = null) {
-        this.clearRegion(0, 0, this.width, this.height, color);
+        // A display surface may use a device-pixel transform. Clear the backing
+        // store in device pixels so browser page zoom does not scale the clear
+        // rectangle a second time and leave stale pixels around the viewport.
+        this.context.save();
+        this.context.setTransform(1, 0, 0, 1, 0, 0);
+        this.context.clearRect(0, 0, this.width, this.height);
+
+        if (color !== null) {
+            this.context.fillStyle = color.toHex();
+            this.context.fillRect(0, 0, this.width, this.height);
+        }
+
+        this.context.restore();
     }
 
     clearRegion(x, y, width, height, color = null) {
