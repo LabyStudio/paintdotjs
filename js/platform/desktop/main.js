@@ -21,16 +21,6 @@ const {ensureDesktopAssets} = require('./asset-manager');
 const DevelopmentPluginHost = require('./DevelopmentPluginHost');
 const updater = require('./updater');
 
-// Wayland does not allow Electron to read or set a window's global position.
-// The status-bar grip needs both capabilities to keep the top-left corner fixed,
-// so use Electron's documented XWayland fallback unless the user chose a backend.
-const hasOzonePlatformArgument = process.argv.some(argument => {
-    return argument === '--ozone-platform' || argument.startsWith('--ozone-platform=');
-});
-const shouldRelaunchForX11 = process.platform === 'linux'
-    && process.env.XDG_SESSION_TYPE === 'wayland'
-    && !hasOzonePlatformArgument;
-
 protocol.registerSchemesAsPrivileged([{
     scheme: 'paintjs',
     privileges: {standard: true, secure: true, supportFetchAPI: true, corsEnabled: true}
@@ -346,18 +336,17 @@ ipcMain.on('resize-window', (event, {deltaX, deltaY}) => {
         || !Number.isFinite(deltaY)) {
         return;
     }
-    mainWindow.setBounds({
-        x: resizeStartBounds.x,
-        y: resizeStartBounds.y,
-        width: Math.max(
-            Math.round(resizeStartBounds.width + deltaX),
-            minimumWindowBounds.width
-        ),
-        height: Math.max(
-            Math.round(resizeStartBounds.height + deltaY),
-            minimumWindowBounds.height
-        )
-    });
+    let width = Math.max(
+        Math.round(resizeStartBounds.width + deltaX),
+        minimumWindowBounds.width
+    );
+    let height = Math.max(
+        Math.round(resizeStartBounds.height + deltaY),
+        minimumWindowBounds.height
+    );
+    // Let the window manager preserve its compositor-managed position. This
+    // works on Wayland, where applications cannot read or set global x/y values.
+    mainWindow.setSize(width, height);
 });
 ipcMain.on('resize-window-end', event => {
     if (mainWindow !== null && event.sender === mainWindow.webContents) {
@@ -475,11 +464,6 @@ async function prepareApplication() {
 
 if (gotSingleInstanceLock) {
     app.whenReady().then(() => {
-        if (shouldRelaunchForX11) {
-            app.relaunch({args: [...process.argv.slice(1), '--ozone-platform=x11']});
-            app.exit(0);
-            return;
-        }
         return prepareApplication();
     });
     app.on('activate', () => {
