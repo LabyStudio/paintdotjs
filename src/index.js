@@ -26,7 +26,8 @@ const getPortableImageCodec = () => {
 
 window.portableImageCodec = {
     decode: (...args) => getPortableImageCodec().then(codec => codec.decode(...args)),
-    encode: (...args) => getPortableImageCodec().then(codec => codec.encode(...args))
+    encode: (...args) => getPortableImageCodec().then(codec => codec.encode(...args)),
+    quantize: (...args) => getPortableImageCodec().then(codec => codec.quantize(...args))
 };
 
 window.PDJVERSION = PDJVERSION;

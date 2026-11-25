@@ -22,11 +22,11 @@ class ImageEncoder {
             }
             case "jpeg": return this.encodeJpeg(canvas, quality, options);
             case "webp": return this.canvasToBlob(canvas, "image/webp", quality);
-            case "bmp": return this.encodeBmp(canvas);
+            case "bmp": return BmpEncoder.encode(canvas, options);
             case "gif": return this.encodeGif(canvas);
             case "tiff": return this.encodeTiff(canvas);
             case "tga": return this.encodeTga(canvas);
-            case "dds": return this.encodeDds(canvas);
+            case "dds": return DdsEncoder.encode(canvas, options);
             case "avif": return this.encodeModern(canvas, "image/avif", "avif", quality);
             case "heic": return this.encodeModern(canvas, "image/heic", "heic", quality);
             case "jxl": return this.encodeModern(canvas, null, "jxl", quality);
@@ -156,36 +156,6 @@ class ImageEncoder {
             .getImageData(0, 0, source.width, source.height);
     }
 
-    static encodeBmp(canvas) {
-        const image = this.getPixels(canvas);
-        const offset = 122;
-        const buffer = new ArrayBuffer(offset + image.data.length);
-        const view = new DataView(buffer);
-        const bytes = new Uint8Array(buffer);
-        bytes.set([0x42, 0x4d]);
-        view.setUint32(2, buffer.byteLength, true);
-        view.setUint32(10, offset, true);
-        view.setUint32(14, 108, true);
-        view.setInt32(18, image.width, true);
-        view.setInt32(22, -image.height, true);
-        view.setUint16(26, 1, true);
-        view.setUint16(28, 32, true);
-        view.setUint32(30, 3, true);
-        view.setUint32(34, image.data.length, true);
-        view.setUint32(54, 0x00ff0000, true);
-        view.setUint32(58, 0x0000ff00, true);
-        view.setUint32(62, 0x000000ff, true);
-        view.setUint32(66, 0xff000000, true);
-        bytes.set([0x20, 0x6e, 0x69, 0x57], 70);
-        for (let source = 0, target = offset; source < image.data.length; source += 4, target += 4) {
-            bytes[target] = image.data[source + 2];
-            bytes[target + 1] = image.data[source + 1];
-            bytes[target + 2] = image.data[source];
-            bytes[target + 3] = image.data[source + 3];
-        }
-        return new Blob([buffer], {type: "image/bmp"});
-    }
-
     static encodeTga(canvas) {
         const image = this.getPixels(canvas);
         const bytes = new Uint8Array(18 + image.data.length);
@@ -202,28 +172,6 @@ class ImageEncoder {
             bytes[target + 3] = image.data[source + 3];
         }
         return new Blob([bytes], {type: "image/x-tga"});
-    }
-
-    static encodeDds(canvas) {
-        const image = this.getPixels(canvas);
-        const bytes = new Uint8Array(128 + image.data.length);
-        const view = new DataView(bytes.buffer);
-        bytes.set([0x44, 0x44, 0x53, 0x20]);
-        view.setUint32(4, 124, true);
-        view.setUint32(8, 0x0000100f, true);
-        view.setUint32(12, image.height, true);
-        view.setUint32(16, image.width, true);
-        view.setUint32(20, image.width * 4, true);
-        view.setUint32(76, 32, true);
-        view.setUint32(80, 0x41, true);
-        view.setUint32(88, 32, true);
-        view.setUint32(92, 0x000000ff, true);
-        view.setUint32(96, 0x0000ff00, true);
-        view.setUint32(100, 0x00ff0000, true);
-        view.setUint32(104, 0xff000000, true);
-        view.setUint32(108, 0x1000, true);
-        bytes.set(image.data, 128);
-        return new Blob([bytes], {type: "image/vnd-ms.dds"});
     }
 
     static encodeTiff(canvas) {

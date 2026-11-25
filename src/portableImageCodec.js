@@ -14,8 +14,10 @@
 
 import jpegXrFactory from 'jpegxr'
 import {
+    DitherMethod,
     ImageMagick,
     MagickFormat,
+    QuantizeSettings,
     initializeImageMagick
 } from '@imagemagick/magick-wasm'
 import magickWasmUrl from '@imagemagick/magick-wasm/magick.wasm'
@@ -93,9 +95,45 @@ const decodeJpegXr = async bytes => {
     return {width: decoded.width, height: decoded.height, rgba};
 };
 
+const decodeLegacyRgbaDds = bytes => {
+    const headerSize = 128;
+    if (bytes.byteLength < headerSize) {
+        return null;
+    }
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const read = offset => view.getUint32(offset, true);
+    // ImageMagick reads this legacy RGBA layout as BGRA. The RGB masks
+    // identify its channel order, so read the top level as RGBA directly.
+    if (read(0) !== 0x20534444 || read(4) !== 124 || read(76) !== 32
+        || read(80) !== 0x41 || read(88) !== 32 || read(92) !== 0xff
+        || read(96) !== 0xff00 || read(100) !== 0xff0000 || read(104) !== 0xff000000
+        || read(112) !== 0) {
+        return null;
+    }
+    const width = read(16);
+    const height = read(12);
+    const rowBytes = width * 4;
+    const pitch = (read(8) & 0x8) ? read(20) : rowBytes;
+    if (!width || !height || pitch < rowBytes || height > (bytes.byteLength - headerSize) / pitch) {
+        throw new Error('Invalid RGBA DDS dimensions');
+    }
+    const rgba = new Uint8ClampedArray(rowBytes * height);
+    for (let y = 0; y < height; ++y) {
+        const start = headerSize + y * pitch;
+        rgba.set(bytes.subarray(start, start + rowBytes), y * rowBytes);
+    }
+    return {width, height, rgba};
+};
+
 export async function decode(bytes, format) {
     if (format === 'jxr' || format === 'wdp' || format === 'wmp') {
         return decodeJpegXr(bytes);
+    }
+    if (format === 'dds') {
+        const pixels = decodeLegacyRgbaDds(bytes);
+        if (pixels !== null) {
+            return pixels;
+        }
     }
     await initializePortableCodecs();
     const inputFormat = magickFormat(format);
@@ -113,6 +151,19 @@ export async function decode(bytes, format) {
     });
 }
 
+export async function quantize(pngBytes, colors, ditherLevel) {
+    await initializePortableCodecs();
+    return ImageMagick.read(pngBytes, MagickFormat.Png, image => {
+        let settings = new QuantizeSettings();
+        settings.colors = colors;
+        settings.ditherMethod = ditherLevel === 0 ? DitherMethod.No : DitherMethod.FloydSteinberg;
+        image.setArtifact('dither:diffusion-amount', (ditherLevel / 8 * 100) + '%');
+        image.quantize(settings);
+        image.depth = 8;
+        return image.write(MagickFormat.Rgba, rgba => new Uint8Array(rgba));
+    });
+}
+
 export async function encode(pngBytes, format, quality, options = {}) {
     await initializePortableCodecs();
     const outputFormat = magickFormat(format);
@@ -124,6 +175,10 @@ export async function encode(pngBytes, format, quality, options = {}) {
         if (outputFormat === MagickFormat.Jpeg && options.subsampling) {
             image.settings.setDefine(MagickFormat.Jpeg, 'sampling-factor', options.subsampling);
             image.setArtifact('jpeg:sampling-factor', options.subsampling);
+        }
+        if (outputFormat === MagickFormat.Dds && options.compression) {
+            image.settings.setDefine(MagickFormat.Dds, 'compression', options.compression);
+            image.settings.setDefine(MagickFormat.Dds, 'mipmaps', '0');
         }
         return image.write(outputFormat, bytes => new Uint8Array(bytes));
     });

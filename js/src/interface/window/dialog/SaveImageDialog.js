@@ -21,10 +21,10 @@ class SaveImageDialog {
         {id: "avif", name: "AV1 (AVIF)", extension: ".avif", mime: "image/avif", quality: 90},
         {id: "heic", name: "HEIC", extension: ".heic", extensions: [".heic", ".heif"], mime: "image/heic", quality: 90},
         {id: "webp", name: "WebP", extension: ".webp", mime: "image/webp", quality: 90},
-        {id: "dds", name: "DirectDraw Surface (DDS)", extension: ".dds", mime: "image/vnd-ms.dds"},
+        {id: "dds", name: "DirectDraw Surface (DDS)", extension: ".dds", mime: "image/vnd-ms.dds", controls: DdsEncoder.CONTROLS},
         {id: "tiff", name: "TIFF", extension: ".tif", extensions: [".tif", ".tiff"], mime: "image/tiff"},
         {id: "gif", name: "GIF", extension: ".gif", mime: "image/gif"},
-        {id: "bmp", name: "BMP", extension: ".bmp", mime: "image/bmp"},
+        {id: "bmp", name: "BMP", extension: ".bmp", mime: "image/bmp", controls: BmpEncoder.CONTROLS},
         {id: "tga", name: "TGA", extension: ".tga", mime: "image/x-tga"},
         {id: "jxr", name: "JPEG XR", extension: ".jxr", extensions: [".jxr", ".wdp", ".wmp"], mime: "image/vnd.ms-photo", quality: 90}
     ];
@@ -89,12 +89,12 @@ class SaveImageDialog {
                 ? {} : AppSettingsStore.get("fileTypes.saveOptions", {});
             const persistedOptions = savedOptions !== null && typeof savedOptions === "object"
                 ? savedOptions : {};
-            let pluginOptions = new Map();
-            let pluginControls = document.createElement("div");
-            pluginControls.className = "save-config-plugin-controls";
-            settings.appendChild(pluginControls);
-            for (let format of PluginFileTypes.saveFormats()) {
-                pluginOptions.set(format.id, {...Object.fromEntries(format.controls.map(control =>
+            let formatOptions = new Map();
+            let formatControls = document.createElement("div");
+            formatControls.className = "save-config-format-controls";
+            settings.insertBefore(formatControls, defaults);
+            for (let format of this.formats().filter(format => format.controls?.length)) {
+                formatOptions.set(format.id, {...Object.fromEntries(format.controls.map(control =>
                     [control.key, control.defaultValue])), ...persistedOptions[format.id],
                     ...(format.id === initialFormat.id ? initialOptions : {})});
             }
@@ -234,8 +234,8 @@ class SaveImageDialog {
             const selectedOptions = () => {
                 const format = this.find(formatSelect.value);
                 const result = {};
-                if (pluginOptions.has(format.id)) {
-                    return {...pluginOptions.get(format.id)};
+                if (formatOptions.has(format.id)) {
+                    return {...formatOptions.get(format.id)};
                 }
                 if (format.quality !== undefined) {
                     result.quality = qualities.get(format.id) ?? format.quality;
@@ -250,12 +250,29 @@ class SaveImageDialog {
                 qualityGroup.hidden = format.quality === undefined;
                 chromaGroup.hidden = format.id !== "jpeg";
                 defaults.hidden = format.quality === undefined && !(format.controls?.length);
-                pluginControls.replaceChildren();
-                if (pluginOptions.has(format.id)) {
+                formatControls.replaceChildren();
+                if (formatOptions.has(format.id)) {
+                    let values = formatOptions.get(format.id);
+                    let inputs = new Map();
+                    let refreshAvailability = () => {
+                        for (let [control, element] of inputs) {
+                            if (control.enabled) {
+                                let enabled = control.enabled(values);
+                                for (let input of element.querySelectorAll("input, select, button")) {
+                                    input.disabled = !enabled;
+                                }
+                            }
+                        }
+                    };
                     for (let control of format.controls) {
-                        pluginControls.appendChild(EffectConfigDialog.createGenericControl(
-                            control, pluginOptions.get(format.id), scheduleRender).element);
+                        let {element} = EffectConfigDialog.createGenericControl(control, values, () => {
+                            refreshAvailability();
+                            scheduleRender();
+                        });
+                        inputs.set(control, element);
+                        formatControls.appendChild(element);
                     }
+                    refreshAvailability();
                 }
                 if (format.quality !== undefined) {
                     setQuality(qualities.get(format.id) ?? format.quality);
@@ -272,9 +289,17 @@ class SaveImageDialog {
                     if (closed || ownGeneration !== generation) {
                         return;
                     }
-                    currentBlob = blob;
                     let displayBlob = blob;
-                    if (!["png", "jpeg", "webp", "gif", "bmp", "avif"].includes(format.id)) {
+                    let sourcePreview = Boolean(format.pluginId);
+                    if (format.id === "dds") {
+                        try {
+                            let decoded = await DocumentIO.loadImage(blob);
+                            displayBlob = await ImageEncoder.canvasToBlob(decoded, "image/png");
+                        } catch (_) {
+                            sourcePreview = true;
+                            displayBlob = await ImageEncoder.canvasToBlob(canvas, "image/png");
+                        }
+                    } else if (!["png", "jpeg", "webp", "gif", "bmp", "avif"].includes(format.id)) {
                         displayBlob = await ImageEncoder.canvasToBlob(canvas, "image/png");
                     }
                     if (closed || ownGeneration !== generation) {
@@ -285,7 +310,8 @@ class SaveImageDialog {
                     }
                     previewUrl = URL.createObjectURL(displayBlob);
                     preview.src = previewUrl;
-                    previewHeading.label.textContent = (format.pluginId ? "Source preview, file size: " : "Preview, file size: ") + formatSize(blob.size);
+                    currentBlob = blob;
+                    previewHeading.label.textContent = (sourcePreview ? "Source preview, file size: " : "Preview, file size: ") + formatSize(blob.size);
                     status.textContent = "";
                     ok.disabled = false;
                 } catch (error) {
@@ -301,6 +327,8 @@ class SaveImageDialog {
                 if (timer !== null) {
                     clearTimeout(timer);
                 }
+                ++generation;
+                ok.disabled = true;
                 timer = setTimeout(() => {
                     timer = null;
                     renderPromise = render();
@@ -354,8 +382,8 @@ class SaveImageDialog {
             };
             defaults.onclick = () => {
                 const format = this.find(formatSelect.value);
-                if (pluginOptions.has(format.id)) {
-                    pluginOptions.set(format.id, Object.fromEntries(format.controls.map(control =>
+                if (formatOptions.has(format.id)) {
+                    formatOptions.set(format.id, Object.fromEntries(format.controls.map(control =>
                         [control.key, control.defaultValue])));
                     refreshControls();
                 }
@@ -380,8 +408,9 @@ class SaveImageDialog {
                     timer = null;
                     renderPromise = render();
                 }
+                let submitGeneration = generation;
                 await renderPromise;
-                if (currentBlob === null || closed) {
+                if (currentBlob === null || closed || submitGeneration !== generation) {
                     return;
                 }
                 const selected = selectedOptions();
