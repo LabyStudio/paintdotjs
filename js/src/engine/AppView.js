@@ -285,6 +285,7 @@ class AppView {
                 finishInterruptedPointer(null);
             }
             try {
+                this.updateModifierKeys(event);
                 const point = getPointerPosition(event);
                 let x = point.x;
                 let y = point.y;
@@ -320,6 +321,7 @@ class AppView {
                 return;
             }
             try {
+                this.updateModifierKeys(event);
                 rememberAutoScrollPointer(event);
 
                 const point = getPointerPosition(event);
@@ -345,6 +347,7 @@ class AppView {
                 return;
             }
             try {
+                this.updateModifierKeys(event);
                 rememberAutoScrollPointer(event);
                 const point = getPointerPosition(event);
                 let x = point.x;
@@ -408,25 +411,17 @@ class AppView {
             documentWorkspace.setViewPosition(this.getViewX(), this.getViewY());
         });
 
-        window.addEventListener('keydown', event => {
-            let modifierChanged = false;
-            // On macOS the command (Meta) key acts as the Ctrl modifier.
-            if (event.key === "Control" || (Platform.isMac() && event.key === "Meta")) {
-                modifierChanged = !this.controlKeyDown;
-                this.controlKeyDown = true;
+        window.addEventListener("blur", () => this.updateModifierKeys());
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                this.updateModifierKeys();
             }
-            if (event.key === "Shift") {
-                modifierChanged = modifierChanged || !this.shiftKeyDown;
-                this.shiftKeyDown = true;
-            }
-            if (event.key === "Alt") {
-                modifierChanged = modifierChanged || !this.altKeyDown;
-                this.altKeyDown = true;
-            }
-            if (modifierChanged) {
-                this.onModifierKeysChanged();
-            }
+        });
+        // Read the current modifiers even when an input or dialog handles the key.
+        window.addEventListener("keydown", event => this.updateModifierKeys(event), true);
+        window.addEventListener("keyup", event => this.updateModifierKeys(event), true);
 
+        window.addEventListener('keydown', event => {
             // Keep native editing and clipboard shortcuts inside text controls and
             // for selected page text. Otherwise Ctrl+C would copy the canvas
             // selection over text selected in an error or settings window.
@@ -465,26 +460,21 @@ class AppView {
 
             ActionRegistry.dispatch(event);
         });
+    }
 
-        window.addEventListener('keyup', event => {
-            let modifierChanged = false;
-            // On macOS the command (Meta) key acts as the Ctrl modifier.
-            if (event.key === "Control" || (Platform.isMac() && event.key === "Meta")) {
-                modifierChanged = this.controlKeyDown;
-                this.controlKeyDown = false;
-            }
-            if (event.key === "Shift") {
-                modifierChanged = modifierChanged || this.shiftKeyDown;
-                this.shiftKeyDown = false;
-            }
-            if (event.key === "Alt") {
-                modifierChanged = modifierChanged || this.altKeyDown;
-                this.altKeyDown = false;
-            }
-            if (modifierChanged) {
-                this.onModifierKeysChanged();
-            }
-        });
+    updateModifierKeys(event = null) {
+        // Focus can change before keyup reaches this window. Use the modifier
+        // state carried by each event and clear it all when focus is lost.
+        let control = event !== null && (event.ctrlKey || (Platform.isMac() && event.metaKey));
+        let shift = event !== null && event.shiftKey;
+        let alt = event !== null && event.altKey;
+        if (this.controlKeyDown === control && this.shiftKeyDown === shift && this.altKeyDown === alt) {
+            return;
+        }
+        this.controlKeyDown = control;
+        this.shiftKeyDown = shift;
+        this.altKeyDown = alt;
+        this.onModifierKeysChanged();
     }
 
     isInViewportClientArea(clientX, clientY) {
